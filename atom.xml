@@ -6,7 +6,7 @@
   <link href="https://matsurimw.github.io/atom.xml" rel="self"/>
   
   <link href="https://matsurimw.github.io/"/>
-  <updated>2022-04-08T19:08:37.355Z</updated>
+  <updated>2022-04-08T19:32:39.922Z</updated>
   <id>https://matsurimw.github.io/</id>
   
   <author>
@@ -21,17 +21,15 @@
     <link href="https://matsurimw.github.io/2022/04/08/title-%20%E3%81%BE%E3%81%A4%E3%82%8A%E3%81%AE%E3%83%95%E3%82%99%E3%83%AD%E3%82%AF%E3%82%99!/"/>
     <id>https://matsurimw.github.io/2022/04/08/title-%20%E3%81%BE%E3%81%A4%E3%82%8A%E3%81%AE%E3%83%95%E3%82%99%E3%83%AD%E3%82%AF%E3%82%99!/</id>
     <published>2022-04-08T09:48:20.000Z</published>
-    <updated>2022-04-08T19:08:37.355Z</updated>
+    <updated>2022-04-08T19:32:39.922Z</updated>
     
-    <content type="html"><![CDATA[<p>这里是我的博客。&lt;br&gt;</p><p>Here’s my blog.&lt;br&gt;</p><p>ここわおれのブログ、よろしく！</p>]]></content>
+    <content type="html"><![CDATA[<h1 id="这里是我的博客。"><a href="#这里是我的博客。" class="headerlink" title="这里是我的博客。"></a>这里是我的博客。</h1><p>Here’s my blog.&lt;br&gt;</p><p>ここわおれのブログ、よろしく！</p>]]></content>
     
     
       
       
-    <summary type="html">&lt;p&gt;这里是我的博客。&amp;lt;br&amp;gt;&lt;/p&gt;
-&lt;p&gt;Here’s my blog.&amp;lt;br&amp;gt;&lt;/p&gt;
-&lt;p&gt;ここわおれのブログ、よろしく！&lt;/p&gt;
-</summary>
+    <summary type="html">&lt;h1 id=&quot;这里是我的博客。&quot;&gt;&lt;a href=&quot;#这里是我的博客。&quot; class=&quot;headerlink&quot; title=&quot;这里是我的博客。&quot;&gt;&lt;/a&gt;这里是我的博客。&lt;/h1&gt;&lt;p&gt;Here’s my blog.&amp;lt;br&amp;gt;&lt;/p&gt;
+&lt;p&gt;ここわおれのブログ、よろし</summary>
       
     
     
