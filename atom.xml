@@ -6,7 +6,7 @@
   <link href="https://matsurimw.github.io/atom.xml" rel="self"/>
   
   <link href="https://matsurimw.github.io/"/>
-  <updated>2022-04-08T18:32:34.496Z</updated>
+  <updated>2022-04-08T19:08:37.355Z</updated>
   <id>https://matsurimw.github.io/</id>
   
   <author>
@@ -17,45 +17,25 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>无标题、佚名、新建文件夹与 Untitled</title>
-    <link href="https://matsurimw.github.io/2022/04/08/%E6%97%A0%E6%A0%87%E9%A2%98/"/>
-    <id>https://matsurimw.github.io/2022/04/08/%E6%97%A0%E6%A0%87%E9%A2%98/</id>
-    <published>2022-04-08T10:06:23.000Z</published>
-    <updated>2022-04-08T18:32:34.496Z</updated>
+    <title>まつりのブログ!</title>
+    <link href="https://matsurimw.github.io/2022/04/08/title-%20%E3%81%BE%E3%81%A4%E3%82%8A%E3%81%AE%E3%83%95%E3%82%99%E3%83%AD%E3%82%AF%E3%82%99!/"/>
+    <id>https://matsurimw.github.io/2022/04/08/title-%20%E3%81%BE%E3%81%A4%E3%82%8A%E3%81%AE%E3%83%95%E3%82%99%E3%83%AD%E3%82%AF%E3%82%99!/</id>
+    <published>2022-04-08T09:48:20.000Z</published>
+    <updated>2022-04-08T19:08:37.355Z</updated>
     
-    <content type="html"><![CDATA[<p>这是一个测试</p>]]></content>
+    <content type="html"><![CDATA[<p>这里是我的博客。&lt;br&gt;</p><p>Here’s my blog.&lt;br&gt;</p><p>ここわおれのブログ、よろしく！</p>]]></content>
     
     
       
       
-    <summary type="html">&lt;p&gt;这是一个测试&lt;/p&gt;
+    <summary type="html">&lt;p&gt;这里是我的博客。&amp;lt;br&amp;gt;&lt;/p&gt;
+&lt;p&gt;Here’s my blog.&amp;lt;br&amp;gt;&lt;/p&gt;
+&lt;p&gt;ここわおれのブログ、よろしく！&lt;/p&gt;
 </summary>
       
     
     
     
-    
-  </entry>
-  
-  <entry>
-    <title>Hello Hexo!</title>
-    <link href="https://matsurimw.github.io/2022/04/08/title-%20Hello%20Hexo!/"/>
-    <id>https://matsurimw.github.io/2022/04/08/title-%20Hello%20Hexo!/</id>
-    <published>2022-04-08T09:48:20.000Z</published>
-    <updated>2022-04-08T09:48:27.798Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;h2 id=&quot;Quick-Start&quot;&gt;&lt;a href=&quot;#Quick-Start&quot; class=&quot;headerlink&quot; title=&quot;Quick Start&quot;&gt;&lt;/a&gt;Quick Start&lt;/h2&gt;&lt;h3 id=&quot;Create-a-new-post&quot;&gt;&lt;a href=&quot;#</summary>
-      
-    
-    
-    
-    
-    <category term="hexo" scheme="https://matsurimw.github.io/tags/hexo/"/>
     
   </entry>
   
