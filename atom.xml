@@ -6,7 +6,7 @@
   <link href="https://matsurimw.github.io/atom.xml" rel="self"/>
   
   <link href="https://matsurimw.github.io/"/>
-  <updated>2022-04-10T11:23:44.651Z</updated>
+  <updated>2022-04-10T11:57:30.012Z</updated>
   <id>https://matsurimw.github.io/</id>
   
   <author>
@@ -15,6 +15,27 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>github</title>
+    <link href="https://matsurimw.github.io/2022/04/10/github%E5%9B%BE%E5%BA%8A%E6%B5%8B%E8%AF%95/"/>
+    <id>https://matsurimw.github.io/2022/04/10/github%E5%9B%BE%E5%BA%8A%E6%B5%8B%E8%AF%95/</id>
+    <published>2022-04-10T11:57:29.000Z</published>
+    <updated>2022-04-10T11:57:30.012Z</updated>
+    
+    <content type="html"><![CDATA[<p><a href="https://github.com/djyde/cusdis">djyde&#x2F;cusdis: lightweight, privacy-friendly alternative to Disqus.</a></p><p><img src="https://raw.githubusercontent.com/MatsuriMW/images/main/202204101956425.png"></p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;&lt;a href=&quot;https://github.com/djyde/cusdis&quot;&gt;djyde&amp;#x2F;cusdis: lightweight, privacy-friendly alternative to Disqus.&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;ht</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>测试4</title>
