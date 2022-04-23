@@ -436,8 +436,8 @@ body td {
 }
 @font-face {
   font-style: normal;
-  font-family: "Meslo LG";
-  src: local("Meslo LG S"), url("../lib/meslo-LG/MesloLGS-Regular.ttf") format("truetype");
+  font-family: "AGaramondPro-Regular";
+  src: local("AGaramondPro-Regular"), url("../lib/meslo-LG/AGaramondPro-Regular.otf") format("opentype");
 }
 *,
 *:before,
