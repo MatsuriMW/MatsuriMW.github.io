@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://matsuri.site/2022/04/11/%E7%87%83%E7%83%A7%E7%9A%84%E8%89%BE%E7%B1%B3%E8%8E%89%E7%8B%84%E9%87%91%E6%A3%AE/</loc>
+    <loc>https://matsuri.site/about/index.html</loc>
     
     <lastmod>2022-04-23</lastmod>
     
@@ -11,7 +11,7 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/about/index.html</loc>
+    <loc>https://matsuri.site/2022/04/11/%E7%87%83%E7%83%A7%E7%9A%84%E8%89%BE%E7%B1%B3%E8%8E%89%E7%8B%84%E9%87%91%E6%A3%AE/</loc>
     
     <lastmod>2022-04-23</lastmod>
     
@@ -135,13 +135,6 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/tags/%E5%9B%9B%E6%9C%88%E6%98%AF%E4%BD%A0%E7%9A%84%E8%B0%8E%E8%A8%80/</loc>
-    <lastmod>2022-04-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://matsuri.site/tags/%E9%BB%91%E6%9A%97%E4%B9%8B%E9%AD%82-3/</loc>
     <lastmod>2022-04-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -149,14 +142,14 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/tags/Obsidian/</loc>
+    <loc>https://matsuri.site/tags/%E5%9B%9B%E6%9C%88%E6%98%AF%E4%BD%A0%E7%9A%84%E8%B0%8E%E8%A8%80/</loc>
     <lastmod>2022-04-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://matsuri.site/tags/%E9%98%85%E8%AF%BB/</loc>
+    <loc>https://matsuri.site/tags/Obsidian/</loc>
     <lastmod>2022-04-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -171,6 +164,13 @@
   
   <url>
     <loc>https://matsuri.site/tags/Chrome/</loc>
+    <lastmod>2022-04-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://matsuri.site/tags/%E9%98%85%E8%AF%BB/</loc>
     <lastmod>2022-04-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
