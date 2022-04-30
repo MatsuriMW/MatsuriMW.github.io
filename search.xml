@@ -4,11 +4,36 @@
   
     
     <entry>
+      <title>系统级 Markdown</title>
+      <link href="/2022/05/02/%E7%B3%BB%E7%BB%9F%E7%BA%A7%20Markdown/"/>
+      <url>/2022/05/02/%E7%B3%BB%E7%BB%9F%E7%BA%A7%20Markdown/</url>
+      
+        <content type="html"><![CDATA[<p>占位</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 效率工具 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Markdown </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>CS books and courses i have learned from since 2022</title>
       <link href="/2022/04/26/CS%20books%20and%20courses%20i%20have%20learned%20from%20since%202022/"/>
       <url>/2022/04/26/CS%20books%20and%20courses%20i%20have%20learned%20from%20since%202022/</url>
       
-        <content type="html"><![CDATA[<p>这里记录我学过的系统性系列课程，杂文、短篇视频不计。</p><blockquote><p>数字化是当前人类社会最伟大的变革，但大多数人只能被动接受。</p></blockquote><h2 id="2022-年-4-月至-5-月">2022 年 4 月至 5 月</h2><ul><li>🔗 <a href="https://www.bilibili.com/video/BV1vA4y197C7">【Udemy 排名第一的 JavaScript 课程】2022 最新完整 JavaScript 课程 从入门到精通 – 通过项目、挑战和理论掌握 JS（中英文字幕）上</a> （P29 032 Activating Strict Mode)</li><li>🔗 <a href="https://space.bilibili.com/456606920/video?tid=0&amp;page=2&amp;keyword=&amp;order=pubdate">【小学生教你学编程】| Swift Playgrounds 通关教程</a> (#09 类型)</li><li>🔗 <a href="https://cs193p.sites.stanford.edu/">CS193p - Developing Apps for iOS</a>（# Lecture 2: Learning more about SwiftUI）</li><li>黑马程序员：第一阶段Html+Css+（Day05）</li></ul>]]></content>
+        <content type="html"><![CDATA[<p>这里记录我学过的系统性系列课程，杂文、短篇视频不计。</p><blockquote><p>数字化是当前人类社会最伟大的变革，但大多数人只能被动接受。</p></blockquote><h2 id="2022-年-4-月至-5-月">2022 年 4 月至 5 月</h2><ul><li>🔗 <a href="https://www.bilibili.com/video/BV1vA4y197C7">【Udemy 排名第一的 JavaScript 课程】2022 最新完整 JavaScript 课程 从入门到精通 – 通过项目、挑战和理论掌握 JS（中英文字幕）上</a> （P31 034 Function Declarations vs. Expressions)</li><li>🔗 <a href="https://space.bilibili.com/456606920/video?tid=0&amp;page=2&amp;keyword=&amp;order=pubdate">【小学生教你学编程】| Swift Playgrounds 通关教程</a> (#09 类型)</li><li>🔗 <a href="https://cs193p.sites.stanford.edu/">CS193p - Developing Apps for iOS</a>（# Lecture 2: Learning more about SwiftUI）</li><li>黑马程序员：第一阶段Html+Css（Day05）</li></ul>]]></content>
       
       
       <categories>
@@ -170,6 +195,12 @@
           
       </categories>
       
+      
+        <tags>
+            
+            <tag> 黑暗之魂 3 </tag>
+            
+        </tags>
       
     </entry>
     
