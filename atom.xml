@@ -6,7 +6,7 @@
   <link href="https://matsuri.site/atom.xml" rel="self"/>
   
   <link href="https://matsuri.site/"/>
-  <updated>2022-05-03T07:29:13.922Z</updated>
+  <updated>2022-05-09T10:40:08.653Z</updated>
   <id>https://matsuri.site/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>大家都在聊</title>
+    <link href="https://matsuri.site/2022/05/09/%E5%A4%A7%E5%AE%B6%E9%83%BD%E5%9C%A8%E8%81%8A/"/>
+    <id>https://matsuri.site/2022/05/09/%E5%A4%A7%E5%AE%B6%E9%83%BD%E5%9C%A8%E8%81%8A/</id>
+    <published>2022-05-08T16:00:00.000Z</published>
+    <updated>2022-05-09T10:40:08.653Z</updated>
+    
+    <content type="html"><![CDATA[<p>聊投资的大都会引用 Paul Graham 和巴菲特的名言，聊 Naval 的流行哲学和他的「如何不靠运气致富？」系列。</p><p>聊笔记软件的都会聊「卢曼卡片笔记法」或者「费曼学习法」。</p><p>聊个人效率的会聊柳比歇夫和帮助他出版了 70 多部学术著作的独特时间管理法。</p><p>聊人性、疫情、社会现实的会聊汉娜阿伦特的「平庸之恶」理论。</p><p>聊成长和人生的会聊马斯洛需求理论和乔布斯的 connect the dot「连点成线」理论（这两者都已经被用到烂了）。</p><p>聊电影剧情尤其是英雄片会聊坎贝尔的「英雄之旅」理论。</p><p>聊创作者经济的基本必聊「二八理论」或「长尾理论」。</p><p>乍一看这些内容很丰富多样，然而当你进入到某一细分领域后会发现，这里的互联网阅读是有尽头的。当你在某一领域关注了数位内容创作者，在某股风潮兴起或是重大事件发生后，其中一些会如复读机一样互相引用着相同的名人名言或理论。我读过无数尬谈卢曼卡片笔记法的文章，我也读过无数大谈长尾效应和「一千个铁粉」的创作营销文章。这些理论和名言就像原本挺不错的，然后大家开始聊，尬聊，硬聊，聊到原本新鲜的知识松散变质，变成语文老师的作文必备案例和 GRE 的写作套路，变成小学作文里的「爱迪生发明灯泡」。Happy Xiao 说：「实际上完全独立的想法的总数是有限的，大部分内容在本质上都属同源，关于一些话题，我只看标题就知道作者接下来会说什么。」</p><p>在同一个泡泡里一起复述着最新最 in 的潮流思想，好像一个领域里的内容生产者都在同一片池子里游泳，有人过来往池里洒了一把鱼食，大家便一同进食。吃进去的都是一样的，出来的自然也大差不差，车轱辘话来回说，看得麻木疲劳。最近的洒入的鱼食是<a href="https://kk.org/thetechnium/103-bits-of-advice-i-wish-i-had-known">《Kevin Kelly 的 103 条人生建议》</a>(天知道我已经在多少个地方读到了）。对于非虚构类的写作，灵感的来源总要基于信息的输入，信息的输入速度低于输出，总有一天会发现源头已经枯竭无物。<strong>「独立创作」这个词，除了指「独自一个人写」，另一层意思也许是游出这片众人聚集的池子，寻觅获得新鲜的食物和水源，保持相对独立的想法，产出耳目一新的内容。世界万维的互联网鱼池之大、活水之奔涌，对于每个人都是无穷无尽的宴席。铜山之大，采铜于山者少，买旧钱充铸者多，所铸之钱既已粗恶，再买再铸。</strong></p><p>每个人的情怀、审美、学识、经历都是独特的，每个人都有独特的经历和创作动机。采山之铜，言之有物，有感而发，如此区分出行活和好内容。</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;聊投资的大都会引用 Paul Graham 和巴菲特的名言，聊 Naval 的流行哲学和他的「如何不靠运气致富？」系列。&lt;/p&gt;
+&lt;p&gt;聊笔记软件的都会聊「卢曼卡片笔记法」或者「费曼学习法」。&lt;/p&gt;
+&lt;p&gt;聊个人效率的会聊柳比歇夫和帮助他出版了 70 多部学术著作的独特时</summary>
+      
+    
+    
+    
+    <category term="杂谈" scheme="https://matsuri.site/categories/%E6%9D%82%E8%B0%88/"/>
+    
+    
+  </entry>
   
   <entry>
     <title>系统级 Markdown</title>
@@ -48,18 +72,19 @@
     <link href="https://matsuri.site/2022/04/26/CS%20books%20and%20courses%20i%20have%20learned%20from%20since%202022/"/>
     <id>https://matsuri.site/2022/04/26/CS%20books%20and%20courses%20i%20have%20learned%20from%20since%202022/</id>
     <published>2022-04-25T16:00:00.000Z</published>
-    <updated>2022-05-01T17:42:46.849Z</updated>
+    <updated>2022-05-05T20:02:02.502Z</updated>
     
-    <content type="html"><![CDATA[<p>这里记录我学过的系统性系列课程，杂文、短篇视频不计。</p><blockquote><p>数字化是当前人类社会最伟大的变革，但大多数人只能被动接受。</p></blockquote><h2 id="2022-年-4-月至-5-月">2022 年 4 月至 5 月</h2><ul><li>🔗 <a href="https://www.bilibili.com/video/BV1vA4y197C7"> The Complete JavaScript Course 2022: From Zero to Expert! （上）/ 作者：Jonas Schmedtmann </a> （P32 035 Arrow Function）</li><li>🔗 <a href="https://space.bilibili.com/456606920/video?tid=0&amp;page=2&amp;keyword=&amp;order=pubdate">【小学生教你学编程】| Swift Playgrounds 通关教程 / 作者：Vita君</a> (#09 类型)</li><li>🔗 <a href="https://cs193p.sites.stanford.edu/">CS193p - Developing Apps for iOS / 作者：Stanford</a>（# Lecture 2: Learning more about SwiftUI）</li><li>黑马程序员：第一阶段Html+Css（Day05）</li></ul>]]></content>
+    <content type="html"><![CDATA[<blockquote><p>数字化是当前人类社会最伟大的变革，但大多数人只能被动接受。</p></blockquote><h2 id="2022-年-4-月至-5-月">2022 年 4 月至 5 月</h2><ul><li>🔗 <a href="https://www.bilibili.com/video/BV1vA4y197C7"> The Complete JavaScript Course 2022: From Zero to Expert! （上）/ 作者：Jonas Schmedtmann </a> （P54 059）</li><li>🔗 <a href="https://space.bilibili.com/456606920/video?tid=0&amp;page=2&amp;keyword=&amp;order=pubdate">【小学生教你学编程】| Swift Playgrounds 通关教程 / 作者：Vita君</a> (#09 类型)</li><li>🔗 <a href="https://cs193p.sites.stanford.edu/">CS193p - Developing Apps for iOS / 作者：Stanford</a>（# Lecture 2: Learning more about SwiftUI）</li><li>黑马程序员：第一阶段Html+Css（Day05）</li></ul>]]></content>
     
     
       
       
-    <summary type="html">&lt;p&gt;这里记录我学过的系统性系列课程，杂文、短篇视频不计。&lt;/p&gt;
-&lt;blockquote&gt;
+    <summary type="html">&lt;blockquote&gt;
 &lt;p&gt;数字化是当前人类社会最伟大的变革，但大多数人只能被动接受。&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;2022-年-4-月至-5-月&quot;&gt;2022 年 4 月至 5 月&lt;/</summary>
+&lt;h2 id=&quot;2022-年-4-月至-5-月&quot;&gt;2022 年 4 月至 5 月&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;🔗 &lt;a href=&quot;https://w</summary>
       
     
     
@@ -146,9 +171,9 @@
     <link href="https://matsuri.site/2022/03/27/%E9%98%85%E8%AF%BB%E9%95%BF%E6%96%87%E9%9C%80%E8%A6%81%E4%BB%80%E4%B9%88%EF%BC%9F/"/>
     <id>https://matsuri.site/2022/03/27/%E9%98%85%E8%AF%BB%E9%95%BF%E6%96%87%E9%9C%80%E8%A6%81%E4%BB%80%E4%B9%88%EF%BC%9F/</id>
     <published>2022-03-26T16:00:00.000Z</published>
-    <updated>2022-04-30T06:14:11.575Z</updated>
+    <updated>2022-05-04T07:38:32.009Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="阅读长文需要什么？">阅读长文需要什么？</h2><p>获得高质量信息的重要途径是什么？<br>是长文，有价值的长文。<br>由旧常识引申出新洞察，从故事里显露情绪和生命，「积小以明大，而又举大以贯小」，字里行间里有作者的笔力和眼光。<br>又或者写得条理清晰、逻辑了然、深入浅出，初学者能一路顺着读下去，熟悉的人也会看得津津有味。<br>读者会在读完后驻足、摘录或是不由自主地动手写点笔记，而不是如同时间线的动态——看完不过动动手指划到下一篇，不起微澜。<br>以上的溢美之词想必大家在曾经的语文课上已经听了不少，写这样的长文对创作者的精神消耗不小，确实不是可以轻松达到的标准。所以每每遇到这样的作者我总是心怀敬意，摁下关注之余还会跑去他们的个人博客网站，挖掘旧文，一饱眼福。这样的人不多，但是也有，比如 <a href="https://sspai.com/u/platyhsu/posts">Platy Hsu 先生</a>——他曾经是我一篇文章的责编；<a href="http://blog.farmostwood.net/category/diary">木遥先生</a>——网站里最早出现的博文可以追溯到 2005 年，他已经断断续续写了 17 年了。我曾经在读完他的文章后感叹：</p><p><img src="https://imgs.zhubai.love/f7ff5d56eddf4471a71b1bb92cfacd87.png" alt=""><br>那么回归正题，作为个人我始终秉持工具主义，网络阅读的时代，我们也需要一些网络工具来优化阅读的体验。以我个人来说，阅读长文时会需要：</p><ol><li>安静的物理环境和能集中精神的心境</li><li>顺手的批注高亮工具</li><li>展示大纲的侧边目录</li><li>去除网站的花哨部分，重新排版正文的「阅读模式」</li></ol><h2 id="集中精神的心境：Workona">集中精神的心境：<a href="https://chrome.google.com/webstore/detail/workona-tab-manager/ailcmbgekjpnablpdkmaaccecekgdhlh?hl=zh-CN">Workona</a></h2><blockquote><p>当我们计划着进行一些轻松的内容消费时，也完全可能无意中点开一篇严肃的长文章。我经常会在读一篇文章超过五分钟时拉至网页底部预估一下文章长度，如果意识到「这是一篇需要认真看的长文」，心情会不免稍稍沉重。在此之外，打开一位内容创作者的主页，搜索到大量关于某一主题的资料，遇到数篇需要集中精神阅读的长文，这些内容可能很有价值、质量很高，但现在的我真的无法集中精神。<br>有时候明明是一次简单的阅读，最后也可能延伸着指向一条深不见底、充满新知的隧道，而也许此时我们的精力有限，不能对它继续探索，需要暂时封存起来。<br>以上内容摘自我几期前写过的一篇 Newsletter <a href="https://matsuri.site/2022/03/03/%E8%AE%A9%E6%88%91%E4%BB%AC%E4%B8%80%E8%B5%B7%E6%9D%A5%E7%94%A8%20Workona%EF%BC%81/">《让我们一起来用 Workona！》</a>（已修改），它描述了我经常遇到的问题：</p></blockquote><ul><li>网页上的文章大多不会标明「我是长文，我有多少字，我需要读多久」。偶然遇见一篇长文，阅读它们需要的精神无法在碎片时间、休息时间提供。</li><li>文中出现的外链，文末出现的「延伸阅读」，页尾的算法推荐「你可能还喜欢」，以及冷不丁冒出的陌生术语概念，都可能延长完成阅读的时间。而时间不会无限延伸，精力也会有所不逮。<br>也因为人们遇到的这些问题，「稍后读」(read it later) 应用应运而生。Instapaper、Pocket、Cubox 之名想必大家都听过，而我目前充作「稍后读」之用的 Workona 原本是用来管理、分类标签页的。我用它把在浏览器上的种种行为进行分类，「阅读」自然也是其中一种行为。分类行为，分类状态，分类心境，把该认真阅读的内容留到有时间、能集中精神的心境下再看，给予有分量的内容以尊重。</li></ul><h2 id="顺手的批注高亮工具：Hypothes-is">顺手的批注高亮工具：<a href="https://web.hypothes.is/">Hypothes.is</a></h2><p><img src="https://imgs.zhubai.love/f9cae428cb7d458ba686d56ee007a599.png" alt=""><br>我相信电影、书和文章，他们可以通过外在的补充和连接变得更好看，获得更丰富的阅读体验。<br>批注、笔记、背景故事、评论区、幕后、创作草稿、插画、原声集，甚至是和谁在一起看，和谁在一起读……<br><a href="http://Hypothes.is">Hypothes.is</a> 就有这种可能。它是一个网页标记（<a href="https://en.wikipedia.org/wiki/Web_annotation">Web annotation</a>）应用，当我们阅读网络文章看到好的段落或句子时可以用它划出高亮，写下评语。这个功能其实相当多的稍后读应用都会附带，然而我选择它有两个原因</p><ul><li>「共享」，也就是截图中官网的口号「with anyone」</li><li>「导出」，能无痕同步至 Obsidian 的插件</li></ul><h3 id="共享">共享</h3><p>当你标注网页时，<a href="http://Hypothes.is">Hypothes.is</a> 会默认公开你的标注信息，同样的，你也可以在任意网页，看到来自他人的标注，共享知识与见解。如果你买过二手书，偶尔会看到书页上看到一些前人的笔记，对文字的批注、添补，融入了阅读者的新视角和新理解。几个月前我深夜在网上闲逛时，在作家 Tim Urban 的博客 <a href="https://waitbutwhy.com">Wait But Why</a> 主页上惊喜地发现有一则中文笔记，由「conanxin」先生记于 2021 年 2 月 9 日。</p><p><img src="https://imgs.zhubai.love/984e6c48c35248c4ac22a52f9f7543be.png" alt=""><br>这是我最喜欢也最有感触的地方。在茫茫无边的互联网上，你与另一个人的阅读标识相遇，隔空，隔着时间，也许还隔着语言，隔着几十年的人生境遇，但此刻我们在这篇文章上相遇，你看到他黄色的高亮和批注，也可能是他看到你的。你惊讶大海茫茫，这篇孤零零的文章，居然已经有人在你想高亮的段落留下了相同的记号，写下了感想。不同的思维跨越时间在此刻此时，在这篇不过几十字节代码的文章上相遇相识。<br>在这个意义上，<a href="http://Hypothes.is">Hypothes.is</a> 也许掌握着未来。<br>……</p><p>另外因为 Page Notes 的存在，换一种理解来看，它也可以是一个半公开的版聊，一个存在于任何网页上的隔空对话。比如 B 站首页上的 <a href="http://Hypothes.is">Hypothes.is</a>，从 2018 年到今天已经积攒了不少的消息，我第一次看到这个界面时不禁失笑，有种「小孩子竞争插标、探索荒地」的感觉。</p><p><img src="https://imgs.zhubai.love/eabf4f542d324ac491b92e896d69f05c.png" alt=""></p><h3 id="导出">导出</h3><p>我主要用 Obsidian 来记笔记。它一款社区插件极其丰富的笔记软件，其中自然也包括 <a href="http://Hypothes.is">Hypothes.is</a> 的<a href="https://github.com/weichenw/obsidian-hypothesis-plugin">插件</a>。这个插件会在你打开 Obsidian 时自动开始同步过去一段时间内，你批注过的文章的元数据、高亮和批注内容，使用效果惊人。<br>当然不只是单单 Obsidian，<a href="http://Hypothes.is">Hypothes.is</a> 和 Notion、Readwise 都能进行联动，又或者你可以通过第三方工具导出为 HTML、CSV、JSON 等等，官方开放 API，还提供了<a href="https://web.hypothes.is/help/how-do-i-export-my-annotations/">导出指南</a>。</p><h2 id="展示大纲的侧边目录：Smart-TOC">展示大纲的侧边目录：<a href="https://chrome.google.com/webstore/detail/smart-toc-%E6%99%BA%E8%83%BD%E7%BD%91%E9%A1%B5%E5%A4%A7%E7%BA%B2/ppdjhggfcaenclmimmdigbcglfoklgaf?hl=zh-CN">Smart TOC</a></h2><p>Table of Contents、缩写 TOC，中文翻译目录。你可以通过它对文章的总体逻辑结构快速一览，明白它是从哪几个方面阐述和铺陈。当我们看了文章的开头觉得不错时，可以打开 TOC，大致了解如果花时间详细阅读，接下来的几分钟或十几分钟，这篇文章会将我们引向何处？我们是否对这次阅读的终点感兴趣？在这个层面上，我们甚至可以把它当成是一个再次简写的「太长不看」（TL, DR）。<br>我觉得任何有大量长文章阅读的应用和网站，都应该提供目录的功能。毕竟在这个时代，相对于碎片信息、140 字的短文和抖音短视频，长文已经完全是不同时代的产物，目录的存在对于长文章来说意义尤重。然而手机上我目前只见到少数派、语雀和稀土掘金的客户端上阅读时有底边目录的选项（也许是我见时浅薄了）。知乎上每次看到那种全文共 x 万字，阅读需要 xx 分钟的文章我都在找他的目录，在哪？在哪？<br>在浏览器的网页上实现 TOC 就轻松了很多，下载 <a href="https://chrome.google.com/webstore/detail/smart-toc-%E6%99%BA%E8%83%BD%E7%BD%91%E9%A1%B5%E5%A4%A7%E7%BA%B2/ppdjhggfcaenclmimmdigbcglfoklgaf?hl=zh-CN">Smart Toc</a> 并安装，链接里的这个版本由国人 <a href="https://github.com/lcomplete?tab=repositories&amp;type=source">lcomplete</a> 二次开发过，效果更好。</p><p><img src="https://imgs.zhubai.love/2d71be258f12455992245dfc580f4c41.png" alt=""><br>我设置了快捷键 ⌥Option+T(T 取自 TOC 的首字母），每次看到太长的文章都会下意识地按下这个组合键，检查侧边目录，看看「这篇文章这么长，到底聊了些啥？」。相信我，当你习惯这种体验后，你会离不开它的。</p><h2 id="阅读模式：简悦">阅读模式：<a href="https://simpread.pro/">简悦</a></h2><p>国内不少网站都很喜欢花里胡哨、密密麻麻的目录导航和头图，有的还会不停切换滚动。对于黑白两色的文章来说，它们都是影响注意力的，需要被裁去的「花边」。简悦就为 Chrome 浏览器提供了一个效果不错的阅读模式。它的一大优点就是主流网站基本全适配了，阅读器的效果自定义程度也很高，还有多种样式可选（比如仿 Safari 浏览器的阅读模式）。简悦还有其他很多可玩的地方比如联动和导出，阅读模式只是功能之一，不过行文至此，我就不再细细叨扰诸位了。<br>前段时间我在<a href="https://www.kekeshici.com/shicizhoubian/mingrenzuopin/luxun/35346.html">这个网站</a>上想读鲁迅先生的一篇短篇小说《在酒楼上》，这个幼儿园般配色的 logo 搭配侧边醒目的红色排行榜简直让人抓狂，无法集中精神。我开了阅读模式，修改成合适的字体和背景，转而在微微泛黄、字重略粗、似乎有些古意的阅读界面里，成功去了一趟鲁迅先生笔下的，绍兴城的酒楼和废园。</p><p><img src="https://imgs.zhubai.love/3b60b3b126a841cdbea9bff5708f9545.png" alt=""></p><p>周末愉快，写于周日凌晨 04:46:40。</p>]]></content>
+    <content type="html"><![CDATA[<h2 id="阅读长文需要什么？">阅读长文需要什么？</h2><p>获得高质量信息的重要途径是什么？<br>是长文，有价值的长文。<br>由旧常识引申出新洞察，从故事里显露情绪和生命，「积小以明大，而又举大以贯小」，字里行间里有作者的笔力和眼光。<br>又或者写得条理清晰、逻辑了然、深入浅出，初学者能一路顺着读下去，熟悉的人也会看得津津有味。<br>读者会在读完后驻足、摘录或是不由自主地动手写点笔记，而不是如同时间线的动态——看完不过动动手指划到下一篇，不起微澜。<br>以上的溢美之词想必大家在曾经的语文课上已经听了不少，写这样的长文对创作者的精神消耗不小，确实不是可以轻松达到的标准。所以每每遇到这样的作者我总是心怀敬意，摁下关注之余还会跑去他们的个人博客网站，挖掘旧文，一饱眼福。这样的人不多，但是也有，比如 <a href="https://sspai.com/u/platyhsu/posts">Platy Hsu 先生</a>——他曾经是我一篇文章的责编；<a href="http://blog.farmostwood.net/category/diary">木遥先生</a>——网站里最早出现的博文可以追溯到 2005 年，他已经断断续续写了 17 年了。我曾经在读完他的文章后感叹：</p><p><img src="https://imgs.zhubai.love/f7ff5d56eddf4471a71b1bb92cfacd87.png" alt=""><br>那么回归正题，作为个人我始终秉持工具主义，网络阅读的时代，我们也需要一些网络工具来优化阅读的体验。以我个人来说，阅读长文时会需要：</p><ol><li>安静的物理环境和能集中精神的心境</li><li>顺手的批注高亮工具</li><li>展示大纲的侧边目录</li><li>去除网站的花哨部分，重新排版正文的「阅读模式」</li></ol><h2 id="集中精神的心境：Workona">集中精神的心境：<a href="https://chrome.google.com/webstore/detail/workona-tab-manager/ailcmbgekjpnablpdkmaaccecekgdhlh?hl=zh-CN">Workona</a></h2><blockquote><p>当我们计划着进行一些轻松的内容消费时，也完全可能无意中点开一篇严肃的长文章。我经常会在读一篇文章超过五分钟时拉至网页底部预估一下文章长度，如果意识到「这是一篇需要认真看的长文」，心情会不免稍稍沉重。在此之外，打开一位内容创作者的主页，搜索到大量关于某一主题的资料，遇到数篇需要集中精神阅读的长文，这些内容可能很有价值、质量很高，但现在的我真的无法集中精神。<br>有时候明明是一次简单的阅读，最后也可能延伸着指向一条深不见底、充满新知的隧道，而也许此时我们的精力有限，不能对它继续探索，需要暂时封存起来。<br>以上内容摘自我几期前写过的一篇 Newsletter <a href="https://matsuri.site/2022/03/03/%E8%AE%A9%E6%88%91%E4%BB%AC%E4%B8%80%E8%B5%B7%E6%9D%A5%E7%94%A8%20Workona%EF%BC%81/">《让我们一起来用 Workona！》</a>（已修改），它描述了我经常遇到的问题：</p></blockquote><ul><li>网页上的文章大多不会标明「我是长文，我有多少字，我需要读多久」。偶然遇见一篇长文，阅读它们需要的精神无法在碎片时间、休息时间提供。</li><li>文中出现的外链，文末出现的「延伸阅读」，页尾的算法推荐「你可能还喜欢」，以及冷不丁冒出的陌生术语概念，都可能延长完成阅读的时间。而时间不会无限延伸，精力也会有所不逮。<br>也因为人们遇到的这些问题，「稍后读」(read it later) 应用应运而生。Instapaper、Pocket、Cubox 之名想必大家都听过，而我目前充作「稍后读」之用的 Workona 原本是用来管理、分类标签页的。我用它把在浏览器上的种种行为进行分类，「阅读」自然也是其中一种行为。分类行为，分类状态，分类心境，把该认真阅读的内容留到有时间、能集中精神的心境下再看，给予有分量的内容以尊重。</li></ul><h2 id="顺手的批注高亮工具：Hypothes-is">顺手的批注高亮工具：<a href="https://web.hypothes.is/">Hypothes.is</a></h2><p><img src="https://imgs.zhubai.love/f9cae428cb7d458ba686d56ee007a599.png" alt=""><br>我相信电影、书和文章，他们可以通过外在的补充和连接变得更好看，获得更丰富的阅读体验。<br>批注、笔记、背景故事、评论区、幕后、创作草稿、插画、原声集，甚至是和谁在一起看，和谁在一起读……<br><a href="http://Hypothes.is">Hypothes.is</a> 就有这种可能。它是一个网页标记（<a href="https://en.wikipedia.org/wiki/Web_annotation">Web annotation</a>）应用，当我们阅读网络文章看到好的段落或句子时可以用它划出高亮，写下评语。批注功能支持 Markdown 语法、LaTeX 公式和添加标签（tag）。这个功能其实相当多的稍后读应用都会附带，然而我选择它有两个原因：</p><ul><li>「共享」，也就是截图中官网的口号「with anyone」</li><li>「导出」，能无痕同步至 Obsidian 的插件</li></ul><h3 id="共享">共享</h3><p>当你标注网页时，<a href="http://Hypothes.is">Hypothes.is</a> 会默认公开你的标注信息，同样的，你也可以在任意网页，看到来自他人的标注，共享知识与见解。如果你买过二手书，偶尔会看到书页上看到一些前人的笔记，对文字的批注、添补，融入了阅读者的新视角和新理解。几个月前我深夜在网上闲逛时，在作家 Tim Urban 的博客 <a href="https://waitbutwhy.com">Wait But Why</a> 主页上惊喜地发现有一则中文笔记，由「conanxin」先生记于 2021 年 2 月 9 日。</p><p><img src="https://imgs.zhubai.love/984e6c48c35248c4ac22a52f9f7543be.png" alt=""><br>这是我最喜欢也最有感触的地方。在茫茫无边的互联网上，你与另一个人的阅读标识相遇，隔空，隔着时间，也许还隔着语言，隔着几十年的人生境遇，但此刻我们在这篇文章上相遇，你看到他黄色的高亮和批注，也可能是他看到你的。你惊讶大海茫茫，这篇孤零零的文章，居然已经有人在你想高亮的段落留下了相同的记号，写下了感想。不同的思维跨越时间在此刻此时，在这篇不过几十字节代码的文章上相遇相识。<br>在这个意义上，<a href="http://Hypothes.is">Hypothes.is</a> 也许掌握着未来。<br>……</p><p>另外因为 Page Notes 的存在，换一种理解来看，它也可以是一个半公开的版聊，一个存在于任何网页上的隔空对话。比如 B 站首页上的 <a href="http://Hypothes.is">Hypothes.is</a>，从 2018 年到今天已经积攒了不少的消息，我第一次看到这个界面时不禁失笑，有种「小孩子竞争插标、探索荒地」的感觉。</p><p><img src="https://imgs.zhubai.love/eabf4f542d324ac491b92e896d69f05c.png" alt=""></p><h3 id="导出">导出</h3><p>我主要用 Obsidian 来记笔记。它一款社区插件极其丰富的笔记软件，其中自然也包括 <a href="http://Hypothes.is">Hypothes.is</a> 的<a href="https://github.com/weichenw/obsidian-hypothesis-plugin">插件</a>。这个插件会在你打开 Obsidian 时自动开始同步过去一段时间内，你批注过的文章的元数据、高亮和批注内容，使用效果惊人。<br>当然不只是单单 Obsidian，<a href="http://Hypothes.is">Hypothes.is</a> 和 Notion、Readwise 都能进行联动，又或者你可以通过第三方工具导出为 HTML、CSV、JSON 等等，官方开放 API，还提供了<a href="https://web.hypothes.is/help/how-do-i-export-my-annotations/">导出指南</a>。</p><h2 id="展示大纲的侧边目录：Smart-TOC">展示大纲的侧边目录：<a href="https://chrome.google.com/webstore/detail/smart-toc-%E6%99%BA%E8%83%BD%E7%BD%91%E9%A1%B5%E5%A4%A7%E7%BA%B2/ppdjhggfcaenclmimmdigbcglfoklgaf?hl=zh-CN">Smart TOC</a></h2><p>Table of Contents、缩写 TOC，中文翻译目录。你可以通过它对文章的总体逻辑结构快速一览，明白它是从哪几个方面阐述和铺陈。当我们看了文章的开头觉得不错时，可以打开 TOC，大致了解如果花时间详细阅读，接下来的几分钟或十几分钟，这篇文章会将我们引向何处？我们是否对这次阅读的终点感兴趣？在这个层面上，我们甚至可以把它当成是一个再次简写的「太长不看」（TL, DR）。<br>我觉得任何有大量长文章阅读的应用和网站，都应该提供目录的功能。毕竟在这个时代，相对于碎片信息、140 字的短文和抖音短视频，长文已经完全是不同时代的产物，目录的存在对于长文章来说意义尤重。然而手机上我目前只见到少数派、语雀和稀土掘金的客户端上阅读时有底边目录的选项（也许是我见时浅薄了）。知乎上每次看到那种全文共 x 万字，阅读需要 xx 分钟的文章我都在找他的目录，在哪？在哪？<br>在浏览器的网页上实现 TOC 就轻松了很多，下载 <a href="https://chrome.google.com/webstore/detail/smart-toc-%E6%99%BA%E8%83%BD%E7%BD%91%E9%A1%B5%E5%A4%A7%E7%BA%B2/ppdjhggfcaenclmimmdigbcglfoklgaf?hl=zh-CN">Smart Toc</a> 并安装，链接里的这个版本由国人 <a href="https://github.com/lcomplete?tab=repositories&amp;type=source">lcomplete</a> 二次开发过，效果更好。</p><p><img src="https://imgs.zhubai.love/2d71be258f12455992245dfc580f4c41.png" alt=""><br>我设置了快捷键 ⌥Option+T(T 取自 TOC 的首字母），每次看到太长的文章都会下意识地按下这个组合键，检查侧边目录，看看「这篇文章这么长，到底聊了些啥？」。相信我，当你习惯这种体验后，你会离不开它的。</p><h2 id="阅读模式：简悦">阅读模式：<a href="https://simpread.pro/">简悦</a></h2><p>国内不少网站都很喜欢花里胡哨、密密麻麻的目录导航和头图，有的还会不停切换滚动。对于黑白两色的文章来说，它们都是影响注意力的，需要被裁去的「花边」。简悦就为 Chrome 浏览器提供了一个效果不错的阅读模式。它的一大优点就是主流网站基本全适配了，阅读器的效果自定义程度也很高，还有多种样式可选（比如仿 Safari 浏览器的阅读模式）。简悦还有其他很多可玩的地方比如联动和导出，阅读模式只是功能之一，不过行文至此，我就不再细细叨扰诸位了。<br>前段时间我在<a href="https://www.kekeshici.com/shicizhoubian/mingrenzuopin/luxun/35346.html">这个网站</a>上想读鲁迅先生的一篇短篇小说《在酒楼上》，这个幼儿园般配色的 logo 搭配侧边醒目的红色排行榜简直让人抓狂，无法集中精神。我开了阅读模式，修改成合适的字体和背景，转而在微微泛黄、字重略粗、似乎有些古意的阅读界面里，成功去了一趟鲁迅先生笔下的，绍兴城的酒楼和废园。</p><p><img src="https://imgs.zhubai.love/3b60b3b126a841cdbea9bff5708f9545.png" alt=""></p><p>周末愉快，写于周日凌晨 04:46:40。</p>]]></content>
     
     
       
@@ -192,31 +217,6 @@
     <category term="Workona" scheme="https://matsuri.site/tags/Workona/"/>
     
     <category term="Chrome" scheme="https://matsuri.site/tags/Chrome/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>RSS 的式微与复兴</title>
-    <link href="https://matsuri.site/2022/02/25/RSS%20%E7%9A%84%E5%BC%8F%E5%BE%AE%E4%B8%8E%E5%A4%8D%E5%85%B4/"/>
-    <id>https://matsuri.site/2022/02/25/RSS%20%E7%9A%84%E5%BC%8F%E5%BE%AE%E4%B8%8E%E5%A4%8D%E5%85%B4/</id>
-    <published>2022-02-24T16:00:00.000Z</published>
-    <updated>2022-04-30T06:19:34.369Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="RSS-的式微与复兴">RSS 的式微与复兴</h2><p>RSS（Really Simple Syndication），中文翻译「简易内容聚合」，一个能让你在一个地方订阅各种感兴趣网站的工具。我开始接触 RSS 的时代，大名鼎鼎的 Google Reader 已经关闭了，自那以降，关于「RSS 已经式微」和「RSS 应该复兴！」的叹息或呼声就不绝于耳。<br>有人觉得微信公众号是封闭的私域流量，把人和平台绑定在一起，可恶可憎，于是让我们来用 RSS。<br>有人觉得算法推荐把人泡在同温层里，用算法定义的画像代替真实的人，增强狭隘偏见，于是让我们来用 RSS。<br>有人觉得简中互联网的产出正在日渐萎缩：SEO 污染严重，内容农场日益猖獗，洗稿抄袭搬运，流量大于内容。于是让我们来用 RSS 挖掘宝藏，在个人独立博客，小众网站，Newsletter，关注者甚少的公众号或社交博主，以及其他小天地里寻得清净。</p><p>而提及 RSS，一定会夸它可控、纯粹、高效阅读、开放自由，是「互联网真正该有的样子」（这里也许说的是 Web1 时代的互联网吧）。于是有人致力于「万物皆可 RSS」（Everything is RSSible）——著名的开源 RSS 生成器 <a href="https://docs.rsshub.app/">RSSHub</a> 在 GitHub 上获得了18.7k 的标星数，抓取范围涵盖了 90% 的中国平台。也有人觉得无论是 RSS 还是算法，将过载的信息输入寄希望于某种技术——无论是算法还是 RSS——都只是缘木求鱼，<strong>无数技术与工具的进步，都只是再一次证实了人类群体原生的缺陷。</strong></p><p><img src="https://imgs.zhubai.love/1bcb87681e454a24b2c79755c06cabaa.png" alt=""><br>（无数人朝着这个「万物皆可 RSS」的理想努力过）</p><p>大约十年前，我在一台廉价的安卓上用 Zaker 和 Flipboard 红板报作为 RSS 阅读器，今天我在 15.4 寸的 Retina 屏上用 <a href="https://feedly.com/">Feedly</a> 和 <a href="https://reederapp.com/">Reeder 5</a> 阅读。时过境迁，我也不得不承认古老的 RSS 正在被今天的简中互联网排斥，已经没有多少内容平台愿意在首页上提供 RSS 订阅源，并且在昨天少数派<a href="https://sspai.com/post/71637">宣布停止持续十年之久的 RSS 全文输出</a>之后意识到，它必然被排斥。</p><blockquote><p>RSS 协议无需访问源站即可获取信息的运用体验严重影响了 Web2 互联网巨头的流量获取；RSS 协议推送内容不显示源站广告的特点极大的打击了 Web2 互联网巨头的广告收入。因此，Web2 互联网巨头抛开了 RSS 协议，构建了基于自身流量体系和商业模式的封闭社交关系网络。</p></blockquote><h2 id="RSS-的优点与缺点">RSS 的优点与缺点</h2><p>RSS 的优点在于多平台聚合，从那些不常去的网站里获得某一项资源。比如我用它订阅了机核的文章，Youtube 上 CaseyNeistat 的视频，Reddit 一些社群的新内容，国内 Happy Xiao 先生的个人独立博客，Pixiv 的每周排行漫图，One 一个的图文，游研社聊的游戏文章，和菜头的微信公众号「槽边往事」，以及某个知乎收藏夹，某位即刻上博主的日常动态，等等等等。<br>你瞧，我显然不可能把每个 APP 都下一遍，每天都点进去看一遍，正如一个人不可能同时生活在冰岛和中国大陆，我不可能同时生活在这么多条信息隧道里。这种对信息环境的「挑选聚合」正是我需要的，每一份关注都是我手动挑选的——人、网站、专栏、频道、博客、公众号、社群。我像农民伯伯摘果子一样一个个选，并不断修整自己的资讯来源，尽量保持信息环境的多元，远离回音室。在可控这一点上，它明显优于算法。<br>RSS 的问题也很致命，它无法给内容创作者或平台提供足够的收益，不增加 PV/UV，读者几乎算得上是幽灵。更何况输出的内容还可能被其他平台利用。<br>热情与理想不能当饭吃。</p><h2 id="未来会来吗：RSS3">未来会来吗：RSS3</h2><p>关于 RSS3 我懂的不多，如果你想进一步了解，一窥 RSS 可能的明天，可以阅读<a href="https://mirror.xyz/walterhuang.eth/9zbYEA95btKypxWKinMCnf0q97o72pQK7QuzLyeA_p0">这篇文章</a>。</p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;h2 id=&quot;RSS-的式微与复兴&quot;&gt;RSS 的式微与复兴&lt;/h2&gt;
-&lt;p&gt;RSS（Really Simple Syndication），中文翻译「简易内容聚合」，一个能让你在一个地方订阅各种感兴趣网站的工具。我开始接触 RSS 的时代，大名鼎鼎的 Google Reader </summary>
-      
-    
-    
-    
-    <category term="杂谈" scheme="https://matsuri.site/categories/%E6%9D%82%E8%B0%88/"/>
-    
-    
-    <category term="RSS" scheme="https://matsuri.site/tags/RSS/"/>
     
   </entry>
   
