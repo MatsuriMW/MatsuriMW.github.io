@@ -2,7 +2,25 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://matsuri.site/2022/07/09/%E4%BD%9C%E8%80%85%E4%B8%8E%E4%BD%9C%E5%93%81/</loc>
+    
+    <lastmod>2022-07-24</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://matsuri.site/2022/07/24/%E4%B8%8D%E5%9C%A8%E7%B2%AA%E5%9D%91%E9%87%8C%E6%B8%B8%E6%B3%B3/</loc>
+    
+    <lastmod>2022-07-24</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://matsuri.site/2022/04/26/CS%20books%20and%20courses%20i%20have%20learned%20from%20since%202022/</loc>
     
     <lastmod>2022-07-24</lastmod>
     
@@ -32,15 +50,6 @@
     <loc>https://matsuri.site/2022/05/09/%E5%A4%A7%E5%AE%B6%E9%83%BD%E5%9C%A8%E8%81%8A/</loc>
     
     <lastmod>2022-05-09</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://matsuri.site/2022/04/26/CS%20books%20and%20courses%20i%20have%20learned%20from%20since%202022/</loc>
-    
-    <lastmod>2022-05-05</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -173,14 +182,14 @@
 
   
   <url>
-    <loc>https://matsuri.site/tags/%E5%9B%9B%E6%9C%88%E6%98%AF%E4%BD%A0%E7%9A%84%E8%B0%8E%E8%A8%80/</loc>
+    <loc>https://matsuri.site/tags/%E9%BB%91%E6%9A%97%E4%B9%8B%E9%AD%82-3/</loc>
     <lastmod>2022-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://matsuri.site/tags/%E9%BB%91%E6%9A%97%E4%B9%8B%E9%AD%82-3/</loc>
+    <loc>https://matsuri.site/tags/%E5%9B%9B%E6%9C%88%E6%98%AF%E4%BD%A0%E7%9A%84%E8%B0%8E%E8%A8%80/</loc>
     <lastmod>2022-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -231,7 +240,7 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/categories/%E4%BA%8C%E6%AC%A1%E5%85%83/</loc>
+    <loc>https://matsuri.site/categories/%E6%B8%B8%E6%88%8F/</loc>
     <lastmod>2022-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -245,7 +254,7 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/categories/%E6%B8%B8%E6%88%8F/</loc>
+    <loc>https://matsuri.site/categories/%E4%BA%8C%E6%AC%A1%E5%85%83/</loc>
     <lastmod>2022-07-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
