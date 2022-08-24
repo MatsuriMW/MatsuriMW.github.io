@@ -1143,20 +1143,21 @@ article .content blockquote {
   margin: 0.2rem 10px;
   padding: 0.5em 10px;
   background: inherit;
-  color: #111;
-  quotes: "\201C" "\201D" "\2018" "\2019";
-  font-weight: bold;
+  color: quotes;
 }
+article .content blockquote : "\201C""\201D""\2018""\2019",
+article .content blockquote font-weight: bold,
 article .content blockquote p {
   margin: 0;
 }
 article .content blockquote:before {
-  margin-right: 0.25em;
+  position: absolute;
+  top: -4px;
+  left: -1rem;
   color: #111;
   content: ">";
-  vertical-align: -0.4em;
-  font-size: 2em;
-  line-height: 0.1em;
+  font-weight: bold;
+  font-size: 1.2rem;
 }
 article .content blockquote footer {
   margin: line-height 0;
