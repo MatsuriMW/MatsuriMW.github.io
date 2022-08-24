@@ -321,7 +321,7 @@ body .h1 {
   display: block;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-  color: #d44375;
+  color: #8d3b34;
   letter-spacing: 0.01em;
   font-weight: 700;
   font-style: normal;
@@ -626,7 +626,7 @@ body {
   -webkit-filter: grayscale(100%);
 }
 #header #nav {
-  color: #d44375;
+  color: #8d3b34;
   letter-spacing: 0.01em;
   font-weight: 200;
   font-style: normal;
@@ -743,7 +743,7 @@ body {
   margin-left: 15px;
 }
 #header-post #menu-icon:hover {
-  color: #d44375;
+  color: #8d3b34;
 }
 #header-post #menu-icon-tablet {
   float: right;
@@ -751,7 +751,7 @@ body {
   margin-left: 15px;
 }
 #header-post #menu-icon-tablet:hover {
-  color: #d44375;
+  color: #8d3b34;
 }
 #header-post #top-icon-tablet {
   position: fixed;
@@ -761,17 +761,17 @@ body {
   margin-left: 15px;
 }
 #header-post #top-icon-tablet:hover {
-  color: #d44375;
+  color: #8d3b34;
 }
 #header-post .active {
-  color: #d44375;
+  color: #8d3b34;
 }
 #header-post #menu {
   display: none;
   margin-right: 2rem;
 }
 #header-post #nav {
-  color: #d44375;
+  color: #8d3b34;
   letter-spacing: 0.01em;
   font-weight: 200;
   font-style: normal;
@@ -782,16 +782,16 @@ body {
 }
 #header-post #nav ul a {
   margin-right: 15px;
-  color: #d44375;
+  color: #8d3b34;
 }
 #header-post #nav ul a:hover {
-  background-image: linear-gradient(transparent, transparent 5px, #d44375 5px, #d44375);
+  background-image: linear-gradient(transparent, transparent 5px, #8d3b34 5px, #8d3b34);
   background-position: bottom;
   background-size: 100% 6px;
   background-repeat: repeat-x;
 }
 #header-post #nav ul li {
-  border-right: 1px dotted #d44375;
+  border-right: 1px dotted #8d3b34;
 }
 #header-post #nav ul li:last-child {
   margin-right: 0;
@@ -845,7 +845,7 @@ body {
   font-size: 0.8rem;
 }
 #header-post #toc .toc-level-2:before {
-  color: #d44375;
+  color: #8d3b34;
   content: "#";
 }
 #header-post #toc .toc-level-3 {
@@ -943,11 +943,11 @@ body {
   text-align: center;
 }
 #footer-post #nav-footer a {
-  color: #d44375;
+  color: #8d3b34;
   font-size: 1em;
 }
 #footer-post #nav-footer a:hover {
-  background-image: linear-gradient(transparent, transparent 5px, #d44375 5px, #d44375);
+  background-image: linear-gradient(transparent, transparent 5px, #8d3b34 5px, #8d3b34);
   background-position: bottom;
   background-size: 100% 6px;
   background-repeat: repeat-x;
@@ -978,7 +978,7 @@ body {
 #footer-post #actions-footer a {
   display: inline-block;
   padding-left: 1rem;
-  color: #d44375;
+  color: #8d3b34;
 }
 #footer-post #share-footer {
   padding-right: 1rem;
@@ -1025,7 +1025,7 @@ body {
   font-size: 0.8rem;
 }
 #footer-post #toc-footer .toc-level-2:before {
-  color: #d44375;
+  color: #8d3b34;
   content: "#";
 }
 #footer-post #toc-footer .toc-level-3 {
@@ -1111,7 +1111,7 @@ article .content h2:before {
   position: absolute;
   top: -4px;
   left: -1rem;
-  color: #d44375;
+  color: #8d3b34;
   content: "#";
   font-weight: bold;
   font-size: 1.2rem;
@@ -1153,7 +1153,7 @@ article .content blockquote p {
 article .content blockquote:before {
   margin-right: 0.25em;
   color: #111;
-  content: "\201D";
+  content: ">";
   vertical-align: -0.4em;
   font-size: 2em;
   line-height: 0.1em;
@@ -1505,18 +1505,16 @@ article .content .caption {
 #categories .category-list-title {
   color: #666;
 }
-#categories .category-list .category-list-item,
-#categories .category-list .categories-list-item::marker {
-  content: '▍';
-}
-#categories .category-list .category-list-count {
+#categories .category-list .category-list-item .categories-list-item::marker,
+#categories .category-list .category-list-item content: '▍',
+#categories .category-list .category-list-item .category-list-count {
   color: #666;
   font-weight: bold;
 }
-#categories .category-list .category-list-count:before {
+#categories .category-list .category-list-item .category-list-count:before {
   content: " (";
 }
-#categories .category-list .category-list-count:after {
+#categories .category-list .category-list-item .category-list-count:after {
   content: ")";
 }
 .highlight {
@@ -1661,7 +1659,7 @@ code {
   transition: opacity 0.2s ease-in;
 }
 .highlight .btn-copy:hover {
-  color: #d44375;
+  color: #8d3b34;
 }
 .highlight pre {
   margin: 0;
