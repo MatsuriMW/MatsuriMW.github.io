@@ -1151,7 +1151,7 @@ article .content blockquote p {
   margin: 0;
 }
 article .content blockquote:before {
-  position: absolute;
+  position: relative;
   top: -4px;
   left: -1rem;
   color: #111;
@@ -1506,7 +1506,7 @@ article .content .caption {
 #categories .category-list-title {
   color: #666;
 }
-#categories .category-list .category-list-item .categories-list-item::marker,
+#categories .category-list .category-list-item:::marker,
 #categories .category-list .category-list-item content: '▍',
 #categories .category-list .category-list-item .category-list-count {
   color: #666;
