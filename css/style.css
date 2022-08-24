@@ -1140,7 +1140,7 @@ article .content .video-container embed {
   height: 100%;
 }
 article .content blockquote {
-  margin: 1rem 10px;
+  margin: 0.2rem 10px;
   padding: 0.5em 10px;
   background: inherit;
   color: #111;
@@ -1153,7 +1153,7 @@ article .content blockquote p {
 article .content blockquote:before {
   margin-right: 0.25em;
   color: #111;
-  content: "\201C";
+  content: "\201D";
   vertical-align: -0.4em;
   font-size: 2em;
   line-height: 0.1em;
