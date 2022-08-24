@@ -1507,7 +1507,7 @@ article .content .caption {
 }
 #categories .category-list .category-list-item,
 #categories .category-list .categories-list-item::marker {
-  content: "▍";
+  content: '▍';
 }
 #categories .category-list .category-list-count {
   color: #666;
