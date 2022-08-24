@@ -1143,10 +1143,10 @@ article .content blockquote {
   margin: 0.2rem 10px;
   padding: 0.5em 10px;
   background: inherit;
-  color: quotes;
+  color: #111;
+  quotes: "\201C" "\201D" "\2018" "\2019";
+  font-weight: bold;
 }
-article .content blockquote : "\201C""\201D""\2018""\2019",
-article .content blockquote font-weight: bold,
 article .content blockquote p {
   margin: 0;
 }
