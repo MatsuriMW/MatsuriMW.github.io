@@ -1506,16 +1506,14 @@ article .content .caption {
 #categories .category-list-title {
   color: #666;
 }
-#categories .category-list .category-list-item,
+#categories .category-list .category-list-item {
+  list-style: '#';
+}
+#categories .category-list .category-list-item::marker: #8d3b34,
 #categories .category-list .category-list-count {
   color: #666;
   font-weight: bold;
-}
-#categories .category-list .category-list-count:before {
-  content: " (";
-}
-#categories .category-list .category-list-count:after {
-  content: ")";
+  font-size: 17px;
 }
 .highlight {
   color: #333;
