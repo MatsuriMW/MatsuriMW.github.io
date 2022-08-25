@@ -1508,11 +1508,13 @@ article .content .caption {
 }
 #categories .category-list .category-list-item {
   list-style: '#';
+  font-weight: bold;
 }
-#categories .category-list .category-list-item::marker: #8d3b34,
+#categories .category-list .category-list-item ::marker {
+  color: #8d3b34;
+}
 #categories .category-list .category-list-count {
   color: #666;
-  font-weight: bold;
   font-size: 17px;
 }
 .highlight {
