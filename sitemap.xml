@@ -214,20 +214,6 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/tags/Obsidian/</loc>
-    <lastmod>2022-08-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://matsuri.site/tags/Markdown/</loc>
-    <lastmod>2022-08-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://matsuri.site/tags/Workona/</loc>
     <lastmod>2022-08-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -242,13 +228,34 @@
   </url>
   
   <url>
+    <loc>https://matsuri.site/tags/Obsidian/</loc>
+    <lastmod>2022-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://matsuri.site/tags/%E9%98%85%E8%AF%BB/</loc>
     <lastmod>2022-08-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>https://matsuri.site/tags/Markdown/</loc>
+    <lastmod>2022-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
+  
+  <url>
+    <loc>https://matsuri.site/categories/%E6%95%88%E7%8E%87%E5%B7%A5%E5%85%B7/</loc>
+    <lastmod>2022-08-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
   
   <url>
     <loc>https://matsuri.site/categories/%E7%BC%96%E7%A8%8B/</loc>
@@ -265,7 +272,7 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/categories/%E6%95%88%E7%8E%87%E5%B7%A5%E5%85%B7/</loc>
+    <loc>https://matsuri.site/categories/%E4%BA%8C%E6%AC%A1%E5%85%83/</loc>
     <lastmod>2022-08-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -273,13 +280,6 @@
   
   <url>
     <loc>https://matsuri.site/categories/%E6%9D%82%E8%B0%88/</loc>
-    <lastmod>2022-08-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://matsuri.site/categories/%E4%BA%8C%E6%AC%A1%E5%85%83/</loc>
     <lastmod>2022-08-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
