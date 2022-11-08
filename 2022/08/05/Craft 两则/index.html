@@ -27,7 +27,7 @@
 <meta property="og:image" content="https://imgs.zhubai.love/7449a8f6237741e09ef5c79bf6b6f773.png">
 <meta property="og:image" content="https://imgs.zhubai.love/4f8ab3d15f314959ab91d779bd096287.png">
 <meta property="article:published_time" content="2022-08-04T16:00:00.000Z">
-<meta property="article:modified_time" content="2022-11-08T01:56:39.007Z">
+<meta property="article:modified_time" content="2022-11-08T02:15:01.096Z">
 <meta property="article:author" content="马自立">
 <meta property="article:tag" content="blog">
 <meta name="twitter:card" content="summary">
@@ -144,7 +144,7 @@
       
         <time datetime="2022-08-04T16:00:00.000Z" itemprop="datePublished">2022-08-05</time>
         
-        (Updated: <time datetime="2022-11-08T01:56:39.007Z" itemprop="dateModified">2022-11-08</time>)
+        (Updated: <time datetime="2022-11-08T02:15:01.096Z" itemprop="dateModified">2022-11-08</time>)
         
       
     </div>
@@ -169,14 +169,24 @@
   <div class="content" itemprop="articleBody">
     <p><em><strong>注：</strong> 两篇关于 Craft 的文章，一篇写于 4 月 18 日，一篇写于 8 月 5 日，现并于一处上传。</em></p>
 <h2 id="【一】高效使用-Craft">【一】高效使用 Craft</h2>
-<p>今天来聊聊 <a target="_blank" rel="noopener" href="https://www.craft.do/">Craft</a>，一款我越用越喜欢，越用越顺手的笔记软件。</p>
-<p>你可能会说：怎么又来一款笔记软件？Notion、Obsidian、Logseq、Evernote 不好吗?</p>
-<p>不是它们不好，是总有些地方不够好，如隔靴搔痒，没法解决痛点。Notion 的电脑客户端是 Electron 封装的网页，打开速度慢，加载慢，数据库功能虽强大然而不支持 URL Scheme；Obsidian 的插件装得越多启动速度越慢，且移动端做得很粗糙，「流畅、精致」的体验跟它只能说是毫不沾边；Logseq 更是本周才刚刚发布 iOS 端。Evernote 就不说了，被广告频繁轰炸了几年后我对它深恶痛绝。</p>
+<p>今天来聊聊 <a target="_blank" rel="noopener" href="https://www.craft.do/">Craft</a>，一款我越用越喜欢，越用越顺手的笔记软件。<br>
+你可能会说：怎么又来一款笔记软件？Notion、Obsidian、Logseq、Evernote 不好吗?<br>
+不是它们不好，是总有些地方不够好，如隔靴搔痒，没法解决痛点。Notion 的电脑客户端是 Electron 封装的网页，打开速度慢，加载慢，数据库功能虽强大然而不支持 URL Scheme；Obsidian 的插件装得越多启动速度越慢，且移动端做得很粗糙，「流畅、精致」的体验跟它只能说是毫不沾边；Logseq 更是本周才刚刚发布 iOS 端。Evernote 就不说了，被广告频繁轰炸了几年后我对它深恶痛绝。</p>
 <p>Craft 值得称道的地方：</p>
 <ul class="lvl-0">
 <li class="lvl-4">
-<p>手机和电脑上都堪称流畅丝滑的原生客户端体验，用 Swift 语言写就</p>
+<p>移动端堪称流畅丝滑的原生体验</p>
 </li>
+</ul>
+<ul class="lvl-0">
+<li class="lvl-2">
+<p>漂亮的文字动画</p>
+</li>
+<li class="lvl-2">
+<p>基于block的设计分享起来很方便，在线内容的排版展示很漂亮</p>
+</li>
+</ul>
+<ul class="lvl-0">
 <li class="lvl-4">
 <p>支持颗粒度到每一块、每一行的双向链接调用</p>
 </li>
@@ -194,7 +204,7 @@
 <h2 id="通过-Alfred-高效调用-Craft">通过 Alfred 高效调用 Craft</h2>
 <p>Deeplink（深层链接） 是 Craft 中每一份笔记文件的本地地址，在 iPhone、iPad、Mac 上全面通用，让你能直接从软件外部唤醒对应的文件或操作。在 Craft 上每一份文件都会提供多种导出选项：网页链接、深层链接、导出为图片、PDF、Markdown、Word，或者发送给下一个应用处理。</p>
 <p><img src="https://imgs.zhubai.love/dc9a6a64be65461aa2071eee126edf44.png" alt=""></p>
-<p>如果你读过我曾经写的「<a target="_blank" rel="noopener" href="https://matsuri.zhubai.love/posts/2115965724102897664">更好地上网冲浪：Alfred「网络搜索」配置</a>」一文，大概对 Alfred 的网络搜索这一功能有点印象。当时通过配置关键词和形如 <a target="_blank" rel="noopener" href="https://www.douban.com/search?q=%7Bquery%7D">https://www.xxxx.com/search?q={query}</a>的网页链接就能唤起浏览器，如今也能通过关键词和深层链接从外部直接唤醒文档，几个字母就能实现快速跳转文档。你可以复制一些经常使用的常青笔记的深层链接，从 Alfred 中直接唤起，也可以用它：</p>
+<p>如果你读过我曾经写的「<a target="_blank" rel="noopener" href="https://matsuri.zhubai.love/posts/2115965724102897664">更好地上网冲浪：Alfred「网络搜索」配置</a>」一文，大概对 Alfred 的网络搜索这一功能有点印象。当时通过配置关键词和形如 <code>https://www.xxxx.com/search?q=&#123;query&#125;</code> 的网页搜索就能唤起浏览器，如今也能通过关键词和深层链接从外部直接唤醒文档，几个字母就能实现快速跳转文档。你可以复制一些经常使用的常青笔记的深层链接，从 Alfred 中直接唤起，也可以用它：</p>
 <ul class="lvl-0">
 <li class="lvl-4">
 <p>打开文档</p>
@@ -214,7 +224,7 @@
 </ul>
 <p>以下是我对 Craft 的配置（最近在学前端）：</p>
 <p><img src="https://imgs.zhubai.love/b82c3bb8eeb04ff48449ff2888ce49a4.png" alt=""></p>
-<p>这里有一份官方的 <a target="_blank" rel="noopener" href="https://support.craft.do/hc/en-us/articles/360020168838-Using-URL-Scheme">URL Scheme 使用手册</a>可供查询，其中「访问并自动创建今天的日记」是我尤其钟爱的功能，我的关键词是 csr，每天输入三个字母并回车就能开始记录今天的生活。Craft 的日记文档做得很精致，真的会让记日记变得无压力。在一行的开头输入 -[] 并空格会渲染成一个可以勾选的任务框（输入字母 x 并空格也可以），我每天的一篇日记就是下图呈现的效果。</p>
+<p>这里有一份官方的 <a target="_blank" rel="noopener" href="https://support.craft.do/hc/en-us/articles/360020168838-Using-URL-Scheme">URL Scheme 使用手册</a>可供查询，其中「访问并自动创建今天的日记」是我尤其钟爱的功能，我的关键词是 csr，每天输入三个字母并回车就能开始记录今天的生活。Craft 的日记文档做得很精致，真的会让记日记变得无压力。在一行的开头输入 <code>-[]</code> 并空格会渲染成一个可以勾选的任务框（输入字母 x 并空格也可以），我每天的一篇日记就是下图呈现的效果。</p>
 <p><img src="https://imgs.zhubai.love/3f32dcf3b13a48fd8aa825b9aa906c3a.png" alt=""></p>
 <p>而当你引用日记时，Craft 支持用 Date Badges 徽标引用日记，效果如下图。</p>
 <p><img src="https://imgs.zhubai.love/f850f76cf01e45b88e69dc07b85f6adc.png" alt=""></p>

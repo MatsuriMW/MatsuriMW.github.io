@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://matsuri.site/2022/08/05/Craft%20%E4%B8%A4%E5%88%99/</loc>
+    
+    <lastmod>2022-11-08</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://matsuri.site/2022/04/26/CS%20books%20and%20courses%20in%202022/</loc>
     
     <lastmod>2022-11-08</lastmod>
@@ -39,15 +48,6 @@
   
   <url>
     <loc>https://matsuri.site/2021/11/02/%E5%B8%B8%E7%94%A8%20Obsidian%20%E5%A4%84%E7%90%86%E4%B8%AD%E6%96%87%E9%95%BF%E6%96%87%EF%BC%9F%E8%AF%95%E8%AF%95%E8%BF%99%E4%BA%9B%E5%A4%A7%E5%B9%85%E6%8F%90%E5%8D%87%E4%BD%93%E9%AA%8C%E7%9A%84%E6%8F%92%E4%BB%B6%E5%92%8C%E4%BB%A3%E7%A0%81%E7%89%87%E6%AE%B5/</loc>
-    
-    <lastmod>2022-11-08</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://matsuri.site/2022/08/05/Craft%20%E4%B8%A4%E5%88%99/</loc>
     
     <lastmod>2022-11-08</lastmod>
     
@@ -228,13 +228,6 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/tags/%E9%98%85%E8%AF%BB/</loc>
-    <lastmod>2022-11-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://matsuri.site/tags/Workona/</loc>
     <lastmod>2022-11-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -248,17 +241,24 @@
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>https://matsuri.site/tags/%E9%98%85%E8%AF%BB/</loc>
+    <lastmod>2022-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
   
   <url>
-    <loc>https://matsuri.site/categories/%E6%95%B0%E5%AD%97%E5%B7%A5%E5%85%B7%E7%AE%B1/</loc>
+    <loc>https://matsuri.site/categories/%E7%BC%96%E7%A8%8B/</loc>
     <lastmod>2022-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://matsuri.site/categories/%E7%BC%96%E7%A8%8B/</loc>
+    <loc>https://matsuri.site/categories/%E6%95%B0%E5%AD%97%E5%B7%A5%E5%85%B7%E7%AE%B1/</loc>
     <lastmod>2022-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -272,14 +272,14 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/categories/%E6%9D%82%E8%B0%88/</loc>
+    <loc>https://matsuri.site/categories/%E4%BA%8C%E6%AC%A1%E5%85%83/</loc>
     <lastmod>2022-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://matsuri.site/categories/%E4%BA%8C%E6%AC%A1%E5%85%83/</loc>
+    <loc>https://matsuri.site/categories/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2022-11-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
