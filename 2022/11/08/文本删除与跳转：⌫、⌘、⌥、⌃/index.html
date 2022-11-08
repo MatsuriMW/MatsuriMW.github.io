@@ -6,21 +6,22 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-    <meta name="description" content="如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。 我们先从「删除」这个动作说起。 删除 在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。 在 macOS 里只有一个 Delete 键，不过你可以通过 ：">
+    <meta name="description" content="如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。我们先从「删除」这个动作说起。 删除 在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。 在 macOS 里只有一个 Delete 键，不过你可以通过 ：">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Matsuri&#39;s Neverland">
-<meta property="og:url" content="https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/index.html">
+<meta property="og:title" content="文本删除与跳转：⌫、⌘、⌥、⌃">
+<meta property="og:url" content="https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/index.html">
 <meta property="og:site_name" content="Matsuri&#39;s Neverland">
-<meta property="og:description" content="如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。 我们先从「删除」这个动作说起。 删除 在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。 在 macOS 里只有一个 Delete 键，不过你可以通过 ：">
+<meta property="og:description" content="如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。我们先从「删除」这个动作说起。 删除 在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。 在 macOS 里只有一个 Delete 键，不过你可以通过 ：">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://imgs.zhubai.love/10a67b365cfe46e893fd3d730575d620.png">
 <meta property="og:image" content="https://imgs.zhubai.love/bf650a489bac45fab7a99f45d6fcf5aa.gif">
 <meta property="og:image" content="https://imgs.zhubai.love/1a1810712649467a91044500543acf10.png">
-<meta property="article:published_time" content="2022-10-18T19:40:14.998Z">
-<meta property="article:modified_time" content="2022-11-08T01:44:12.550Z">
+<meta property="article:published_time" content="2022-11-07T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-08T01:49:28.741Z">
 <meta property="article:author" content="马自立">
 <meta property="article:tag" content="blog">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://imgs.zhubai.love/bf650a489bac45fab7a99f45d6fcf5aa.gif">
+<meta name="twitter:image" content="https://imgs.zhubai.love/10a67b365cfe46e893fd3d730575d620.png">
     
     
       
@@ -40,7 +41,7 @@
       
     
     <!-- title -->
-    <title>Matsuri&#39;s Neverland</title>
+    <title>文本删除与跳转：⌫、⌘、⌥、⌃</title>
     <!-- styles -->
     
 <link rel="stylesheet" href="/css/style.css">
@@ -96,11 +97,11 @@
     <br/>
     <div id="share" style="display: none">
       <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&text="><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=&body=Check out this article: https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title="><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://www.instapaper.com/edit?url=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title="><i class="far fa-newspaper " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&text=文本删除与跳转：⌫、⌘、⌥、⌃"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=文本删除与跳转：⌫、⌘、⌥、⌃&body=Check out this article: https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title=文本删除与跳转：⌫、⌘、⌥、⌃"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://www.instapaper.com/edit?url=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title=文本删除与跳转：⌫、⌘、⌥、⌃"><i class="far fa-newspaper " aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
@@ -117,7 +118,7 @@
   <header>
     
     <h1 class="posttitle" itemprop="name headline">
-        
+        文本删除与跳转：⌫、⌘、⌥、⌃
     </h1>
 
 
@@ -129,15 +130,20 @@
       
     <div class="postdate">
       
-        <time datetime="2022-10-18T19:40:14.998Z" itemprop="datePublished">2022-10-19</time>
+        <time datetime="2022-11-07T16:00:00.000Z" itemprop="datePublished">2022-11-08</time>
         
-        (Updated: <time datetime="2022-11-08T01:44:12.550Z" itemprop="dateModified">2022-11-08</time>)
+        (Updated: <time datetime="2022-11-08T01:49:28.741Z" itemprop="dateModified">2022-11-08</time>)
         
       
     </div>
 
 
       
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/%E6%95%88%E7%8E%87%E5%B7%A5%E5%85%B7/">效率工具</a>
+    </div>
+
 
 
 
@@ -149,8 +155,8 @@
   
 
   <div class="content" itemprop="articleBody">
-    <p>如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。</p>
-<p>我们先从「删除」这个动作说起。</p>
+    <p><img src="https://imgs.zhubai.love/10a67b365cfe46e893fd3d730575d620.png" alt=""><br>
+如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。我们先从「删除」这个动作说起。</p>
 <h2 id="删除">删除</h2>
 <p>在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。</p>
 <p>在 macOS 里只有一个 Delete 键，不过你可以通过 ：</p>
@@ -204,7 +210,7 @@
 <p>Fn-←/→：滚动至文稿的开头或结尾，↑/↓ 上下翻页</p>
 </li>
 </ul>
-<p>几点补充</p>
+<p>几点补充：</p>
 <ul class="lvl-0">
 <li class="lvl-4">
 <p>因为这些快捷键控制的都是光标的跳转，它们不仅适用于修改文稿，也同样适用于网页浏览</p>
@@ -212,14 +218,14 @@
 <li class="lvl-4">
 <p>中文分词的跳转在国内大部分网站上都没问题，虽然我现在正在用的竹白编辑器例外。在软件如 Microsoft Word、（没有配置过的）Obsidian、VS Code 上，分词跳转都没有反应。我猜高贵的昂撒人不知道世界上有不用空格的语言，也不知道字符统计功能是个什么玩意，事实上很多国外的笔记或写作软件对于中文的支持（或者说 CJK 友善）都很糟糕，要自己找办法解决或者等很久。对中文的支持度是编辑手感的重要部分。</p>
 <ul class="lvl-2">
-<li class="lvl-8">因为 Obsidian 有丰富的插件市场，你可以安装 <a target="_blank" rel="noopener" href="https://github.com/aidenlx/cm-chs-patch">Word Splitting for Simplified Chinese in Edit Mode</a> 来解决这个问题。</li>
+<li class="lvl-8">因为 nbsidian 有丰富的插件市场，你可以安装 <a target="_blank" rel="noopener" href="https://github.com/aidenlx/cm-chs-patch">Word Splitting for Simplified Chinese in Edit Mode</a> 来解决这个问题。</li>
 </ul>
 </li>
 <li class="lvl-4">
-<p>⌥Option-↑/↓ 大致来说是按照段落进行上下跳转，实际使用中各家都会有不同的细节。比如光标是否根据方向不同自动定位在行首或行尾，是否识别硬回车或软回车，是否自动选择段落或列表等等，可以说每一家的风格都不一样。在 Logseq 中 ⌥Option+↑/↓ 的效果是自动进入选择模式，macOS 下的 Obsidian 需要使用 <a target="_blank" rel="noopener" href="https://github.com/ryanjamurphy/macOS-keyboard-nav-obsidian">ryanjamurphy/macOS-keyboard-nav-obsidia。</a>而在 VS Code、BBEdit 等代码编辑器里这个组合键代表上下移动光标所在行。</p>
+<p>⌥Option-↑/↓ 大致来说是按照段落进行上下跳转，实际使用中各家都会有不同的细节。比如光标是否根据方向不同自动定位在行首或行尾，是否识别硬回车或软回车，是否自动选择段落或列表等等，可以说每一家的风格都不一样。在 Logseq 中 ⌥Option+↑/↓ 的效果是自动进入选择模式，macOS 下的 Obsidian 需要使用 <a target="_blank" rel="noopener" href="https://github.com/ryanjamurphy/macOS-keyboard-nav-obsidian">macOS-keyboard-nav-obsidian</a>。而在 VS Code、BBEdit 等代码编辑器中这个组合键代表上下移动光标所在行。</p>
 </li>
 </ul>
-<p>依旧是一些 emacs 快捷键</p>
+<p>依旧是一些 emacs 快捷键：</p>
 <ul class="lvl-0">
 <li class="lvl-4">
 <p>⌃Control-A 移动到段落首</p>
@@ -263,11 +269,11 @@
 
     <div id="share-footer" style="display: none">
       <ul>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&text="><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=&body=Check out this article: https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title="><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://www.instapaper.com/edit?url=https://matsuri.site/2022/10/19/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title="><i class="far fa-newspaper fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&text=文本删除与跳转：⌫、⌘、⌥、⌃"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=文本删除与跳转：⌫、⌘、⌥、⌃&body=Check out this article: https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title=文本删除与跳转：⌫、⌘、⌥、⌃"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://www.instapaper.com/edit?url=https://matsuri.site/2022/11/08/%E6%96%87%E6%9C%AC%E5%88%A0%E9%99%A4%E4%B8%8E%E8%B7%B3%E8%BD%AC%EF%BC%9A%E2%8C%AB%E3%80%81%E2%8C%98%E3%80%81%E2%8C%A5%E3%80%81%E2%8C%83/&title=文本删除与跳转：⌫、⌘、⌥、⌃"><i class="far fa-newspaper fa-lg" aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
