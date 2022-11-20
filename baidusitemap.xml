@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://matsuri.site/2022/11/21/Swift%20%E5%B0%8F%E8%AE%B0/</loc>
+    <lastmod>2022-11-20</lastmod>
+  </url>
+  <url>
+    <loc>https://matsuri.site/2022/11/20/Markdown%20%E8%BE%93%E5%85%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E5%B0%8F%E6%8A%80%E5%B7%A7/</loc>
+    <lastmod>2022-11-20</lastmod>
+  </url>
+  <url>
     <loc>https://matsuri.site/2022/04/26/CS%20books%20and%20courses%20in%202022/</loc>
     <lastmod>2022-11-20</lastmod>
   </url>
@@ -9,15 +17,7 @@
     <lastmod>2022-11-20</lastmod>
   </url>
   <url>
-    <loc>https://matsuri.site/2022/11/20/Markdown%20%E8%BE%93%E5%85%A5%E7%9A%84%E4%B8%80%E4%BA%9B%E5%B0%8F%E6%8A%80%E5%B7%A7/</loc>
-    <lastmod>2022-11-20</lastmod>
-  </url>
-  <url>
     <loc>https://matsuri.site/2022/05/09/%E5%A4%A7%E5%AE%B6%E9%83%BD%E5%9C%A8%E8%81%8A/</loc>
-    <lastmod>2022-11-20</lastmod>
-  </url>
-  <url>
-    <loc>https://matsuri.site/2022/11/21/Swift%20%E5%B0%8F%E8%AE%B0/</loc>
     <lastmod>2022-11-20</lastmod>
   </url>
   <url>
