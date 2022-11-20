@@ -17,7 +17,7 @@
 <meta property="og:image" content="https://imgs.zhubai.love/bf650a489bac45fab7a99f45d6fcf5aa.gif">
 <meta property="og:image" content="https://imgs.zhubai.love/1a1810712649467a91044500543acf10.png">
 <meta property="article:published_time" content="2022-11-07T16:00:00.000Z">
-<meta property="article:modified_time" content="2022-11-20T21:16:33.683Z">
+<meta property="article:modified_time" content="2022-11-20T23:41:59.202Z">
 <meta property="article:author" content="马自立">
 <meta property="article:tag" content="blog">
 <meta name="twitter:card" content="summary">
@@ -134,7 +134,7 @@
       
         <time datetime="2022-11-07T16:00:00.000Z" itemprop="datePublished">2022-11-08</time>
         
-        (Updated: <time datetime="2022-11-20T21:16:33.683Z" itemprop="dateModified">2022-11-21</time>)
+        (Updated: <time datetime="2022-11-20T23:41:59.202Z" itemprop="dateModified">2022-11-21</time>)
         
       
     </div>
@@ -174,7 +174,7 @@
 <p>如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。</p>
 <p>我们先从「删除」这个动作说起。</p>
 <h2 id="删除">删除</h2>
-<p>在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。</p>
+<p>在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。</p>
 <p>在 macOS 里只有一个 Delete 键，不过你可以通过 ：</p>
 <ul class="lvl-0">
 <li class="lvl-4">
@@ -208,7 +208,7 @@
 <p>⌃Control-Y，粘贴上一个 kill 动作复制的文本，Y=yank（此功能在部分没有实现 Cocoa 文本系统的应用程序内无法实现）</p>
 </li>
 </ul>
-<p>如果你感兴趣，关于文本编辑功能 kill 和 yanking，它们的原理是：</p>
+<p>如果你感兴趣，关于后两个文本编辑功能 kill 和 yanking，它们的原理是：</p>
 <ul class="lvl-0">
 <li class="lvl-4">
 <p>每个应用程序都维护着一个私有的 kill ring，当文本被 kill 动作删除后，它会被添加到应用程序的 kill ring 中</p>
@@ -217,7 +217,7 @@
 <p>yank 会从应用的 kill ring 中检索文本，插入最近一个</p>
 </li>
 <li class="lvl-4">
-<p>你可以在一个视图中删除文本，然后将其拖放到同一应用程序中的另一个视图中，但你不能在应用程序之间 kill 并 yank</p>
+<p>你可以在一个视图中删除文本，然后将其拖放到同一应用程序中的另一个视图中，<strong>但你不能在应用程序之间 kill 然后 yank</strong></p>
 </li>
 <li class="lvl-4">
 <p>你还可以通过阅读这个<a target="_blank" rel="noopener" href="https://apple.stackexchange.com/questions/409816/how-do-i-get-text-key-binding-yankandselect-to-work">帖子</a>实现 yankAndSelect，在 kill ring 里循环遍历文本粘贴</p>
