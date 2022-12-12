@@ -31,8 +31,8 @@ https://matsuri.site/tags/Markdown/
 https://matsuri.site/tags/Workona/
 https://matsuri.site/tags/Chrome/
 https://matsuri.site/tags/%E9%98%85%E8%AF%BB/
-https://matsuri.site/categories/%E7%BC%96%E7%A8%8B/
 https://matsuri.site/categories/%E6%95%B0%E5%AD%97%E5%B7%A5%E5%85%B7%E7%AE%B1/
+https://matsuri.site/categories/%E7%BC%96%E7%A8%8B/
 https://matsuri.site/categories/%E6%B8%B8%E6%88%8F/
 https://matsuri.site/categories/%E6%9D%82%E8%B0%88/
 https://matsuri.site/categories/%E4%BA%8C%E6%AC%A1%E5%85%83/
