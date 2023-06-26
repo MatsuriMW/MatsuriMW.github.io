@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://matsuri.site/2022/11/08/%E8%AE%A9%E6%88%91%E4%BB%AC%E4%B8%80%E8%B5%B7%E6%9D%A5%E7%94%A8%20Workona%EF%BC%81/</loc>
+    <loc>https://matsuri.site/2022/04/11/%E7%87%83%E7%83%A7%E7%9A%84%E8%89%BE%E7%B1%B3%E8%8E%89%E7%8B%84%E9%87%91%E6%A3%AE/</loc>
     
     <lastmod>2023-06-26</lastmod>
     
@@ -20,7 +20,7 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/2016/08/16/%E3%80%8C%E5%9B%9B%E6%9C%88%E3%81%AF%E5%90%9B%E3%81%AE%E5%98%98%E3%80%8DORIGINAL%20SONG%20&%20SOUNDTRACK%20%E4%B9%90%E8%AF%84/</loc>
+    <loc>https://matsuri.site/2022/11/08/%E8%AE%A9%E6%88%91%E4%BB%AC%E4%B8%80%E8%B5%B7%E6%9D%A5%E7%94%A8%20Workona%EF%BC%81/</loc>
     
     <lastmod>2023-06-26</lastmod>
     
@@ -29,7 +29,7 @@
   </url>
   
   <url>
-    <loc>https://matsuri.site/2022/04/11/%E7%87%83%E7%83%A7%E7%9A%84%E8%89%BE%E7%B1%B3%E8%8E%89%E7%8B%84%E9%87%91%E6%A3%AE/</loc>
+    <loc>https://matsuri.site/2016/08/16/%E3%80%8C%E5%9B%9B%E6%9C%88%E3%81%AF%E5%90%9B%E3%81%AE%E5%98%98%E3%80%8DORIGINAL%20SONG%20&%20SOUNDTRACK%20%E4%B9%90%E8%AF%84/</loc>
     
     <lastmod>2023-06-26</lastmod>
     
@@ -235,6 +235,13 @@
   </url>
   
   <url>
+    <loc>https://matsuri.site/tags/%E9%98%85%E8%AF%BB/</loc>
+    <lastmod>2023-06-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://matsuri.site/tags/Workona/</loc>
     <lastmod>2023-06-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -243,13 +250,6 @@
   
   <url>
     <loc>https://matsuri.site/tags/Chrome/</loc>
-    <lastmod>2023-06-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://matsuri.site/tags/%E9%98%85%E8%AF%BB/</loc>
     <lastmod>2023-06-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
