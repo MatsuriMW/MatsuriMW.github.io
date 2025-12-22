@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="更新：: 如果你想获得更完整更细致的关于 cocoa text editing 的介绍，欢迎阅读Cocoa 文本组合键：macOS 中隐藏的 Emacs 情怀。 TL; DR四个非常有效实用的 macOS 文本编辑快捷键：  ⌥Option-Del 以语言的分词为单位向前删除 ⌃Control-K，剪切当前光标到段尾之间的内容 ⌃Control-A&#x2F;E 移动到段落首&#x2F;尾   如果你经常在">
+  <meta name="description" content="更新：: 如果你想获得更完整更细致的关于 cocoa text editing 的介绍，欢迎阅读Cocoa 文本组合键：macOS 中隐藏的 Emacs 情怀。 ¶TL; DR 四个非常有效实用的 macOS 文本编辑快捷键：  ⌥Option-Del 以语言的分词为单位向前删除 ⌃Control-K，剪切当前光标到段尾之间的内容 ⌃Control-A&#x2F;E 移动到段落首&#x2F;尾   如果你经常在 ma">
 <meta property="og:type" content="article">
 <meta property="og:title" content="文本删除与跳转：⌫、⌘、⌥、⌃">
 <meta property="og:url" content="http://example.com/2022/11/08/text%20editor/index.html">
 <meta property="og:site_name" content="马自立的blog">
-<meta property="og:description" content="更新：: 如果你想获得更完整更细致的关于 cocoa text editing 的介绍，欢迎阅读Cocoa 文本组合键：macOS 中隐藏的 Emacs 情怀。 TL; DR四个非常有效实用的 macOS 文本编辑快捷键：  ⌥Option-Del 以语言的分词为单位向前删除 ⌃Control-K，剪切当前光标到段尾之间的内容 ⌃Control-A&#x2F;E 移动到段落首&#x2F;尾   如果你经常在">
+<meta property="og:description" content="更新：: 如果你想获得更完整更细致的关于 cocoa text editing 的介绍，欢迎阅读Cocoa 文本组合键：macOS 中隐藏的 Emacs 情怀。 ¶TL; DR 四个非常有效实用的 macOS 文本编辑快捷键：  ⌥Option-Del 以语言的分词为单位向前删除 ⌃Control-K，剪切当前光标到段尾之间的内容 ⌃Control-A&#x2F;E 移动到段落首&#x2F;尾   如果你经常在 ma">
 <meta property="og:locale">
 <meta property="og:image" content="https://imgs.zhubai.love/10a67b365cfe46e893fd3d730575d620.png">
 <meta property="og:image" content="https://imgs.zhubai.love/bf650a489bac45fab7a99f45d6fcf5aa.gif">
@@ -223,16 +223,18 @@
 
       
         <p><em><strong>更新：</strong>: 如果你想获得更完整更细致的关于 cocoa text editing 的介绍，欢迎阅读<a target="_blank" rel="noopener" href="https://sspai.com/prime/story/cocoa-text-keybindings">Cocoa 文本组合键：macOS 中隐藏的 Emacs 情怀</a>。</em></p>
-<h2 id="TL-DR"><a href="#TL-DR" class="headerlink" title="TL; DR"></a>TL; DR</h2><p>四个非常有效实用的 macOS 文本编辑快捷键：</p>
+<h2 id="TL-DR"><a class="header-anchor" href="#TL-DR">¶</a>TL; DR</h2>
+<p>四个非常有效实用的 macOS 文本编辑快捷键：</p>
 <ul>
 <li><code>⌥Option-Del</code> 以语言的分词为单位向前删除</li>
 <li><code>⌃Control-K</code>，剪切当前光标到段尾之间的内容</li>
-<li><code>⌃Control-A/E</code> 移动到段落首&#x2F;尾</li>
+<li><code>⌃Control-A/E</code> 移动到段落首/尾</li>
 </ul>
 <p><img src="https://imgs.zhubai.love/10a67b365cfe46e893fd3d730575d620.png" alt="在这里插入图片描述"></p>
 <p>如果你经常在 macOS 或者 iPadOS 下用键盘处理文本，会发现一些比较有意思的细节。</p>
 <p>我们先从「删除」这个动作说起。</p>
-<h2 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h2><p>在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。</p>
+<h2 id="删除"><a class="header-anchor" href="#删除">¶</a>删除</h2>
+<p>在 Windows 中，有两个键可以实现删除的功能，一个是标有 ← 的 BackSpace 退格键，一个是 Delete 键。退格键可以删除光标左边的文字，Delete 键可以删除光标右边的文字。</p>
 <p>在 macOS 里只有一个 Delete 键，不过你可以通过 ：</p>
 <ul>
 <li>Delete 键以语言的字符为单位向前删除</li>
@@ -241,14 +243,14 @@
 <li><code>⌘Command-Del</code> 以语言的段落为单位向前删除</li>
 </ul>
 <p>以上快捷键很好记，基本上就是以 Del 键为中心进行各种混搭，比如你还可以用 <code>⌥Option-Fn-Del</code> 来向后删除分词。值得注意的是，在网页浏览器中分词删除有时会出现问题。因为在不同语言中，「分词」的行为是不一样的，对于字母语言分词删除只需识别单词之间的空格，对于中文等不使用空格分词的语言，摁下 ⌥Option-Del 光标可能会一路向前，删除至第一个非中文字符为止。有的网站甚至是无视字符，直接按照段落删除。</p>
-<p><img src="https://imgs.zhubai.love/bf650a489bac45fab7a99f45d6fcf5aa.gif"></p>
+<p><img src="https://imgs.zhubai.love/bf650a489bac45fab7a99f45d6fcf5aa.gif" alt=""></p>
 <p>当然这个问题大部分人都不会遇到。因为日常上网中在「输入框」和「地址栏」，中文分词都是正常识别的，只有到了<strong>各家网站的编辑器</strong>上才会显示出对语言适配的差异。所以每到一个可以编辑文档的网站或是软件上，我都会试试它的编辑器是否能识别分词。测试下来即使是飞书文档和知乎，它们的网页版也没有对中文进行适配，也可能是人家本来就不注重这方面。语雀倒是适配了，很惊讶。</p>
 <p>macOS 里还有着大量的 emacs 历史遗留键，你可以通过：</p>
 <ul>
 <li><code>⌃Control-D</code>，删除光标后的一个字符, 相当于 Delete</li>
 <li><code>⌃Control-H</code>，删除光标前的一个字符, 相当于 Backspace 或者 <code>Fn-Del</code></li>
-<li><code>⌃Control-K</code>，剪切光标后直到段尾的内容，K&#x3D;kill。推荐这个快捷键，我日常（直接当成删除）高频使用。并且它剪切的内容不会覆盖粘贴板</li>
-<li><code>⌃Control-Y</code>，粘贴上一个 kill 动作复制的文本，Y&#x3D;yank（此功能在部分没有实现 Cocoa 文本系统的应用程序内无法实现）</li>
+<li><code>⌃Control-K</code>，剪切光标后直到段尾的内容，K=kill。推荐这个快捷键，我日常（直接当成删除）高频使用。并且它剪切的内容不会覆盖粘贴板</li>
+<li><code>⌃Control-Y</code>，粘贴上一个 kill 动作复制的文本，Y=yank（此功能在部分没有实现 Cocoa 文本系统的应用程序内无法实现）</li>
 </ul>
 <p>如果你感兴趣，关于后两个文本编辑功能 kill 和 yanking，它们的原理是：</p>
 <ul>
@@ -257,39 +259,44 @@
 <li>你可以在一个视图中删除文本，然后将其拖放到同一应用程序中的另一个视图中，<strong>但你不能在应用程序之间 kill 然后 yank</strong></li>
 <li>你还可以通过阅读这个<a target="_blank" rel="noopener" href="https://apple.stackexchange.com/questions/409816/how-do-i-get-text-key-binding-yankandselect-to-work">帖子</a>实现 yankAndSelect，在 kill ring 里循环遍历文本粘贴</li>
 </ul>
-<p>无论是写代码、写稿子、写中文英文还是单纯上网冲浪，以上快捷键在 macOS 系统的各处都通用，这就是它们的价值。而终端的主流 shell 默认使用 Emacs 键位，同样支持以上四种删除方式，因此键位熟悉后也不会限制在某一个具体的操作系统中。更重要的是，以左手小拇指摁住 Control 键为支点，右手的食指、中指自然垂落在键盘中心行的 H&#x2F;J&#x2F;K&#x2F;L 四键上，打字时手感极佳。操作删除的幅度比刻意跨越着去找右上顶角的 Del 键——甚至还要去找左下底角的 Fn 键——要小得多。</p>
+<p>无论是写代码、写稿子、写中文英文还是单纯上网冲浪，以上快捷键在 macOS 系统的各处都通用，这就是它们的价值。而终端的主流 shell 默认使用 Emacs 键位，同样支持以上四种删除方式，因此键位熟悉后也不会限制在某一个具体的操作系统中。更重要的是，以左手小拇指摁住 Control 键为支点，右手的食指、中指自然垂落在键盘中心行的 H/J/K/L 四键上，打字时手感极佳。操作删除的幅度比刻意跨越着去找右上顶角的 Del 键——甚至还要去找左下底角的 Fn 键——要小得多。</p>
 <p>当然，你也完全可以通过一些强大的改键工具（比如 Karabiner）把键盘上闲置不用的键位用起来，让手指的操作更符合习惯。一个参考：我自己几乎不会用到右手侧的 ⇧Shift 键，所以它被我改成了向后删除文本。</p>
-<p><img src="https://imgs.zhubai.love/1a1810712649467a91044500543acf10.png"></p>
-<h2 id="跳转"><a href="#跳转" class="headerlink" title="跳转"></a>跳转</h2><p>对文本进行修改时固然会大量地增删，最常见的动作应该还是控制光标的「跳转」，以在单词、行和段落之间遍历文本。一边盯着跳跃的光标一边狂摁方向键时，「怎么这么慢……」的烦躁感也许会在某个时刻划过你的脑海。</p>
+<p><img src="https://imgs.zhubai.love/1a1810712649467a91044500543acf10.png" alt=""></p>
+<h2 id="跳转"><a class="header-anchor" href="#跳转">¶</a>跳转</h2>
+<p>对文本进行修改时固然会大量地增删，最常见的动作应该还是控制光标的「跳转」，以在单词、行和段落之间遍历文本。一边盯着跳跃的光标一边狂摁方向键时，「怎么这么慢……」的烦躁感也许会在某个时刻划过你的脑海。</p>
 <p>解决的思路还是一样，对大于字符的文本对象（text-objects）进行操作——分词，分句，行，段落，页。</p>
 <p>你可以通过：</p>
 <ul>
-<li><code>⌥Option-←/→</code>：跳转至上或下一分词，↑&#x2F;↓ 跳转至段落首尾。</li>
-<li><code>⌘Command-←/→</code>：跳转至光标所在行的行首和行尾，↑&#x2F;↓ 到文稿首尾</li>
-<li><code>Fn-←/→</code>：滚动至文稿的开头或结尾(Home&#x2F;End)，↑&#x2F;↓ 上下翻页(Page Up&#x2F;Page Down)</li>
+<li><code>⌥Option-←/→</code>：跳转至上或下一分词，↑/↓ 跳转至段落首尾。</li>
+<li><code>⌘Command-←/→</code>：跳转至光标所在行的行首和行尾，↑/↓ 到文稿首尾</li>
+<li><code>Fn-←/→</code>：滚动至文稿的开头或结尾(Home/End)，↑/↓ 上下翻页(Page Up/Page Down)</li>
 </ul>
-<p>以上三组快捷键是以我个人的日常使用频率降序排列的，另有几点补充: </p>
+<p>以上三组快捷键是以我个人的日常使用频率降序排列的，另有几点补充:</p>
 <ul>
-<li><p>因为这些快捷键控制的都是光标的跳转，它们不仅适用于修改文稿，也同样适用于网页浏览</p>
+<li>
+<p>因为这些快捷键控制的都是光标的跳转，它们不仅适用于修改文稿，也同样适用于网页浏览</p>
 </li>
-<li><p>中文分词的跳转在国内大部分网站上都没问题，虽然我现在正在用的竹白编辑器例外。在 mac 版 Microsoft Word、Obsidian、VS Code 上，分词跳转都没有反应。我猜高贵的昂撒人不知道世界上有不用空格的语言，也不知道字符统计功能是个什么玩意，事实上很多国外的笔记或写作软件对于中文的支持（或者说 CJK 友善）都很糟糕，要自己找办法解决或者等很久。对中文的支持度是编辑手感的重要部分。    </p>
+<li>
+<p>中文分词的跳转在国内大部分网站上都没问题，虽然我现在正在用的竹白编辑器例外。在 mac 版 Microsoft Word、Obsidian、VS Code 上，分词跳转都没有反应。我猜高贵的昂撒人不知道世界上有不用空格的语言，也不知道字符统计功能是个什么玩意，事实上很多国外的笔记或写作软件对于中文的支持（或者说 CJK 友善）都很糟糕，要自己找办法解决或者等很久。对中文的支持度是编辑手感的重要部分。</p>
 <ul>
 <li>因为 Obsidian 有丰富的插件市场，你可以安装 <a target="_blank" rel="noopener" href="https://github.com/aidenlx/cm-chs-patch">Word Splitting for Simplified Chinese in Edit Mode</a> 来解决这个问题。</li>
 </ul>
 </li>
-<li><p><code>⌥Option-↑/↓</code> 大致来说是跳转至段落首尾，但也仅仅是个参考，实际使用中各家的实现都不同: 比如是否识别硬回车或软回车，是否自动选择段落或列表，是否按照段落进行上下跳转等等。</p>
+<li>
+<p><code>⌥Option-↑/↓</code> 大致来说是跳转至段落首尾，但也仅仅是个参考，实际使用中各家的实现都不同: 比如是否识别硬回车或软回车，是否自动选择段落或列表，是否按照段落进行上下跳转等等。</p>
 <ul>
-<li>在 Logseq 中 <code>⌥Option+↑/↓</code> 的效果是自动进入选择模式；在 VS Code、BBEdit 和 Org Mode 里，这个组合键代表上下移动光标所在行&#x2F;块；macOS 版的 Obsidian 则需要使用 <a target="_blank" rel="noopener" href="https://github.com/ryanjamurphy/macOS-keyboard-nav-obsidian">macOS-keyboard-nav-obsidian</a> 来恢复默认的键盘导航。</li>
+<li>在 Logseq 中 <code>⌥Option+↑/↓</code> 的效果是自动进入选择模式；在 VS Code、BBEdit 和 Org Mode 里，这个组合键代表上下移动光标所在行/块；macOS 版的 Obsidian 则需要使用 <a target="_blank" rel="noopener" href="https://github.com/ryanjamurphy/macOS-keyboard-nav-obsidian">macOS-keyboard-nav-obsidian</a> 来恢复默认的键盘导航。</li>
 </ul>
 </li>
 </ul>
-<p>依旧是一些 emacs 快捷键: </p>
+<p>依旧是一些 emacs 快捷键:</p>
 <ul>
 <li><code>⌃Control-A</code> 移动到段落首</li>
 <li><code>⌃Control-E</code> 移动到段落尾</li>
 </ul>
 <p>「段落首尾」指的是换行符（即回车键⏎）输入的地方，这两个快捷键与 <code>⌘Command-←/→</code> 的效果并不同，但依旧实用。</p>
-<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>无论是文本还是数据，在 Shell、macOS 还是 iPadOS 上，熟悉这些快捷键都能够助力不少。如果你在编辑文本这件事上追求效率，就一定会接触到快捷键，再最终接触到 vim 和 emacs。当然，也不必跳进这么深的兔子洞，以上介绍的内容对日常工作已经完全够用了。处理完工作，放下电脑出去享受阳光和人生，geek 的事情就留给 geek，不要和我一样凌晨四点在敲键盘。大家下次见，抱歉这么久没更新。</p>
+<h2 id="最后"><a class="header-anchor" href="#最后">¶</a>最后</h2>
+<p>无论是文本还是数据，在 Shell、macOS 还是 iPadOS 上，熟悉这些快捷键都能够助力不少。如果你在编辑文本这件事上追求效率，就一定会接触到快捷键，再最终接触到 vim 和 emacs。当然，也不必跳进这么深的兔子洞，以上介绍的内容对日常工作已经完全够用了。处理完工作，放下电脑出去享受阳光和人生，geek 的事情就留给 geek，不要和我一样凌晨四点在敲键盘。大家下次见，抱歉这么久没更新。</p>
 <p>写于 09-15 周四，04:17:11。</p>
 
     </div>

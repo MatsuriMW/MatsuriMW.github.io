@@ -20,12 +20,12 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="Markdown 作为一种由 HTML 语言演变而来的一种轻量级标记语言，大量的 Markdown 编辑器也支持嵌入一些原生的 HTML 标记。 如果你需要实现一些正常情况下 Markdown 不支持的功能，可以转而用一些简单的 HTML 标记来实现。 居中默认情况下 Markdown 的所有的文字内容都是左对齐的，如果你需要输入一些居中的内容时可以输入： &lt;center&gt;我是居中的标">
+  <meta name="description" content="Markdown 作为一种由 HTML 语言演变而来的一种轻量级标记语言，大量的 Markdown 编辑器也支持嵌入一些原生的 HTML 标记。 如果你需要实现一些正常情况下 Markdown 不支持的功能，可以转而用一些简单的 HTML 标记来实现。 ¶居中 默认情况下 Markdown 的所有的文字内容都是左对齐的，如果你需要输入一些居中的内容时可以输入： &lt;center&gt;我是居中">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Markdown 输入的一些小技巧">
 <meta property="og:url" content="http://example.com/2022/11/20/Markdown/index.html">
 <meta property="og:site_name" content="马自立的blog">
-<meta property="og:description" content="Markdown 作为一种由 HTML 语言演变而来的一种轻量级标记语言，大量的 Markdown 编辑器也支持嵌入一些原生的 HTML 标记。 如果你需要实现一些正常情况下 Markdown 不支持的功能，可以转而用一些简单的 HTML 标记来实现。 居中默认情况下 Markdown 的所有的文字内容都是左对齐的，如果你需要输入一些居中的内容时可以输入： &lt;center&gt;我是居中的标">
+<meta property="og:description" content="Markdown 作为一种由 HTML 语言演变而来的一种轻量级标记语言，大量的 Markdown 编辑器也支持嵌入一些原生的 HTML 标记。 如果你需要实现一些正常情况下 Markdown 不支持的功能，可以转而用一些简单的 HTML 标记来实现。 ¶居中 默认情况下 Markdown 的所有的文字内容都是左对齐的，如果你需要输入一些居中的内容时可以输入： &lt;center&gt;我是居中">
 <meta property="og:locale">
 <meta property="og:image" content="https://imgs.zhubai.love/b3d6f79cb334479c8c43132678af9f9e.png">
 <meta property="og:image" content="https://imgs.zhubai.love/61a7284753e541f798b62a95f97466ea.png">
@@ -229,12 +229,15 @@
 
       
         <p>Markdown 作为一种由 HTML 语言演变而来的一种轻量级标记语言，大量的 Markdown 编辑器也支持嵌入一些原生的 HTML 标记。 如果你需要实现一些正常情况下 Markdown 不支持的功能，可以转而用一些简单的 HTML 标记来实现。</p>
-<h2 id="居中"><a href="#居中" class="headerlink" title="居中"></a>居中</h2><p>默认情况下 Markdown 的所有的文字内容都是左对齐的，如果你需要输入一些居中的内容时可以输入：</p>
+<h2 id="居中"><a class="header-anchor" href="#居中">¶</a>居中</h2>
+<p>默认情况下 Markdown 的所有的文字内容都是左对齐的，如果你需要输入一些居中的内容时可以输入：</p>
 <p><code>&lt;center&gt;我是居中的标题&lt;/center&gt;</code></p>
-<p><img src="https://imgs.zhubai.love/b3d6f79cb334479c8c43132678af9f9e.png"></p>
-<h2 id="注音"><a href="#注音" class="headerlink" title="注音"></a>注音</h2><p>通过 html 的 ruby 元素，你可以在 Markdown 里为日语写注音假名（振り仮名）。输入 <code>&lt;ruby&gt;漢字&lt;rt&gt;かんじ&lt;/rt&gt;&lt;/ruby&gt;</code>，呈现出</p>
-<p><img src="https://imgs.zhubai.love/61a7284753e541f798b62a95f97466ea.png"></p>
-<h2 id="控制展示效果"><a href="#控制展示效果" class="headerlink" title="控制展示效果"></a>控制展示效果</h2><ul>
+<p><img src="https://imgs.zhubai.love/b3d6f79cb334479c8c43132678af9f9e.png" alt=""></p>
+<h2 id="注音"><a class="header-anchor" href="#注音">¶</a>注音</h2>
+<p>通过 html 的 ruby 元素，你可以在 Markdown 里为日语写注音假名（振り仮名）。输入 <code>&lt;ruby&gt;漢字&lt;rt&gt;かんじ&lt;/rt&gt;&lt;/ruby&gt;</code>，呈现出</p>
+<p><img src="https://imgs.zhubai.love/61a7284753e541f798b62a95f97466ea.png" alt=""></p>
+<h2 id="控制展示效果"><a class="header-anchor" href="#控制展示效果">¶</a>控制展示效果</h2>
+<ul>
 <li>想要换一些除黄色之外的高光颜色输入（比如红色）可以这样：</li>
 </ul>
 <p><code>&lt;font color=red&gt;文字颜色控制&lt;/font&gt;</code></p>
@@ -243,36 +246,47 @@
 </ul>
 <p><code>&lt;font color=32901&gt;RGB颜色控制&lt;/font&gt;</code></p>
 <p>效果：</p>
-<p><img src="https://imgs.zhubai.love/8f7ad047b2594e749786d01554c7c8ac.png"></p>
+<p><img src="https://imgs.zhubai.love/8f7ad047b2594e749786d01554c7c8ac.png" alt=""></p>
 <ul>
 <li>对部分内容单独更换字体（思源宋体、华文仿宋等等）：</li>
 </ul>
 <p><code>&lt;font face=&quot;思源宋体&quot;&gt;我是黑体字&lt;/font&gt;</code></p>
-<p><img src="https://imgs.zhubai.love/5d73ba06445d4a62a88ed434cb4deb7c.png"></p>
+<p><img src="https://imgs.zhubai.love/5d73ba06445d4a62a88ed434cb4deb7c.png" alt=""></p>
 <ul>
 <li>更换字号：</li>
 </ul>
 <p><code>&lt;font size=&quot;7&quot;&gt;我是变大的字&lt;/font&gt;</code></p>
-<p><img src="https://imgs.zhubai.love/602b28cb31ed4542bb9db5792579911d.png"></p>
+<p><img src="https://imgs.zhubai.love/602b28cb31ed4542bb9db5792579911d.png" alt=""></p>
 <p>把它们组合在一起效果就是这样的：</p>
-<p><img src="https://imgs.zhubai.love/c2c27615b52b490cada75b976c370c56.png"></p>
-<h2 id="按键标签"><a href="#按键标签" class="headerlink" title="按键标签"></a>按键标签</h2><p>把所有特殊信息全部一股脑用 `` 括起来固然是没有问题的做法，偶尔也会想要对部分内容特殊处理，用不一样的视觉效果区分开来。比如像 ⌘Command, ⇧Shift 这样的按键，可以用 HTML 的 <code>&lt;kbd&gt;&lt;/kbd&gt;</code> 标签包裹起来。Logseq 和 Obsidian 都支持这个标签。</p>
+<p><img src="https://imgs.zhubai.love/c2c27615b52b490cada75b976c370c56.png" alt=""></p>
+<h2 id="按键标签"><a class="header-anchor" href="#按键标签">¶</a>按键标签</h2>
+<p>把所有特殊信息全部一股脑用 `` 括起来固然是没有问题的做法，偶尔也会想要对部分内容特殊处理，用不一样的视觉效果区分开来。比如像 ⌘Command, ⇧Shift 这样的按键，可以用 HTML 的 <code>&lt;kbd&gt;&lt;/kbd&gt;</code> 标签包裹起来。Logseq 和 Obsidian 都支持这个标签。</p>
 <p><code>&lt;kbd&gt;⌘Command-⇧Shift-O&lt;/kbd&gt;</code></p>
 <p>以下三行分别为在 Logseq 中将内容用代码块``包裹，<code>&lt;kbd&gt;</code> 标签包裹和正常输入后的效果：</p>
-<p><img src="https://imgs.zhubai.love/eb6a9b93c27b4bc7b98b022e1a90c0fb.png"></p>
-<h2 id="那么……如何快速插入这些标签？"><a href="#那么……如何快速插入这些标签？" class="headerlink" title="那么……如何快速插入这些标签？"></a>那么……如何快速插入这些标签？</h2><h3 id="用输入法输入"><a href="#用输入法输入" class="headerlink" title="用输入法输入"></a>用输入法输入</h3><p>以我使用的 <a target="_blank" rel="noopener" href="https://github.com/rime/squirrel">Rime 鼠须管输入法</a>插入 <code>&lt;kbd&gt;</code> 标签为例，通过在自定义短语文件 custom_phrase.txt 中输入 <code>&lt;kbd&gt;&lt;kbd&gt; kbd 1</code> 并重新部署即可。输入 kbd 就会得到</p>
-<p><img src="https://imgs.zhubai.love/566188d76d5744ad926c8c4123c54f9c.png"></p>
-<h3 id="在-Obsidian-中快捷键插入"><a href="#在-Obsidian-中快捷键插入" class="headerlink" title="在 Obsidian 中快捷键插入"></a>在 Obsidian 中快捷键插入</h3><p>两种方法：</p>
+<p><img src="https://imgs.zhubai.love/eb6a9b93c27b4bc7b98b022e1a90c0fb.png" alt=""></p>
+<h2 id="那么……如何快速插入这些标签？"><a class="header-anchor" href="#那么……如何快速插入这些标签？">¶</a>那么……如何快速插入这些标签？</h2>
+<h3 id="用输入法输入"><a class="header-anchor" href="#用输入法输入">¶</a>用输入法输入</h3>
+<p>以我使用的 <a target="_blank" rel="noopener" href="https://github.com/rime/squirrel">Rime 鼠须管输入法</a>插入 <code>&lt;kbd&gt;</code> 标签为例，通过在自定义短语文件 custom_phrase.txt 中输入 <code>&lt;kbd&gt;&lt;kbd&gt; kbd 1</code> 并重新部署即可。输入 kbd 就会得到</p>
+<p><img src="https://imgs.zhubai.love/566188d76d5744ad926c8c4123c54f9c.png" alt=""></p>
+<h3 id="在-Obsidian-中快捷键插入"><a class="header-anchor" href="#在-Obsidian-中快捷键插入">¶</a>在 Obsidian 中快捷键插入</h3>
+<p>两种方法：</p>
 <ul>
-<li><p>安装 Wrap with shortcuts 插件实现</p>
+<li>
+<p>安装 Wrap with shortcuts 插件实现</p>
 </li>
-<li><p>安装 Templater 插件，新建一个新的 templater 模板并输入以下内容（代码以 kbd 标签为例，可以自行修改内容）</p>
-<p>  &lt;%*<br>const selection &#x3D; tp.file.selection()<br>if(!(selection &amp;&amp; selection.length)) return<br>tR +&#x3D; selection.replace(&#x2F;([a-z0-9]+)&#x2F;gi, ‘<kbd>$1</kbd>‘)<br>  %&gt;</p>
+<li>
+<p>安装 Templater 插件，新建一个新的 templater 模板并输入以下内容（代码以 kbd 标签为例，可以自行修改内容）</p>
+<p>&lt;%*<br>
+const selection = tp.file.selection()<br>
+if(!(selection &amp;&amp; selection.length)) return<br>
+tR += selection.replace(/([a-z0-9]+)/gi, ‘<kbd>$1</kbd>’)<br>
+%&gt;</p>
 </li>
 </ul>
 <p>再将此模板与一个趁手的热键绑定即可。</p>
-<p><img src="https://imgs.zhubai.love/f17c6fed7ff5407db08ca476879cff59.png"></p>
-<h2 id="尾巴"><a href="#尾巴" class="headerlink" title="尾巴"></a>尾巴</h2><p>Markdown 因为它的简洁易用而走红，也因为它或多或少的不足（比如表格、脚注）而诞生了无数变种作为补充。除了常见的 CommonMark，GFM 和 Multi-Markdown，还有专为论文而生的 Pandoc Markdown，写作软件 Ulysses 自用的 Markdown XL 等等。如果你不想学这么多「方言」，可以回归最本质的 HTML，用标签完成标记，也许不够简洁好看，但也能解燃眉之急。</p>
+<p><img src="https://imgs.zhubai.love/f17c6fed7ff5407db08ca476879cff59.png" alt=""></p>
+<h2 id="尾巴"><a class="header-anchor" href="#尾巴">¶</a>尾巴</h2>
+<p>Markdown 因为它的简洁易用而走红，也因为它或多或少的不足（比如表格、脚注）而诞生了无数变种作为补充。除了常见的 CommonMark，GFM 和 Multi-Markdown，还有专为论文而生的 Pandoc Markdown，写作软件 Ulysses 自用的 Markdown XL 等等。如果你不想学这么多「方言」，可以回归最本质的 HTML，用标签完成标记，也许不够简洁好看，但也能解燃眉之急。</p>
 
     </div>
 
