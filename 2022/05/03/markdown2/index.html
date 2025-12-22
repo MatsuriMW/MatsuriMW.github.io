@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 8.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="![][image-1]  你需要知道一些 Markdown 的基础知识以阅读此文 本文涉及的所有工具都提供了下载链接，部分链接在小节标题处，不易察觉 「在系统中随时 Markdown」一节中涉及软件皆为 Mac 环境下  在浏览器上随时 Markdown[拷贝猫][1]你有没有过这样的经历：  你在网上搜索资料，发现了一些很有用的内容。你想保存，复制、黏贴在 Word 文档里，却只能得到一团乱七">
+<meta property="og:type" content="article">
+<meta property="og:title" content="系统级 Markdown">
+<meta property="og:url" content="http://example.com/2022/05/03/markdown2/index.html">
+<meta property="og:site_name" content="马自立的blog">
+<meta property="og:description" content="![][image-1]  你需要知道一些 Markdown 的基础知识以阅读此文 本文涉及的所有工具都提供了下载链接，部分链接在小节标题处，不易察觉 「在系统中随时 Markdown」一节中涉及软件皆为 Mac 环境下  在浏览器上随时 Markdown[拷贝猫][1]你有没有过这样的经历：  你在网上搜索资料，发现了一些很有用的内容。你想保存，复制、黏贴在 Word 文档里，却只能得到一团乱七">
+<meta property="og:locale">
+<meta property="article:published_time" content="2022-05-02T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-11-08T02:05:42.864Z">
+<meta property="article:author" content="马自立">
+<meta property="article:tag" content="Markdown">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/05/03/markdown2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>系统级 Markdown | 马自立的blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">马自立的blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/05/03/markdown2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="马自立">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="马自立的blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          系统级 Markdown
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-05-03 00:00:00" itemprop="dateCreated datePublished" datetime="2022-05-03T00:00:00+08:00">2022-05-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-11-08 10:05:42" itemprop="dateModified" datetime="2022-11-08T10:05:42+08:00">2022-11-08</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%95%B0%E5%AD%97%E5%B7%A5%E5%85%B7%E7%AE%B1/" itemprop="url" rel="index"><span itemprop="name">数字工具箱</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>![][image-1]</p>
+<ul>
+<li>你需要知道一些 Markdown 的基础知识以阅读此文</li>
+<li>本文涉及的所有工具都提供了下载链接，部分链接在小节标题处，不易察觉</li>
+<li>「在系统中随时 Markdown」一节中涉及软件皆为 Mac 环境下</li>
+</ul>
+<h2 id="在浏览器上随时-Markdown"><a href="#在浏览器上随时-Markdown" class="headerlink" title="在浏览器上随时 Markdown"></a>在浏览器上随时 Markdown</h2><h3 id="拷贝猫-1"><a href="#拷贝猫-1" class="headerlink" title="[拷贝猫][1]"></a>[拷贝猫][1]</h3><p>你有没有过这样的经历：</p>
+<ul>
+<li>你在网上搜索资料，发现了一些很有用的内容。你想保存，复制、黏贴在 Word 文档里，却只能得到一团乱七八糟、不带格式的纯文本。你不得不手动整理一遍。</li>
+<li>你需要浏览一些英文长文，可是 Chrome 自带的谷歌翻译有点词不达意，体验很差。你希望将它翻译成更好的中文，又能原汁原味地保存住所有图片，超链接，排版，脚注……</li>
+<li>你想保存或是分享一个网页链接，在浏览器的地址栏里复制，得到的是看起来都长一个样的英文字母。回头翻看时已经不记得这个链接是什么内容，也不想点开了。</li>
+</ul>
+<p>![][image-2]<br>通过安装 Chrome 插件[拷贝猫][2]，这些体验都可以得到改变。选中内容，用一次复制在剪切板里保存所有的内容、排版、图片、超链接等等，原理就是将选中的内容以 Markdown 格式复制到剪切板。当复制地址栏中的 URL 时则会自动抓取当前网页的标题。如果你不需要选中内容的格式，也可以选择复制为纯文本。</p>
+<p>![][image-3]<br>你可以选择自己喜欢的 Markdown 格式：Ghost、GFM、或是 CommonMark。</p>
+<p>![][image-4]<br>你还可以设置自定义快捷键。如下图所示，⌘Command+M（Markdown）、⌘Command+P（Plain Text） 和 ⌘Command+U（URL）替代了多年默认的 ⌘Command+C，获得更细致，更强大的复制功能。</p>
+<p>![][image-5]<br>使用场景：比如我常常会阅读英文 Newsletter，但长篇累牍的非母语文章读起来毕竟太消耗精力，长此以往造成了心理负担（当然也可能是我英语水平不到家）。</p>
+<p>现在我可以打开网页，无脑全选，⌘Command+M 将内容复制为 Markdown 格式，放在 Deepl 里翻译为中文，回来放在 Obsidian 里，仍然完整保留了图片和排版。</p>
+<p>原文：</p>
+<p>![][image-6]<br>翻译中：</p>
+<p>![][image-7]<br>翻译后：</p>
+<p>![][image-8]<br>「将内容复制为 Markdown 格式」这件事曾经被很多人以很多方式实现过：用 Applescript 制作的 [SearchLink][3]，KeyboardMastero 的宏，Obsidian 的插件，Alfred 的工作流，JavaScript 制作的小书签（BookMarklet)。我体验过不少，但它们都不够无感，都需要一些额外的操作或是等待时间，你会意识到它的存在。拷贝猫最大的优点是没有多余的步骤，依旧是选择，复制，粘贴，只是复制时换了个非常相似的快捷键。</p>
+<p>「无感」就是我选用工具的标准。无需过多操作，Markdown 随时编写，随时查看，随时转换，是为「系统级 Markdown」。</p>
+<h3 id="Markdown-Here-4"><a href="#Markdown-Here-4" class="headerlink" title="[Markdown Here][4]"></a>[Markdown Here][4]</h3><p>![][image-9]</p>
+<p>把内容以 Markdown 形式扒下来，自然也会需要把 Markdown 内容转换后发出去，插件 Markdown Here 就起这个作用。你可以在一些只支持富文本编辑的地方用 Markdown 语法编辑，然后点击 Markdown Here 将文本转换为富文本。还可以添加一些自定义主题 CSS 样式，来改变转换后标题、字号、间距、颜色等排版样式的呈现，比如使用这个少数派风格的 CSS：[<a target="_blank" rel="noopener" href="https://t.co/9QEsItHp7X?amp=1%EF%BC%8C%5D%5B5%5D%E5%8D%B3%E8%A3%85%E5%8D%B3%E7%94%A8%E3%80%82">https://t.co/9QEsItHp7X?amp=1，][5]即装即用。</a></p>
+<p>但是经过测试，支持转换文本操作的网页十分有限，最常用且稳定有效的两个地方是<strong>网页电子邮件的编辑窗口</strong>，和<strong>微信公众号的官方编辑页面</strong>。也许这不能怪它，毕竟最后一次更新已经是 2015 年了。一言以蔽之，如果你的使用场景里包括撰写邮件和发表公众号文章，Markdown Here 的体验会很好。</p>
+<h3 id="其他转换方式"><a href="#其他转换方式" class="headerlink" title="其他转换方式"></a>其他转换方式</h3><ul>
+<li>一般来说只要是支持 Markdown 的笔记软件，在预览状态下选中内容并复制，得到的就已经是富文本了。预览时复制内容到任何一个富文本编辑器里——通用的 doc 文档、各类网站如知乎、少数派的编辑页，甚至系统自带的备忘录，效果都不错。这种方式最简单也最常用，我的不少文章就是在 Obsidian 里写完后复制到竹白里。</li>
+<li>在线转换为富文本：[Md2All][6] 和 [在线Markdown转富文本工具][7]</li>
+</ul>
+<h2 id="在系统中随时-Markdown"><a href="#在系统中随时-Markdown" class="headerlink" title="在系统中随时 Markdown"></a>在系统中随时 Markdown</h2><h3 id="「预览」-Markdown"><a href="#「预览」-Markdown" class="headerlink" title="「预览」 Markdown"></a>「预览」 Markdown</h3><p>针对 macOS 系统自带软件「预览」的增强插件不少，有的增强[代码预览][8]，有的增强[压缩文件预览][9]，也有的力图实现 all in one，[一个软件什么都能预览][10]。然而这种 all in one 大都对自定义的支持度很低。[QLMarkdown][11] 是针对 Markdown 文件预览的增强插件，它自定义程度高，渲染快，支持语法多，最近更新的一个版本已经初步支持了 .qmd 文件。<br>它帮助我实现了在浏览文件时无感地预览 Markdown 文件。</p>
+<p>![][image-10]</p>
+<h3 id="PopClip-12-实现-Markdown"><a href="#PopClip-12-实现-Markdown" class="headerlink" title="[PopClip][12] 实现 Markdown"></a>[PopClip][12] 实现 Markdown</h3><p>PopClip 是久负盛名的效率神器，无论是处理文本、快速搜索还是与其他 App 联动，它都是不可或缺的一环，原因就在于丰富的插件（Again，又是插件）。它在系统级 Markdown 中起到两个作用：</p>
+<ul>
+<li>作为文本编辑的工具条，随时向文本中插入一些 Markdown 标记比如引用、注释、代码块、转化无序列表等等。你可以从[官方插件][13]中找到一些合适的，也可以通过 [Brett’s PopClip Extensions][14] 建立更丰富多样，更符合自己习惯的文本编辑条。</li>
+</ul>
+<p>![][image-11]</p>
+<ul>
+<li>在 Chrome 之外的地方也能把内容以 Markdown 格式扒下来，[CopyAsMarkdown][15] 插件。比如在 Safari 浏览器、各种笔记软件、邮箱、RSS 阅读器，编写文本和展示文本的地方，你都能将内容复制为 Markdown，真正实现随意转换。</li>
+</ul>
+<h3 id="任意文件-Markdown"><a href="#任意文件-Markdown" class="headerlink" title="任意文件 Markdown"></a>任意文件 Markdown</h3><p>![][image-12]<br>最后介绍个大的，[Hook][16] 。</p>
+<p>它的作用是把 macOS 操作系统中<strong>各种不同类型的信息资源加以链接整合</strong>。选中任意一个文件，呼出 Hook，同样是 ⌘Command+M 复制，此时你会得到一个<strong>指向当前文件的 Markdown 链接</strong>。当然不止是 Finder 内的文件，各种应用如 Things3 的项目，PDF 阅读器中的注释、Spark 的邮件以及千奇百怪软件的子资源，都可以用 Hook 获得它们的 Markdown 链接。真正实现任意文件都能以 Markdown 调用。</p>
+<p>![][image-13]<br>（即使是一个文件夹，你也可以获得它的 Markdown 链接从而引用在笔记里）</p>
+<p>[1]:	<a target="_blank" rel="noopener" href="https://chrome.crxsoso.com/webstore/detail/copycat/jdjbiojkklnaeoanimopafmnmhldejbg">https://chrome.crxsoso.com/webstore/detail/copycat/jdjbiojkklnaeoanimopafmnmhldejbg</a><br>[2]:	<a target="_blank" rel="noopener" href="https://chrome.google.com/webstore/detail/copycat/jdjbiojkklnaeoanimopafmnmhldejbg">https://chrome.google.com/webstore/detail/copycat/jdjbiojkklnaeoanimopafmnmhldejbg</a><br>[3]:	<a target="_blank" rel="noopener" href="https://brettterpstra.com/projects/searchlink/">https://brettterpstra.com/projects/searchlink/</a><br>[4]:	<a target="_blank" rel="noopener" href="https://chrome.google.com/webstore/detail/markdown-here/elifhakcjgalahccnjkneoccemfahfoa?hl=zh-CN">https://chrome.google.com/webstore/detail/markdown-here/elifhakcjgalahccnjkneoccemfahfoa?hl=zh-CN</a><br>[5]:	<a target="_blank" rel="noopener" href="https://t.co/9QEsItHp7X?amp=1">https://t.co/9QEsItHp7X?amp=1</a><br>[6]:	<a target="_blank" rel="noopener" href="http://md.aclickall.com/">http://md.aclickall.com/</a><br>[7]:	<a target="_blank" rel="noopener" href="https://knightyun.github.io/markdown-to-richtext/">https://knightyun.github.io/markdown-to-richtext/</a><br>[8]:	<a target="_blank" rel="noopener" href="https://github.com/sbarex/SourceCodeSyntaxHighlight">https://github.com/sbarex/SourceCodeSyntaxHighlight</a><br>[9]:	<a target="_blank" rel="noopener" href="https://github.com/srirangav/qlZipInfo">https://github.com/srirangav/qlZipInfo</a><br>[10]:	<a target="_blank" rel="noopener" href="https://www.findergg.com/">https://www.findergg.com/</a><br>[11]:	<a target="_blank" rel="noopener" href="https://github.com/sbarex/QLMarkdown">https://github.com/sbarex/QLMarkdown</a><br>[12]:	<a target="_blank" rel="noopener" href="https://apps.apple.com/cn/app/popclip/id445189367?mt=12">https://apps.apple.com/cn/app/popclip/id445189367?mt=12</a><br>[13]:	<a target="_blank" rel="noopener" href="https://pilotmoon.com/popclip/extensions/">https://pilotmoon.com/popclip/extensions/</a><br>[14]:	<a target="_blank" rel="noopener" href="https://github.com/ttscoff/popclipextensions">https://github.com/ttscoff/popclipextensions</a><br>[15]:	<a target="_blank" rel="noopener" href="https://pilotmoon.com/popclip/extensions/page/CopyAsMarkdown">https://pilotmoon.com/popclip/extensions/page/CopyAsMarkdown</a><br>[16]:	<a target="_blank" rel="noopener" href="https://hookproductivity.com/">https://hookproductivity.com/</a></p>
+<p>[image-1]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/9001fc98721e434fbc5cf1bda4a45cbd.png">https://imgs.zhubai.love/9001fc98721e434fbc5cf1bda4a45cbd.png</a><br>[image-2]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/a75f8a56a4a9454f89040b7b160c25d4.png">https://imgs.zhubai.love/a75f8a56a4a9454f89040b7b160c25d4.png</a><br>[image-3]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/3f8a0ad9e08b46f8a6c669a74de47efa.png">https://imgs.zhubai.love/3f8a0ad9e08b46f8a6c669a74de47efa.png</a><br>[image-4]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/7e3a0c6de8c1493cb14d72b367324e18.png">https://imgs.zhubai.love/7e3a0c6de8c1493cb14d72b367324e18.png</a><br>[image-5]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/c22f31aedfd5480284cdc3565df497b0.png">https://imgs.zhubai.love/c22f31aedfd5480284cdc3565df497b0.png</a><br>[image-6]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/f24a44733fd140acbe166a0d7d9c7a75.png">https://imgs.zhubai.love/f24a44733fd140acbe166a0d7d9c7a75.png</a><br>[image-7]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/d0fb546424a9405fa9664a2319e0fbf0.png">https://imgs.zhubai.love/d0fb546424a9405fa9664a2319e0fbf0.png</a><br>[image-8]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/66b95bdc20e34b55a9cf36cc5414f8d0.png">https://imgs.zhubai.love/66b95bdc20e34b55a9cf36cc5414f8d0.png</a><br>[image-9]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/32fece340fb945eba5aabc382e9a702d.png">https://imgs.zhubai.love/32fece340fb945eba5aabc382e9a702d.png</a><br>[image-10]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/745bcf5b684040c48b2e386d8e46dab0.png">https://imgs.zhubai.love/745bcf5b684040c48b2e386d8e46dab0.png</a><br>[image-11]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/f2b0896bd4084e46bb1aa77a5b481443.png">https://imgs.zhubai.love/f2b0896bd4084e46bb1aa77a5b481443.png</a><br>[image-12]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/c8a223d8960f4e2bacb870b2f95b7861.png">https://imgs.zhubai.love/c8a223d8960f4e2bacb870b2f95b7861.png</a><br>[image-13]:	<a target="_blank" rel="noopener" href="https://imgs.zhubai.love/afd9f6979379443f9a87825616306037.png">https://imgs.zhubai.love/afd9f6979379443f9a87825616306037.png</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Markdown/" rel="tag"># Markdown</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/25/blog2/" rel="prev" title="一个博客就是一片湖">
+      <i class="fa fa-chevron-left"></i> 一个博客就是一片湖
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/05/09/talk%20about/" rel="next" title="大家都在聊">
+      大家都在聊 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E6%B5%8F%E8%A7%88%E5%99%A8%E4%B8%8A%E9%9A%8F%E6%97%B6-Markdown"><span class="nav-number">1.</span> <span class="nav-text">在浏览器上随时 Markdown</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%B7%E8%B4%9D%E7%8C%AB-1"><span class="nav-number">1.1.</span> <span class="nav-text">[拷贝猫][1]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Markdown-Here-4"><span class="nav-number">1.2.</span> <span class="nav-text">[Markdown Here][4]</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E8%BD%AC%E6%8D%A2%E6%96%B9%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">其他转换方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E7%B3%BB%E7%BB%9F%E4%B8%AD%E9%9A%8F%E6%97%B6-Markdown"><span class="nav-number">2.</span> <span class="nav-text">在系统中随时 Markdown</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E3%80%8C%E9%A2%84%E8%A7%88%E3%80%8D-Markdown"><span class="nav-number">2.1.</span> <span class="nav-text">「预览」 Markdown</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PopClip-12-%E5%AE%9E%E7%8E%B0-Markdown"><span class="nav-number">2.2.</span> <span class="nav-text">[PopClip][12] 实现 Markdown</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6-Markdown"><span class="nav-number">2.3.</span> <span class="nav-text">任意文件 Markdown</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">马自立</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">19</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/yourname" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yourname@gmail.com" title="E-Mail → mailto:yourname@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/yourname" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://instagram.com/yourname" title="Instagram → https:&#x2F;&#x2F;instagram.com&#x2F;yourname" rel="noopener" target="_blank"><i class="fab fa-instagram fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">马自立</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
