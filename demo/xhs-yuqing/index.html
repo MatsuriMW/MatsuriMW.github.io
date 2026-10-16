@@ -128,6 +128,25 @@
 
   #tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: #fff; font-size: 12px; line-height: 1.5; padding: 6px 10px; border-radius: 6px; opacity: 0; transition: opacity .1s; max-width: 260px; }
   #tip b { font-size: 14px; }
+  /* 机器初判 → 人工复核 */
+  .review { border: 1px solid #c9d9ef; background: var(--accent-bg); }
+  .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+  .steps3 > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
+  .steps3 .k { font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+  .steps3 .v { font-weight: 700; margin: 2px 0 4px; }
+  .steps3 .d { font-size: 13px; color: var(--ink-2); }
+  .steps3 .human .k { color: var(--violet); }
+  @media (max-width: 680px) { .steps3 { grid-template-columns: 1fr; } }
+  .diff { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .diff th, .diff td { padding: 10px 12px; vertical-align: top; border-bottom: 1px solid var(--rule); text-align: left; }
+  .diff tr:last-child td { border-bottom: 0; }
+  .diff th { font-size: 12px; color: var(--ink-3); font-weight: 500; background: #faf9f6; }
+  .diff td:first-child { color: var(--ink-2); white-space: nowrap; }
+  .diff .before { color: var(--ink-3); text-decoration: line-through; text-decoration-color: #c9c7c0; }
+  .diff .after { color: var(--ink); }
+  .diff .after b { color: var(--violet); }
+  @media (max-width: 680px) { .diff td:first-child { white-space: normal; } .diff { font-size: 13px; } }
+  .badge { display: inline-block; font-size: 11px; color: var(--violet); border: 1px solid var(--violet); border-radius: 4px; padding: 0 4px; margin-left: 6px; vertical-align: 2px; font-weight: 500; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
   footer p { margin-bottom: 6px; }
 </style>
@@ -135,9 +154,9 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">DEMO · n8n + 小红书 MCP + DeepSeek</div>
+    <div class="eyebrow">DEMO · n8n + 小红书 MCP + DeepSeek · 机器初判 + 人工复核</div>
     <h1>小红书舆情研判：特斯拉 Roadster 发布后的 24 小时</h1>
-    <p class="lede">一个每天自动跑两次的舆情工作流。它在小红书搜品牌关键词，抓笔记和评论，逐条判断是不是在说这个品牌、什么语气、有没有碰到高压线，再由代码算指标、模型写研判，最后用规则和另一个模型给研判打分。下面是 2026 年 10 月 16 日 20:58 那一次的结果。</p>
+    <p class="lede">一个每天自动跑两次的舆情工作流。它在小红书搜品牌关键词，抓笔记和评论，逐条判断是不是在说这个品牌、什么语气、有没有碰到高压线，再由代码算指标、模型写研判，最后用规则和另一个模型给研判打分。下面是 2026 年 10 月 16 日 20:58 那一次的结果，以及人工复核之后的修正：自动评测给了 A，复核仍然找出了一处会把结论带偏的误判。</p>
     <div class="disclaimer">个人作品演示，与特斯拉公司无关。数据是 2026-10-16 小红书公开笔记和评论的样本（24 篇笔记、906 条记录），用户 ID 只存哈希，结论只对这个时间点、这个平台、这批样本成立。</div>
   </header>
 
@@ -146,8 +165,33 @@
       <div class="card stat"><div class="label">窗口内相关记录</div><div class="value">341</div><div class="sub">前一个 24 小时 33 条</div></div>
       <div class="card stat"><div class="label">负面</div><div class="value">31</div><div class="sub">占 9%，314 个独立用户</div></div>
       <div class="card stat"><div class="label">相关笔记互动</div><div class="value">15.7万</div><div class="sub">11 篇笔记的累计值</div></div>
-      <div class="card stat"><div class="label">真正指向车况的安全线索</div><div class="value">2</div><div class="sub">编码标了 8 条，6 条是对比梗</div></div>
-      <div class="card stat"><div class="label">研判评测</div><div class="value">A · 88</div><div class="sub">规则 14/14，抽检一致率 92%</div></div>
+      <div class="card stat"><div class="label">安全线索（人工复核后）<span class="badge">已修正</span></div><div class="value">8 → 2</div><div class="sub">6 条是拿别家事故做对比的梗</div></div>
+      <div class="card stat"><div class="label">自动评测（复核前）</div><div class="value">A · 88</div><div class="sub">规则 14/14，抽检一致率 92%</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>机器初判，人工复核</h2>
+      <p>自动评测只能查出机械性的错（编造的 ID、算不出来的百分比、证据不够就下结论），查不出「这条到底在说谁」。所以每份研判都要人看一遍，复核出的问题写回流程，下一轮自动生效。</p>
+    </div>
+    <div class="card review">
+      <div class="steps3">
+        <div><div class="k">① 机器初判</div><div class="v">评测 A · 88 分</div><div class="d">规则 14/14 通过，盲抽检一致率 92%，看起来可以直接用。</div></div>
+        <div class="human"><div class="k">② 人工复核</div><div class="v">发现一处误判</div><div class="d">「#刹车 #踩断」说的是懂车帝测出的江淮尊界刹车踏板断裂，不是特斯拉；模型把这批对比梗算成了特斯拉的安全风险。</div></div>
+        <div class="human"><div class="k">③ 写回流程</div><div class="v">下一轮自动生效</div><div class="d">新增「对比对象 / 谁占上风」编码字段；别家的事故不算本品牌高压线；核实过的背景写进配置，编码、研判、抽检都会读到。</div></div>
+      </div>
+      <div class="table-scroll">
+      <table class="diff">
+        <tr><th></th><th>机器初判</th><th>人工复核后</th></tr>
+        <tr><td>「刹车踩断」话题笔记</td><td class="before">窗口内量级最高的负面向内容，指向待核实</td><td class="after">拿尊界刹车踏板断裂对比 Roadster「会飞」的<b>玩梗帖</b>，特斯拉是占上风的一方</td></tr>
+        <tr><td>「安全」高压线</td><td class="before">8 条</td><td class="after"><b>2 条</b>指向特斯拉车况，其余 6 条是对比梗</td></tr>
+        <tr><td>舆情实质</td><td class="before">把飞行秀和刹车安全并置，翻安全旧账</td><td class="after">真实风险在另一面：对比带出国产车和特斯拉的<b>阵营情绪</b></td></tr>
+        <tr><td>升级条件</td><td class="before">「刹车踩断」以特斯拉名义扩散到其他平台</td><td class="after">特斯拉一方借梗点名友商，被截图成<b>外资品牌嘲讽国产</b></td></tr>
+        <tr><td>第一条自查</td><td class="before">核查标签指向，排查刹车相关售后工单和 400 记录</td><td class="after"><b>不借势</b>：官方号、销售、合作博主不接这个梗；梗本身不需要回应</td></tr>
+        <tr><td>不变的部分</td><td class="after" colspan="2">分档「舆情前夜」、阶段「暂不可判断」、下一步「内部自查」；跳票、续航承诺的旧账和一条 Model Y 刹车亲历反馈仍要跟进</td></tr>
+      </table>
+      </div>
     </div>
   </section>
 
@@ -166,7 +210,7 @@
 
   <section>
     <div class="sec-head">
-      <h2>研判结论</h2>
+      <h2>研判结论<span class="badge">人工复核后</span></h2>
       <p>判断顺序：是否形成舆情 → 舆情实质 → 走势 → 对业务的参考意义。没有连续传播数据时不判断阶段，只看一个平台时不说「尚未形成」。</p>
     </div>
     <div class="grid g4">
@@ -179,7 +223,7 @@
 
   <section>
     <div class="sec-head">
-      <h2>「刹车踩断」说的不是特斯拉</h2>
+      <h2>复核细节：「刹车踩断」说的不是特斯拉</h2>
       <p>窗口内互动最高的负面向笔记只挂了「#特斯拉 #刹车 #踩断」三个话题。模型据此把 8 条记录标成了特斯拉的「安全」高压线，人工复核发现其中 6 条在拿懂车帝测出的江淮尊界刹车踏板断裂，对比 Roadster「会飞」。被嘲讽的是别家，特斯拉是对照里占上风的一方。</p>
     </div>
     <div class="grid g2">
@@ -255,8 +299,8 @@
 
   <section>
     <div class="sec-head">
-      <h2>这份研判的评测</h2>
-      <p>最终等级取模型等级和规则封顶里更低的那个；低于 B 时报告顶上会写「只能作为讨论素材」。分数针对人工复核之前的版本。</p>
+      <h2>这份研判的自动评测</h2>
+      <p>最终等级取模型等级和规则封顶里更低的那个；低于 B 时报告顶上会写「只能作为讨论素材」。分数针对人工复核之前的版本：评测打出 A 的同一份报告，复核时仍改掉了一条会带偏结论的判断，这也是为什么流程里留着人。</p>
     </div>
     <div class="grid g2">
       <div class="card"><h3>七维度打分（合计 88 / 100）</h3><div id="dims"></div></div>
