@@ -147,6 +147,15 @@
   .diff .after b { color: var(--violet); }
   @media (max-width: 680px) { .diff td:first-child { white-space: normal; } .diff { font-size: 13px; } }
   .badge { display: inline-block; font-size: 11px; color: var(--violet); border: 1px solid var(--violet); border-radius: 4px; padding: 0 4px; margin-left: 6px; vertical-align: 2px; font-weight: 500; }
+  .links { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 680px) { .links { grid-template-columns: 1fr; } }
+  .links ul { list-style: none; margin: 0; padding: 0; }
+  .links li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .links li:last-child { border-bottom: 0; }
+  .links a { color: var(--blue); text-decoration: none; font-weight: 600; }
+  .links a:hover { text-decoration: underline; }
+  .links .d { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+  .links .t { font-size: 11px; color: var(--ink-3); border: 1px solid var(--rule); border-radius: 4px; padding: 0 4px; margin-left: 6px; font-weight: 400; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
   footer p { margin-bottom: 6px; }
 </style>
@@ -310,6 +319,35 @@
         <p class="note" style="margin-top:12px">✓ 是这份报告通过的 14 条；+ 是复核之后新加的四条，下一次运行起生效。</p>
       </div>
     </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>其他时间点和原始数据</h2>
+      <p>上面是 20:58 那次、经过人工复核的版本。同一天前后还跑过三次，报告都放在下面；每次运行的模型直出、指标和逐条编码都公开在仓库里，可以对着查。</p>
+    </div>
+    <div class="links">
+      <div class="card">
+        <h3>其他时间点的报告</h3>
+        <ul>
+          <li><a href="runs/2026-10-16_2009/">10-16 20:09 · 首跑</a><span class="t">已复核</span><span class="d">不限时间窗口，24 篇笔记、794 条记录，评测 B（83）</span></li>
+          <li><a href="runs/2026-10-16_2037/">10-16 20:37 · 第 2 次快照</a><span class="t">机器直出</span><span class="d">第一次按 24 小时窗口统计；「特斯拉 投诉」超时没抓到，样本不完整，评测 B（83）</span></li>
+          <li><a href="runs/2026-10-17_0723/">10-17 07:23 · 新字段首次实跑</a><span class="t">机器直出</span><span class="d">复核结论写回流程后的第一次运行，「尊界」被编成对比对象；评测 C（84）</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>数据来源与调研过程</h3>
+        <ul>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/tree/main/examples/tesla-2026-10/">四次运行总览</a><span class="d">每次做了什么、样本多少、评测几分、复核改了什么</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/examples/tesla-2026-10/2026-10-16_2058/模型直出.json">本页这次的模型直出</a><span class="d">研判和评测模型的原始输出，复核前的样子</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/examples/tesla-2026-10/2026-10-16_2058/编码表.csv">本页这次的逐条编码</a><span class="d">906 条笔记和评论的指向、情感、语气、高压线、动员等标签</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/examples/tesla-2026-10/2026-10-16_2058/指标.json">本页这次的指标</a><span class="d">代码算的三维度、窗口对比、热度最高的笔记</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/framework/研判与评测体系.md">研判与评测标准</a><span class="d">编码字段、指标口径、19 条规则和七维度打分</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/">工作流源码</a><span class="d">n8n 节点代码、提示词、导出脚本</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="note" style="margin-top:12px">数据来自小红书公开笔记和评论，用 xiaohongshu-mcp 在本机抓取。公开前去掉了评论全文、用户 ID 哈希、IP 属地和链接里的访问令牌。</p>
   </section>
 
   <footer>

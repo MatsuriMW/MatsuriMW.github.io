@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>舆情研判 · 10 月 17 日 07:23 · 新字段首次实跑</title>
+<style>
+:root { color-scheme: light; --page:#f6f5f1; --surface:#fcfcfb; --ink:#1f1f1d; --ink-2:#55544f; --ink-3:#8a8984; --rule:#e6e4de; --blue:#2a78d6; --violet:#4a3aa7; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--page); color:var(--ink); font:15px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",sans-serif; }
+.wrap { max-width: 920px; margin: 0 auto; padding: 32px 24px 72px; }
+@media (max-width:520px) { .wrap { padding: 24px 16px 56px; } }
+.top { font-size:13px; color:var(--ink-3); display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+.top a { color:var(--blue); text-decoration:none; }
+.note { background:var(--surface); border:1px solid #c9d9ef; border-radius:10px; padding:12px 16px; font-size:14px; color:var(--ink-2); margin-bottom:24px; }
+.note b { color:var(--violet); }
+.report { background:var(--surface); border:1px solid var(--rule); border-radius:12px; padding:8px 28px 28px; }
+@media (max-width:520px) { .report { padding: 4px 16px 20px; } }
+.report h1 { font-size:24px; line-height:1.35; margin:20px 0 12px; }
+.report h2 { font-size:19px; margin:28px 0 8px; padding-top:8px; border-top:1px solid var(--rule); }
+.report blockquote { margin:12px 0; padding:8px 14px; background:#f1f5fb; border-left:3px solid var(--blue); border-radius:0 8px 8px 0; color:var(--ink-2); }
+.report blockquote p { margin:4px 0; }
+.report a { color:var(--blue); text-decoration:none; word-break:break-all; }
+.report table { display:block; overflow-x:auto; border-collapse:collapse; font-size:13px; margin:10px 0; }
+.report th, .report td { border-bottom:1px solid var(--rule); padding:5px 8px; text-align:left; vertical-align:top; }
+.report th { color:var(--ink-3); font-weight:500; white-space:nowrap; }
+.report code { font-size:12px; background:#f0efea; padding:1px 4px; border-radius:4px; }
+.report sub { color:var(--ink-3); }
+footer { margin-top:32px; font-size:13px; color:var(--ink-3); }
+footer a { color:var(--blue); }
+</style></head><body><div class="wrap">
+<div class="top"><a href="../../">← 主页面（人工复核版）</a><a href="https://github.com/MatsuriMW/xhs-yuqing/tree/main/examples/tesla-2026-10/2026-10-17_0723">这次运行的原始数据</a><a href="https://github.com/MatsuriMW/xhs-yuqing">工作流源码</a></div>
+<div class="note">复核结论写回流程后的第一次实跑：格式、对比对象、谁占上风、「公众实际看到的版本」、交接包、19 条规则。<b>未经人工复核</b>；评测 C，因为研判引用了两条样本里没有的记录 ID。</div>
+<div class="report">
+<h1>特斯拉小红书舆情研判 · 2026/10/17 07:23:28</h1>
+<blockquote>
+<p><strong>评测 C（84/100）</strong>　规则检查 17/18 通过　编码抽检一致率 86%（12 条）</p>
+<p>⚠️ 这份结果只能作为讨论素材，不建议直接使用。请先补充事实、证据或组织动作，再生成发布版本。</p>
+</blockquote>
+<h2>判断基准</h2>
+<ul>
+<li><strong>决策主体</strong>：特斯拉中国品牌公关部</li>
+<li><strong>时间锚点</strong>：2026-10-17 07:23（本地）出发，研判窗口为过去 24 小时（覆盖 2026-10-16 全天到 10-17 上午）</li>
+<li><strong>范围</strong>：平台：小红书（唯一平台）；关键词：特斯拉、特斯拉 投诉、Model Y，三个关键词均正常返回、无失败；研判窗口：24 小时；样本：总记录 894 条（本机构 806 条），窗口内相关记录 349 条，涉及笔记 13 篇（窗口内发布 9 篇、新出现 6 篇）</li>
+<li><strong>证据缺口</strong>：<ul>
+<li>跨平台未覆盖：本工作流只抓小红书，没有微博、抖音、懂车帝、B站或媒体的证据，无法判断是否跨平台扩散</li>
+<li>官方号评论区未覆盖（metrics.official.covered 为 false，configured 为空、搜索中未见官方号），半公开喊话类内容可能出现在那里，本次看不到</li>
+<li>快照还没跨满一个 24 小时窗口（window_base_run_at 为空），拿不到窗口互动增量，传播增减只能看记录条数方向</li>
+<li>每篇只抓前若干条热评，发布较早的评论可能没抓到，前一窗口只记录到 2 条，对比只能看方向</li>
+<li>Roadster 飞行演示的技术真伪、167 万定金与 2028 量产的时间表、国内是否开放预订，本次样本里没有官方口径可核对，相关质疑只能标「待核实」</li>
+</ul>
+</li>
+</ul>
+<h2>零、过去 24 小时 的变化</h2>
+<p>过去 24 小时小红书新增窗口内相关记录 349 条，前一个窗口只有 2 条；新增负面 48 条（前一窗口 0 条）；窗口内发布相关笔记 9 篇、新出现相关笔记 6 篇，这批笔记累计互动 614748，24 小时互动增 1479（约 +1%）。增量几乎全部由 10 月 16 日 Roadster 发布会的飞行/悬浮演示带来：资讯转述笔记 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">n_6ad18924000000001b03238a</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">n_6ad184690000000012039554</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">n_6ad17ef600000000140002ff</a>）、玩梗二创 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1f3db000000001801bc66">n_6ad1f3db000000001801bc66</a>）、版本与定金信息贴 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad19457000000001402c3a6">n_6ad19457000000001402c3a6</a>）。窗口内没有本机构官方号内容，也没有新增安全事故或集体维权类记录（collective_recall 为 0，high_voltage 为空）。前一窗口样本偏少，这里只看方向不看幅度。</p>
+<h2>公众实际看到的版本</h2>
+<p>搜「特斯拉」先看到的是 Roadster 飞行演示页，前五位互动量分别是 228457、190908、131949、42217、17546，全部是世界知识型转述或玩梗二创 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">n_6ad18924000000001b03238a</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">n_6ad17ef600000000140002ff</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">n_6ad184690000000012039554</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">n_6ad17d9c000000001500e936</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1f3db000000001801bc66">n_6ad1f3db000000001801bc66</a>），高赞评论主要是玩梗——「老马这得意的小表情」15000 赞 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad1981a0000000011033752</a>）、「地上的车也得注意 到时候还得注意天上」711 赞 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad1e1c70000000012009b37</a>）、「詹姆斯邦德」429 赞 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad1c2570000000012002b3d</a>），也有负面「it sucks」2998 赞 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad193df00000000030306a9</a>）。搜「特斯拉 投诉」先看到的五位全部是窗口外存量维权内容（对特斯拉寒心、投诉无回应、维权Day3、安全带钢缆断裂被要求自费维修、售后投诉鬼打墙），没有一条窗口内新增 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a5e39b100000000220186dc">n_6a5e39b100000000220186dc</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a221e640000000022025a83">n_6a221e640000000022025a83</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a8838330000000035027da5">n_6a8838330000000035027da5</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6acb9d83000000000202bd2f">n_6acb9d83000000000202bd2f</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6aa38879000000002a0274be">n_6aa38879000000002a0274be</a>）。搜「Model Y」第二位是窗口内的销量内容「Model Y，已经「无法无天」了！」，高赞「不是它有多好，而是对国内的车不信任」137 赞 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">n_6ad1805b000000001400097d</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">c_6ad1837d000000000702acfe</a>）。也就是说，公众先看到的是「概念车表演 + 销量占上风 + 一屏存量旧账」拼出来的版本；挂着本机构话题在传播的，其实大多是在讲那台会飞的 Roadster 概念车，和窗口内在售车型的交付、售后没有新增关系。</p>
+<h2>一、是否已经形成舆情</h2>
+<p><strong>传播证据不足，暂不可分档</strong>。单平台内互动量级不小（这批笔记累计互动 614748、13 位作者），但本次只覆盖小红书，没有跨平台节点、媒体跟进或热榜证据，构不成「已形成舆情」的跨平台条件；同时样本量足够、并非单点投诉，也不能反过来说「尚未形成」，因此按证据不足处理 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">n_6ad18924000000001b03238a</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">n_6ad184690000000012039554</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">n_6ad17ef600000000140002ff</a>）。</p>
+<h2>二、舆情实质分析</h2>
+<p>这个窗口的负面不是车况，而是对 Roadster「会飞」这场概念营销的反弹。349 条窗口内相关记录里 48 条负面、来自 53 个账号，其中高强度负面 34 条，集中在三条线上。第一，质疑演示真假和能不能量产：「绝对AI，如果不是今天中午我就吃一个烧鹅腿」222 赞 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad19e670000000008030faa</a>）、「放心，不可能量产的，纯哄粉丝个股民用的」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">c_6ad19bc0000000000702b56d</a>）、「所以又跳票了 还要等两年」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad19457000000001402c3a6">c_6ad1b1730000000008026092</a>）、「又是概念！从来不实现的概念」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad21ab9000000000b00098a</a>）、「你永远看不见，这在天上飞的车，正式发售的消息」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1f9dd000000000b00e8d9</a>）；第二，质疑是噱头、不解决真实需求：「我会为彩电沙发冰箱买单，不会去给什么飞行汽车买单」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1e1e6000000001001fd2f</a>）、「光看演示的那个表现没有实用价值还不安全」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1f3db000000001801bc66">c_6ad2616400000000110317b5</a>）、「不就是个吊广告吗」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad2067d0000000008027397</a>）、「真需求提供生活便利，伪需求氮气喷射」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1e3b2000000001202a428</a>），以及合规与安全顾虑「这种喷射根本就不合规，绝对不可能上街」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad20c10000000001103ea95</a>）、「什么移动炸弹」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1e71e000000001001df16</a>）；第三，把这次发布和国产车企同类展示对照，指双标——「小鹏做飞行器时，比亚迪做浮水汽车时你们说的可是花里胡哨」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad22a5a00000000070364ee</a>）、「我记得比亚迪展出汽车涉水和悬挂跳舞的时候，好像特粉们不是这样说的啊」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad233ec0000000007028fd5</a>）、「小鹏：…我之前公开的飞车，忘啦？」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad25f75000000001103ef64</a>）。另外出现对刷屏的怀疑：「你们是商量好的吗，还是说有宣传费？刷到好多了」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad20055000000001103c15d</a>）、「特斯拉在中国短视频平台的舆论战通稿是第六次工业革命」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">c_6ad20e1a000000000b037fca</a>），这条线会伤品牌而不是产品。找替代解释后能确认：刹车类负面里至少一条明确是调侃别家（「我们刹车断了也随便飞」，说的是尊界，本机构在这个对比里占上风）（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">c_6ad1bb550000000012003f82</a>）；「不如好好研究刹车」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">c_6ad19a130000000007034585</a>）、「真创新在用塑料替代金属刹车。伪创新在天上飞」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1ddab0000000007035aed</a>） 指向待核实，不能当本机构车况实证。同时段本机构占上风的对比有 29 条（对比记录共 41 条），例如销量帖下的「不是它有多好，而是对国内的车不信任」137 赞 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">c_6ad1837d000000000702acfe</a>）、「目前除了特斯拉也就小米了」（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">c_6ad1ea96000000000801de70</a>）。结论：窗口内没有在售车型的新增故障或集体维权（collective_recall 0、high_voltage 为空），风险落在品牌与营销层；搜「特斯拉 投诉」首屏仍是存量旧账（售后推诿、降价维权、安全带过保自费）（<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6aa38879000000002a0274be">n_6aa38879000000002a0274be</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e5bd7000000002502e18a">n_6a9e5bd7000000002502e18a</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6acb9d83000000000202bd2f">n_6acb9d83000000000202bd2f</a>、n_6aa57673000000000100be6f）——也就是有旧账可翻，但这一窗没有新的账。</p>
+<h2>三、舆情走势研判</h2>
+<p><strong>阶段暂不可判断</strong></p>
+<p>升级条件：</p>
+<ul>
+<li>如果 24-48 小时内出现新的高互动负面笔记，或单条质疑笔记互动量级追平这批飞行演示笔记 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">n_6ad18924000000001b03238a</a>）</li>
+<li>如果「会飞」被证实为纯 CGI/AI 合成、或被官方口径修正，质疑会从玩梗滑向「虚假宣传」标签 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad19e670000000008030faa</a>）</li>
+<li>如果 168 万定金、2028 量产、国内是否开放预订引出新的预订或退款争议 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad19457000000001402c3a6">n_6ad19457000000001402c3a6</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad19457000000001402c3a6">c_6ad1b1730000000008026092</a>）</li>
+<li>如果「通稿刷屏/双标」被国产车企高管或汽车媒体接续放大，话题从品牌玩梗转成阵营对骂 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad20055000000001103c15d</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">c_6ad20e1a000000000b037fca</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad22a5a00000000070364ee</a>）</li>
+<li>如果存量售后、价格或安全带类维权出现新的 12315 受理或被这次高流量发布会带进同一条讨论 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e5bd7000000002502e18a">n_6a9e5bd7000000002502e18a</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6acb9d83000000000202bd2f">n_6acb9d83000000000202bd2f</a>）</li>
+<li>如果小红书之外（抖音、微博、懂车帝）出现同题内容并被媒体转载</li>
+</ul>
+<p>降温条件：</p>
+<ul>
+<li>如果 24-48 小时内讨论自然回落，互动增量持续低于 1%，负面停留在玩梗和概念质疑层面</li>
+<li>如果官方或高管对飞行演示的技术边界、Rocket 版是否上路、量产时间给出明确口径，压缩「骗股价」「AI 合成」的解释空间</li>
+<li>如果窗口内继续没有新的售后、价格维权笔记出现，存量旧账没有新燃料</li>
+<li>如果本机构占上风的对比（销量、品牌信任类）继续占多数，阵营争吵没有形成固定标签 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">c_6ad1837d000000000702acfe</a>）</li>
+</ul>
+<h2>四、对业务的参考意义</h2>
+<p>这次高流量的是 Roadster 概念车，短期不直接牵涉在售 Model 3 / Model Y 的交付和售后。真实敞口有三块：一，品牌层面会被贴上「噱头、伪创新、通稿刷屏」的标签，消费者对 FSD、续航、配置这些实打实的产品点会更挑剔 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1e1e6000000001001fd2f</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad20055000000001103c15d</a>）；二，发布会被拿去和国产车企的飞行器、浮水展示对照，账号容易被卷进阵营争吵 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad22a5a00000000070364ee</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad233ec0000000007028fd5</a>）；三，搜「特斯拉 投诉」的首屏仍是售后推诿、降价维权、安全带过保自费的存量内容，说明这些问题的可见性没有被新内容稀释，一有合适由头就会被重新翻出来 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a5e39b100000000220186dc">n_6a5e39b100000000220186dc</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a221e640000000022025a83">n_6a221e640000000022025a83</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6acb9d83000000000202bd2f">n_6acb9d83000000000202bd2f</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6aa38879000000002a0274be">n_6aa38879000000002a0274be</a>）。</p>
+<p>需要自查：</p>
+<ul>
+<li>调近 7 天 400 与门店互推、无法给出处理时限的售后工单，与小红书上「400 说我给你反馈到门店」这类存量表述对一遍 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6aa38879000000002a0274be">c_6aa57673000000000100be6f</a>）</li>
+<li>核对 Model YL 后悬相关投诉的受理与处理进度——窗口内那篇销量笔记自己就提到「Model YL的后悬前段时间还出现了投诉」 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">n_6ad1805b000000001400097d</a>）</li>
+<li>核对蓝牙钥匙/卡片钥匙落锁这类车机问题的上报路径和客服回复模板 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a5e39b100000000220186dc">n_6a5e39b100000000220186dc</a>、n_6a5f0686000000001500993c）</li>
+<li>核对安全带钢缆等安全件过保争议的判定口径与话术是否统一 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6acb9d83000000000202bd2f">n_6acb9d83000000000202bd2f</a>）</li>
+<li>抽查销售端对降价和区补的口头承诺话术，与官方价格通知是否一致 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e5bd7000000002502e18a">n_6a9e5bd7000000002502e18a</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e1459000000001103920e">c_6a9e3bb6000000000202b991</a>）</li>
+<li>确认 Roadster Rocket 版及「会飞」相关对外传播素材是否已给出技术边界和量产时间口径，避免被解读成 AI 合成或纯营销 （<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad19e670000000008030faa</a>、<a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">c_6ad19bc0000000000702b56d</a>）</li>
+</ul>
+<p><strong>下一步：观察即可</strong>。窗口内 349 条相关记录里负面 48 条，没有指向在售车型的新增故障、没有高强度负面事件、collective_recall 为 0、high_voltage 为空；高分贝内容集中在自家发布会的玩梗与概念质疑，本机构占上风的对比有 29/41 条。负面里能定位到具体门店、批次、软件版本的新增线索为零，存量的售后与价格问题这一窗没有新燃料，不需要立刻动用公关资源，保持盯数据即可。</p>
+<hr>
+<h2>附一：三维度指标（代码计算，只统计指向本机构、过去 24 小时 内的记录）</h2>
+<p>风险量级 <strong>高</strong>（传播 高｜情感 低｜内容 低）。三维度各自分级，风险量级取最高，不取平均（任一维度爆表都要警惕）。</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>指标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>样本</td>
+<td>关键词 特斯拉、特斯拉 投诉、Model Y；筛选 不筛选；抓到笔记 24 篇、记录 894 条，编码 894 条（失败 0）；指向分布：本机构 806，同名或其他机构 58，泛讨论 17，无法判断 13；第 4 次快照</td>
+</tr>
+<tr>
+<td>窗口</td>
+<td>过去 24 小时：窗口内记录 370 条，其中本机构 349 条（全部样本里本机构 806 条）；和前一个 24 小时 比：本机构记录 2 → 349，负面 0 → 48，碰高压线 0 → 0（每篇只抓前若干条热评，越早的评论越可能没被抓到，前一窗口的数字偏少，只看方向不看幅度）</td>
+</tr>
+<tr>
+<td>传播</td>
+<td>窗口内有动静的相关笔记 13 篇（其中窗口内新发 9 篇），作者 13 人，互动总量 614748；新增相关笔记 6；可比笔记互动增量 1479（1%）；窗口互动增量 —（快照还不够 24 小时，窗口互动增量要等跑满一个窗口才有；下面的互动总量是这些笔记的累计值）；跨平台：未覆盖（本工作流只抓小红书）</td>
+</tr>
+<tr>
+<td>情感</td>
+<td>相关记录 349 条（335 个独立用户）：中性 222，正面 73，负面 48，混合 6；负面占 14%；烈度 ≥2 的负面 34 条；集体经验召回 0 条；语气：玩梗 137，陈述 113，质疑 38，嘲讽 28，询问 19，推荐 8，抱怨 5，避雷警告 1</td>
+</tr>
+<tr>
+<td>内容</td>
+<td>话题：设计与配置 145，未标注 138，品牌与创始人言论 39，销售与交付 12，价格与优惠 10，其他 8，产品质量与故障 6，安全事故 5，辅助驾驶 2，车机与软件 1，续航与充电 1，售后与维修 1；负面集中在：设计与配置 32，品牌与创始人言论 7，未标注 6，销售与交付 6，其他 4，产品质量与故障 2，辅助驾驶 1，安全事故 1；高压线：无</td>
+</tr>
+<tr>
+<td>动员</td>
+<td>最高 5 级；≥4 级 1 条，≥5 级 1 条</td>
+</tr>
+<tr>
+<td>可见版本</td>
+<td>搜索前排：「特斯拉」前 5 篇里本机构 5 篇、负面 0 篇；「特斯拉 投诉」前 5 篇里本机构 5 篇、负面 5 篇；「Model Y」前 5 篇里本机构 5 篇、负面 1 篇；相关笔记格式：资讯转述 10，玩梗二创 1，其他 1，亲历分享 1（排名、互动和高赞只说明被看见，不等于态度）</td>
+</tr>
+<tr>
+<td>对比</td>
+<td>41 条在拿本机构和别家比：比的对象 国产车 8，尊界 6，小米 4，蔚来 4，小鹏 2，小米 SU7 Ultra 2，比亚迪 2，国产新能源车 1，比亚迪 仰望 1，其他车企 1，宝马 1，雷军 1，车载无人机 1，理想 1，别家车企 1，弹射电池 1，国产车企 1，国产友商 1，吉利星愿 1，极氪 1，腾势 1，国内品牌 1，小米 YU7 1，其他电车 1，极氪7X 1；本机构占上风 29，不分高下 6，本机构落下风 6</td>
+</tr>
+<tr>
+<td>官方号评论区</td>
+<td>未覆盖（「配置」official_accounts 没填 user_id）</td>
+</tr>
+<tr>
+<td>存量背景</td>
+<td>窗口外的本机构记录 457 条，其中负面 174 条，集中在：价格与优惠 46，售后与维修 45，设计与配置 25，品牌与创始人言论 23，产品质量与故障 19，车机与软件 18，销售与交付 14，未标注 13，其他 6，辅助驾驶 5，续航与充电 4，员工与招聘 1，保险与残值 1；全部样本负面占 28%；最早一条 2025-12-30</td>
+</tr>
+</tbody></table>
+<p>热度最高的相关笔记：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">特斯拉能飞了！新款Roadster跑车亮相</a>　互动 228457</li>
+<li><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">特斯拉发布了一款会飞的跑车</a>　互动 190908</li>
+<li><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">特斯拉把SpaceX的火箭技术装到了新车上</a>　互动 131949</li>
+<li><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">特斯拉Roadster真的会飞！零百加速1秒！</a>　互动 42217</li>
+<li><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1f3db000000001801bc66">特斯拉新车最大的用途：抢车位</a>　互动 17546</li>
+</ul>
+<h2>附二：研判引用的原话</h2>
+<table>
+<thead>
+<tr>
+<th>记录</th>
+<th>类型</th>
+<th>原话</th>
+<th>指向 / 情感 / 语气</th>
+<th>格式 / 对比</th>
+<th>高压线</th>
+<th>动员</th>
+<th>赞</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">n_6ad18924000000001b03238a</a></td>
+<td>笔记</td>
+<td>10月16日，特斯拉新款Roadster跑车正式亮相</td>
+<td>本机构 / 中性 / 陈述</td>
+<td>资讯转述</td>
+<td>—</td>
+<td>0</td>
+<td>79000</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">n_6ad184690000000012039554</a></td>
+<td>笔记</td>
+<td>特斯拉把SpaceX的火箭技术装到了新车上</td>
+<td>本机构 / 中性 / 陈述</td>
+<td>资讯转述</td>
+<td>—</td>
+<td>0</td>
+<td>65000</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">n_6ad17ef600000000140002ff</a></td>
+<td>笔记</td>
+<td>新一代 Roadster 把 SpaceX 的技术放到了跑车上</td>
+<td>本机构 / 正面 / 推荐</td>
+<td>资讯转述</td>
+<td>—</td>
+<td>0</td>
+<td>59000</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1f3db000000001801bc66">n_6ad1f3db000000001801bc66</a></td>
+<td>笔记</td>
+<td>特斯拉新车最大的用途：抢车位</td>
+<td>本机构 / 中性 / 玩梗</td>
+<td>玩梗二创</td>
+<td>—</td>
+<td>0</td>
+<td>5667</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad19457000000001402c3a6">n_6ad19457000000001402c3a6</a></td>
+<td>笔记</td>
+<td>特斯拉Roadster II发布会看得非常震撼</td>
+<td>本机构 / 正面 / 陈述</td>
+<td>资讯转述</td>
+<td>—</td>
+<td>0</td>
+<td>87</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">n_6ad17d9c000000001500e936</a></td>
+<td>笔记</td>
+<td>特斯拉Roadster真的会飞！零百加速1秒！</td>
+<td>本机构 / 正面 / 陈述</td>
+<td>资讯转述</td>
+<td>—</td>
+<td>0</td>
+<td>11000</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad1981a0000000011033752</a></td>
+<td>评论</td>
+<td>老马这得意的小表情</td>
+<td>本机构 / 正面 / 玩梗</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>15000</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad1e1c70000000012009b37</a></td>
+<td>评论</td>
+<td>地上的车也得注意 到时候还得注意天上</td>
+<td>本机构 / 中性 / 玩梗</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>711</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad1c2570000000012002b3d</a></td>
+<td>评论</td>
+<td>詹姆斯邦德</td>
+<td>本机构 / 中性 / 玩梗</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>429</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad193df00000000030306a9</a></td>
+<td>回复</td>
+<td>it sucks</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>2998</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a5e39b100000000220186dc">n_6a5e39b100000000220186dc</a></td>
+<td>笔记</td>
+<td>亲身深山遇险经历，全程无个人失误，却被自家车辆系统锁在荒郊</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>亲历分享</td>
+<td>被轻视感、消费公平</td>
+<td>6</td>
+<td>104</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a221e640000000022025a83">n_6a221e640000000022025a83</a></td>
+<td>笔记</td>
+<td>态度敷衍，盛气凌人，无视法律</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>亲历分享</td>
+<td>被轻视感、消费公平</td>
+<td>2</td>
+<td>34</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a8838330000000035027da5">n_6a8838330000000035027da5</a></td>
+<td>笔记</td>
+<td>超充后高速断电失去动力，BMS_a079故障码</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>亲历分享</td>
+<td>安全、质量缺陷</td>
+<td>6</td>
+<td>152</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6acb9d83000000000202bd2f">n_6acb9d83000000000202bd2f</a></td>
+<td>笔记</td>
+<td>特斯拉安全带钢缆断裂被要求自费维修</td>
+<td>本机构 / 负面 / 陈述</td>
+<td>资讯转述</td>
+<td>安全</td>
+<td>6</td>
+<td>46</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6aa38879000000002a0274be">n_6aa38879000000002a0274be</a></td>
+<td>笔记</td>
+<td>400 说我给你反馈到门店？</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>亲历分享</td>
+<td>被轻视感</td>
+<td>2</td>
+<td>3</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">n_6ad1805b000000001400097d</a></td>
+<td>笔记</td>
+<td>Model Y依然拿下了国内所有品类所有车型的销量第一</td>
+<td>本机构 / 正面 / 陈述</td>
+<td>资讯转述；比 国产友商、吉利星愿（本机构占上风）</td>
+<td>—</td>
+<td>0</td>
+<td>75</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">c_6ad1837d000000000702acfe</a></td>
+<td>评论</td>
+<td>不是它有多好，而是对国内的车不信任</td>
+<td>本机构 / 中性 / 陈述</td>
+<td>比 国产车（本机构占上风）</td>
+<td>—</td>
+<td>0</td>
+<td>137</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17ef600000000140002ff">c_6ad19e670000000008030faa</a></td>
+<td>评论</td>
+<td>绝对AI，如果不是今天中午我就吃一个烧鹅腿</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>222</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">c_6ad19bc0000000000702b56d</a></td>
+<td>回复</td>
+<td>放心，不可能量产的，纯哄粉丝个股民用的</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>19</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad19457000000001402c3a6">c_6ad1b1730000000008026092</a></td>
+<td>评论</td>
+<td>所以又跳票了 还要等两年</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad21ab9000000000b00098a</a></td>
+<td>评论</td>
+<td>又是概念！从来不实现的概念</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1f9dd000000000b00e8d9</a></td>
+<td>评论</td>
+<td>你永远看不见，这在天上飞的车，正式发售的消息</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1e1e6000000001001fd2f</a></td>
+<td>评论</td>
+<td>我会为彩电沙发冰箱买单，不会去给什么飞行汽车买单</td>
+<td>本机构 / 负面 / 陈述</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>6</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1f3db000000001801bc66">c_6ad2616400000000110317b5</a></td>
+<td>评论</td>
+<td>光看演示的那个表现没有实用价值还不安全</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad2067d0000000008027397</a></td>
+<td>评论</td>
+<td>不就是个吊广告吗</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1e3b2000000001202a428</a></td>
+<td>评论</td>
+<td>真需求提供生活便利，伪需求氮气喷射</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad20c10000000001103ea95</a></td>
+<td>评论</td>
+<td>这种喷射根本就不合规，绝对不可能上街</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1e71e000000001001df16</a></td>
+<td>评论</td>
+<td>什么移动炸弹💣</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad22a5a00000000070364ee</a></td>
+<td>评论</td>
+<td>小鹏做飞行器时，比亚迪做浮水汽车时你们说的可是花里胡哨</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>比 小鹏、比亚迪（不分高下）</td>
+<td>—</td>
+<td>0</td>
+<td>20</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad233ec0000000007028fd5</a></td>
+<td>评论</td>
+<td>我记得比亚迪展出汽车涉水和悬挂跳舞的时候，好像特粉们不是这样说的啊</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>比 比亚迪（不分高下）</td>
+<td>—</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad18924000000001b03238a">c_6ad25f75000000001103ef64</a></td>
+<td>回复</td>
+<td>小鹏：[黑薯问号R][黑薯问号R][黑薯问号R]我之前公开的飞车，忘啦？才说这话。</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>比 小鹏（本机构落下风）</td>
+<td>—</td>
+<td>0</td>
+<td>6</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad20055000000001103c15d</a></td>
+<td>评论</td>
+<td>你们是商量好的吗，还是说有宣传费？刷到好多了</td>
+<td>本机构 / 负面 / 质疑</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad184690000000012039554">c_6ad20e1a000000000b037fca</a></td>
+<td>评论</td>
+<td>特斯拉在中国短视频平台的舆论战通稿是第六次工业革命</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">c_6ad1bb550000000012003f82</a></td>
+<td>评论</td>
+<td>我们刹车断了也随便飞</td>
+<td>同名或其他机构 / 负面 / 玩梗</td>
+<td>比 尊界（本机构占上风）</td>
+<td>—</td>
+<td>0</td>
+<td>13</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad17d9c000000001500e936">c_6ad19a130000000007034585</a></td>
+<td>评论</td>
+<td>不如好好研究刹车</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>35</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1a9090000000018010ae1">c_6ad1ddab0000000007035aed</a></td>
+<td>评论</td>
+<td>真创新在用塑料替代金属刹车。伪创新在天上飞</td>
+<td>本机构 / 负面 / 嘲讽</td>
+<td>—</td>
+<td>—</td>
+<td>0</td>
+<td>7</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6ad1805b000000001400097d">c_6ad1ea96000000000801de70</a></td>
+<td>评论</td>
+<td>目前除了特斯拉也就小米了</td>
+<td>本机构 / 正面 / 陈述</td>
+<td>比 小米（不分高下）</td>
+<td>—</td>
+<td>0</td>
+<td>19</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e5bd7000000002502e18a">n_6a9e5bd7000000002502e18a</a></td>
+<td>笔记</td>
+<td>销售明确说9 月不会降价，也不会有区补</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>亲历分享</td>
+<td>消费公平</td>
+<td>6</td>
+<td>76</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6aa38879000000002a0274be">c_6aa57673000000000100be6f</a></td>
+<td>评论</td>
+<td>我投诉也是400推给门店，门店说找400</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>—</td>
+<td>被轻视感</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e1459000000001103920e">c_6a9e3bb6000000000202b991</a></td>
+<td>回复</td>
+<td>我已上12315投诉并打了市长热线</td>
+<td>本机构 / 负面 / 抱怨</td>
+<td>—</td>
+<td>消费公平</td>
+<td>6</td>
+<td>2</td>
+</tr>
+</tbody></table>
+<h2>附三：评测明细</h2>
+<p>评测体系见 <code>framework/研判与评测体系.md</code>（改写自初五 Chuwu-PR-OS 的热点舆情分析与 PR 输出质量评估）。</p>
+<p><strong>规则检查</strong></p>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>检查</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>R0</td>
+<td>采集完整（每个关键词都搜到了）</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R1</td>
+<td>结构完整</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>分档在四个取值里</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>快照没跨满一个窗口时不判断阶段</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>引用的记录真实存在且至少一条</td>
+<td>❌ 引用了不存在的记录：n_6aa57673000000000100be6f、n_6a5f0686000000001500993c（封顶 C）</td>
+</tr>
+<tr>
+<td>R12</td>
+<td>窗口变化只引用窗口内的记录</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R4b</td>
+<td>引用写全 ID</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R5</td>
+<td>百分比都来自指标</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R6</td>
+<td>单平台要写明其他平台未覆盖</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R6b</td>
+<td>官方号评论区没覆盖时要交代</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R7</td>
+<td>同名占比高时要交代</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R8</td>
+<td>没有空话</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R9</td>
+<td>没有把评论区外推成整体公众</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R13</td>
+<td>没有把可见性写成态度</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R14</td>
+<td>写了「公众实际看到的版本」并引用记录</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R15</td>
+<td>下一步不是观察即可时交接包八字段齐全</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R10</td>
+<td>不替法务定责</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>R11</td>
+<td>写了决策主体和带日期的时间锚点</td>
+<td>✅</td>
+</tr>
+</tbody></table>
+<p><strong>模型打分</strong>（deepseek-v4-pro）</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>得分</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>问题识别</td>
+<td>8/10</td>
+</tr>
+<tr>
+<td>事实和证据</td>
+<td>17/20</td>
+</tr>
+<tr>
+<td>公共语境</td>
+<td>16/20</td>
+</tr>
+<tr>
+<td>品牌和业务匹配</td>
+<td>9/10</td>
+</tr>
+<tr>
+<td>策略可执行性</td>
+<td>12/15</td>
+</tr>
+<tr>
+<td>表达质量</td>
+<td>9/10</td>
+</tr>
+<tr>
+<td>风险控制</td>
+<td>13/15</td>
+</tr>
+<tr>
+<td>合计</td>
+<td>84/100，规则扣分后 84</td>
+</tr>
+</tbody></table>
+<p>做得好的：</p>
+<ul>
+<li>证据充分，大部分判断都有原话和指标数据支撑，如负面言论均引用具体评论内容</li>
+<li>区分了窗口内新增与窗口外存量，避免把旧账误报为新增风险</li>
+<li>主动寻找替代解释，明确「刹车断了」等调侃指向尊界而非本机构</li>
+<li>阶段判断谨慎，传播证据不足时写「暂不可分档」，不强行定级</li>
+<li>自查项具体到 400 工单、蓝牙钥匙反馈路径、销售话术等可执行层面</li>
+</ul>
+<p>问题：</p>
+<ul>
+<li>部分自查项仍偏宽泛，如「核对蓝牙钥匙/卡片钥匙落锁这类车机问题的上报路径」未指明具体由哪个团队负责、查什么时间范围</li>
+<li>报告中使用了「collective_recall」「high_voltage」等指标术语，对非数据团队不够白话，影响直接转发</li>
+<li>handoff 为 null，没有提供交接包，若需跨班次跟进会缺失证据、反证和缺口的对照清单</li>
+<li>对民族情绪风险提示不足：trend 中仅提到「阵营对骂」，未明确点出双标讨论可能引发民族情绪对抗</li>
+</ul>
+<p><strong>编码抽检</strong>：12 条，指向一致 100%，情感一致 83%，高压线一致 75%。两个模型一致不等于判对，只用来发现明显错标。</p>
+<table>
+<thead>
+<tr>
+<th>记录</th>
+<th>原文</th>
+<th>分歧（编码→复核）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e5bd7000000002502e18a">c_6aa0b6af000000000201078f</a></td>
+<td>投诉这个销售比特斯拉靠谱点</td>
+<td>高压线 []→[消费公平]</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a5e39b100000000220186dc">n_6a5e39b100000000220186dc</a></td>
+<td>对特斯拉寒心 #特斯拉售后避雷[话题]# #特斯拉车主维权[话题]# 亲身深山遇险经历，全程无个人失误，却被自家车辆系统锁在荒郊，400客服全程甩锅不作为 20</td>
+<td>高压线 [被轻视感,消费公平]→[安全,被轻视感,消费公平]</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a5e39b100000000220186dc">c_6a706f85000000002a0338e9</a></td>
+<td>我是开车去爬山，在离景区充电站1.8km的地方没电了，车子直接熄火，车机系统过了十来分钟也关机车门打不开。打400打不通，最后还是保险叫得搭电拖车。</td>
+<td>高压线 []→[安全]</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a6c9d54000000002403d764">c_6a6fcc6300000000140393bb</a></td>
+<td>大胆 竟敢说特斯拉不好</td>
+<td>情感 负面→中性</td>
+</tr>
+<tr>
+<td><a target="_blank" rel="noopener" href="https://www.xiaohongshu.com/explore/6a9e5bd7000000002502e18a">c_6a9e5cd3000000000202a558</a></td>
+<td>其他消费者，有微信截图，可惜我这边是通话，没有记录</td>
+<td>情感 中性→负面</td>
+</tr>
+</tbody></table>
+<p><sub>运行 2026-10-17T07-23-28｜手动触发｜编码 deepseek-flash（新编码 894 条，缓存 0 条，8 条原话不在原文里已丢弃）｜研判 deepseek-flash｜评测 deepseek-v4-pro｜抓取失败 0 篇</sub></p>
+
+</div>
+<footer>个人作品演示，与特斯拉公司无关。数据是小红书公开笔记和评论的样本，结论只对当时、这个平台、这批样本成立。原始数据里去掉了评论全文、用户 ID 和访问令牌。</footer>
+</div></body></html>
