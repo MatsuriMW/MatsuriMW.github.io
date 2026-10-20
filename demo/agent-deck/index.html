@@ -30,7 +30,14 @@
   .lede { font-size: 17px; color: var(--ink-2); max-width: 760px; margin: 0 0 12px; }
   .film { margin-top: 32px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px; }
   video { display: block; width: 100%; height: auto; border-radius: 8px; background: #000; aspect-ratio: 16 / 9; }
-  .cap { font-size: 13px; color: var(--ink-3); margin: 10px 4px 0; }
+  .cap { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 10px 4px 0; }
+  .quality { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+  .quality button { font: inherit; font-size: 13px; padding: 4px 10px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; }
+  .quality button + button { border-left: 1px solid var(--rule); }
+  .quality button small { margin-left: 4px; font-size: 11px; color: var(--ink-3); }
+  .quality button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+  .quality button[aria-pressed="true"] small { color: inherit; opacity: .7; }
   .links { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 15px; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
 </style>
@@ -44,16 +51,22 @@
   </header>
 
   <div class="film">
-    <video controls playsinline preload="metadata" poster="poster.jpg">
+    <video id="film" controls playsinline preload="metadata" poster="poster.jpg">
       <source src="agent-deck-demo-1080p60.mp4" type="video/mp4">
       <track kind="subtitles" src="agent-deck-demo.zh.vtt" srclang="zh" label="中文" default>
     </video>
-    <p class="cap">25 秒，有声音，带中文字幕。画面是按插件界面复刻的动态图形，不是录屏。</p>
+    <div class="bar">
+      <p class="cap">25 秒，有声音，带中文字幕。画面是按插件界面复刻的动态图形，不是录屏。</p>
+      <div class="quality" role="group" aria-label="清晰度">
+        <button type="button" data-src="agent-deck-demo-720p30.mp4">720p<small>3 MB</small></button>
+        <button type="button" data-src="agent-deck-demo-1080p60.mp4">1080p60<small>7.5 MB</small></button>
+        <button type="button" data-src="agent-deck-demo-4k60.mp4">4K60<small>37 MB</small></button>
+      </div>
+    </div>
   </div>
 
   <div class="links">
     <a href="https://github.com/MatsuriMW/obsidian-agent-deck">GitHub 仓库</a>
-    <a href="https://github.com/MatsuriMW/obsidian-agent-deck/releases/download/1.2.1/agent-deck-demo-4k60.mp4">4K60 原片</a>
     <a href="/github/">马自立的其他项目</a>
   </div>
 
@@ -61,5 +74,30 @@
     <p>Agent Deck 已上架 Obsidian 社区插件市场，MIT 开源，仅桌面端。</p>
   </footer>
 </div>
+<script>
+  // 换清晰度：接着当前进度和播放状态放；手机或省流量模式默认 720p，选过的记住
+  (function () {
+    var v = document.getElementById('film');
+    var btns = [].slice.call(document.querySelectorAll('.quality button'));
+    function pick(src, keep) {
+      var t = v.currentTime, playing = !v.paused && !v.ended;
+      btns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.src === src)); });
+      if (v.currentSrc && v.currentSrc.split('/').pop() === src) return;
+      v.src = src;
+      if (keep) v.addEventListener('loadedmetadata', function once() {
+        v.removeEventListener('loadedmetadata', once);
+        v.currentTime = t;
+        if (playing) v.play();
+      });
+      try { localStorage.setItem('ad-demo-quality', src); } catch (e) {}
+    }
+    var saved = null;
+    try { saved = localStorage.getItem('ad-demo-quality'); } catch (e) {}
+    var small = window.matchMedia('(max-width: 700px)').matches || (navigator.connection && navigator.connection.saveData);
+    var start = btns.some(function (b) { return b.dataset.src === saved; }) ? saved : (small ? 'agent-deck-demo-720p30.mp4' : 'agent-deck-demo-1080p60.mp4');
+    pick(start, false);
+    btns.forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.src, true); }); });
+  })();
+</script>
 </body>
 </html>
