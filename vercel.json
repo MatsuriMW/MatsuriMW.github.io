@@ -1,0 +1,5 @@
+{
+  "functions": {
+    "api/ask.mjs": { "includeFiles": "api/_data/**", "maxDuration": 60, "memory": 1024 }
+  }
+}

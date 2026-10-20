@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第二大脑 RAG Demo</title>
+<meta name="description" content="对一个真实的个人笔记库提问：混合检索（向量 + BM25）、重排、带出处的生成、库里没有就拒答，检索过程逐块摊开。附召回和生成两层评测。">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f6f5f1; --surface: #fcfcfb; --ink: #1f1f1d; --ink-2: #55544f; --ink-3: #8a8984;
+    --rule: #e6e4de; --blue: #2a78d6; --blue-soft: #dbe8f8; --red: #e34948; --red-soft: #f8dedc;
+    --violet: #4a3aa7; --neutral-soft: #ecebe6; --accent-bg: #f1f5fb; --mark: #fff3c4;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+  @media (max-width: 520px) { .wrap { padding: 32px 16px 64px; } h1 { font-size: 27px !important; } }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; color: var(--ink-3); }
+  h1 { font-size: 34px; line-height: 1.3; margin: 8px 0 12px; font-weight: 700; }
+  h2 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+  h3 { font-size: 15px; margin: 0 0 10px; font-weight: 600; color: var(--ink-2); }
+  p { margin: 0 0 12px; }
+  a { color: var(--blue); text-decoration: none; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 780px; }
+  .note { font-size: 13px; color: var(--ink-3); }
+  section { margin-top: 56px; }
+  .sec-head { margin-bottom: 18px; max-width: 780px; }
+  .sec-head p { color: var(--ink-2); }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px 22px; }
+  @media (max-width: 520px) { .card { padding: 16px 14px; } }
+  .grid { display: grid; gap: 16px; }
+  .grid > * { min-width: 0; }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 860px) { .g4 { grid-template-columns: repeat(2, 1fr); } .g2 { grid-template-columns: 1fr; } }
+  .stat .label { font-size: 13px; color: var(--ink-2); }
+  .stat .value { font-size: 28px; font-weight: 700; line-height: 1.25; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--neutral-soft); color: var(--ink-2); margin: 0 4px 4px 0; }
+
+  /* 提问 */
+  .ask { margin-top: 28px; }
+  .ask form { display: flex; gap: 10px; }
+  .ask input { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 12px 16px; border: 1px solid #d6d4cd; border-radius: 10px; background: #fff; color: var(--ink); }
+  .ask input:focus { outline: 2px solid var(--blue); outline-offset: -1px; border-color: transparent; }
+  .ask button { font: inherit; font-weight: 600; padding: 0 22px; border: 0; border-radius: 10px; background: var(--ink); color: #fff; cursor: pointer; }
+  .ask button:disabled { opacity: .45; cursor: default; }
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .examples button { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 99px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+  .examples button:hover { border-color: var(--blue); color: var(--blue); }
+  .examples button .k { color: var(--ink-3); margin-right: 4px; }
+
+  /* 回答 */
+  #result { margin-top: 24px; display: none; }
+  .answer { font-size: 16px; line-height: 1.85; word-break: break-word; }
+  .answer p { margin: 0 0 .6em; }
+  .answer ul, .answer ol { margin: 0 0 .6em; padding-left: 1.4em; }
+  .answer li { margin: .15em 0; }
+  .answer code { font-size: .9em; padding: 1px 5px; border-radius: 4px; background: var(--blue-soft); }
+  .more-rows { margin-top: 8px; font-size: 13px; color: var(--blue); background: none; border: 0; cursor: pointer; padding: 4px 0; }
+  #cand.folded tr.extra { display: none; }
+  .answer.refused { color: var(--ink-2); }
+  .cite { display: inline-block; font-size: 11px; font-weight: 700; line-height: 16px; min-width: 18px; padding: 0 4px; margin: 0 1px; text-align: center; border-radius: 4px; background: var(--blue-soft); color: var(--blue); cursor: pointer; vertical-align: 2px; }
+  .cite:hover, .cite.on { background: var(--blue); color: #fff; }
+  .caret { display: inline-block; width: 8px; height: 1.1em; background: var(--ink-3); vertical-align: -3px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .refuse-box { margin-top: 12px; font-size: 13px; color: var(--ink-2); background: var(--red-soft); border-radius: 8px; padding: 8px 12px; }
+  .meta-line { margin-top: 14px; font-size: 12px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .sources { display: grid; gap: 10px; margin-top: 16px; }
+  .src { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 14px; background: #fff; font-size: 14px; transition: background .2s, border-color .2s; }
+  .src.on { border-color: var(--blue); background: var(--accent-bg); }
+  .src .h { display: flex; gap: 8px; align-items: baseline; font-size: 13px; color: var(--ink-2); margin-bottom: 4px; flex-wrap: wrap; }
+  .src .h .n { font-weight: 700; color: var(--blue); }
+  .src .h .s { margin-left: auto; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .src .t { color: var(--ink); white-space: pre-wrap; word-break: break-word; max-height: 9.5em; overflow: hidden; position: relative; }
+  .src.open .t { max-height: none; }
+  .src .more { font-size: 12px; color: var(--ink-3); cursor: pointer; margin-top: 2px; }
+
+  /* 检索过程 */
+  .pipe { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 4px 0 14px; }
+  @media (max-width: 860px) { .pipe { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 520px) { .pipe { grid-template-columns: repeat(2, 1fr); } }
+  .pipe > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; font-size: 12px; color: var(--ink-2); min-width: 0; }
+  .pipe .k { font-size: 11px; letter-spacing: .04em; color: var(--ink-3); }
+  .pipe .v { font-size: 14px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+  .pipe .bad { border-color: var(--red); background: var(--red-soft); }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th, td { border-bottom: 1px solid var(--rule); padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { color: var(--ink-3); font-weight: 500; white-space: nowrap; }
+  td.num { text-align: right; white-space: nowrap; }
+  td.snip { min-width: 260px; color: var(--ink-2); }
+  tr.ctx td { background: var(--accent-bg); }
+  .bar { display: inline-block; height: 6px; border-radius: 3px; background: var(--blue); vertical-align: middle; margin-right: 6px; }
+  details { margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+  details summary { cursor: pointer; color: var(--ink-3); }
+
+  /* 方法 */
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 860px) { .flow { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .flow { grid-template-columns: 1fr; } }
+  .step .n { font-size: 12px; color: var(--blue); font-weight: 700; letter-spacing: .06em; }
+  .step .t { font-weight: 700; margin: 2px 0 6px; }
+  .step ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  ul.plain { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 15px; }
+  ul.plain li { margin-bottom: 6px; }
+  .score { display: grid; grid-template-columns: 9em 1fr 4em; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 8px; }
+  .score .track { height: 10px; background: var(--neutral-soft); border-radius: 99px; overflow: hidden; }
+  .score .fill { height: 100%; background: var(--blue); border-radius: 99px; }
+  .score .name { color: var(--ink-2); text-align: right; }
+  footer { margin-top: 64px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">RAG DEMO · 马自立的第二大脑</div>
+    <h1>对我的笔记库提问</h1>
+    <p class="lede">一个真实在用的个人知识库（Obsidian，记了四年的概念笔记、读书笔记、日记摘录和博客），公开部分放到线上。问一个问题，它先在 <b id="nBlocks">两万多</b> 个笔记块里混合检索，再重排、带出处地回答；库里没有的，它会说没有。下面把每一步的分数都摊开了。</p>
+    <div class="ask">
+      <form id="f"><input id="q" placeholder="比如：为什么说媚俗是一种自我感动？" autocomplete="off" maxlength="300"><button id="go">提问</button></form>
+      <div class="examples" id="ex"></div>
+    </div>
+  </header>
+
+  <div id="result">
+    <section style="margin-top:28px">
+      <div class="card">
+        <div class="answer" id="answer"></div>
+        <div id="refuse"></div>
+        <div class="meta-line" id="metaLine"></div>
+        <div class="sources" id="sources"></div>
+      </div>
+    </section>
+    <section style="margin-top:32px">
+      <div class="sec-head"><h2>检索过程</h2><p>这一问在线上实际走过的每一步。蓝底的行是最后放进提示词、给模型看的块。</p></div>
+      <div class="pipe" id="pipe"></div>
+      <div class="card table-scroll"><table id="cand"></table><button type="button" class="more-rows" id="moreRows" hidden onclick="const t=document.getElementById('cand');t.classList.toggle('folded');this.textContent=t.classList.contains('folded')?'显示全部候选':'收起'">显示全部候选</button></div>
+      <details><summary>这几列是什么</summary>
+        <p style="margin-top:8px">余弦：问题向量和块向量的相似度（bge-m3）。BM25：字面检索的分（中文两字切词）。混合分：两者各自换成 z 分（离平均值几个标准差）后按 1 : 0.15 相加，空壳块（不到 12 个字）减 3，过 1.5 才算候选。重排：bge-reranker-v2-m3 把问题和块成对打的相关度（0–1），候选按它重新排序。</p>
+      </details>
+    </section>
+  </div>
+
+  <section>
+    <div class="sec-head"><h2>怎么做的</h2><p>检索的打分口径和我本地 Obsidian 插件「第二大脑」是同一套（同一份代码移植过来），本地那套先用评测集调过；线上版补上了重排、生成和生成评测。</p></div>
+    <div class="flow">
+      <div class="card step"><div class="n">01 · 离线</div><div class="t">圈语料 + 切块</div><ul><li>只放知识类文件夹、博客、日记里的摘录块</li><li>块级隐私过滤：私人关系、学生、钱、健康等规则</li><li>日记一条一块，长块按子项再切，子块带上「页名 › 小标题 › 母块」</li></ul></div>
+      <div class="card step"><div class="n">02 · 离线</div><div class="t">算向量、打包</div><ul><li>bge-m3，1024 维</li><li>按内容哈希缓存，改了才重算</li><li>int8 量化，索引约 <span id="sizeMB">20</span> MB，随函数一起部署</li></ul></div>
+      <div class="card step"><div class="n">03 · 在线</div><div class="t">混合检索 → 重排</div><ul><li>先按问题里的时间 / 文件夹圈范围（「2023 年 3 月」「去年」「编程与技术里」）</li><li>余弦 + BM25 的 z 分融合，取前 30</li><li>bge-reranker-v2-m3 精排</li></ul></div>
+      <div class="card step"><div class="n">04 · 在线</div><div class="t">拒答 or 生成</div><ul><li>两道门槛：前 10 最高余弦、重排最高分</li><li>过线才把前 6 块交给 DeepSeek</li><li>每句标出处 [n]；片段答不了就说没写到</li></ul></div>
+    </div>
+  </section>
+
+  <section id="evalSec">
+    <div class="sec-head"><h2>评测</h2><p id="evalLede">在这份公开语料上单独建的评测集，召回和生成分开评。</p></div>
+    <div id="evalBody" class="grid g2"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>边界和局限</h2></div>
+    <div class="card"><ul class="plain">
+      <li><b>只放了公开的部分。</b>日记的其余部分、人物、健康、资产等目录不进；进来的块还按规则逐块过滤（链到私密页面的、涉及身边人的、手机号 / 钱 / 就医等），过滤清单人工看过。</li>
+      <li><b>笔记里很多是摘录。</b>回答引用的可能是我摘的别人的话，不一定是我的观点，出处里能看到原文。</li>
+      <li><b>评测规模小。</b>一个人出题、一个人标注，数字只说明「在这份语料上」的表现。</li>
+      <li><b>限流。</b>每人每天 30 次，同一问题当天直接回放。</li>
+    </ul></div>
+  </section>
+
+  <footer>马自立 · <a href="https://matsuri.site/github/">项目主页</a> · 本地版是自己写的 Obsidian 插件 · 模型：bge-m3 / bge-reranker-v2-m3（硅基流动）、DeepSeek · <span id="built"></span></footer>
+</div>
+
+<script>
+const API = "/api/ask";
+// 示例问题：都在评测里跑过，答案能在语料里核对；最后一条是库里没有的，演示拒答
+const EXAMPLES = window.EXAMPLES || [
+  { k: "概念", q: "Naval 认为怎样才能真正变富" },
+  { k: "观点", q: "热情是天生的，还是做着做着才有的" },
+  { k: "按时间", q: "2023 年 3 月我对 Logseq 有什么吐槽" },
+  { k: "按文件夹", q: "编程与技术里，vim 怎么删掉引号里的内容但保留引号" },
+  { k: "AI", q: "传统 RAG 一般分哪几步" },
+  { k: "拒答", q: "糖醋排骨怎么做才好吃" },
+];
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const f3 = (x) => (x == null || Number.isNaN(x) ? "—" : Number(x).toFixed(3));
+
+for (const e of EXAMPLES) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.innerHTML = (e.k ? `<span class="k">${esc(e.k)}</span>` : "") + esc(e.q);
+  b.onclick = () => { $("q").value = e.q; ask(e.q); };
+  $("ex").append(b);
+}
+
+fetch(API).then((r) => r.json()).then((j) => {
+  $("nBlocks").textContent = j.blocks.toLocaleString();
+  $("sizeMB").textContent = Math.round(j.blocks * 1028 / 1e6);
+  $("built").textContent = "索引构建于 " + new Date(Date.parse(j.built) + 8 * 3600e3).toISOString().slice(0, 10);
+}).catch(() => {});
+
+$("f").onsubmit = (e) => { e.preventDefault(); const q = $("q").value.trim(); if (q) ask(q); };
+
+let ctrl = null;
+async function ask(q) {
+  ctrl?.abort(); ctrl = new AbortController();
+  $("result").style.display = "block";
+  $("go").disabled = true;
+  $("answer").className = "answer"; $("answer").innerHTML = '<span class="note">检索中…</span>';
+  $("refuse").innerHTML = ""; $("metaLine").innerHTML = ""; $("sources").innerHTML = ""; $("pipe").innerHTML = ""; $("cand").innerHTML = "";
+  let text = "", trace = null;
+  try {
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }), signal: ctrl.signal });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || `请求失败 ${r.status}`); }
+    const rd = r.body.getReader(), dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await rd.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let k;
+      while ((k = buf.indexOf("\n\n")) >= 0) {
+        const raw = buf.slice(0, k); buf = buf.slice(k + 2);
+        const ev = (raw.match(/^event: (.*)$/m) || [])[1], data = JSON.parse((raw.match(/^data: (.*)$/m) || [])[1] || "null");
+        if (ev === "trace") { trace = data; renderTrace(trace); if (!trace.refused) $("answer").innerHTML = '<span class="caret"></span>'; }
+        else if (ev === "delta") { text += data.t; renderAnswer(text, trace, true); }
+        else if (ev === "done") { renderAnswer(text, trace, false); renderMeta(trace, data); }
+        else if (ev === "error") throw new Error(data.message);
+      }
+    }
+  } catch (e) {
+    if (e.name !== "AbortError") $("answer").innerHTML = `<span class="note">出错了：${esc(e.message)}</span>`;
+  } finally { $("go").disabled = false; }
+}
+
+// 回答里的 [n] → 可点的引用，点了高亮对应出处
+// 模型回答里的 Markdown 只认几样：段落、- / 1. 列表、**粗体**、`代码`，再把 [n] 换成可点的引用
+function mdLite(text) {
+  const inline = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\[(\d{1,2})\]/g, (m, n) => `<span class="cite" data-n="${n}">${n}</span>`);
+  const out = []; let list = null;
+  const close = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  for (const line of text.split("\n")) {
+    const m = line.match(/^\s*(?:([-*•])|(\d+)[.、])\s+(.*)$/);
+    if (m) { const tag = m[1] ? "ul" : "ol"; if (list !== tag) { close(); out.push(`<${tag}>`); list = tag; } out.push(`<li>${inline(m[3])}</li>`); }
+    else if (!line.trim()) close();
+    else { close(); out.push(`<p>${inline(line)}</p>`); }
+  }
+  close();
+  return out.join("");
+}
+function renderAnswer(text, trace, streaming) {
+  const html = mdLite(text);
+  $("answer").innerHTML = html + (streaming ? '<span class="caret"></span>' : "");
+  $("answer").classList.toggle("refused", !!trace?.refused);
+  if (!streaming && trace && !trace.refused) {
+    const used = new Set([...text.matchAll(/\[(\d{1,2})\]/g)].map((m) => +m[1]));
+    const ctx = trace.hits.filter((h) => h.inContext);
+    $("sources").innerHTML = ctx.map((h, i) => `<div class="src${used.has(i + 1) ? "" : " unused"}" id="src${i + 1}">
+      <div class="h"><span class="n">[${i + 1}]</span><span>${srcName(h)}</span>${used.has(i + 1) ? "" : '<span class="tag">没被引用</span>'}<span class="s">重排 ${f3(h.rr)} · 余弦 ${f3(h.cos)}</span></div>
+      <div class="t">${esc(h.text)}</div><div class="more">展开全文</div></div>`).join("");
+    for (const el of document.querySelectorAll(".src .more")) el.onclick = () => { el.parentElement.classList.toggle("open"); el.textContent = el.parentElement.classList.contains("open") ? "收起" : "展开全文"; };
+  }
+}
+document.addEventListener("click", (e) => {
+  const c = e.target.closest(".cite"); if (!c) return;
+  document.querySelectorAll(".cite.on, .src.on").forEach((x) => x.classList.remove("on"));
+  const s = $("src" + c.dataset.n); if (!s) return;
+  c.classList.add("on"); s.classList.add("on"); s.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+function srcName(h) {
+  const name = h.folder === "日记" ? `日记 · ${h.day}` : h.folder === "博客" ? `博客 ·《${esc(h.title)}》` : `${esc(h.folder)} ·《${esc(h.title)}》`;
+  return h.url ? `<a href="${esc(h.url)}" target="_blank" rel="noopener">${name}</a>` : name;
+}
+
+function renderTrace(t) {
+  const ms = t.ms || {};
+  const cells = [
+    ["圈范围", t.filters.label || "不圈", t.filters.label ? `检索词：${esc(t.filters.query)}` : "问题里没有时间 / 文件夹"],
+    ["问题向量", `${ms.embed ?? "—"} ms`, "bge-m3 · 1024 维"],
+    ["混合检索", `${t.passed.toLocaleString()} 块过线`, `全库 ${t.total.toLocaleString()} 块 · 取前 ${t.hits.length}`],
+    ["粗门槛", f3(t.topCos), "前 10 最高余弦"],
+    ["重排", ms.rerank != null ? `${ms.rerank} ms` : "—", t.hits[0]?.rr != null ? `最高 ${f3(t.hits[0].rr)}` : "没走到"],
+    ["生成", t.refused ? "拒答" : `${t.context.length} 块进提示词`, t.refused ? `${esc(t.refused.stage)}门槛没过` : "DeepSeek"],
+  ];
+  $("pipe").innerHTML = cells.map(([k, v, d], i) => `<div class="${t.refused && ((t.refused.stage === "检索" && i === 3) || (t.refused.stage === "重排" && i === 4)) ? "bad" : ""}"><div class="k">${k}</div><div class="v">${v}</div><div>${d}</div></div>`).join("");
+  if (t.refused) $("refuse").innerHTML = `<div class="refuse-box">没有回答：${esc(t.refused.reason)}。这类问题库里大概率没有记过，硬答就是编。</div>`;
+  const maxRr = Math.max(0.001, ...t.hits.map((h) => h.rr || 0));
+  $("cand").innerHTML = `<tr><th>重排</th><th>检索</th><th>出处</th><th>片段</th><th>余弦</th><th>BM25</th><th>混合分</th><th>重排分</th></tr>` +
+    t.hits.map((h, i) => `<tr class="${[h.inContext ? "ctx" : "", i >= 10 ? "extra" : ""].join(" ").trim()}"><td class="num">${h.rrRank ?? "—"}</td><td class="num">${h.rank}</td><td style="white-space:nowrap">${srcName(h)}</td><td class="snip">${esc(h.text.slice(0, 90))}${h.text.length > 90 ? "…" : ""}</td><td class="num">${f3(h.cos)}</td><td class="num">${Number(h.bm).toFixed(1)}</td><td class="num">${Number(h.f).toFixed(2)}</td><td class="num"><span class="bar" style="width:${Math.round(40 * (h.rr || 0) / maxRr)}px"></span>${f3(h.rr)}</td></tr>`).join("");
+  // 候选默认只露前 10 条，其余点开
+  $("cand").classList.toggle("folded", t.hits.length > 10);
+  $("moreRows").hidden = t.hits.length <= 10;
+  $("moreRows").textContent = `显示全部 ${t.hits.length} 条候选`;
+}
+function renderMeta(t, d) {
+  const u = d.usage;
+  $("metaLine").innerHTML = [`总用时 ${(d.ms.total / 1000).toFixed(1)} s`, `向量 ${d.ms.embed} ms`, `检索 ${d.ms.retrieve} ms`, d.ms.rerank != null ? `重排 ${d.ms.rerank} ms` : "", u ? `token 输入 ${u.prompt_tokens} / 输出 ${u.completion_tokens}` : "", d.cached ? "今天问过，直接回放" : ""].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
+}
+
+// 评测结果：eval.json 由 eval/run.mjs 生成
+fetch("eval.json").then((r) => r.ok ? r.json() : null).then((E) => {
+  if (!E) { $("evalSec").style.display = "none"; return; }
+  const bar = (name, v, fmt = (x) => Math.round(x * 100) + "%") => `<div class="score"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${Math.round(v * 100)}%"></div></div><div class="num">${fmt(v)}</div></div>`;
+  $("evalLede").textContent = E.lede;
+  $("evalBody").innerHTML = E.cards.map((c) => `<div class="card"><h3>${esc(c.title)}</h3>${c.bars.map((b) => bar(b[0], b[1], b[2] === "f3" ? f3 : undefined)).join("")}<p class="note" style="margin:10px 0 0">${esc(c.note)}</p></div>`).join("");
+}).catch(() => { $("evalSec").style.display = "none"; });
+</script>
+</body>
+</html>
