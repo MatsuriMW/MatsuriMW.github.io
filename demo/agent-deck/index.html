@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Deck 演示</title>
+<meta name="description" content="Agent Deck（智能体甲板）：把散在各个客户端里的 AI Agent 会话收进 Obsidian 的一张甲板，从笔记里派活，进度和结果回到笔记。25 秒演示片。">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f6f5f1;
+    --surface: #fcfcfb;
+    --ink: #1f1f1d;
+    --ink-2: #55544f;
+    --ink-3: #8a8984;
+    --rule: #e6e4de;
+    --blue: #2a78d6;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font: 16px/1.7 -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+  @media (max-width: 520px) { .wrap { padding: 32px 16px 64px; } h1 { font-size: 27px; } }
+  header .eyebrow { font-size: 13px; letter-spacing: .08em; color: var(--ink-3); }
+  h1 { font-size: 34px; line-height: 1.3; margin: 8px 0 12px; font-weight: 700; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 760px; margin: 0 0 12px; }
+  .film { margin-top: 32px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px; }
+  video { display: block; width: 100%; height: auto; border-radius: 8px; background: #000; aspect-ratio: 16 / 9; }
+  .cap { font-size: 13px; color: var(--ink-3); margin: 10px 4px 0; }
+  .links { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 15px; }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">OBSIDIAN 插件 · 演示</div>
+    <h1>Agent Deck（智能体甲板）</h1>
+    <p class="lede">Agent Deck 把散在各个客户端里的 AI Agent 会话收到 Obsidian 里的一张甲板上：哪个 Agent 在干活、哪个在等你、做到了哪一步，抬眼就能看到；要派活，就从笔记里正在写的那一行派出去，进度和结果再回到这一行。人写的计划和 Agent 跑的活，最后落在同一份日记里。</p>
+  </header>
+
+  <div class="film">
+    <video controls playsinline preload="metadata" poster="poster.jpg">
+      <source src="agent-deck-demo-1080p60.mp4" type="video/mp4">
+      <track kind="subtitles" src="agent-deck-demo.zh.vtt" srclang="zh" label="中文" default>
+    </video>
+    <p class="cap">25 秒，有声音，带中文字幕。画面是按插件界面复刻的动态图形，不是录屏。</p>
+  </div>
+
+  <div class="links">
+    <a href="https://github.com/MatsuriMW/obsidian-agent-deck">GitHub 仓库</a>
+    <a href="https://github.com/MatsuriMW/obsidian-agent-deck/releases/download/1.2.1/agent-deck-demo-4k60.mp4">4K60 原片</a>
+    <a href="/github/">马自立的其他项目</a>
+  </div>
+
+  <footer>
+    <p>Agent Deck 已上架 Obsidian 社区插件市场，MIT 开源，仅桌面端。</p>
+  </footer>
+</div>
+</body>
+</html>
