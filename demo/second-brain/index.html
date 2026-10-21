@@ -47,6 +47,15 @@
   .ask form { display: flex; gap: 10px; }
   .ask input { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 12px 16px; border: 1px solid #d6d4cd; border-radius: 10px; background: #fff; color: var(--ink); }
   .ask input:focus { outline: 2px solid var(--blue); outline-offset: -1px; border-color: transparent; }
+  /* 输入框里轮播的提示问题（像电商搜索框那样，每隔几秒往上滑出一条新的）；原生 placeholder 做不了动画，所以叠一层 */
+  .qwrap { display: flex; flex: 1; min-width: 0; position: relative; }
+  .qhint { position: absolute; left: 17px; right: 14px; top: 50%; transform: translateY(-50%); height: 1.6em; line-height: 1.6em; font-size: 17px; color: #9a9891; pointer-events: none; display: flex; white-space: nowrap; z-index: 3; }
+  .qhint .roll { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+  .qhint .roll span { position: absolute; inset: 0; overflow: hidden; text-overflow: ellipsis; transition: transform .45s var(--ease, cubic-bezier(.2,.8,.2,1)), opacity .45s; }
+  .qhint .roll .in { transform: translateY(100%); opacity: 0; }
+  .qhint .roll .out { transform: translateY(-100%); opacity: 0; }
+  .qwrap.typed .qhint { display: none; }
+  @media (prefers-reduced-motion: reduce) { .qhint .roll span { transition: none; } }
   .ask button { font: inherit; font-weight: 600; padding: 0 22px; border: 0; border-radius: 10px; background: var(--ink); color: #fff; cursor: pointer; }
   .ask button:disabled { opacity: .45; cursor: default; }
   .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -258,7 +267,7 @@
     <h1>对我的笔记库提问</h1>
     <p class="lede">一个真实在用的个人知识库（Obsidian，记了四年的概念笔记、读书笔记、日记摘录和博客），公开部分放到线上。问一个问题，它先在 <b id="nBlocks">两万多</b> 个笔记块里混合检索，再重排、带出处地回答；库里没有的，它会说没有。下面把每一步的分数都摊开了。</p>
     <div class="ask">
-      <form id="f"><input id="q" placeholder="比如：为什么说媚俗是一种自我感动？" autocomplete="off" maxlength="300"><button id="go"><svg class="ph" aria-hidden="true"><use href="#ph-paper-plane-right"/></svg>提问</button></form>
+      <form id="f"><span class="qwrap" id="qwrap"><input id="q" aria-label="提问，比如：为什么说媚俗是一种自我感动？" autocomplete="off" maxlength="300"><span class="qhint" aria-hidden="true">比如：<span class="roll"><span id="qhintCur">为什么说媚俗是一种自我感动？</span></span></span></span><button id="go"><svg class="ph" aria-hidden="true"><use href="#ph-paper-plane-right"/></svg>提问</button></form>
       <div class="examples" id="ex"></div>
     </div>
   </header>
@@ -334,7 +343,7 @@ for (const e of EXAMPLES) {
   const b = document.createElement("button");
   b.type = "button";
   b.innerHTML = (e.k ? `<span class="k">${ph(KIND_ICON[e.k])}${esc(e.k)}</span>` : "") + esc(e.q);
-  b.onclick = () => { $("q").value = e.q; ask(e.q); };
+  b.onclick = () => { $("q").value = e.q; $("qwrap").classList.add("typed"); ask(e.q); };
   $("ex").append(b);
 }
 
@@ -370,7 +379,23 @@ fetch(API).then((r) => r.json()).then((j) => {
   $("built").textContent = "索引构建于 " + new Date(Date.parse(j.built) + 8 * 3600e3).toISOString().slice(0, 10);
 }).catch(() => {});
 
-$("f").onsubmit = (e) => { e.preventDefault(); const q = $("q").value.trim(); if (q) ask(q); };
+$("f").onsubmit = (e) => { e.preventDefault(); const q = $("q").value.trim() || HINTS[hintAt]; if (q) { $("q").value = q; $("qwrap").classList.add("typed"); ask(q); } };
+
+// 输入框提示轮播：示例问题（不含拒答那条）每 4 秒换一条，新的从下面滑上来；有字时不显示，页面在后台时不换；空着按回车就问当前这条
+const HINTS = ["为什么说媚俗是一种自我感动？", ...EXAMPLES.filter((e) => e.k !== "拒答").map((e) => e.q)];
+let hintAt = 0;
+$("q").addEventListener("input", () => $("qwrap").classList.toggle("typed", $("q").value !== ""));
+setInterval(() => {
+  if (document.hidden || $("q").value) return;
+  hintAt = (hintAt + 1) % HINTS.length;
+  const roll = document.querySelector(".qhint .roll");
+  const old = roll.querySelector("span:not(.out)");
+  const next = Object.assign(document.createElement("span"), { className: "in", textContent: HINTS[hintAt] });
+  roll.append(next);
+  next.getBoundingClientRect(); // 先按「在下面」的位置排一次版，再去掉 in，过渡才会发生
+  next.classList.remove("in");
+  if (old) { old.classList.add("out"); setTimeout(() => old.remove(), 500); }
+}, 4000);
 
 let ctrl = null, run = null;
 async function ask(q) {
