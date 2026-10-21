@@ -1,28 +1,20 @@
 // POST /api/ask  { q }  →  text/event-stream
 // 事件：trace（检索过程）→ delta（回答片段，多次）→ done（用时和 token）；出错发 error
 import { retrieve, buildMessages, generate, loadIndex } from "./_lib/pipeline.mjs";
+import { hit, PER_IP } from "./_lib/limit.mjs";
 
-const PER_IP = Number(process.env.PER_IP_DAILY ?? 30);       // 每个 IP 每天
-const GLOBAL = Number(process.env.GLOBAL_DAILY ?? 600);      // 每个函数实例每天（兜底，防刷爆账单）
-const counts = new Map();
-let day = "", total = 0;
-function allow(ip) {
-    const d = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
-    if (d !== day) { day = d; total = 0; counts.clear(); }
-    const n = counts.get(ip) || 0;
-    if (n >= PER_IP || total >= GLOBAL) return false;
-    counts.set(ip, n + 1); total++;
-    return true;
-}
-const cache = new Map();   // 同一个问题当天直接回放（示例问题会被反复点）
+const cache = new Map();   // 同一个问题当天直接回放（示例问题会被反复点）；回放也算一次，免得爬虫换着示例题把答案扒走
 
 export async function POST(request) {
     let q = "";
     try { q = String((await request.json()).q || "").trim().slice(0, 300); } catch {}
     if (q.length < 2) return Response.json({ error: "问题太短" }, { status: 400 });
-    const ip = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "local";
+    const h = request.headers;
+    const ip = h.get("x-real-ip") || (h.get("x-forwarded-for") || "").split(",")[0].trim() || "local";
+    const lim = await hit(ip);
+    const left = { "X-RateLimit-Limit": String(PER_IP), "X-RateLimit-Remaining": String(lim.left) };
+    if (!lim.ok) return Response.json({ error: lim.global ? "今天全站的提问额度用完了，明天再来" : `今天的提问次数用完了（每人每天 ${PER_IP} 次），明天再来` }, { status: 429, headers: left });
     const cached = cache.get(q);
-    if (!cached && !allow(ip)) return Response.json({ error: `今天的提问次数用完了（每人每天 ${PER_IP} 次），明天再来` }, { status: 429 });
 
     const enc = new TextEncoder();
     const stream = new ReadableStream({
@@ -53,7 +45,7 @@ export async function POST(request) {
             ctl.close();
         },
     });
-    return new Response(stream, { headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-store", "X-Accel-Buffering": "no" } });
+    return new Response(stream, { headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-store", "X-Accel-Buffering": "no", ...left } });
 }
 
 // GET /api/ask：健康检查 + 语料规模，页面加载时用来显示「库里有多少块」

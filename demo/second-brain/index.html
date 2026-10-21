@@ -17,6 +17,8 @@
   body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif; }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
   @media (max-width: 520px) { .wrap { padding: 32px 16px 64px; } h1 { font-size: 27px !important; } }
+  .ph { width: 1.05em; height: 1.05em; flex: none; fill: currentColor; vertical-align: -.16em; margin-right: .32em; }
+  h2 .ph { color: var(--ink-3); }
   .eyebrow { font-size: 13px; letter-spacing: .08em; color: var(--ink-3); }
   h1 { font-size: 34px; line-height: 1.3; margin: 8px 0 12px; font-weight: 700; }
   h2 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
@@ -114,13 +116,15 @@
 </style>
 </head>
 <body>
+<!-- 图标：Phosphor Icons regular（https://phosphoricons.com），MIT License，Copyright (c) 2023 Phosphor Icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="ph-calendar-blank" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></symbol><symbol id="ph-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol><symbol id="ph-chat-circle-text" viewBox="0 0 256 256"><path d="M168,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,112Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm72-8A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></symbol><symbol id="ph-chat-teardrop-text" viewBox="0 0 256 256"><path d="M172,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h68A8,8,0,0,1,172,112Zm-8,24H96a8,8,0,0,0,0,16h68a8,8,0,0,0,0-16Zm68-12A100.11,100.11,0,0,1,132,224H48a16,16,0,0,1-16-16V124a100,100,0,0,1,200,0Zm-16,0a84,84,0,0,0-168,0v84h84A84.09,84.09,0,0,0,216,124Z"/></symbol><symbol id="ph-crosshair" viewBox="0 0 256 256"><path d="M232,120h-8.34A96.14,96.14,0,0,0,136,32.34V24a8,8,0,0,0-16,0v8.34A96.14,96.14,0,0,0,32.34,120H24a8,8,0,0,0,0,16h8.34A96.14,96.14,0,0,0,120,223.66V232a8,8,0,0,0,16,0v-8.34A96.14,96.14,0,0,0,223.66,136H232a8,8,0,0,0,0-16Zm-96,87.6V200a8,8,0,0,0-16,0v7.6A80.15,80.15,0,0,1,48.4,136H56a8,8,0,0,0,0-16H48.4A80.15,80.15,0,0,1,120,48.4V56a8,8,0,0,0,16,0V48.4A80.15,80.15,0,0,1,207.6,120H200a8,8,0,0,0,0,16h7.6A80.15,80.15,0,0,1,136,207.6ZM128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152Z"/></symbol><symbol id="ph-flask" viewBox="0 0 256 256"><path d="M221.69,199.77,160,96.92V40h8a8,8,0,0,0,0-16H88a8,8,0,0,0,0,16h8V96.92L34.31,199.77A16,16,0,0,0,48,224H208a16,16,0,0,0,13.72-24.23ZM110.86,103.25A7.93,7.93,0,0,0,112,99.14V40h32V99.14a7.93,7.93,0,0,0,1.14,4.11L183.36,167c-12,2.37-29.07,1.37-51.75-10.11-15.91-8.05-31.05-12.32-45.22-12.81ZM48,208l28.54-47.58c14.25-1.74,30.31,1.85,47.82,10.72,19,9.61,35,12.88,48,12.88a69.89,69.89,0,0,0,19.55-2.7L208,208Z"/></symbol><symbol id="ph-folder" viewBox="0 0 256 256"><path d="M216,72H131.31L104,44.69A15.86,15.86,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.4,15.4,0,0,0,39.38,216H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40ZM216,200H40V88H216Z"/></symbol><symbol id="ph-funnel" viewBox="0 0 256 256"><path d="M230.6,49.53A15.81,15.81,0,0,0,216,40H40A16,16,0,0,0,28.19,66.76l.08.09L96,139.17V216a16,16,0,0,0,24.87,13.32l32-21.34A16,16,0,0,0,160,194.66V139.17l67.74-72.32.08-.09A15.8,15.8,0,0,0,230.6,49.53ZM40,56h0Zm106.18,74.58A8,8,0,0,0,144,136v58.66L112,216V136a8,8,0,0,0-2.16-5.47L40,56H216Z"/></symbol><symbol id="ph-gauge" viewBox="0 0 256 256"><path d="M207.06,72.67A111.24,111.24,0,0,0,128,40h-.4C66.07,40.21,16,91,16,153.13V176a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V152A111.25,111.25,0,0,0,207.06,72.67ZM224,176H119.71l54.76-75.3a8,8,0,0,0-12.94-9.42L99.92,176H32V153.13c0-3.08.15-6.12.43-9.13H56a8,8,0,0,0,0-16H35.27c10.32-38.86,44-68.24,84.73-71.66V80a8,8,0,0,0,16,0V56.33A96.14,96.14,0,0,1,221,128H200a8,8,0,0,0,0,16h23.67c.21,2.65.33,5.31.33,8Z"/></symbol><symbol id="ph-gear-six" viewBox="0 0 256 256"><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A112.1,112.1,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.08,8.08,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8.08,8.08,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z"/></symbol><symbol id="ph-hourglass-medium" viewBox="0 0 256 256"><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z"/></symbol><symbol id="ph-lightbulb" viewBox="0 0 256 256"><path d="M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Zm-16.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z"/></symbol><symbol id="ph-lock-key" viewBox="0 0 256 256"><path d="M128,112a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Zm80-72H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol><symbol id="ph-magnifying-glass" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></symbol><symbol id="ph-package" viewBox="0 0 256 256"><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></symbol><symbol id="ph-paper-plane-right" viewBox="0 0 256 256"><path d="M231.87,114l-168-95.89A16,16,0,0,0,40.92,37.34L71.55,128,40.92,218.67A16,16,0,0,0,56,240a16.15,16.15,0,0,0,7.93-2.1l167.92-96.05a16,16,0,0,0,.05-27.89ZM56,224a.56.56,0,0,0,0-.12L85.74,136H144a8,8,0,0,0,0-16H85.74L56.06,32.16A.46.46,0,0,0,56,32l168,95.83Z"/></symbol><symbol id="ph-path" viewBox="0 0 256 256"><path d="M200,168a32.06,32.06,0,0,0-31,24H72a32,32,0,0,1,0-64h96a40,40,0,0,0,0-80H72a8,8,0,0,0,0,16h96a24,24,0,0,1,0,48H72a48,48,0,0,0,0,96h97a32,32,0,1,0,31-40Zm0,48a16,16,0,1,1,16-16A16,16,0,0,1,200,216Z"/></symbol><symbol id="ph-prohibit" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z"/></symbol><symbol id="ph-quotes" viewBox="0 0 256 256"><path d="M100,56H40A16,16,0,0,0,24,72v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,100,56Zm0,80H40V72h60ZM216,56H156a16,16,0,0,0-16,16v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,216,56Zm0,80H156V72h60Z"/></symbol><symbol id="ph-robot" viewBox="0 0 256 256"><path d="M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48Zm16,144a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V80A16,16,0,0,1,56,64H200a16,16,0,0,1,16,16Zm-52-56H92a28,28,0,0,0,0,56h72a28,28,0,0,0,0-56Zm-24,16v24H116V152ZM80,164a12,12,0,0,1,12-12h8v24H92A12,12,0,0,1,80,164Zm84,12h-8V152h8a12,12,0,0,1,0,24ZM72,108a12,12,0,1,1,12,12A12,12,0,0,1,72,108Zm88,0a12,12,0,1,1,12,12A12,12,0,0,1,160,108Z"/></symbol><symbol id="ph-scissors" viewBox="0 0 256 256"><path d="M157.73,113.13A8,8,0,0,1,159.82,102L227.48,55.7a8,8,0,0,1,9,13.21l-67.67,46.3a7.92,7.92,0,0,1-4.51,1.4A8,8,0,0,1,157.73,113.13Zm80.87,85.09a8,8,0,0,1-11.12,2.08L136,137.7,93.49,166.78a36,36,0,1,1-9-13.19L121.83,128,84.44,102.41a35.86,35.86,0,1,1,9-13.19l143,97.87A8,8,0,0,1,238.6,198.22ZM80,180a20,20,0,1,0-5.86,14.14A19.85,19.85,0,0,0,80,180ZM74.14,90.13a20,20,0,1,0-28.28,0A19.85,19.85,0,0,0,74.14,90.13Z"/></symbol><symbol id="ph-sort-descending" viewBox="0 0 256 256"><path d="M40,128a8,8,0,0,1,8-8h72a8,8,0,0,1,0,16H48A8,8,0,0,1,40,128Zm8-56h56a8,8,0,0,0,0-16H48a8,8,0,0,0,0,16ZM184,184H48a8,8,0,0,0,0,16H184a8,8,0,0,0,0-16ZM229.66,82.34l-40-40a8,8,0,0,0-11.32,0l-40,40a8,8,0,0,0,11.32,11.32L176,67.31V144a8,8,0,0,0,16,0V67.31l26.34,26.35a8,8,0,0,0,11.32-11.32Z"/></symbol><symbol id="ph-sparkle" viewBox="0 0 256 256"><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"/></symbol><symbol id="ph-vector-three" viewBox="0 0 256 256"><path d="M237.66,141.66l-32,32a8,8,0,0,1-11.32-11.32L212.69,144H123.31l-56,56H96a8,8,0,0,1,0,16H48a8,8,0,0,1-8-8V160a8,8,0,0,1,16,0v28.69l56-56V43.31L93.66,61.66A8,8,0,0,1,82.34,50.34l32-32a8,8,0,0,1,11.32,0l32,32a8,8,0,0,1-11.32,11.32L128,43.31V128h84.69l-18.35-18.34a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,237.66,141.66Z"/></symbol><symbol id="ph-warning-circle" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"/></symbol></svg>
 <div class="wrap">
   <header>
     <div class="eyebrow">RAG DEMO · 马自立的第二大脑</div>
     <h1>对我的笔记库提问</h1>
     <p class="lede">一个真实在用的个人知识库（Obsidian，记了四年的概念笔记、读书笔记、日记摘录和博客），公开部分放到线上。问一个问题，它先在 <b id="nBlocks">两万多</b> 个笔记块里混合检索，再重排、带出处地回答；库里没有的，它会说没有。下面把每一步的分数都摊开了。</p>
     <div class="ask">
-      <form id="f"><input id="q" placeholder="比如：为什么说媚俗是一种自我感动？" autocomplete="off" maxlength="300"><button id="go">提问</button></form>
+      <form id="f"><input id="q" placeholder="比如：为什么说媚俗是一种自我感动？" autocomplete="off" maxlength="300"><button id="go"><svg class="ph" aria-hidden="true"><use href="#ph-paper-plane-right"/></svg>提问</button></form>
       <div class="examples" id="ex"></div>
     </div>
   </header>
@@ -135,7 +139,7 @@
       </div>
     </section>
     <section style="margin-top:32px">
-      <div class="sec-head"><h2>检索过程</h2><p>这一问在线上实际走过的每一步。蓝底的行是最后放进提示词、给模型看的块。</p></div>
+      <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-path"/></svg>检索过程</h2><p>这一问在线上实际走过的每一步。蓝底的行是最后放进提示词、给模型看的块。</p></div>
       <div class="pipe" id="pipe"></div>
       <div class="card table-scroll"><table id="cand"></table><button type="button" class="more-rows" id="moreRows" hidden onclick="const t=document.getElementById('cand');t.classList.toggle('folded');this.textContent=t.classList.contains('folded')?'显示全部候选':'收起'">显示全部候选</button></div>
       <details><summary>这几列是什么</summary>
@@ -145,27 +149,27 @@
   </div>
 
   <section>
-    <div class="sec-head"><h2>怎么做的</h2><p>检索的打分口径和我本地 Obsidian 插件「第二大脑」是同一套（同一份代码移植过来），本地那套先用评测集调过；线上版补上了重排、生成和生成评测。</p></div>
+    <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-gear-six"/></svg>怎么做的</h2><p>检索的打分口径和我本地 Obsidian 插件「第二大脑」是同一套（同一份代码移植过来），本地那套先用评测集调过；线上版补上了重排、生成和生成评测。</p></div>
     <div class="flow">
-      <div class="card step"><div class="n">01 · 离线</div><div class="t">圈语料 + 切块</div><ul><li>只放知识类文件夹、博客、日记里的摘录块</li><li>块级隐私过滤：私人关系、学生、钱、健康等规则</li><li>日记一条一块，长块按子项再切，子块带上「页名 › 小标题 › 母块」</li></ul></div>
-      <div class="card step"><div class="n">02 · 离线</div><div class="t">算向量、打包</div><ul><li>bge-m3，1024 维</li><li>按内容哈希缓存，改了才重算</li><li>int8 量化，索引约 <span id="sizeMB">20</span> MB，随函数一起部署</li></ul></div>
-      <div class="card step"><div class="n">03 · 在线</div><div class="t">混合检索 → 重排</div><ul><li>先按问题里的时间 / 文件夹圈范围（「2023 年 3 月」「去年」「编程与技术里」）</li><li>余弦 + BM25 的 z 分融合，取前 30</li><li>bge-reranker-v2-m3 精排</li></ul></div>
-      <div class="card step"><div class="n">04 · 在线</div><div class="t">拒答 or 生成</div><ul><li>两道门槛：前 10 最高余弦、重排最高分</li><li>过线才把前 6 块交给 DeepSeek</li><li>每句标出处 [n]；片段答不了就说没写到</li></ul></div>
+      <div class="card step"><div class="n">01 · 离线</div><div class="t"><svg class="ph" aria-hidden="true"><use href="#ph-scissors"/></svg>圈语料 + 切块</div><ul><li>只放知识类文件夹、博客、日记里的摘录块</li><li>块级隐私过滤：私人关系、学生、钱、健康等规则</li><li>日记一条一块，长块按子项再切，子块带上「页名 › 小标题 › 母块」</li></ul></div>
+      <div class="card step"><div class="n">02 · 离线</div><div class="t"><svg class="ph" aria-hidden="true"><use href="#ph-package"/></svg>算向量、打包</div><ul><li>bge-m3，1024 维</li><li>按内容哈希缓存，改了才重算</li><li>int8 量化，索引约 <span id="sizeMB">20</span> MB，随函数一起部署</li></ul></div>
+      <div class="card step"><div class="n">03 · 在线</div><div class="t"><svg class="ph" aria-hidden="true"><use href="#ph-funnel"/></svg>混合检索 → 重排</div><ul><li>先按问题里的时间 / 文件夹圈范围（「2023 年 3 月」「去年」「编程与技术里」）</li><li>余弦 + BM25 的 z 分融合，取前 30</li><li>bge-reranker-v2-m3 精排</li></ul></div>
+      <div class="card step"><div class="n">04 · 在线</div><div class="t"><svg class="ph" aria-hidden="true"><use href="#ph-chat-circle-text"/></svg>拒答 or 生成</div><ul><li>两道门槛：前 10 最高余弦、重排最高分</li><li>过线才把前 6 块交给 DeepSeek</li><li>每句标出处 [n]；片段答不了就说没写到</li></ul></div>
     </div>
   </section>
 
   <section id="evalSec">
-    <div class="sec-head"><h2>评测</h2><p id="evalLede">在这份公开语料上单独建的评测集，召回和生成分开评。</p></div>
+    <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-chart-bar"/></svg>评测</h2><p id="evalLede">在这份公开语料上单独建的评测集，召回和生成分开评。</p></div>
     <div id="evalBody" class="grid g2"></div>
   </section>
 
   <section>
-    <div class="sec-head"><h2>边界和局限</h2></div>
+    <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-warning-circle"/></svg>边界和局限</h2></div>
     <div class="card"><ul class="plain">
-      <li><b>只放了公开的部分。</b>日记的其余部分、人物、健康、资产等目录不进；进来的块还按规则逐块过滤（链到私密页面的、涉及身边人的、手机号 / 钱 / 就医等），过滤清单人工看过。</li>
-      <li><b>笔记里很多是摘录。</b>回答引用的可能是我摘的别人的话，不一定是我的观点，出处里能看到原文。</li>
-      <li><b>评测规模小。</b>一个人出题、一个人标注，数字只说明「在这份语料上」的表现。</li>
-      <li><b>限流。</b>每人每天 30 次，同一问题当天直接回放。</li>
+      <li><b><svg class="ph" aria-hidden="true"><use href="#ph-lock-key"/></svg>只放了公开的部分。</b>日记的其余部分、人物、健康、资产等目录不进；进来的块还按规则逐块过滤（链到私密页面的、涉及身边人的、手机号 / 钱 / 就医等），过滤清单人工看过。</li>
+      <li><b><svg class="ph" aria-hidden="true"><use href="#ph-quotes"/></svg>笔记里很多是摘录。</b>回答引用的可能是我摘的别人的话，不一定是我的观点，出处里能看到原文。</li>
+      <li><b><svg class="ph" aria-hidden="true"><use href="#ph-flask"/></svg>评测规模小。</b>一个人出题、一个人标注，数字只说明「在这份语料上」的表现。</li>
+      <li><b><svg class="ph" aria-hidden="true"><use href="#ph-hourglass-medium"/></svg>限流。</b>每人每天 5 次（按北京时间零点清零），问过的问题当天直接回放，回放也算一次。</li>
     </ul></div>
   </section>
 
@@ -184,13 +188,15 @@ const EXAMPLES = window.EXAMPLES || [
   { k: "拒答", q: "糖醋排骨怎么做才好吃" },
 ];
 const $ = (id) => document.getElementById(id);
+const ph = (n) => n ? `<svg class="ph" aria-hidden="true"><use href="#ph-${n}"/></svg>` : "";
+const KIND_ICON = { "概念": "lightbulb", "观点": "chat-teardrop-text", "按时间": "calendar-blank", "按文件夹": "folder", "AI": "robot", "拒答": "prohibit" };
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const f3 = (x) => (x == null || Number.isNaN(x) ? "—" : Number(x).toFixed(3));
 
 for (const e of EXAMPLES) {
   const b = document.createElement("button");
   b.type = "button";
-  b.innerHTML = (e.k ? `<span class="k">${esc(e.k)}</span>` : "") + esc(e.q);
+  b.innerHTML = (e.k ? `<span class="k">${ph(KIND_ICON[e.k])}${esc(e.k)}</span>` : "") + esc(e.q);
   b.onclick = () => { $("q").value = e.q; ask(e.q); };
   $("ex").append(b);
 }
@@ -214,6 +220,7 @@ async function ask(q) {
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }), signal: ctrl.signal });
     if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || `请求失败 ${r.status}`); }
+    const left = r.headers.get("X-RateLimit-Remaining");
     const rd = r.body.getReader(), dec = new TextDecoder();
     let buf = "";
     for (;;) {
@@ -226,7 +233,7 @@ async function ask(q) {
         const ev = (raw.match(/^event: (.*)$/m) || [])[1], data = JSON.parse((raw.match(/^data: (.*)$/m) || [])[1] || "null");
         if (ev === "trace") { trace = data; renderTrace(trace); if (!trace.refused) $("answer").innerHTML = '<span class="caret"></span>'; }
         else if (ev === "delta") { text += data.t; renderAnswer(text, trace, true); }
-        else if (ev === "done") { renderAnswer(text, trace, false); renderMeta(trace, data); }
+        else if (ev === "done") { renderAnswer(text, trace, false); renderMeta(trace, { ...data, left }); }
         else if (ev === "error") throw new Error(data.message);
       }
     }
@@ -276,6 +283,7 @@ function srcName(h) {
 
 function renderTrace(t) {
   const ms = t.ms || {};
+  const PIPE_ICON = { "圈范围": "crosshair", "问题向量": "vector-three", "混合检索": "magnifying-glass", "粗门槛": "gauge", "重排": "sort-descending", "生成": "sparkle" };
   const cells = [
     ["圈范围", t.filters.label || "不圈", t.filters.label ? `检索词：${esc(t.filters.query)}` : "问题里没有时间 / 文件夹"],
     ["问题向量", `${ms.embed ?? "—"} ms`, "bge-m3 · 1024 维"],
@@ -284,7 +292,7 @@ function renderTrace(t) {
     ["重排", ms.rerank != null ? `${ms.rerank} ms` : "—", t.hits[0]?.rr != null ? `最高 ${f3(t.hits[0].rr)}` : "没走到"],
     ["生成", t.refused ? "拒答" : `${t.context.length} 块进提示词`, t.refused ? `${esc(t.refused.stage)}门槛没过` : "DeepSeek"],
   ];
-  $("pipe").innerHTML = cells.map(([k, v, d], i) => `<div class="${t.refused && ((t.refused.stage === "检索" && i === 3) || (t.refused.stage === "重排" && i === 4)) ? "bad" : ""}"><div class="k">${k}</div><div class="v">${v}</div><div>${d}</div></div>`).join("");
+  $("pipe").innerHTML = cells.map(([k, v, d], i) => `<div class="${t.refused && ((t.refused.stage === "检索" && i === 3) || (t.refused.stage === "重排" && i === 4)) ? "bad" : ""}"><div class="k">${ph(PIPE_ICON[k])}${k}</div><div class="v">${v}</div><div>${d}</div></div>`).join("");
   if (t.refused) $("refuse").innerHTML = `<div class="refuse-box">没有回答：${esc(t.refused.reason)}。这类问题库里大概率没有记过，硬答就是编。</div>`;
   const maxRr = Math.max(0.001, ...t.hits.map((h) => h.rr || 0));
   $("cand").innerHTML = `<tr><th>重排</th><th>检索</th><th>出处</th><th>片段</th><th>余弦</th><th>BM25</th><th>混合分</th><th>重排分</th></tr>` +
@@ -296,7 +304,7 @@ function renderTrace(t) {
 }
 function renderMeta(t, d) {
   const u = d.usage;
-  $("metaLine").innerHTML = [`总用时 ${(d.ms.total / 1000).toFixed(1)} s`, `向量 ${d.ms.embed} ms`, `检索 ${d.ms.retrieve} ms`, d.ms.rerank != null ? `重排 ${d.ms.rerank} ms` : "", u ? `token 输入 ${u.prompt_tokens} / 输出 ${u.completion_tokens}` : "", d.cached ? "今天问过，直接回放" : ""].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
+  $("metaLine").innerHTML = [`总用时 ${(d.ms.total / 1000).toFixed(1)} s`, `向量 ${d.ms.embed} ms`, `检索 ${d.ms.retrieve} ms`, d.ms.rerank != null ? `重排 ${d.ms.rerank} ms` : "", u ? `token 输入 ${u.prompt_tokens} / 输出 ${u.completion_tokens}` : "", d.cached ? "今天问过，直接回放" : "", d.left != null ? `今天还能问 ${d.left} 次` : ""].filter(Boolean).map((x) => `<span>${x}</span>`).join("");
 }
 
 // 评测结果：eval.json 由 eval/run.mjs 生成
