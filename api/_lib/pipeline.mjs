@@ -32,12 +32,16 @@ export function loadIndex() {
 const show = (b) => ({ title: b.title, folder: b.folder, path: b.path, day: b.day ? fmtDay(b.day) : null, url: b.url || null, text: plain(b.text).slice(0, 600) });
 
 // 检索部分（不生成）。返回给页面的「检索过程」也从这里出
-export async function retrieve(question, { today, key, signal, cfg = CONFIG, skipRerank = false } = {}) {
+// onStage(k, data)：每步做完回调一次（scope / embed / search），线上用它把进度推给页面
+export async function retrieve(question, { today, key, signal, cfg = CONFIG, skipRerank = false, onStage } = {}) {
     const idx = loadIndex();
     const t = { start: Date.now() };
     const filters = parseQueryFilters(question, { today, folders: idx.folders });
+    onStage?.("scope", { query: filters.query, label: filters.label || null });
     const [qvec] = await embed([filters.query], { query: true, key, signal });
     t.embed = Date.now() - t.start;
+    const vec = Array.from(qvec.slice(0, 64), (x) => +x.toFixed(4));   // 前 64 维，页面画成条形
+    onStage?.("embed", { ms: t.embed, vec });
     const S = idx.search(filters.query, qvec, { limit: cfg.candidates, perFile: cfg.perFile, minZ: cfg.minZ, dateFrom: filters.dateFrom, dateTo: filters.dateTo, folder: filters.folder, ...cfg });
     t.retrieve = Date.now() - t.start - t.embed;
     const hits = S.hits.map((h, rank) => ({ id: h.i, rank: rank + 1, cos: h.cos, bm: h.bm, f: h.f }));
@@ -45,6 +49,7 @@ export async function retrieve(question, { today, key, signal, cfg = CONFIG, ski
     let refused = null;
     if (!hits.length) refused = { stage: "检索", reason: filters.label ? `「${filters.label}」范围里没有过线的块` : "没有块的混合分过线" };
     else if (topCos < cfg.minTopCos) refused = { stage: "检索", reason: `前 10 条最高余弦 ${topCos.toFixed(3)} < 门槛 ${cfg.minTopCos}` };
+    onStage?.("search", { ms: t.retrieve, passed: S.passed, total: idx.blocks.length, n: hits.length, topCos, gate: cfg.minTopCos });
     // 重排：把问题和每个候选成对打分
     if (!refused && !skipRerank) {
         const docs = hits.map((h) => { const b = idx.blocks[h.id]; return (b.ctx ? b.ctx + "\n" : "") + plain(b.text).slice(0, 1000); });
@@ -61,7 +66,7 @@ export async function retrieve(question, { today, key, signal, cfg = CONFIG, ski
         filters: { query: filters.query, label: filters.label || null },
         terms: S.terms.slice(0, 12), passed: S.passed, total: idx.blocks.length, topCos,
         hits: hits.map((h) => ({ ...h, ...show(idx.blocks[h.id]), inContext: context.includes(h) })),
-        context: context.map((h) => h.id), refused, ms: t,
+        context: context.map((h) => h.id), refused, ms: t, vec, gates: { cos: cfg.minTopCos, rr: cfg.minRerank },
     };
 }
 

@@ -66,8 +66,6 @@
   .answer.refused { color: var(--ink-2); }
   .cite { display: inline-block; font-size: 11px; font-weight: 700; line-height: 16px; min-width: 18px; padding: 0 4px; margin: 0 1px; text-align: center; border-radius: 4px; background: var(--blue-soft); color: var(--blue); cursor: pointer; vertical-align: 2px; }
   .cite:hover, .cite.on { background: var(--blue); color: #fff; }
-  .caret { display: inline-block; width: 8px; height: 1.1em; background: var(--ink-3); vertical-align: -3px; animation: blink 1s steps(2) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
   .refuse-box { margin-top: 12px; font-size: 13px; color: var(--ink-2); background: var(--red-soft); border-radius: 8px; padding: 8px 12px; }
   .meta-line { margin-top: 14px; font-size: 12px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 4px 14px; }
   .sources { display: grid; gap: 10px; margin-top: 16px; }
@@ -113,11 +111,147 @@
   .score .fill { height: 100%; background: var(--blue); border-radius: 99px; }
   .score .name { color: var(--ink-2); text-align: right; }
   footer { margin-top: 64px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  /* ===== 动效 ===== */
+  :root { --ease: cubic-bezier(.2, .8, .2, 1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes grow { from { transform: scaleX(0); } }
+  @keyframes pop { 0% { transform: scale(0); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
+  @keyframes shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+  @keyframes hit { 0% { box-shadow: 0 0 0 0 rgba(42, 120, 214, .45); background: var(--accent-bg); } 100% { box-shadow: 0 0 0 12px rgba(42, 120, 214, 0); } }
+  header > * { animation: rise .7s var(--ease) backwards; }
+  header > :nth-child(2) { animation-delay: .08s; } header > :nth-child(3) { animation-delay: .16s; } header > :nth-child(4) { animation-delay: .24s; }
+  .examples button { transition: transform .2s var(--ease), border-color .2s, color .2s; }
+  .examples button:hover { transform: translateY(-1px); }
+  /* 往下滚到才出场：JS 给 .reveal 加 .in，子元素按 --i 依次升起 */
+  .reveal > * { opacity: 0; }
+  .reveal.in > * { opacity: 1; animation: rise .6s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 80ms); }
+  .reveal .fill { transform: scaleX(0); transform-origin: left; transition: transform 1.1s var(--ease) .3s; }
+  .reveal.in .fill { transform: none; }
+  .pipe > div { animation: rise .5s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 60ms); }
+  #cand tr { animation: fade .5s backwards; animation-delay: calc(var(--i, 0) * 30ms); }
+  #cand .bar { transform-origin: left; animation: grow .8s var(--ease) backwards .35s; }
+  #traceSec:not(.in) .pipe > div, #traceSec:not(.in) #cand tr { animation-play-state: paused; }
+
+  /* 提问框：跑起来时外圈有流光（border-beam），提问按钮是液态金属边（metal-fx） */
+  .ask form { align-items: stretch; }
+  .ask input, .ask button { height: 52px; line-height: 1.4; }
+  .ask .metal-fx-root button { color: var(--ink); background: transparent; }
+  .wrap { overflow-x: clip; }   /* 金属按钮的辉光画布贴着右边会溢出，手机上别撑出横向滚动 */
+  .q-fly { position: fixed; z-index: 50; margin: 0; pointer-events: none; white-space: nowrap; font-size: 17px; line-height: 1.4; color: var(--ink); transform-origin: 0 0; }
+
+  /* 回答卡片 */
+  .q-echo { display: flex; gap: 10px; align-items: baseline; font-size: 20px; font-weight: 700; line-height: 1.45; margin-bottom: 18px; }
+  .q-echo .qk { flex: none; font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--blue); background: var(--blue-soft); border-radius: 5px; padding: 1px 7px; position: relative; top: -2px; }
+  .q-echo.hide { visibility: hidden; }
+  .orb-host { display: inline-block; line-height: 0; }
+
+  /* 过程剧场：检索时占满卡片，开始出字后收成一条时间线 */
+  .th-body { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .6s var(--ease), opacity .45s; }
+  .th-body > div { min-height: 0; overflow: hidden; }
+  .theater.compact .th-body { grid-template-rows: 0fr; opacity: 0; }
+  .th-head { display: flex; gap: 16px; align-items: center; }
+  .th-orb { width: 64px; height: 64px; flex: none; }
+  .th-orb .orb-host { animation: fade .5s var(--ease); }
+  .th-orb.swap .orb-host { animation: pop .55s var(--ease); }
+  .th-text { min-width: 0; flex: 1; }
+  .th-title { font-size: 18px; font-weight: 700; line-height: 1.4; }
+  .th-title.live { background: linear-gradient(90deg, var(--ink) 35%, #c3c1ba 50%, var(--ink) 65%) 0 0 / 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 1.8s linear infinite; }
+  .th-title.bad { color: var(--red); }
+  .th-detail { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+  .th-skip { align-self: flex-start; flex: none; font: inherit; font-size: 12px; color: var(--ink-3); background: none; border: 0; padding: 2px 0; cursor: pointer; }
+  .th-skip:hover { color: var(--blue); }
+  .th-stage { margin-top: 16px; overflow: hidden; }
+  .enter > * { animation: rise .45s var(--ease) backwards; }
+  .enter > :nth-child(2) { animation-delay: .1s; } .enter > :nth-child(3) { animation-delay: .2s; }
+  .th-hint { font-size: 13px; color: var(--ink-3); }
+  /* 阶段画面：圈范围 */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; background: var(--neutral-soft); color: var(--ink-2); animation: pop .5s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 90ms); }
+  .chip b { color: var(--ink); font-weight: 600; }
+  .chip.blue { background: var(--blue-soft); color: var(--blue); }
+  /* 问题向量：前 64 维，正的朝上、负的朝下 */
+  .vec { display: grid; grid-template-columns: repeat(64, 1fr); gap: 2px; height: 72px; }
+  @media (max-width: 520px) { .vec { gap: 1px; } }
+  .vec b { position: relative; }
+  .vec b::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--rule); }
+  .vec i { position: absolute; left: 0; right: 0; bottom: 50%; height: calc(var(--h) / 2); min-height: 1px; background: var(--blue); border-radius: 2px 2px 0 0; transform-origin: bottom; animation: vgrow .5s var(--ease) backwards; animation-delay: calc(var(--i) * 9ms); }
+  .vec i.neg { bottom: auto; top: 50%; background: var(--violet); border-radius: 0 0 2px 2px; transform-origin: top; }
+  .vec.wait i { height: 6px; opacity: .35; animation: breathe 1.2s ease-in-out infinite alternate; animation-delay: calc(var(--i) * 18ms); }
+  @keyframes vgrow { from { transform: scaleY(0); } }
+  @keyframes breathe { to { transform: scaleY(3); opacity: .7; } }
+  /* 混合检索：漏斗计数 */
+  .funnel { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .funnel .fn { background: var(--page); border-radius: 10px; padding: 8px 14px; min-width: 7.5em; }
+  .funnel .fn b { display: block; font-size: 24px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .funnel .fn span { font-size: 12px; color: var(--ink-3); }
+  .funnel .fn.last { background: var(--accent-bg); } .funnel .fn.last b { color: var(--blue); }
+  .funnel .ar { color: var(--ink-3); }
+  /* 门槛 */
+  .gate { display: grid; grid-template-columns: 8.5em 1fr auto; gap: 12px; align-items: center; font-size: 13px; margin-top: 14px; color: var(--ink-2); }
+  @media (max-width: 520px) { .gate { grid-template-columns: 1fr auto; } .gate .gn { grid-column: 1 / -1; } }
+  .gate .gt { position: relative; height: 8px; background: var(--neutral-soft); border-radius: 99px; }
+  .gate .gf { position: absolute; left: 0; top: 0; bottom: 0; width: var(--w); background: var(--blue); border-radius: 99px; transform-origin: left; animation: grow .9s var(--ease) both .15s; }
+  .gate .gk { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
+  .gate .gv { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .gate .gv small { color: var(--ink-3); font-size: 12px; }
+  .gate .gv em { font-style: normal; font-weight: 700; color: var(--blue); margin-left: 6px; }
+  .gate.no .gf { background: var(--red); } .gate.no .gv em { color: var(--red); }
+  .gate.no { animation: shake .45s 1s; }
+  /* 重排：候选当场换位次 */
+  .rr { display: grid; gap: 3px; }
+  .rr-row { display: grid; grid-template-columns: 6.2em minmax(0, 1fr) 100px 3.2em; gap: 10px; align-items: center; font-size: 13px; padding: 3px 8px; border-radius: 6px; transition: background .4s, opacity .4s; }
+  @media (max-width: 520px) { .rr-row { grid-template-columns: 5.6em minmax(0, 1fr) 48px; } .rr-row .sc { display: none; } }
+  .rr-row .from { color: var(--ink-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rr-row .from .up { color: var(--blue); font-weight: 700; }
+  .rr-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rr-row .tr { height: 6px; background: var(--neutral-soft); border-radius: 3px; overflow: hidden; }
+  .rr-row .tr i { display: block; height: 100%; width: 0; background: var(--blue); border-radius: 3px; transition: width .8s var(--ease); }
+  .rr-row .sc { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .rr-row.ctx { background: var(--accent-bg); }
+  .rr-row.out { opacity: .5; }
+  /* 生成：把块装进提示词 */
+  .pack { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+  .pack .chip { background: var(--accent-bg); color: var(--ink-2); max-width: 15em; }
+  .pack .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pack .chip b { color: var(--blue); }
+  .pack .to { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-3); animation: fade .5s backwards .7s; }
+  /* 时间线 */
+  .track { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 18px 0 0; padding: 14px 0 0; border-top: 1px dashed var(--rule); transition: margin .5s var(--ease), padding .5s var(--ease); }
+  .theater.compact .track { margin-top: 0; padding-top: 0; border-top-color: transparent; margin-bottom: 18px; }
+  .track li { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; font-size: 12px; color: var(--ink-3); min-width: 0; }
+  .track li::before, .track li::after { content: ""; position: absolute; top: 10px; right: 50%; width: 100%; height: 2px; background: var(--rule); }
+  .track li::after { background: var(--blue); transform: scaleX(0); transform-origin: left; transition: transform .5s var(--ease); }
+  .track li:first-child::before, .track li:first-child::after { display: none; }
+  .track li.on::after, .track li.done::after, .track li.bad::after { transform: none; }
+  .track .dot { position: relative; z-index: 1; width: 22px; height: 22px; border-radius: 50%; background: var(--surface); border: 2px solid var(--rule); display: grid; place-items: center; color: #fff; transition: background .3s, border-color .3s; }
+  .track .dot .ph { margin: 0; width: 12px; height: 12px; }
+  .track li.on .dot { border-color: transparent; }
+  .track li.done .dot { background: var(--blue); border-color: var(--blue); animation: pop .45s var(--ease); }
+  .track li.bad .dot { background: var(--red); border-color: var(--red); animation: pop .45s var(--ease); }
+  .track li.skip { opacity: .4; }
+  .track .lb { margin-top: 5px; color: var(--ink-2); white-space: nowrap; }
+  .track li.on .lb { color: var(--ink); font-weight: 600; }
+  .track .ms { font-size: 11px; min-height: 1.5em; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  /* 出字 */
+  .caret-orb { display: inline-block; vertical-align: -4px; margin-left: 4px; }
+  .cite.pop { animation: pop .5s var(--ease) both; }
+  .sources .src { animation: rise .45s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 70ms); transition: opacity .4s, background .2s, border-color .2s; }
+  .src.wait { opacity: .5; }
+  .src.cited { opacity: 1; }
+  .src.hit { animation: hit 1s var(--ease); }
+  .meta-line span { animation: fade .5s backwards; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0ms !important; }
+  }
 </style>
 </head>
 <body>
 <!-- 图标：Phosphor Icons regular（https://phosphoricons.com），MIT License，Copyright (c) 2023 Phosphor Icons -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="ph-calendar-blank" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></symbol><symbol id="ph-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol><symbol id="ph-chat-circle-text" viewBox="0 0 256 256"><path d="M168,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,112Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm72-8A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></symbol><symbol id="ph-chat-teardrop-text" viewBox="0 0 256 256"><path d="M172,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h68A8,8,0,0,1,172,112Zm-8,24H96a8,8,0,0,0,0,16h68a8,8,0,0,0,0-16Zm68-12A100.11,100.11,0,0,1,132,224H48a16,16,0,0,1-16-16V124a100,100,0,0,1,200,0Zm-16,0a84,84,0,0,0-168,0v84h84A84.09,84.09,0,0,0,216,124Z"/></symbol><symbol id="ph-crosshair" viewBox="0 0 256 256"><path d="M232,120h-8.34A96.14,96.14,0,0,0,136,32.34V24a8,8,0,0,0-16,0v8.34A96.14,96.14,0,0,0,32.34,120H24a8,8,0,0,0,0,16h8.34A96.14,96.14,0,0,0,120,223.66V232a8,8,0,0,0,16,0v-8.34A96.14,96.14,0,0,0,223.66,136H232a8,8,0,0,0,0-16Zm-96,87.6V200a8,8,0,0,0-16,0v7.6A80.15,80.15,0,0,1,48.4,136H56a8,8,0,0,0,0-16H48.4A80.15,80.15,0,0,1,120,48.4V56a8,8,0,0,0,16,0V48.4A80.15,80.15,0,0,1,207.6,120H200a8,8,0,0,0,0,16h7.6A80.15,80.15,0,0,1,136,207.6ZM128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152Z"/></symbol><symbol id="ph-flask" viewBox="0 0 256 256"><path d="M221.69,199.77,160,96.92V40h8a8,8,0,0,0,0-16H88a8,8,0,0,0,0,16h8V96.92L34.31,199.77A16,16,0,0,0,48,224H208a16,16,0,0,0,13.72-24.23ZM110.86,103.25A7.93,7.93,0,0,0,112,99.14V40h32V99.14a7.93,7.93,0,0,0,1.14,4.11L183.36,167c-12,2.37-29.07,1.37-51.75-10.11-15.91-8.05-31.05-12.32-45.22-12.81ZM48,208l28.54-47.58c14.25-1.74,30.31,1.85,47.82,10.72,19,9.61,35,12.88,48,12.88a69.89,69.89,0,0,0,19.55-2.7L208,208Z"/></symbol><symbol id="ph-folder" viewBox="0 0 256 256"><path d="M216,72H131.31L104,44.69A15.86,15.86,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.4,15.4,0,0,0,39.38,216H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40ZM216,200H40V88H216Z"/></symbol><symbol id="ph-funnel" viewBox="0 0 256 256"><path d="M230.6,49.53A15.81,15.81,0,0,0,216,40H40A16,16,0,0,0,28.19,66.76l.08.09L96,139.17V216a16,16,0,0,0,24.87,13.32l32-21.34A16,16,0,0,0,160,194.66V139.17l67.74-72.32.08-.09A15.8,15.8,0,0,0,230.6,49.53ZM40,56h0Zm106.18,74.58A8,8,0,0,0,144,136v58.66L112,216V136a8,8,0,0,0-2.16-5.47L40,56H216Z"/></symbol><symbol id="ph-gauge" viewBox="0 0 256 256"><path d="M207.06,72.67A111.24,111.24,0,0,0,128,40h-.4C66.07,40.21,16,91,16,153.13V176a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V152A111.25,111.25,0,0,0,207.06,72.67ZM224,176H119.71l54.76-75.3a8,8,0,0,0-12.94-9.42L99.92,176H32V153.13c0-3.08.15-6.12.43-9.13H56a8,8,0,0,0,0-16H35.27c10.32-38.86,44-68.24,84.73-71.66V80a8,8,0,0,0,16,0V56.33A96.14,96.14,0,0,1,221,128H200a8,8,0,0,0,0,16h23.67c.21,2.65.33,5.31.33,8Z"/></symbol><symbol id="ph-gear-six" viewBox="0 0 256 256"><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A112.1,112.1,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.08,8.08,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8.08,8.08,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z"/></symbol><symbol id="ph-hourglass-medium" viewBox="0 0 256 256"><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z"/></symbol><symbol id="ph-lightbulb" viewBox="0 0 256 256"><path d="M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Zm-16.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z"/></symbol><symbol id="ph-lock-key" viewBox="0 0 256 256"><path d="M128,112a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Zm80-72H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol><symbol id="ph-magnifying-glass" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></symbol><symbol id="ph-package" viewBox="0 0 256 256"><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></symbol><symbol id="ph-paper-plane-right" viewBox="0 0 256 256"><path d="M231.87,114l-168-95.89A16,16,0,0,0,40.92,37.34L71.55,128,40.92,218.67A16,16,0,0,0,56,240a16.15,16.15,0,0,0,7.93-2.1l167.92-96.05a16,16,0,0,0,.05-27.89ZM56,224a.56.56,0,0,0,0-.12L85.74,136H144a8,8,0,0,0,0-16H85.74L56.06,32.16A.46.46,0,0,0,56,32l168,95.83Z"/></symbol><symbol id="ph-path" viewBox="0 0 256 256"><path d="M200,168a32.06,32.06,0,0,0-31,24H72a32,32,0,0,1,0-64h96a40,40,0,0,0,0-80H72a8,8,0,0,0,0,16h96a24,24,0,0,1,0,48H72a48,48,0,0,0,0,96h97a32,32,0,1,0,31-40Zm0,48a16,16,0,1,1,16-16A16,16,0,0,1,200,216Z"/></symbol><symbol id="ph-prohibit" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z"/></symbol><symbol id="ph-quotes" viewBox="0 0 256 256"><path d="M100,56H40A16,16,0,0,0,24,72v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,100,56Zm0,80H40V72h60ZM216,56H156a16,16,0,0,0-16,16v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,216,56Zm0,80H156V72h60Z"/></symbol><symbol id="ph-robot" viewBox="0 0 256 256"><path d="M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48Zm16,144a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V80A16,16,0,0,1,56,64H200a16,16,0,0,1,16,16Zm-52-56H92a28,28,0,0,0,0,56h72a28,28,0,0,0,0-56Zm-24,16v24H116V152ZM80,164a12,12,0,0,1,12-12h8v24H92A12,12,0,0,1,80,164Zm84,12h-8V152h8a12,12,0,0,1,0,24ZM72,108a12,12,0,1,1,12,12A12,12,0,0,1,72,108Zm88,0a12,12,0,1,1,12,12A12,12,0,0,1,160,108Z"/></symbol><symbol id="ph-scissors" viewBox="0 0 256 256"><path d="M157.73,113.13A8,8,0,0,1,159.82,102L227.48,55.7a8,8,0,0,1,9,13.21l-67.67,46.3a7.92,7.92,0,0,1-4.51,1.4A8,8,0,0,1,157.73,113.13Zm80.87,85.09a8,8,0,0,1-11.12,2.08L136,137.7,93.49,166.78a36,36,0,1,1-9-13.19L121.83,128,84.44,102.41a35.86,35.86,0,1,1,9-13.19l143,97.87A8,8,0,0,1,238.6,198.22ZM80,180a20,20,0,1,0-5.86,14.14A19.85,19.85,0,0,0,80,180ZM74.14,90.13a20,20,0,1,0-28.28,0A19.85,19.85,0,0,0,74.14,90.13Z"/></symbol><symbol id="ph-sort-descending" viewBox="0 0 256 256"><path d="M40,128a8,8,0,0,1,8-8h72a8,8,0,0,1,0,16H48A8,8,0,0,1,40,128Zm8-56h56a8,8,0,0,0,0-16H48a8,8,0,0,0,0,16ZM184,184H48a8,8,0,0,0,0,16H184a8,8,0,0,0,0-16ZM229.66,82.34l-40-40a8,8,0,0,0-11.32,0l-40,40a8,8,0,0,0,11.32,11.32L176,67.31V144a8,8,0,0,0,16,0V67.31l26.34,26.35a8,8,0,0,0,11.32-11.32Z"/></symbol><symbol id="ph-sparkle" viewBox="0 0 256 256"><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"/></symbol><symbol id="ph-vector-three" viewBox="0 0 256 256"><path d="M237.66,141.66l-32,32a8,8,0,0,1-11.32-11.32L212.69,144H123.31l-56,56H96a8,8,0,0,1,0,16H48a8,8,0,0,1-8-8V160a8,8,0,0,1,16,0v28.69l56-56V43.31L93.66,61.66A8,8,0,0,1,82.34,50.34l32-32a8,8,0,0,1,11.32,0l32,32a8,8,0,0,1-11.32,11.32L128,43.31V128h84.69l-18.35-18.34a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,237.66,141.66Z"/></symbol><symbol id="ph-warning-circle" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"/></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="ph-calendar-blank" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z"/></symbol><symbol id="ph-check" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></symbol><symbol id="ph-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol><symbol id="ph-chat-circle-text" viewBox="0 0 256 256"><path d="M168,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,112Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm72-8A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></symbol><symbol id="ph-chat-teardrop-text" viewBox="0 0 256 256"><path d="M172,112a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h68A8,8,0,0,1,172,112Zm-8,24H96a8,8,0,0,0,0,16h68a8,8,0,0,0,0-16Zm68-12A100.11,100.11,0,0,1,132,224H48a16,16,0,0,1-16-16V124a100,100,0,0,1,200,0Zm-16,0a84,84,0,0,0-168,0v84h84A84.09,84.09,0,0,0,216,124Z"/></symbol><symbol id="ph-crosshair" viewBox="0 0 256 256"><path d="M232,120h-8.34A96.14,96.14,0,0,0,136,32.34V24a8,8,0,0,0-16,0v8.34A96.14,96.14,0,0,0,32.34,120H24a8,8,0,0,0,0,16h8.34A96.14,96.14,0,0,0,120,223.66V232a8,8,0,0,0,16,0v-8.34A96.14,96.14,0,0,0,223.66,136H232a8,8,0,0,0,0-16Zm-96,87.6V200a8,8,0,0,0-16,0v7.6A80.15,80.15,0,0,1,48.4,136H56a8,8,0,0,0,0-16H48.4A80.15,80.15,0,0,1,120,48.4V56a8,8,0,0,0,16,0V48.4A80.15,80.15,0,0,1,207.6,120H200a8,8,0,0,0,0,16h7.6A80.15,80.15,0,0,1,136,207.6ZM128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152Z"/></symbol><symbol id="ph-flask" viewBox="0 0 256 256"><path d="M221.69,199.77,160,96.92V40h8a8,8,0,0,0,0-16H88a8,8,0,0,0,0,16h8V96.92L34.31,199.77A16,16,0,0,0,48,224H208a16,16,0,0,0,13.72-24.23ZM110.86,103.25A7.93,7.93,0,0,0,112,99.14V40h32V99.14a7.93,7.93,0,0,0,1.14,4.11L183.36,167c-12,2.37-29.07,1.37-51.75-10.11-15.91-8.05-31.05-12.32-45.22-12.81ZM48,208l28.54-47.58c14.25-1.74,30.31,1.85,47.82,10.72,19,9.61,35,12.88,48,12.88a69.89,69.89,0,0,0,19.55-2.7L208,208Z"/></symbol><symbol id="ph-folder" viewBox="0 0 256 256"><path d="M216,72H131.31L104,44.69A15.86,15.86,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.4,15.4,0,0,0,39.38,216H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40ZM216,200H40V88H216Z"/></symbol><symbol id="ph-funnel" viewBox="0 0 256 256"><path d="M230.6,49.53A15.81,15.81,0,0,0,216,40H40A16,16,0,0,0,28.19,66.76l.08.09L96,139.17V216a16,16,0,0,0,24.87,13.32l32-21.34A16,16,0,0,0,160,194.66V139.17l67.74-72.32.08-.09A15.8,15.8,0,0,0,230.6,49.53ZM40,56h0Zm106.18,74.58A8,8,0,0,0,144,136v58.66L112,216V136a8,8,0,0,0-2.16-5.47L40,56H216Z"/></symbol><symbol id="ph-gauge" viewBox="0 0 256 256"><path d="M207.06,72.67A111.24,111.24,0,0,0,128,40h-.4C66.07,40.21,16,91,16,153.13V176a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V152A111.25,111.25,0,0,0,207.06,72.67ZM224,176H119.71l54.76-75.3a8,8,0,0,0-12.94-9.42L99.92,176H32V153.13c0-3.08.15-6.12.43-9.13H56a8,8,0,0,0,0-16H35.27c10.32-38.86,44-68.24,84.73-71.66V80a8,8,0,0,0,16,0V56.33A96.14,96.14,0,0,1,221,128H200a8,8,0,0,0,0,16h23.67c.21,2.65.33,5.31.33,8Z"/></symbol><symbol id="ph-gear-six" viewBox="0 0 256 256"><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A112.1,112.1,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.08,8.08,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8.08,8.08,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z"/></symbol><symbol id="ph-hourglass-medium" viewBox="0 0 256 256"><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z"/></symbol><symbol id="ph-lightbulb" viewBox="0 0 256 256"><path d="M176,232a8,8,0,0,1-8,8H88a8,8,0,0,1,0-16h80A8,8,0,0,1,176,232Zm40-128a87.55,87.55,0,0,1-33.64,69.21A16.24,16.24,0,0,0,176,186v6a16,16,0,0,1-16,16H96a16,16,0,0,1-16-16v-6a16,16,0,0,0-6.23-12.66A87.59,87.59,0,0,1,40,104.49C39.74,56.83,78.26,17.14,125.88,16A88,88,0,0,1,216,104Zm-16,0a72,72,0,0,0-73.74-72c-39,.92-70.47,33.39-70.26,72.39a71.65,71.65,0,0,0,27.64,56.3A32,32,0,0,1,96,186v6h64v-6a32.15,32.15,0,0,1,12.47-25.35A71.65,71.65,0,0,0,200,104Zm-16.11-9.34a57.6,57.6,0,0,0-46.56-46.55,8,8,0,0,0-2.66,15.78c16.57,2.79,30.63,16.85,33.44,33.45A8,8,0,0,0,176,104a9,9,0,0,0,1.35-.11A8,8,0,0,0,183.89,94.66Z"/></symbol><symbol id="ph-lock-key" viewBox="0 0 256 256"><path d="M128,112a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Zm80-72H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol><symbol id="ph-magnifying-glass" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></symbol><symbol id="ph-package" viewBox="0 0 256 256"><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></symbol><symbol id="ph-paper-plane-right" viewBox="0 0 256 256"><path d="M231.87,114l-168-95.89A16,16,0,0,0,40.92,37.34L71.55,128,40.92,218.67A16,16,0,0,0,56,240a16.15,16.15,0,0,0,7.93-2.1l167.92-96.05a16,16,0,0,0,.05-27.89ZM56,224a.56.56,0,0,0,0-.12L85.74,136H144a8,8,0,0,0,0-16H85.74L56.06,32.16A.46.46,0,0,0,56,32l168,95.83Z"/></symbol><symbol id="ph-path" viewBox="0 0 256 256"><path d="M200,168a32.06,32.06,0,0,0-31,24H72a32,32,0,0,1,0-64h96a40,40,0,0,0,0-80H72a8,8,0,0,0,0,16h96a24,24,0,0,1,0,48H72a48,48,0,0,0,0,96h97a32,32,0,1,0,31-40Zm0,48a16,16,0,1,1,16-16A16,16,0,0,1,200,216Z"/></symbol><symbol id="ph-prohibit" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z"/></symbol><symbol id="ph-quotes" viewBox="0 0 256 256"><path d="M100,56H40A16,16,0,0,0,24,72v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,100,56Zm0,80H40V72h60ZM216,56H156a16,16,0,0,0-16,16v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,216,56Zm0,80H156V72h60Z"/></symbol><symbol id="ph-robot" viewBox="0 0 256 256"><path d="M200,48H136V16a8,8,0,0,0-16,0V48H56A32,32,0,0,0,24,80V192a32,32,0,0,0,32,32H200a32,32,0,0,0,32-32V80A32,32,0,0,0,200,48Zm16,144a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V80A16,16,0,0,1,56,64H200a16,16,0,0,1,16,16Zm-52-56H92a28,28,0,0,0,0,56h72a28,28,0,0,0,0-56Zm-24,16v24H116V152ZM80,164a12,12,0,0,1,12-12h8v24H92A12,12,0,0,1,80,164Zm84,12h-8V152h8a12,12,0,0,1,0,24ZM72,108a12,12,0,1,1,12,12A12,12,0,0,1,72,108Zm88,0a12,12,0,1,1,12,12A12,12,0,0,1,160,108Z"/></symbol><symbol id="ph-scissors" viewBox="0 0 256 256"><path d="M157.73,113.13A8,8,0,0,1,159.82,102L227.48,55.7a8,8,0,0,1,9,13.21l-67.67,46.3a7.92,7.92,0,0,1-4.51,1.4A8,8,0,0,1,157.73,113.13Zm80.87,85.09a8,8,0,0,1-11.12,2.08L136,137.7,93.49,166.78a36,36,0,1,1-9-13.19L121.83,128,84.44,102.41a35.86,35.86,0,1,1,9-13.19l143,97.87A8,8,0,0,1,238.6,198.22ZM80,180a20,20,0,1,0-5.86,14.14A19.85,19.85,0,0,0,80,180ZM74.14,90.13a20,20,0,1,0-28.28,0A19.85,19.85,0,0,0,74.14,90.13Z"/></symbol><symbol id="ph-sort-descending" viewBox="0 0 256 256"><path d="M40,128a8,8,0,0,1,8-8h72a8,8,0,0,1,0,16H48A8,8,0,0,1,40,128Zm8-56h56a8,8,0,0,0,0-16H48a8,8,0,0,0,0,16ZM184,184H48a8,8,0,0,0,0,16H184a8,8,0,0,0,0-16ZM229.66,82.34l-40-40a8,8,0,0,0-11.32,0l-40,40a8,8,0,0,0,11.32,11.32L176,67.31V144a8,8,0,0,0,16,0V67.31l26.34,26.35a8,8,0,0,0,11.32-11.32Z"/></symbol><symbol id="ph-sparkle" viewBox="0 0 256 256"><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"/></symbol><symbol id="ph-vector-three" viewBox="0 0 256 256"><path d="M237.66,141.66l-32,32a8,8,0,0,1-11.32-11.32L212.69,144H123.31l-56,56H96a8,8,0,0,1,0,16H48a8,8,0,0,1-8-8V160a8,8,0,0,1,16,0v28.69l56-56V43.31L93.66,61.66A8,8,0,0,1,82.34,50.34l32-32a8,8,0,0,1,11.32,0l32,32a8,8,0,0,1-11.32,11.32L128,43.31V128h84.69l-18.35-18.34a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,237.66,141.66Z"/></symbol><symbol id="ph-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol><symbol id="ph-warning-circle" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z"/></symbol></svg>
 <div class="wrap">
   <header>
     <div class="eyebrow">RAG DEMO · 马自立的第二大脑</div>
@@ -131,15 +265,17 @@
 
   <div id="result">
     <section style="margin-top:28px">
-      <div class="card">
+      <div class="card" id="answerCard">
+        <div class="q-echo" id="qEcho"><span class="qk">提问</span><span class="qt" id="qText"></span></div>
+        <div class="theater" id="theater"></div>
         <div class="answer" id="answer"></div>
         <div id="refuse"></div>
         <div class="meta-line" id="metaLine"></div>
         <div class="sources" id="sources"></div>
       </div>
     </section>
-    <section style="margin-top:32px">
-      <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-path"/></svg>检索过程</h2><p>这一问在线上实际走过的每一步。蓝底的行是最后放进提示词、给模型看的块。</p></div>
+    <section style="margin-top:32px" id="traceSec">
+      <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-path"/></svg>检索过程</h2><p>这一问在线上实际走过的每一步，上面的动画就是按这些数字放的。蓝底的行是最后放进提示词、给模型看的块。</p></div>
       <div class="pipe" id="pipe"></div>
       <div class="card table-scroll"><table id="cand"></table><button type="button" class="more-rows" id="moreRows" hidden onclick="const t=document.getElementById('cand');t.classList.toggle('folded');this.textContent=t.classList.contains('folded')?'显示全部候选':'收起'">显示全部候选</button></div>
       <details><summary>这几列是什么</summary>
@@ -150,7 +286,7 @@
 
   <section>
     <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-gear-six"/></svg>怎么做的</h2><p>检索的打分口径和我本地 Obsidian 插件「第二大脑」是同一套（同一份代码移植过来），本地那套先用评测集调过；线上版补上了重排、生成和生成评测。</p></div>
-    <div class="flow">
+    <div class="flow reveal">
       <div class="card step"><div class="n">01 · 离线</div><div class="t"><svg class="ph" aria-hidden="true"><use href="#ph-scissors"/></svg>圈语料 + 切块</div><ul><li>只放知识类文件夹、博客、日记里的摘录块</li><li>块级隐私过滤：私人关系、学生、钱、健康等规则</li><li>日记一条一块，长块按子项再切，子块带上「页名 › 小标题 › 母块」</li></ul></div>
       <div class="card step"><div class="n">02 · 离线</div><div class="t"><svg class="ph" aria-hidden="true"><use href="#ph-package"/></svg>算向量、打包</div><ul><li>bge-m3，1024 维</li><li>按内容哈希缓存，改了才重算</li><li>int8 量化，索引约 <span id="sizeMB">20</span> MB，随函数一起部署</li></ul></div>
       <div class="card step"><div class="n">03 · 在线</div><div class="t"><svg class="ph" aria-hidden="true"><use href="#ph-funnel"/></svg>混合检索 → 重排</div><ul><li>先按问题里的时间 / 文件夹圈范围（「2023 年 3 月」「去年」「编程与技术里」）</li><li>余弦 + BM25 的 z 分融合，取前 30</li><li>bge-reranker-v2-m3 精排</li></ul></div>
@@ -160,7 +296,7 @@
 
   <section id="evalSec">
     <div class="sec-head"><h2><svg class="ph" aria-hidden="true"><use href="#ph-chart-bar"/></svg>评测</h2><p id="evalLede">在这份公开语料上单独建的评测集，召回和生成分开评。</p></div>
-    <div id="evalBody" class="grid g2"></div>
+    <div id="evalBody" class="grid g2 reveal"></div>
   </section>
 
   <section>
@@ -176,6 +312,7 @@
   <footer>马自立 · <a href="https://matsuri.site/github/">项目主页</a> · 本地版是自己写的 Obsidian 插件 · 模型：bge-m3 / bge-reranker-v2-m3（硅基流动）、DeepSeek · <span id="built"></span></footer>
 </div>
 
+<script src="fx.js" defer></script>
 <script>
 const API = "/api/ask";
 // 示例问题：都在评测里跑过，答案能在语料里核对；最后一条是库里没有的，演示拒答
@@ -201,22 +338,46 @@ for (const e of EXAMPLES) {
   $("ex").append(b);
 }
 
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const EASE = "cubic-bezier(.2,.8,.2,1)";
+// fx.js（orb / 流光边框 / 金属按钮）没加载上就退回纯文字，问答照常
+const orb = (state, size, extra) => window.FX ? FX.orb(state, size, extra) : { el: Object.assign(document.createElement("span"), { className: "orb-host" }), set() {} };
+let inputBeam = null, cardBeam = null;
+document.addEventListener("DOMContentLoaded", () => {
+  if (!window.FX) return;
+  FX.metal($("go"), { variant: "button", preset: "chromatic" });
+  inputBeam = FX.beam($("q"), { size: "md", colorVariant: "ocean", active: false, borderRadius: 10, style: { flex: 1, minWidth: 0 } }, { display: "flex" });
+  cardBeam = FX.beam($("answerCard"), { size: "md", colorVariant: "ocean", active: false, borderRadius: 12, strength: 0.8 });
+});
+
+// 滚到视口里才出场：加 .in，子元素按 --i 依次升起
+const io = "IntersectionObserver" in window ? new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }, { rootMargin: "0px 0px -10% 0px" }) : null;
+function watch(el) { el.classList.remove("in"); if (io && !REDUCED) io.observe(el); else el.classList.add("in"); }
+function reveal(el) { [...el.children].forEach((c, i) => c.style.setProperty("--i", i)); watch(el); }
+document.querySelectorAll(".reveal").forEach(reveal);
+
+function countUp(el, to, ms = 700) {
+  const fmt = (x) => Math.round(x).toLocaleString();
+  if (REDUCED) { el.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  const step = (t) => { const p = Math.min(1, (t - t0) / ms); el.textContent = fmt(to * (1 - (1 - p) ** 3)); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
 fetch(API).then((r) => r.json()).then((j) => {
-  $("nBlocks").textContent = j.blocks.toLocaleString();
+  countUp($("nBlocks"), j.blocks, 900);
   $("sizeMB").textContent = Math.round(j.blocks * 1028 / 1e6);
   $("built").textContent = "索引构建于 " + new Date(Date.parse(j.built) + 8 * 3600e3).toISOString().slice(0, 10);
 }).catch(() => {});
 
 $("f").onsubmit = (e) => { e.preventDefault(); const q = $("q").value.trim(); if (q) ask(q); };
 
-let ctrl = null;
+let ctrl = null, run = null;
 async function ask(q) {
   ctrl?.abort(); ctrl = new AbortController();
-  $("result").style.display = "block";
+  run?.kill();
+  const R = run = startRun(q);
   $("go").disabled = true;
-  $("answer").className = "answer"; $("answer").innerHTML = '<span class="note">检索中…</span>';
-  $("refuse").innerHTML = ""; $("metaLine").innerHTML = ""; $("sources").innerHTML = ""; $("pipe").innerHTML = ""; $("cand").innerHTML = "";
-  let text = "", trace = null;
   try {
     const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }), signal: ctrl.signal });
     if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || `请求失败 ${r.status}`); }
@@ -231,18 +392,256 @@ async function ask(q) {
       while ((k = buf.indexOf("\n\n")) >= 0) {
         const raw = buf.slice(0, k); buf = buf.slice(k + 2);
         const ev = (raw.match(/^event: (.*)$/m) || [])[1], data = JSON.parse((raw.match(/^data: (.*)$/m) || [])[1] || "null");
-        if (ev === "trace") { trace = data; renderTrace(trace); if (!trace.refused) $("answer").innerHTML = '<span class="caret"></span>'; }
-        else if (ev === "delta") { text += data.t; renderAnswer(text, trace, true); }
-        else if (ev === "done") { renderAnswer(text, trace, false); renderMeta(trace, { ...data, left }); }
+        if (ev === "stage") R.stage(data);
+        else if (ev === "trace") R.trace(data);
+        else if (ev === "delta") R.delta(data.t);
+        else if (ev === "done") R.done({ ...data, left });
         else if (ev === "error") throw new Error(data.message);
       }
     }
   } catch (e) {
-    if (e.name !== "AbortError") $("answer").innerHTML = `<span class="note">出错了：${esc(e.message)}</span>`;
+    if (e.name !== "AbortError") R.fail(e.message);
   } finally { $("go").disabled = false; }
 }
 
-// 回答里的 [n] → 可点的引用，点了高亮对应出处
+// ===== 一问的放映：每个阶段先「进入」（orb 换状态、标题流光），等到真实数据再出结果画面，至少停 DWELL 毫秒让人看清 =====
+const STAGES = [
+  { k: "scope", lb: "圈范围", orb: "shaping", title: "圈定范围", wait: "看问题里有没有时间、文件夹" },
+  { k: "embed", lb: "问题向量", orb: "connecting", title: "把问题变成向量", wait: "bge-m3 编码中" },
+  { k: "search", lb: "混合检索", orb: "searching", title: "混合检索", wait: "向量相似度 + BM25 字面匹配，在全库里找" },
+  { k: "rerank", lb: "重排", orb: "solving", title: "重排", wait: "bge-reranker-v2-m3 把问题和每个候选成对打分" },
+  { k: "gen", lb: "生成", orb: "composing", title: "生成回答", wait: "交给 DeepSeek" },
+];
+const DWELL = { scope: 450, embed: 700, search: 1000, rerank: 400, gen: 500 };
+function deferred() { let res; const p = new Promise((r) => (res = r)); p.give = (v) => { if (!p.done) { p.done = true; res(v); } }; return p; }
+const shortName = (h) => (h.folder === "日记" ? `日记 · ${h.day}` : h.title) + " · " + h.text.slice(0, 40);
+const shortTitle = (h) => h.folder === "日记" ? `日记 ${h.day}` : h.title;
+const icon = (n) => `<svg class="ph" aria-hidden="true"><use href="#ph-${n}"/></svg>`;
+function gate(name, v, thr) {
+  const ok = v >= thr, pct = (x) => `${Math.max(0, Math.min(100, x * 100)).toFixed(1)}%`;
+  return `<div class="gate ${ok ? "ok" : "no"}"><span class="gn">${name}</span><span class="gt"><i class="gf" style="--w:${pct(v)}"></i><i class="gk" style="left:${pct(thr)}"></i></span><span class="gv">${v < 0 ? "—" : f3(v)}<small> / 门槛 ${thr}</small><em>${ok ? "过" : "没过"}</em></span></div>`;
+}
+// 改动 el 的内容，同时把高度从旧值平滑过渡到新值
+function resize(el, mutate) {
+  const h0 = el.offsetHeight; mutate(); const h1 = el.offsetHeight;
+  if (!REDUCED && h0 !== h1) el.animate([{ height: h0 + "px" }, { height: h1 + "px" }], { duration: 380, easing: EASE });
+}
+// 按新顺序重排子元素，每个元素从旧位置滑过去（FLIP）
+function flip(box, order) {
+  const y0 = new Map(order.map((el) => [el, el.getBoundingClientRect().top]));
+  box.append(...order);
+  if (REDUCED) return;
+  for (const el of order) { const dy = y0.get(el) - el.getBoundingClientRect().top; if (dy) el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 700, easing: EASE }); }
+}
+// 正在出的字：末尾十几个字由淡到实，像刚写上去
+function fadeTail(root, n) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+  while (w.nextNode()) nodes.push(w.currentNode);
+  let k = 0;
+  for (let i = nodes.length - 1; i >= 0 && k < n; i--) {
+    const t = nodes[i], ch = Array.from(t.data), m = Math.min(n - k, ch.length), frag = document.createDocumentFragment();
+    frag.append(ch.slice(0, ch.length - m).join(""));
+    ch.slice(ch.length - m).forEach((c, j) => { const s = document.createElement("span"); s.textContent = c; s.style.opacity = ((k + m - j) / (n + 1)).toFixed(2); frag.append(s); });
+    t.replaceWith(frag); k += m;
+  }
+}
+function flyQuestion(q) {
+  const echo = $("qEcho"), inp = $("q"), a = inp.getBoundingClientRect(), b = $("qText").getBoundingClientRect();
+  if (REDUCED) return;
+  if (b.top > innerHeight * 0.7 || a.bottom < 0) {   // 卡片不在眼前：滚过去，问题淡入
+    scrollBy({ top: b.top - 96, behavior: "smooth" });
+    echo.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 600, easing: EASE });
+    return;
+  }
+  const x0 = a.left + parseFloat(getComputedStyle(inp).paddingLeft), y0 = a.top + (a.height - 17 * 1.4) / 2;
+  const fly = Object.assign(document.createElement("p"), { className: "q-fly", textContent: q });
+  fly.style.left = x0 + "px"; fly.style.top = y0 + "px";
+  document.body.append(fly); echo.classList.add("hide");
+  fly.animate([{ transform: "none", fontWeight: 400 }, { transform: `translate(${b.left - x0}px, ${b.top - y0}px) scale(${20 / 17})`, fontWeight: 700 }], { duration: 700, easing: EASE }).onfinish = () => { fly.remove(); echo.classList.remove("hide"); };
+}
+
+function startRun(q) {
+  const D = Object.fromEntries(STAGES.map((s) => [s.k, deferred()]));
+  const timers = new Set(), KILLED = new Error("killed");
+  let dead = false, skip = REDUCED, trace = null, text = "", doneInfo = null, tGen = 0;
+  const wait = (ms) => new Promise((r) => { if (skip) return r(); const o = { r, t: setTimeout(() => { timers.delete(o); r(); }, ms) }; timers.add(o); });
+  const flush = () => { for (const o of timers) { clearTimeout(o.t); o.r(); } timers.clear(); };
+  const alive = (v) => { if (dead) throw KILLED; return v; };
+
+  $("result").style.display = "block";
+  $("answer").className = "answer"; $("answer").innerHTML = "";
+  $("refuse").innerHTML = ""; $("metaLine").innerHTML = ""; $("sources").innerHTML = ""; $("pipe").innerHTML = ""; $("cand").innerHTML = ""; $("moreRows").hidden = true;
+  $("qText").textContent = q;
+  $("theater").className = "theater";
+  $("theater").innerHTML = `<div class="th-body"><div><div class="th-head"><div class="th-orb" id="thOrb"></div><div class="th-text"><div class="th-title live" id="thTitle"></div><div class="th-detail" id="thDetail"></div></div>${REDUCED ? "" : '<button type="button" class="th-skip" id="thSkip">跳过动画</button>'}</div><div class="th-stage" id="thStage"></div></div></div>` +
+    `<ol class="track" id="track">${STAGES.map((s) => `<li data-k="${s.k}"><span class="dot"></span><span class="lb">${s.lb}</span><span class="ms"></span></li>`).join("")}</ol>`;
+  const big = orb("shaping", 64), small = orb("shaping", 20);
+  $("thOrb").append(big.el);
+  if ($("thSkip")) $("thSkip").onclick = () => { skip = true; flush(); $("thSkip").remove(); };
+  inputBeam?.set({ active: true }); cardBeam?.set({ active: false });
+  flyQuestion(q);
+
+  const li = (k) => $("track").querySelector(`[data-k="${k}"]`);
+  function node(k, cls, ms) {
+    const el = li(k), dot = el.querySelector(".dot");
+    el.className = cls;
+    if (cls === "on") dot.append(small.el); else dot.innerHTML = cls === "done" ? icon("check") : cls === "bad" ? icon("x") : "";
+    if (ms != null) el.querySelector(".ms").textContent = ms;
+  }
+  function head(title, detail, cls = "") { $("thTitle").className = "th-title " + cls; $("thTitle").textContent = title; if (detail != null) $("thDetail").textContent = detail; }
+  function stage(html) { const box = $("thStage"); resize(box, () => (box.innerHTML = `<div class="enter">${html}</div>`)); return box.firstChild; }
+  function enter(s, html) {
+    big.set({ state: s.orb }); small.set({ state: s.orb });
+    const o = $("thOrb"); o.classList.remove("swap"); void o.offsetWidth; o.classList.add("swap");
+    head(s.title + "…", s.wait, "live"); node(s.k, "on");
+    if (html != null) stage(html);
+  }
+  const S = Object.fromEntries(STAGES.map((s) => [s.k, s]));
+
+  async function play() {
+    enter(S.scope);
+    const sc = alive(await D.scope);
+    head("圈定范围", sc.label ? `问题里提到了「${sc.label}」，只在这个范围里找` : "问题里没有时间或文件夹，全库检索");
+    stage(`<div class="chips"><span class="chip" style="--i:0">检索词 <b>${esc(sc.query)}</b></span><span class="chip blue" style="--i:1">${icon(sc.label ? "crosshair" : "magnifying-glass")}${esc(sc.label || "全库")}</span></div>`);
+    node("scope", "done", sc.label || "全库");
+    alive(await wait(DWELL.scope));
+
+    enter(S.embed, `<div class="vec wait">${Array.from({ length: 64 }, (_, i) => `<b><i style="--i:${i}"></i></b>`).join("")}</div>`);
+    const em = alive(await D.embed);
+    head("把问题变成向量", `bge-m3 · 1024 维，这里画前 64 维（蓝正紫负）· ${em.ms} ms`);
+    if (em.vec?.length) {
+      const mx = Math.max(1e-6, ...em.vec.map(Math.abs));
+      stage(`<div class="vec">${em.vec.map((x, i) => `<b><i class="${x < 0 ? "neg" : ""}" style="--h:${(Math.abs(x) / mx * 100).toFixed(0)}%;--i:${i}"></i></b>`).join("")}</div>`);
+    }
+    node("embed", "done", `${em.ms} ms`);
+    alive(await wait(DWELL.embed));
+
+    enter(S.search, `<div class="th-hint">在 ${esc($("nBlocks").textContent)} 个块里同时算向量相似度和 BM25…</div>`);
+    const se = alive(await D.search);
+    const okS = se.n > 0 && se.topCos >= se.gate;
+    head(okS ? "混合检索" : "混合检索：没过门槛", okS ? "两路分数各换成 z 分再加权融合，过线的取前 30 个交给重排" : "最像的几块也不够像，说明库里大概率没记过这个", okS ? "" : "bad");
+    const box = stage(`<div class="funnel"><div class="fn"><b data-n="${se.total}">0</b><span>全库块</span></div><span class="ar">→</span><div class="fn"><b data-n="${se.passed}">0</b><span>混合分过线</span></div><span class="ar">→</span><div class="fn last"><b data-n="${se.n}">0</b><span>候选交给重排</span></div></div>${gate("粗门槛 · 最高余弦", se.topCos, se.gate)}`);
+    box.querySelectorAll("b[data-n]").forEach((b, i) => setTimeout(() => countUp(b, +b.dataset.n, 650), skip ? 0 : i * 230));
+    node("search", okS ? "done" : "bad", `${se.ms} ms`);
+    alive(await wait(DWELL.search));
+    if (!okS) return refuse("search");
+
+    enter(S.rerank, `<div class="th-hint">${se.n} 个候选，逐个和问题配对打分…</div>`);
+    const t = alive(await D.rerank);
+    const rows = t.hits.filter((h) => h.rrRank <= 8), maxRr = Math.max(0.001, ...rows.map((h) => h.rr || 0));
+    head("重排", `按检索名次摆着，看重排模型怎么重新排；蓝底的 ${t.context.length} 块会放进提示词`);
+    const rb = stage(`<div class="rr">${[...rows].sort((a, b) => a.rank - b.rank).map((h) => `<div class="rr-row" data-id="${h.id}"><span class="from">检索 #${h.rank}</span><span class="nm">${esc(shortName(h))}</span><span class="tr"><i></i></span><span class="sc"></span></div>`).join("")}</div>`);
+    const rowEl = (h) => rb.querySelector(`[data-id="${h.id}"]`);
+    alive(await wait(300));
+    for (const h of rows) { rowEl(h).querySelector(".tr i").style.width = `${(100 * (h.rr || 0) / maxRr).toFixed(1)}%`; rowEl(h).querySelector(".sc").textContent = f3(h.rr); }
+    alive(await wait(750));
+    flip(rb.querySelector(".rr"), [...rows].sort((a, b) => a.rrRank - b.rrRank).map(rowEl));
+    for (const h of rows) rowEl(h).querySelector(".from").innerHTML = `#${h.rank} → ${h.rrRank < h.rank ? `<span class="up">#${h.rrRank}</span>` : `#${h.rrRank}`}`;
+    alive(await wait(650));
+    for (const h of rows) rowEl(h).classList.add(h.inContext ? "ctx" : "out");
+    const okR = !t.refused;
+    resize($("thStage"), () => rb.insertAdjacentHTML("beforeend", gate("细门槛 · 重排最高", t.hits[0]?.rr ?? 0, t.gates?.rr ?? 0.04)));
+    if (!okR) head("重排：没过门槛", "候选里没有一块真正答得上这个问题", "bad");
+    node("rerank", okR ? "done" : "bad", t.ms.rerank != null ? `${t.ms.rerank} ms` : "");
+    alive(await wait(DWELL.rerank + 600));
+    if (!okR) return refuse("rerank");
+
+    const ctx = t.hits.filter((h) => h.inContext);
+    enter(S.gen, `<div class="pack">${ctx.map((h, i) => `<span class="chip" style="--i:${i}"><b>[${i + 1}]</b><span>${esc(shortTitle(h))}</span></span>`).join("")}<span class="to">${icon("paper-plane-right")}DeepSeek</span></div>`);
+    $("thDetail").textContent = `前 ${ctx.length} 块放进提示词交给 DeepSeek，要求每句标出处；片段答不了就说没写到`;
+    tGen = performance.now();
+    renderSources(ctx);
+    await Promise.all([D.gen, wait(DWELL.gen)]); alive();
+    answer(false);
+  }
+
+  async function refuse(at) {
+    big.set({ state: "breathing" });
+    for (const k of at === "search" ? ["rerank", "gen"] : ["gen"]) node(k, "skip");
+    alive(await wait(900));
+    await D.gen; alive();
+    answer(true);
+  }
+
+  // 出字：按缓冲平滑放出，末尾渐显，orb 当光标；引用一出现，对应出处卡片亮一下
+  function answer(refused) {
+    $("theater").classList.add("compact");
+    inputBeam?.set({ active: false });
+    if (!refused) cardBeam?.set({ active: true });
+    const caret = orb("composing", 20); caret.el.classList.add("caret-orb");
+    const a = $("answer"), seen = [];
+    a.classList.toggle("refused", refused);
+    let shown = 0, last = -1;
+    const tick = () => {
+      if (dead) return;
+      shown = skip ? text.length : Math.min(text.length, shown + Math.max(1.2, (text.length - shown) / 16));
+      const n = Math.floor(shown), finished = !!doneInfo && n >= text.length;
+      if (n !== last || finished) {
+        last = n;
+        a.innerHTML = mdLite(text.slice(0, n));
+        if (!finished) {
+          if (!REDUCED) fadeTail(a, 14);
+          let tail = a.lastElementChild || a; if (/^(UL|OL)$/.test(tail.tagName)) tail = tail.lastElementChild || tail;
+          tail.append(caret.el);
+        }
+        const now = performance.now();
+        a.querySelectorAll(".cite").forEach((c, i) => {
+          if (seen[i] == null) {
+            seen[i] = now;
+            const s = $("src" + c.dataset.n);
+            if (s && !s.classList.contains("cited")) { s.classList.remove("wait"); s.classList.add("cited", "hit"); }
+          }
+          const age = now - seen[i];
+          if (age < 500 && !REDUCED) { c.classList.add("pop"); c.style.animationDelay = `-${age.toFixed(0)}ms`; }
+        });
+      }
+      if (finished) return finish(refused);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  function finish(refused) {
+    cardBeam?.set({ active: false });
+    if (!refused) node("gen", "done", `${((performance.now() - tGen) / 1000).toFixed(1)} s`);
+    for (const s of document.querySelectorAll(".src.wait")) { s.classList.remove("wait"); s.classList.add("unused"); s.querySelector(".s").insertAdjacentHTML("beforebegin", '<span class="tag">没被引用</span>'); }
+    if (refused && trace?.refused) $("refuse").innerHTML = `<div class="refuse-box">没有回答：${esc(trace.refused.reason)}。这类问题库里大概率没有记过，硬答就是编。</div>`;
+    renderMeta(trace, doneInfo);
+  }
+
+  const self = {
+    stage(d) { D[d.k]?.give(d); },
+    trace(t) {
+      trace = t; renderTrace(t);
+      D.scope.give(t.filters);
+      D.embed.give({ ms: t.ms.embed, vec: t.vec });
+      D.search.give({ ms: t.ms.retrieve, passed: t.passed, total: t.total, n: t.hits.length, topCos: t.topCos, gate: t.gates?.cos ?? 0.55 });
+      D.rerank.give(t);
+    },
+    delta(s) { text += s; D.gen.give(true); },
+    done(d) { doneInfo = d; D.gen.give(true); },
+    fail(msg) {
+      if (dead) return;
+      dead = true; flush();
+      inputBeam?.set({ active: false }); cardBeam?.set({ active: false });
+      big.set({ state: "breathing" });
+      const on = $("track").querySelector("li.on"); if (on) node(on.dataset.k, "bad");
+      head("出错了", msg, "bad");
+      $("thStage").innerHTML = "";
+    },
+    kill() { dead = true; flush(); },
+  };
+  play().catch((e) => { if (e !== KILLED) self.fail(e.message); });
+  return self;
+}
+
+function renderSources(ctx) {
+  $("sources").innerHTML = ctx.map((h, i) => `<div class="src wait" id="src${i + 1}" style="--i:${i}">
+    <div class="h"><span class="n">[${i + 1}]</span><span>${srcName(h)}</span><span class="s">重排 ${f3(h.rr)} · 余弦 ${f3(h.cos)}</span></div>
+    <div class="t">${esc(h.text)}</div><div class="more">展开全文</div></div>`).join("");
+  for (const el of document.querySelectorAll(".src .more")) el.onclick = () => { el.parentElement.classList.toggle("open"); el.textContent = el.parentElement.classList.contains("open") ? "收起" : "展开全文"; };
+}
+
 // 模型回答里的 Markdown 只认几样：段落、- / 1. 列表、**粗体**、`代码`，再把 [n] 换成可点的引用
 function mdLite(text) {
   const inline = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\[(\d{1,2})\]/g, (m, n) => `<span class="cite" data-n="${n}">${n}</span>`);
@@ -257,19 +656,7 @@ function mdLite(text) {
   close();
   return out.join("");
 }
-function renderAnswer(text, trace, streaming) {
-  const html = mdLite(text);
-  $("answer").innerHTML = html + (streaming ? '<span class="caret"></span>' : "");
-  $("answer").classList.toggle("refused", !!trace?.refused);
-  if (!streaming && trace && !trace.refused) {
-    const used = new Set([...text.matchAll(/\[(\d{1,2})\]/g)].map((m) => +m[1]));
-    const ctx = trace.hits.filter((h) => h.inContext);
-    $("sources").innerHTML = ctx.map((h, i) => `<div class="src${used.has(i + 1) ? "" : " unused"}" id="src${i + 1}">
-      <div class="h"><span class="n">[${i + 1}]</span><span>${srcName(h)}</span>${used.has(i + 1) ? "" : '<span class="tag">没被引用</span>'}<span class="s">重排 ${f3(h.rr)} · 余弦 ${f3(h.cos)}</span></div>
-      <div class="t">${esc(h.text)}</div><div class="more">展开全文</div></div>`).join("");
-    for (const el of document.querySelectorAll(".src .more")) el.onclick = () => { el.parentElement.classList.toggle("open"); el.textContent = el.parentElement.classList.contains("open") ? "收起" : "展开全文"; };
-  }
-}
+// 点回答里的 [n]，高亮对应出处
 document.addEventListener("click", (e) => {
   const c = e.target.closest(".cite"); if (!c) return;
   document.querySelectorAll(".cite.on, .src.on").forEach((x) => x.classList.remove("on"));
@@ -292,15 +679,15 @@ function renderTrace(t) {
     ["重排", ms.rerank != null ? `${ms.rerank} ms` : "—", t.hits[0]?.rr != null ? `最高 ${f3(t.hits[0].rr)}` : "没走到"],
     ["生成", t.refused ? "拒答" : `${t.context.length} 块进提示词`, t.refused ? `${esc(t.refused.stage)}门槛没过` : "DeepSeek"],
   ];
-  $("pipe").innerHTML = cells.map(([k, v, d], i) => `<div class="${t.refused && ((t.refused.stage === "检索" && i === 3) || (t.refused.stage === "重排" && i === 4)) ? "bad" : ""}"><div class="k">${ph(PIPE_ICON[k])}${k}</div><div class="v">${v}</div><div>${d}</div></div>`).join("");
-  if (t.refused) $("refuse").innerHTML = `<div class="refuse-box">没有回答：${esc(t.refused.reason)}。这类问题库里大概率没有记过，硬答就是编。</div>`;
+  $("pipe").innerHTML = cells.map(([k, v, d], i) => `<div style="--i:${i}" class="${t.refused && ((t.refused.stage === "检索" && i === 3) || (t.refused.stage === "重排" && i === 4)) ? "bad" : ""}"><div class="k">${ph(PIPE_ICON[k])}${k}</div><div class="v">${v}</div><div>${d}</div></div>`).join("");
   const maxRr = Math.max(0.001, ...t.hits.map((h) => h.rr || 0));
   $("cand").innerHTML = `<tr><th>重排</th><th>检索</th><th>出处</th><th>片段</th><th>余弦</th><th>BM25</th><th>混合分</th><th>重排分</th></tr>` +
-    t.hits.map((h, i) => `<tr class="${[h.inContext ? "ctx" : "", i >= 10 ? "extra" : ""].join(" ").trim()}"><td class="num">${h.rrRank ?? "—"}</td><td class="num">${h.rank}</td><td style="white-space:nowrap">${srcName(h)}</td><td class="snip">${esc(h.text.slice(0, 90))}${h.text.length > 90 ? "…" : ""}</td><td class="num">${f3(h.cos)}</td><td class="num">${Number(h.bm).toFixed(1)}</td><td class="num">${Number(h.f).toFixed(2)}</td><td class="num"><span class="bar" style="width:${Math.round(40 * (h.rr || 0) / maxRr)}px"></span>${f3(h.rr)}</td></tr>`).join("");
+    t.hits.map((h, i) => `<tr style="--i:${Math.min(i, 12)}" class="${[h.inContext ? "ctx" : "", i >= 10 ? "extra" : ""].join(" ").trim()}"><td class="num">${h.rrRank ?? "—"}</td><td class="num">${h.rank}</td><td style="white-space:nowrap">${srcName(h)}</td><td class="snip">${esc(h.text.slice(0, 90))}${h.text.length > 90 ? "…" : ""}</td><td class="num">${f3(h.cos)}</td><td class="num">${Number(h.bm).toFixed(1)}</td><td class="num">${Number(h.f).toFixed(2)}</td><td class="num"><span class="bar" style="width:${Math.round(40 * (h.rr || 0) / maxRr)}px"></span>${f3(h.rr)}</td></tr>`).join("");
   // 候选默认只露前 10 条，其余点开
   $("cand").classList.toggle("folded", t.hits.length > 10);
   $("moreRows").hidden = t.hits.length <= 10;
   $("moreRows").textContent = `显示全部 ${t.hits.length} 条候选`;
+  watch($("traceSec"));
 }
 function renderMeta(t, d) {
   const u = d.usage;
@@ -313,6 +700,7 @@ fetch("eval.json").then((r) => r.ok ? r.json() : null).then((E) => {
   const bar = (name, v, fmt = (x) => Math.round(x * 100) + "%") => `<div class="score"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${Math.round(v * 100)}%"></div></div><div class="num">${fmt(v)}</div></div>`;
   $("evalLede").textContent = E.lede;
   $("evalBody").innerHTML = E.cards.map((c) => `<div class="card"><h3>${esc(c.title)}</h3>${c.bars.map((b) => bar(b[0], b[1], b[2] === "f3" ? f3 : undefined)).join("")}<p class="note" style="margin:10px 0 0">${esc(c.note)}</p></div>`).join("");
+  reveal($("evalBody"));
 }).catch(() => { $("evalSec").style.display = "none"; });
 </script>
 </body>

@@ -1,5 +1,5 @@
 // POST /api/ask  { q }  →  text/event-stream
-// 事件：trace（检索过程）→ delta（回答片段，多次）→ done（用时和 token）；出错发 error
+// 事件：stage（scope / embed / search 各一次）→ trace（检索过程）→ delta（回答片段，多次）→ done（用时和 token）；出错发 error
 import { retrieve, buildMessages, generate, loadIndex } from "./_lib/pipeline.mjs";
 import { hit, PER_IP } from "./_lib/limit.mjs";
 
@@ -28,7 +28,7 @@ export async function POST(request) {
                     return ctl.close();
                 }
                 const t0 = Date.now();
-                const R = await retrieve(q, { signal: request.signal });
+                const R = await retrieve(q, { signal: request.signal, onStage: (k, d) => send("stage", { k, ...d }) });
                 send("trace", R);
                 let answer = "", usage = null;
                 if (R.refused) { answer = "笔记里没有写到这个。"; send("delta", { t: answer }); }
