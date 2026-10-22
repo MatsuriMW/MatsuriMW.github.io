@@ -19,6 +19,7 @@
   position: absolute; inset: 0;
   transform: perspective(1400px) rotateX(calc(var(--gf-py) * -3deg)) rotateY(calc(var(--gf-px) * 4deg));
   transition: transform .9s var(--gf-ease);
+  will-change: transform;
 }
 .gf-shadow {
   position: absolute; left: 18px; right: 18px; bottom: -6px; height: 60px; border-radius: 40px;
@@ -52,7 +53,7 @@
   border-radius: 16px; overflow: hidden; cursor: pointer; pointer-events: auto;
   background: linear-gradient(180deg, #ffffff 0%, #f2f2f0 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 0 0 .5px rgba(0, 0, 0, .1), 0 10px 26px -8px rgba(10, 12, 20, .28);
-  transform-origin: 50% 100%;
+  transform-origin: 50% 100%; will-change: transform;
   transform:
     translate(calc(var(--gf-jx) + var(--gf-slot) * var(--gf-spread)), calc(var(--gf-lift) + var(--gf-depth) * var(--gf-stack) * -1))
     rotate(calc(var(--gf-jr) + var(--gf-slot) * var(--gf-fan)));
@@ -94,6 +95,8 @@
   position: absolute; left: 0; top: 74px; width: 340px; height: 198px; z-index: 10;
   -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
   transform-origin: 50% 100%; transform: perspective(760px) rotateX(var(--gf-hinge));
+  /* 带磨砂的玻璃一直留在自己的合成层上：动画开始 / 结束时临时建、拆合成层，Chrome 偶尔会把磨砂那一块画成白的（分类页的白闪） */
+  will-change: transform; backface-visibility: hidden; -webkit-backface-visibility: hidden;
   transition: transform .8s var(--gf-spring), translate 1s var(--gf-ease), opacity 1s var(--gf-ease);
 }
 .gf-tint { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .5) 42%, rgba(252, 252, 252, .93) 100%); }
