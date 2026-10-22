@@ -1,7 +1,7 @@
 /* 玻璃文件夹：照 21st.dev 的 Glass Folder Cards（React）改写成原生 JS，去掉了「+ 新建」和菜单，右下角的键改成链接。
    三层从后往前：背板（生成的流体纹理）、里面的文件、磨砂玻璃前板。悬停时前板往前倾、文件冒头；点开后前板倒得更低，文件升起扇开，每张都是链接。
 
-   用法：<div class="gfolder" data-label="杂谈" data-meta="8 篇" data-art="aurora" data-seed="3" data-href="/categories/杂谈/" data-key="进分类页">
+   用法：<div class="gfolder" data-label="杂谈" data-meta="8 篇" data-art="aurora" data-seed="3" data-href="/categories/杂谈/" data-key="进分类页" data-autoopen="1200">
            <a href="/2021/…/" data-meta="2021">文章标题</a> …
          </div>
    没有 JS 时就是一串普通链接。 */
@@ -228,8 +228,10 @@
       return { name: a.textContent.trim(), href: a.getAttribute("href"), meta: a.dataset.meta || "", art: a.dataset.art || "" };
     });
     var label = d.label || "", place = d.place || "bottom-left";
+    // 网格里按自己那一格算宽度，别的地方按父元素的内容宽度
     var box = root.parentElement, cs = getComputedStyle(box);
-    var room = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var room = cs.display === "grid" ? parseFloat(cs.gridTemplateColumns)
+      : box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
     var width = Math.min(+d.width || 320, room > 0 ? room : 320);
     var k = width / W, density = Math.min(1.5, Math.max(1, window.devicePixelRatio || 1)) * k;
 
@@ -331,11 +333,15 @@
     root.addEventListener("pointerleave", function () { px = 0; py = 0; if (!raf) raf = requestAnimationFrame(write); });
 
     // ---- 第一次滚进视野时自己组装起来 ----
-    if (!("IntersectionObserver" in window)) { root.setAttribute("data-entered", ""); return; }
+    if (!("IntersectionObserver" in window)) { root.setAttribute("data-entered", ""); if (d.autoopen) setOpen(true); return; }
     var io = new IntersectionObserver(function (entries) {
       if (!entries.some(function (e) { return e.isIntersecting; })) return;
       io.disconnect();
-      setTimeout(function () { root.setAttribute("data-entered", ""); }, +d.delay || 0);
+      setTimeout(function () {
+        root.setAttribute("data-entered", "");
+        // data-autoopen：组装好之后再等这么多毫秒自己摊开
+        if (d.autoopen) setTimeout(function () { setOpen(true); }, +d.autoopen);
+      }, +d.delay || 0);
     }, { threshold: 0.25 });
     io.observe(root);
   }
