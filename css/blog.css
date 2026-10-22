@@ -126,8 +126,8 @@ section { margin-top: 56px; }
 .prose h4, .prose h5, .prose h6 { font-size: 16px; margin: 1.4em 0 .5em; }
 .prose .header-anchor { position: absolute; left: -1.1em; width: 1em; color: var(--ink-3); opacity: 0; font-weight: 400; transition: opacity .2s; }
 .prose :hover > .header-anchor { opacity: 1; }
-.prose a:not(.header-anchor):not(.footnote-backref) { background: linear-gradient(var(--blue-soft), var(--blue-soft)) 0 100% / 100% 1px no-repeat; transition: background-size .25s var(--ease); }
-.prose a:not(.header-anchor):not(.footnote-backref):hover { background-size: 100% 100%; }
+.prose a:not(.header-anchor):not(.footnote-backref):not(.gf-root a) { background: linear-gradient(var(--blue-soft), var(--blue-soft)) 0 100% / 100% 1px no-repeat; transition: background-size .25s var(--ease); }
+.prose a:not(.header-anchor):not(.footnote-backref):not(.gf-root a):hover { background-size: 100% 100%; }
 .prose strong { font-weight: 700; color: var(--ink); }
 .prose ul, .prose ol { margin: 0 0 1em; padding-left: 1.5em; }
 .prose li { margin: .25em 0; }
