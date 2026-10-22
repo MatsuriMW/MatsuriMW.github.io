@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>多平台舆情研判 Demo</title>
+<meta name="description" content="舆情研判工作流的 LangGraph 版：按人群画像选平台（B站 / 知乎 / 小红书）、判断事件还是日常、规则没过自动返工、出报告前停下等人工复核、飞书推送。示例：特斯拉，2026/10/22 07:19:41。">
+<style>
+  :root { color-scheme: light; --page: #f6f5f1; --surface: #fcfcfb; --ink: #1f1f1d; --ink-2: #55544f; --ink-3: #8a8984; --rule: #e6e4de; --blue: #2a78d6; --blue-soft: #dbe8f8; --red: #e34948; --red-soft: #f8dedc; --green: #2f8f5b; --violet: #4a3aa7; --neutral-soft: #ecebe6; --accent-bg: #f1f5fb; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; color: var(--ink-3); }
+  h1 { font-size: 34px; line-height: 1.3; margin: 8px 0 12px; }
+  h2 { font-size: 22px; margin: 0 0 6px; }
+  h3 { font-size: 15px; margin: 0 0 10px; font-weight: 600; color: var(--ink-2); }
+  p { margin: 0 0 12px; }
+  a { color: var(--blue); }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 760px; }
+  .note { font-size: 13px; color: var(--ink-3); }
+  .toplinks { font-size: 14px; margin-top: 12px; display: flex; gap: 18px; flex-wrap: wrap; }
+  section { margin-top: 56px; }
+  .sec-head { margin-bottom: 20px; max-width: 760px; }
+  .sec-head p { color: var(--ink-2); }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px 22px; }
+  .grid { display: grid; gap: 16px; }
+  .grid > * { min-width: 0; }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 860px) { .g4 { grid-template-columns: repeat(2, 1fr); } .g2 { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .wrap { padding: 32px 16px 64px; } h1 { font-size: 27px; } }
+  .stat .label { font-size: 13px; color: var(--ink-2); }
+  .stat .value { font-size: 22px; font-weight: 700; line-height: 1.35; margin-top: 4px; }
+  .stat .sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .flow { display: grid; gap: 10px; }
+  .step { display: grid; grid-template-columns: 220px 1fr; gap: 4px 24px; }
+  @media (max-width: 640px) { .step { grid-template-columns: 1fr; } }
+  .step .n { font-size: 12px; color: var(--blue); font-weight: 700; letter-spacing: .06em; }
+  .step .t { font-weight: 700; margin: 2px 0 2px; }
+  .step .how { font-size: 12px; color: var(--ink-3); margin-bottom: 8px; }
+  .step .res { font-size: 14px; margin-bottom: 6px; }
+  .step .res b { color: var(--violet); }
+  .step ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  .hbars { display: grid; gap: 10px; }
+  .hbar { display: grid; grid-template-columns: 4.5em 1fr 9em; align-items: center; gap: 10px; font-size: 13px; }
+  .hbar .name { color: var(--ink-2); text-align: right; }
+  .hbar .track { height: 14px; }
+  .hbar .fill { height: 100%; border-radius: 0 4px 4px 0; background: var(--blue); min-width: 2px; }
+  .hbar .num { font-variant-numeric: tabular-nums; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { border-bottom: 1px solid var(--rule); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { color: var(--ink-3); font-weight: 500; font-size: 12px; }
+  .table-scroll { overflow-x: auto; }
+  td.old { color: var(--ink-3); }
+  tr.now td { font-weight: 600; }
+  .verdict .k { font-size: 13px; color: var(--ink-2); }
+  .verdict .v { font-size: 20px; font-weight: 700; margin: 4px 0 6px; }
+  .verdict .why { font-size: 14px; color: var(--ink-2); }
+  ul.plain { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ink-2); }
+  .fs { max-width: 520px; background: #fff; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; font-size: 14px; line-height: 1.65; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .fs-h { padding: 10px 14px; color: #fff; font-weight: 600; }
+  .fs-h.red { background: #d83931; } .fs-h.green { background: #2ea121; }
+  .fs-b { padding: 12px 14px; }
+  .fs-f { padding: 8px 14px 12px; font-size: 12px; color: var(--ink-3); border-top: 1px solid var(--rule); }
+  .score { display: grid; grid-template-columns: 7em 1fr 3.4em; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 8px; }
+  .score .track { height: 10px; background: var(--neutral-soft); border-radius: 99px; overflow: hidden; }
+  .score .fill { height: 100%; background: var(--blue); border-radius: 99px; }
+  .score .name { color: var(--ink-2); text-align: right; }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
+  footer p { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">舆情研判 · LangGraph 多平台版 · 2026/10/22 07:19:41</div>
+  <h1>特斯拉：B站 + 知乎的舆情研判</h1>
+  <p class="lede">上一版是 n8n 定时抓小红书。这一版把编排换成 LangGraph：先按品牌人群画像决定以哪个平台为主，再判断现在是「出了事」还是「日常」，规则检查没过就让模型带着问题返工，出报告前停下来等人复核，最后生成一条推送卡片。编码、指标、规则、评级还是同一份代码。</p>
+  <div class="toplinks"><a href="/demo/xhs-yuqing/">← 上一版：小红书 · n8n · 人工复核纠错</a><a href="report/">完整研判报告 →</a><a href="https://github.com/MatsuriMW/xhs-yuqing">源码（GitHub）</a></div>
+</header>
+
+<section>
+  <div class="grid g4">
+    <div class="card stat"><div class="label">分档</div><div class="value">舆情前夜</div><div class="sub">四档之一，按证据定</div></div>
+    <div class="card stat"><div class="label">走势阶段</div><div class="value">阶段暂不可判断</div><div class="sub">快照 3 次</div></div>
+    <div class="card stat"><div class="label">风险量级</div><div class="value">传播中 · 情绪高 · 内容高</div><div class="sub">三维度各自分级，取最高</div></div>
+    <div class="card stat"><div class="label">自动评测</div><div class="value">A 级 · 89 分</div><div class="sub">规则 18/18 通过</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>这一轮流程里发生了什么</h2><p>五个环节都是这次真实运行的记录（来自运行留下的 <code>_graph.json</code>）。</p></div>
+  <div class="flow">
+    <div class="card step"><div><div class="n">01</div><div class="t">选平台</div><div class="how">LangChain 判断人群画像 → 规则表定比重</div></div><div><div class="res">男性为主、本科及以上为主 → 主平台 <b>知乎</b></div><ul><li>小红书 20%，本次未抓</li><li>B站 20%，每词 3 个视频</li><li>知乎 60%，每词 9 个回答</li></ul></div></div>
+    <div class="card step"><div><div class="n">02</div><div class="t">判模式</div><div class="how">LangChain 看指标摘要判断事件 / 日常</div></div><div><div class="res"><b>事件模式</b>：特斯拉新一代Roadster发布并展示“能飞”能力，引发集中讨论、质疑与嘲讽，并叠加人民日报相关评论。（置信度 中）</div><ul><li>搜索前列与多条新发高赞内容均集中在Roadster发布、“会飞”及人民日报评论《特斯拉“能飞”，我们就被甩开了？》。</li><li>负面话题集中在“品牌与创始人言论”17条和“设计与配置”12条，语气以嘲讽28条为主，讨论指向同一波发布与言论。</li><li>窗口负面占比62%、强负面30条，较高敏8条且三维度风险总体为高，显示该事件带来明显情绪与内容风险。</li></ul></div></div>
+    <div class="card step"><div><div class="n">03</div><div class="t">写研判、过规则</div><div class="how">19 条代码规则没过就带着问题返工，最多 2 次</div></div><div><div class="res">第 1 稿 没过 R3 R4 R5 → 第 2 稿 规则全过</div><ul><li>首稿，63 秒，43k tokens</li><li>返工，23 秒，41k tokens</li></ul></div></div>
+    <div class="card step"><div><div class="n">04</div><div class="t">人工复核</div><div class="how">出报告前停下（interrupt），进程可以退出，之后从检查点接着跑</div></div><div><div class="res">通过</div></div></div>
+    <div class="card step"><div><div class="n">05</div><div class="t">推送</div><div class="how">按飞书卡片格式生成通知（未接真实群）</div></div><div><div class="res">需要关注（只生成预览）</div><ul><li>用量 230k tokens</li></ul></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>两个平台各说了什么</h2><p>窗口（过去 24 小时）内指向特斯拉的记录数和其中负面占比，按平台拆开。比重决定每个平台抓多少，研判时以主平台为准，其他平台用来判断是否跨平台扩散。</p></div>
+  <div class="card">
+    <div class="hbars">
+      <div class="hbar"><div class="name">B站</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">50 条 · 负面 68%</div></div>
+      <div class="hbar"><div class="name">知乎</div><div class="track"><div class="fill" style="width:22%"></div></div><div class="num">11 条 · 负面 36%</div></div>
+    </div>
+    <p class="note" style="margin-top:12px">总样本：B站 18 个视频 / 1033 条记录；知乎 27 个回答 / 87 条记录。B站借登录态抓评论（每页 20 条、带 IP 属地）；知乎回答当「笔记」，评论不带属地。</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>研判结论</h2><p>完整报告每句都挂着原话出处，这里只摘结论。</p></div>
+  <div class="grid g2">
+    <div class="card verdict"><div class="k">是否形成舆情</div><div class="v">舆情前夜</div><div class="why">主平台知乎窗口内 11 条相关、4 条负面，讨论还停留在提问与长文嘲讽；B站 50 条相关、34 条负面，但集中在同一条存量视频的新评论里，没有独立成篇的负面内容。固定说法「能飞」「遥遥领先」「特友」「邪教」已经出现，人民日报评论也被搬上知乎，可那条提问只有 3 互动，窗口内没有热榜、没有媒体或 KOL 的独立跟进。</div></div>
+    <div class="card verdict"><div class="k">对业务的参考 · 下一步</div><div class="v">转公关决策</div><div class="why">回应与否卡在两件还没核实的事实上：演示车当时车内是否有人、高压气瓶的规格与安全设计；以及 Model Y L 后悬投诉的处理状态。这两件有了明确口径，对外可以只做技术澄清、不接阵营对比；核实之前不宜表态，先由工程与法务把可公开的边界划出来。</div></div>
+    <div class="card"><h3>升级信号</h3><ul class="plain"><li>下一个窗口 B站或知乎出现独立发布的新笔记（不在评论区），主题是「能飞是造假 / 不安全」，单条互动过千，或有汽车、科技类 UP 主与媒体号发视频跟进</li><li>知乎「如何看待人民日报发文…」这条问题在下一个窗口回答数明显增加（现在只有 3 互动），或同类提问进入知乎热榜</li><li>微博、抖音、小红书出现同主题上榜内容（本次未覆盖，需下一轮补抓后才算数）</li><li>「高压气瓶」「碳纤维压力容器」和具体量产车型（Model Y、Model Y L 后悬）被放进同一条内容，并在两个以上平台重复出现</li><li>出现动员级别 4 及以上的联名、维权或集体喊话内容（本窗口 mobilization 最高为 0）</li></ul></div>
+    <div class="card"><h3>降温信号</h3><ul class="plain"><li>下一个窗口 B站那条「能飞」视频的新增评论里，负面条数少于中性条数，且没有新的独立负面笔记</li><li>知乎讨论回到销量、试驾、财报类中性话题（本窗口已有 Q3 财报会、Robotaxi 两条中性内容）</li><li>官方或高管把演示条件讲清楚（车内是否有人、气瓶规格、充气与喷气时长），评论区从「拿大号喷气玩具去糊弄资本」转向技术讨论</li><li>尊界踏板断裂的对比被新话题盖过去，不再出现在特斯拉相关的高赞评论里</li></ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>历次运行</h2><p>同一品牌目录下之前几次运行的摘要会交给研判模型，走势不再只看一张快照。</p></div>
+  <div class="card table-scroll"><table>
+    <tr><th>时间（北京）</th><th>分档</th><th>阶段</th><th>负面占比</th><th>相关记录</th><th>评测</th></tr>
+    <tr><td>10-22 06:47</td><td>传播证据不足，暂不可分档</td><td>阶段暂不可判断</td><td>29%</td><td>89</td><td>A</td></tr>
+    <tr><td>10-22 07:03</td><td>舆情前夜</td><td>阶段暂不可判断</td><td>63%</td><td>63</td><td>B</td></tr>
+    <tr class="now"><td>本次</td><td>舆情前夜</td><td>阶段暂不可判断</td><td>62%</td><td>61</td><td>A</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>推送卡片（预览）</h2><p>工作流会按飞书群机器人的卡片格式生成一条通知，这里是本次生成的预览；还没接真实的群。卡片先写结论，再「为什么提醒」、数字、平台、下一步、自查、历次。「需要关注」由规则表定：分档到舆情前夜以上、事件模式、高敏比前一窗口多、分档比上次高，任一条成立。</p></div>
+  <div class="fs"><div class="fs-h red">🔴 特斯拉舆情｜需要关注</div><div class="fs-b"><b>结论</b>：舆情前夜｜阶段暂不可判断｜事件模式：特斯拉新一代Roadster发布并展示“能飞”能力，引发集中讨论、质疑与嘲讽，并…<br><b>为什么提醒</b>：分档「舆情前夜」；事件模式：特斯拉新一代Roadster发布并展示“能飞”能力，引发集中讨论、质疑与嘲讽，并叠加人民日报相关评论。；高敏 7 → 8 条<br><b>依据</b>：主平台知乎窗口内 11 条相关、4 条负面，讨论还停留在提问与长文嘲讽；B站 50 条相关、34 条负面，但集中在同一条存量视频的新评论里，没有独立成篇的负面内容。固定说法「能飞」「遥遥领先」「特友」「邪教」已经出现，人民日报评论也被搬上知乎，可那条提问只有 3 互动，窗口内没有热榜、没有媒体或 KOL 的独立跟进。<br><b>过去 24 小时</b>：相关 61 条（前一窗口 53），负面 38，高敏 8；负面占比 62%<br><b>平台</b>：B站 1033 条（窗口内相关 50，负面 68%）；知乎 87 条（窗口内相关 11，负面 36%）；主平台 知乎<br><b>下一步</b>：转公关决策——回应与否卡在两件还没核实的事实上：演示车当时车内是否有人、高压气瓶的规格与安全设计；以及 Model Y L 后悬投诉的处理状态。这两件有了明确口径，对外可以只做技术澄清、不接阵营对比；核实之前不宜表…<br><b>要自查</b>：<br>- 核对 Model Y L 后悬架下沉相关售后工单：近 30 天进店量、处理方案是抹油润滑还是换件、有没有以「正常现象」结案的工单<br>- 核对 FSD 的对内对外表述：门店话术、官网与小程序的措辞里是否还有「无人驾驶」「领先十年」类字眼，与 6.4 万元选装的实际能力是否对得上<br>- 核对 Roadster 大陆意向金（33.2 万元）预订页面上的版本（Performance、Thrust）、交付时间表述是否与实际一致，避…<br><b>历次</b>：10-21 传播证据不足，暂不可分档·负面29% → 10-21 舆情前夜·负面63% → 本次</div><div class="fs-f">评测 A（89 分）｜规则 18/18｜230k tokens｜报告：完整报告链接</div></div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>和 n8n 版比</h2><p>业务代码同一份：用 n8n 那次小红书运行（10-17 08:04）每一步的真实输入在 LangGraph 里重跑，输出逐字段一致，指标完全相同。不同的只在编排，以及模型每次写得不一样。</p></div>
+  <div class="card table-scroll"><table>
+    <tr><th></th><th>n8n 版</th><th>LangGraph 版</th></tr>
+    <tr><td>平台</td><td class="old">只抓小红书</td><td>按人群画像选主平台、分比重：小红书 / B站 / 知乎</td></tr>
+    <tr><td>研判模式</td><td class="old">一种写法</td><td>先判断事件还是日常，两种写法</td></tr>
+    <tr><td>规则没过</td><td class="old">扣分、封顶评级</td><td>带着没过的规则返工，最多 2 次</td></tr>
+    <tr><td>人工复核</td><td class="old">事后改配置，下一轮生效</td><td>出报告前停下；打回时写回背景、当场重写</td></tr>
+    <tr><td>中断</td><td class="old">从头跑</td><td>每步存检查点，停在复核时可以退出、之后接着跑</td></tr>
+    <tr><td>走势</td><td class="old">只比前一窗口</td><td>带上同一品牌之前几次运行的摘要</td></tr>
+    <tr><td>通知</td><td class="old">无</td><td>生成飞书格式的卡片（还没接群），按规则表分「需要关注」和「日常简报」</td></tr>
+    <tr><td>业务代码</td><td class="old">src/ 里的 Code 节点</td><td>同一份文件原样复用，同一份数据逐字段对拍一致</td></tr>
+  </table></div>
+  <div class="card table-scroll" style="margin-top:16px">
+    <h3>同一份小红书数据重放 7 次</h3>
+    <table><tr><th>跑法</th><th>各稿没过的规则</th><th>评级 / 分</th><th>分档</th></tr>
+    <tr><td>n8n（当时）</td><td>R4</td><td>C / 83</td><td>舆情前夜</td></tr>
+    <tr><td>LangGraph 返工上限 0</td><td>全过</td><td>A / 88</td><td>尚未形成舆情</td></tr>
+    <tr><td>LangGraph 返工上限 0</td><td>R4</td><td>C / 87</td><td>舆情前夜</td></tr>
+    <tr><td>LangGraph 返工上限 0</td><td>全过</td><td>A / 86</td><td>舆情前夜</td></tr>
+    <tr><td>LangGraph 返工上限 2</td><td>全过</td><td>B / 82</td><td>尚未形成舆情</td></tr>
+    <tr><td>LangGraph 返工上限 2</td><td>全过</td><td>B / 81</td><td>舆情前夜</td></tr>
+    <tr><td>LangGraph 返工上限 2</td><td>全过</td><td>A / 89</td><td>舆情前夜</td></tr>
+    </table>
+    <p class="note" style="margin-top:10px">首稿编造记录 ID（R4）的情况时有发生，不返工就被封顶 C 级；返工是出错时兜底，不拉高平均分。同一份数据模型打分在 80 多分上下浮动、分档会在两档之间摇摆，所以单次分数只说明过没过红线。</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><h2>这份研判的自动评测</h2><p>另一个模型（DeepSeek V4 Pro）按七个维度打分，再扣掉没过的软规则。</p></div>
+  <div class="card">
+    <div class="score"><div class="name">问题识别</div><div class="track"><div class="fill" style="width:90%"></div></div><div class="num">9/10</div></div>
+    <div class="score"><div class="name">事实和证据</div><div class="track"><div class="fill" style="width:90%"></div></div><div class="num">18/20</div></div>
+    <div class="score"><div class="name">公共语境</div><div class="track"><div class="fill" style="width:85%"></div></div><div class="num">17/20</div></div>
+    <div class="score"><div class="name">品牌和业务匹配</div><div class="track"><div class="fill" style="width:90%"></div></div><div class="num">9/10</div></div>
+    <div class="score"><div class="name">策略可执行性</div><div class="track"><div class="fill" style="width:86.66666666666667%"></div></div><div class="num">13/15</div></div>
+    <div class="score"><div class="name">表达质量</div><div class="track"><div class="fill" style="width:90%"></div></div><div class="num">9/10</div></div>
+    <div class="score"><div class="name">风险控制</div><div class="track"><div class="fill" style="width:93.33333333333333%"></div></div><div class="num">14/15</div></div>
+  </div>
+</section>
+
+<footer>
+  <p>数据：B站、知乎公开内容，2026/10/22 07:19:41 抓取；只存用户 ID 的哈希，不存昵称。原话和链接见<a href="report/">完整报告</a>。</p>
+  <p>研判和评测维度改写自初五的 Chuwu-PR-OS（MIT）。编码、研判 DeepSeek V4 Flash，评测 DeepSeek V4 Pro。</p>
+</footer>
+</div>
+</body>
+</html>
