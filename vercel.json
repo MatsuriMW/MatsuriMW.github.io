@@ -1,5 +1,9 @@
 {
   "functions": {
     "api/ask.mjs": { "includeFiles": "api/_data/**", "maxDuration": 60, "memory": 1024 }
-  }
+  },
+  "redirects": [
+    { "source": "/tags", "destination": "/archives/", "permanent": false },
+    { "source": "/tags/", "destination": "/archives/", "permanent": false }
+  ]
 }
