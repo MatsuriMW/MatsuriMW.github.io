@@ -209,3 +209,7 @@
 }
 /* demo 页「← 返回作品集」跳到对应卡片：让出吸顶的站点顶栏 */
 .pf-cell[id] { scroll-margin-top: 88px; }
+/* 项目页「接下来要做」：卡片里的清单，进行中的条目后面挂一个小标签 */
+.pj-next { flex: 1; margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+.pj-next li + li { margin-top: 6px; }
+.pj-next .chip { margin-left: 6px; font-size: 12px; padding: 0 8px; vertical-align: 1px; }
