@@ -9,7 +9,8 @@
 // POST { action: "review", ... }  → JSON { suggestions, gaps }：读最近几次课的记录，给下一次课的教案提改进建议
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
-// POST { action: "afterclass", words, lesson, plan, examLabel, student, studentMems, logs | members: [{name, gradeLabel, schoolLabel, profile, mems, logs, note}] }
+// POST { action: "afterclass", words, lesson: {topics, hw}, mix: {lesson, perf, weak, hw, exam}, praise, plan, examLabel, student, studentMems, logs, perf | members: [{name, gradeLabel, schoolLabel, profile, mems, logs, perf}] }
+//   perf = { items: [["专注", "很专注"]], good: [题型], weak: [题型] }
 //   → JSON { items: [{name, text}] }：发给家长的课后反馈，一对多一人一段
 // POST { action: "ocr", images: [dataURL] }  → JSON { text }：建档时传的截图、照片 → 图里的字（最多 3 张）
 // POST { action: "feedback", ... }→ JSON { ok }：首页反馈表单，存进 Redis（不调模型）；GET ?feedback=口令 读最近的反馈（口令见 feedbackToken，本地用 demo/feedback.mjs）
@@ -23,7 +24,7 @@
 import crypto from "node:crypto";
 import {
     loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
-    templateMessages, cleanTemplate, intakeMessages, cleanIntake, ocr, okImages, afterclassMessages, shortenMessages, hanCount, noPronoun, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
+    templateMessages, cleanTemplate, intakeMessages, cleanIntake, ocr, okImages, afterclassMessages, AFTER_PARTS, shortenMessages, hanCount, noPronoun, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
     itemBodies, adminToken, verifyToken, acctLogin, acctDemo, dataLoad, dataSave, itemsQuota, acctAdmin,
 } from "./_lib/english.mjs";
 
@@ -143,10 +144,16 @@ export async function POST(request) {
     if (action === "afterclass") {
         // 一个学生走 student / studentMems / logs；一对多传 members（每人一份档案 + 个别情况），一次写出每人一段
         const words = Math.max(50, Math.min(800, Math.round(+p.words || 200)));
+        const strs = (a, n = 16) => (Array.isArray(a) ? a : []).slice(0, n).map((t) => clip(t, 16)).filter(Boolean);
+        const perf = (x) => ({ items: (Array.isArray(x?.items) ? x.items : []).slice(0, 6).map((r) => [clip(r?.[0], 6), clip(r?.[1], 10)]).filter(([a, b]) => a && b), good: strs(x?.good), weak: strs(x?.weak) });
         const students = Array.isArray(p.members) && p.members.length
             ? p.members.slice(0, 8).map((m) => ({ name: clip(m?.name, 10) || "这个学生", gradeLabel: clip(m?.gradeLabel, 40), schoolLabel: clip(m?.schoolLabel, 40), profile: clip(m?.profile, 1500),
-                mems: cleanMems(m?.mems), logs: cleanLogs(m?.logs).slice(-3), note: clip(m?.note, 300) }))
-            : [{ name: student.name || "这个学生", gradeLabel: student.gradeLabel, schoolLabel: student.schoolLabel, profile: student.profile, mems: studentMems, logs: logs.slice(-3) }];
+                mems: cleanMems(m?.mems), logs: cleanLogs(m?.logs).slice(-3), perf: perf(m?.perf) }))
+            : [{ name: student.name || "这个学生", gradeLabel: student.gradeLabel, schoolLabel: student.schoolLabel, profile: student.profile, mems: studentMems, logs: logs.slice(-3), perf: perf(p.perf) }];
+        // 各部分占比：全是 0 或没传就按默认；表扬占比 0–100，默认 60
+        let mix = AFTER_PARTS.map(([k, n]) => [n, Math.max(0, Math.min(100, Math.round(+p.mix?.[k] || 0)))]);
+        if (!mix.some(([, v]) => v)) mix = AFTER_PARTS.map(([, n], i) => [n, [25, 30, 20, 15, 10][i]]);
+        const praise = Number.isFinite(+p.praise) && p.praise !== null && p.praise !== "" ? Math.max(0, Math.min(100, Math.round(+p.praise / 10) * 10)) : 60;
         const tok = Math.min(8000, students.length * words * 2 + 300);
         const fit = async (text) => {   // 写超了两成：压一次（不另计次），压坏了就用原来的
             if (hanCount(text) <= words * 1.2) return text;
@@ -155,7 +162,7 @@ export async function POST(request) {
             return t2 && hanCount(t2) < hanCount(text) ? noPronoun(t2) : text;
         };
         try {
-            const { data, usage } = await json(afterclassMessages({ students, exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: clip(p.lesson, 600), words }), { signal: request.signal, cfg, max_tokens: tok });
+            const { data, usage } = await json(afterclassMessages({ students, exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: { topics: strs(p.lesson?.topics), hw: strs(p.lesson?.hw, 8) }, mix, praise, words }), { signal: request.signal, cfg, max_tokens: tok });
             const raw = students.length > 1 ? (Array.isArray(data.items) ? data.items : []) : [{ text: data.text }];
             // 按顺序对上学生；模型给的名字只作核对，对不上就按位置
             const items = students.map((x, i) => ({ name: x.name, text: noPronoun(String((raw.find((r) => clip(r?.name, 10) === x.name) || raw[i])?.text || "").trim().slice(0, 2000)) }));

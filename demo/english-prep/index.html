@@ -363,6 +363,7 @@
   .ns-notes label { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
   .ns-notes .q { font-size: 12px; color: var(--ink-3); }
   .ns-act { margin-top: 18px; }
+  .ns-drafts { margin-bottom: 16px; } .ns-drafts h3 { margin: 0 0 6px; }
   /* 历史得分（用户 10-29） */
   .sc-h { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; margin: 18px 0 8px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
   .sc-h .note { font-weight: 400; }
@@ -377,9 +378,15 @@
   @media (max-width: 520px) { .scores li { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 3.4em 1.2em; } .scores input[data-f="name"] { grid-column: 1 / -1; } }
   .ac-form { display: grid; gap: 14px; align-content: start; }
   .ac-form textarea, .ac-form select { width: 100%; }
-  .ac-members { display: grid; gap: 6px; }
-  .ac-members label { display: grid; grid-template-columns: 5em minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13.5px; }
-  .ac-members input { width: 100%; font-size: 14px; padding: 5px 8px; }
+  .ac-chips { gap: 6px; } .ac-chips .chip, .ac-perf .chip { font-size: 13px; padding: 3px 11px; }
+  .ac-perf { display: grid; gap: 12px; }
+  .ac-who { display: grid; gap: 6px; } .ac-who + .ac-who { border-top: 1px solid var(--rule); padding-top: 12px; }
+  .ac-who > b { font-size: 14px; }
+  .ac-row { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: 13.5px; }
+  .ac-row > span { color: var(--ink-2); }
+  .ac-tone { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+  .ac-tone .v { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink-2); min-width: 9.5em; text-align: right; }
+  @media (max-width: 520px) { .ac-tone { grid-template-columns: auto minmax(0, 1fr) auto; } .ac-tone .v { grid-column: 1 / -1; text-align: left; } }
   .ac-out { display: grid; gap: 14px; }
   .ac-item textarea { width: 100%; margin-top: 6px; }
   .ns-weak { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
@@ -524,7 +531,7 @@
     <div class="fside">
       <p class="note">点开文件夹，点一张就切到那份档案、打开那份教案。前三份是示例档案，看明白了就给自己的学生建档；档案和教案只存在你的浏览器里。</p>
       <div class="lt-row"><span class="lab">这节课</span><span class="chips" id="ltChips" role="group" aria-label="课型"></span></div>
-      <a class="btn small" href="#/newstu">+ 新建学生档案</a>
+      <a class="btn small" href="#/newstu">+ 新建学生档案</a><span class="note" id="nsDraftHint"></span>
       <details class="fold" id="allStu"><summary id="allStuSum">全部档案</summary><ul class="stulist" id="stuList"></ul></details>
     </div>
   </div>
@@ -575,7 +582,8 @@
 <div class="page" data-page="newstu" hidden>
 <!-- 建档（MAT-508）：可以先贴一段话让 agent 填，再逐项核对；画像维度多，单独一页 -->
 <section class="step">
-  <div class="step-h"><h2>新建学生档案</h2><span class="note" style="margin-left:0">可以先贴一段话让 agent 把表填好，再逐项核对；也可以直接在下面选。建好以后在档案页还能拖、能加维度。</span></div>
+  <div class="step-h"><h2>新建学生档案</h2><span class="note" style="margin-left:0">可以先贴一段话让 agent 把表填好，再逐项核对；也可以直接在下面选。建好以后在档案页还能拖、能加维度。信息还不全就先「暂存」，回头接着填。</span></div>
+  <div class="card ns-drafts" id="nsDrafts" hidden></div>
   <div class="ns">
     <div class="ns-col">
       <div class="card">
@@ -608,7 +616,7 @@
       <div id="nsScores"></div>
     </div>
   </div>
-  <div class="row ns-act"><button class="btn" form="nsForm">建档</button><a href="#/profile">取消，回档案</a></div>
+  <div class="row ns-act"><button class="btn" form="nsForm">建档</button><button type="button" class="btn ghost" id="nsStash" title="没填完也能先存着，下次从「+ 新建学生档案」进来接着填">暂存</button><a href="#/profile">取消，回档案</a></div>
 </section>
 </div>
 
@@ -763,13 +771,17 @@
 <div class="page" data-page="afterclass" hidden>
 <!-- 6 课后反馈（用户 10-29）：上完课发给家长的那段话；不绑前面几步，直接进来选学生就能写 -->
 <section class="step">
-  <div class="step-h"><span class="n">6</span><h2>课后反馈</h2><span class="note">上完课发给家长的那段话。按学生档案（画像、进度、历史得分、薄弱点）、最近几次课和下一场考试来写，字数自己定；前面几步没走也能直接用，排过教案的话一起参考。选一对多的组，一次给每个学生各写一段。</span></div>
+  <div class="step-h"><span class="n">6</span><h2>课后反馈</h2><span class="note">上完课发给家长的那段话。左边不用打字：点选这节课讲了什么、表现、作业，调好各部分写多少、表扬和指问题的比例；再按学生档案（画像、进度、历史得分、薄弱点）、最近几次课和下一场考试来写，字数自己定；前面几步没走也能直接用，排过教案的话一起参考。选一对多的组，一次给每个学生各写一段。</span></div>
   <div class="grid2">
     <div class="card ac-form">
       <label class="field"><span class="lab">给谁写</span><select id="acStu" aria-label="给谁写"></select></label>
       <p class="note" id="acInfo" style="margin:0"></p>
-      <label class="field"><span class="lab">这节课的情况 <span class="note" style="font-weight:400">可选，写了更具体</span></span><textarea id="acLesson" rows="5" maxlength="600" placeholder="比如：今天讲了完形的转折线索，10 题错 3 题，比上次好；作文开头还是太长。作业是练习册 P23–24。"></textarea></label>
-      <div class="field" id="acMembersWrap" hidden><span class="lab">每个学生的个别情况 <span class="note" style="font-weight:400">可选</span></span><div class="ac-members" id="acMembers"></div></div>
+      <!-- 左边不让老师打字（用户 10-29）：讲了什么、表现、作业都是点选；反馈里各部分写多少、表扬和指问题各占多少，用横条和滑块调 -->
+      <div class="field"><span class="lab">这节课讲了 <span class="note" style="font-weight:400">排过大纲的已经勾好了</span></span><div class="chips ac-chips" id="acTopics" role="group" aria-label="这节课讲了哪些题型"></div></div>
+      <div class="field"><span class="lab">课堂表现 <span class="note" style="font-weight:400">没选的那项反馈里不提</span></span><div class="ac-perf" id="acPerf"></div></div>
+      <div class="field"><span class="lab">作业</span><div class="chips ac-chips" id="acHw" role="group" aria-label="作业"></div></div>
+      <div class="field"><span class="lab">反馈里各部分写多少 <span class="note" style="font-weight:400">拖分界线或点 ±；调到 0 的那部分不写</span></span><div id="acMix"></div></div>
+      <div class="field"><span class="lab">表扬和指出问题</span><div class="ac-tone"><span class="note">多表扬</span><input type="range" id="acPraise" min="0" max="100" step="10" aria-label="表扬占多少"><span class="note">多指问题</span><span class="v" id="acPraiseV"></span></div></div>
       <div class="field"><span class="lab">字数</span><div class="row"><input type="number" id="acWords" min="50" max="800" step="10" value="200" aria-label="字数" style="width:6.5em"><span class="chips" id="acWordChips"><button type="button" class="chip">100</button><button type="button" class="chip">200</button><button type="button" class="chip">300</button><button type="button" class="chip">500</button></span></div></div>
       <div class="row"><button type="button" class="btn" id="acGo">生成课后反馈</button><span class="note" id="acNote"></span></div>
     </div>
@@ -1076,6 +1088,7 @@ function renderFolders() {
     const hist = st.logs.map((l, i) => [l, i]).filter(([l]) => l.plan?.md).reverse();
     const histFiles = hist.map(([l, i]) => [l.plan.outline?.title || `${md5(l.date)} 的教案`, `#hist=${i}`, md5(l.date)]);
     $("#allStuSum").textContent = `全部档案（${S.students.length}）`;
+    $("#nsDraftHint").textContent = S.nsDrafts?.length ? `暂存了 ${S.nsDrafts.length} 份没建完的` : "";
     $("#stuList").innerHTML = S.students.map((x) => `<li${x.id === S.current ? ' class="on"' : ""}><span><b>${esc(x.name)}</b> <span class="note">${({ 7: "七", 8: "八", 9: "九" })[x.grade]}年级 · ${esc(x.schoolName)}</span>${isExample(x) ? ' <span class="tag">示例</span>' : ""}</span>
       <span>${x.id === S.current ? '<span class="note">正在看</span>' : `<button class="linkbtn" data-open="${x.id}">打开</button>`} · <button class="linkbtn" data-delstu="${x.id}">删除</button></span></li>`).join("");
     // 文件夹内容没变就不重挂（重挂会重新播组装动画）
@@ -1198,8 +1211,37 @@ function renderNewStu() {
     renderNsWeak(); mountScores($("#nsScores"), NS);
     $("#nsNotesWrap").hidden = !NS.notes.length;
     $("#nsNotes").innerHTML = NS.notes.map((n, i) => `<li><label><input type="checkbox" data-i="${i}" ${n.on ? "checked" : ""}><span><span class="tag ${n.cat === "薄弱点" ? "weak" : n.cat === "已掌握" ? "ok" : ""}">${n.cat}</span>${esc(n.text)}${n.quote ? `<div class="q">原文：${esc(n.quote)}</div>` : ""}</span></label></li>`).join("");
-    nsSchoolNote();
+    nsSchoolNote(); renderNsDrafts();
 }
+// 暂存（用户 10-29）：没填完的档案先存着，可以存好几份，跟着 S 存（登录了进账号）。「接着填」整份恢复，建档以后删掉那一份
+const nsFormVals = () => ({ name: $("#nsName").value, district: $("#nsDistrict").value, school: $("#nsSchool").value, other: $("#nsOther").value, own: $("#nsOwn").value, text: $("#nsText").value });
+function renderNsDrafts() {
+    const ds = S.nsDrafts || [];
+    $("#nsDrafts").hidden = !ds.length;
+    $("#nsDrafts").innerHTML = `<h3>暂存的档案（${ds.length}）</h3><ul class="stulist">${ds.map((d) => `<li${d.id === NS?.draftId ? ' class="on"' : ""} data-id="${d.id}"><span><b>${esc(d.form.name.trim() || "没写名字")}</b> <span class="note">${CNG[d.ns.grade]}年级 · 存于 ${md5(d.date)} ${d.time}</span></span>`
+        + `<span>${d.id === NS?.draftId ? '<span class="note">正在填</span>' : '<button type="button" class="linkbtn" data-open>接着填</button>'} · <button type="button" class="linkbtn" data-del>删掉</button></span></li>`).join("")}</ul>`;
+}
+$("#nsStash").onclick = () => {
+    NS ||= nsFresh();
+    NS.draftId ||= "d" + Date.now().toString(36);
+    const d = { id: NS.draftId, date: TODAY, time: new Date().toTimeString().slice(0, 5), ns: clone(NS), form: nsFormVals() };
+    S.nsDrafts = [d, ...(S.nsDrafts || []).filter((x) => x.id !== d.id)];
+    // 存完清空表单，好接着建下一个；这一份在上面「暂存的档案」里
+    NS = null; $("#nsForm").reset(); $("#nsText").value = ""; $("#nsParseNote").textContent = ""; nsSchoolOpts();
+    save(); renderNewStu(); renderFolders(); toast(`暂存好了${d.form.name.trim() ? `「${d.form.name.trim()}」` : ""}，在上面「暂存的档案」里点「接着填」`);
+};
+$("#nsDrafts").onclick = (e) => {
+    const li = e.target.closest("li[data-id]"), d = li && S.nsDrafts.find((x) => x.id === li.dataset.id); if (!d) return;
+    if (e.target.closest("[data-del]")) {
+        S.nsDrafts = S.nsDrafts.filter((x) => x !== d); if (NS?.draftId === d.id) delete NS.draftId;
+        save(); renderNsDrafts(); renderFolders(); return;
+    }
+    if (!e.target.closest("[data-open]")) return;
+    NS = clone(d.ns); const f = d.form;
+    $("#nsName").value = f.name; $("#nsText").value = f.text; $("#nsOther").value = f.other; $("#nsOwn").value = f.own;
+    $("#nsDistrict").value = f.district; nsSchoolOpts(); $("#nsSchool").value = f.school;
+    $("#nsParseNote").textContent = ""; renderNewStu(); window.scrollTo({ top: 0, behavior: "smooth" });
+};
 const nsClamp = () => { const n = unitsOf(stuGt(NS)); if (NS.progress > n) setProgress(NS, n, n); };   // 换到九下（4 个单元）时进度别超出
 $("#nsGrade").onclick = (e) => { const b = e.target.closest("[data-g]"); if (b) { NS.grade = +b.dataset.g; nsClamp(); renderNewStu(); } };
 $("#nsTerm").onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) { NS.term = b.dataset.t; nsClamp(); renderNewStu(); } };
@@ -1313,6 +1355,7 @@ $("#nsForm").onsubmit = (e) => {
     const weak = NS.weak.filter((w) => w.qtype || w.text.trim()).map((w) => ({ cat: "薄弱点", qtype: w.qtype, text: w.text.trim() || "暂时未知", quote: w.quote }));
     const notes = [...weak, ...NS.notes.filter((n) => n.on)];
     if (notes.length) Mem.applyOps(memState(st), notes.map((n) => ({ op: "add", who: "student", cat: n.cat, text: n.text, qtype: n.qtype, evidence: n.quote, why: "建档时老师贴的描述" })), TODAY, "建档描述");
+    if (NS.draftId) S.nsDrafts = (S.nsDrafts || []).filter((x) => x.id !== NS.draftId);
     S.students.push(st); snapWork();
     NS = null; e.target.reset(); $("#nsText").value = ""; $("#nsParseNote").textContent = ""; nsSchoolOpts();
     loadStudent(st.id); go("profile"); toast(`建好了「${name}」的档案${notes.length ? `，记进了 ${notes.length} 条记忆` : ""}`);
@@ -2969,6 +3012,62 @@ function acExam(id, st) {
 }
 const acPlan = (id) => (U.W?.sid === id && U.W.outline ? `${U.W.outline.title || ""}：${U.W.outline.sections.map((x) => `${x.name}${x.type ? "（" + x.type + "）" : ""} ${x.minutes} 分钟`).join("；")}` : "");
 const hanN = (t) => t.replace(/\s/g, "").length;
+// 左边全是点选（用户 10-29：让老师自己写就没意义了）。AC 是这一次点的，换学生就清空；各部分占比、表扬比例是老师的习惯，存在 S.teacher.acPrefs
+const AC_PERF = [["focus", "专注", ["走神多", "偶尔走神", "基本专注", "很专注"]], ["part", "参与", ["不太开口", "叫到才答", "积极回答", "主动提问"]], ["grasp", "掌握", ["没跟上", "一半会", "大部分会", "掌握得好"]]];
+const AC_HW = ["没留作业", "练习册", "试卷", "背单词短语", "订正错题", "写作文", "听读跟读"];
+const AC_MIX = [["lesson", "讲了什么"], ["perf", "课堂表现"], ["weak", "薄弱跟进"], ["hw", "作业配合"], ["exam", "考试安排"]];
+const acPrefs = () => (S.teacher.acPrefs ||= { mix: { lesson: 25, perf: 30, weak: 20, hw: 15, exam: 10 }, praise: 60 });
+let AC = null;   // { id, topics: [题型], hw: [], per: { 学生 id: { focus, part, grasp, good: [], weak: [] } } }
+const acChips = (f, vals, on) => vals.map((v) => `<button type="button" class="chip" data-f="${f}" data-v="${esc(v)}" aria-pressed="${on.includes(v)}">${esc(v)}</button>`).join("");
+const acToggle = (a, v) => (a.includes(v) ? a.filter((x) => x !== v) : [...a, v]);
+// 「有进步 / 要加强」从这节课讲的题型、档案里的薄弱题型里挑；已经选了的一直留着，好取消
+function acWhoHTML(st, many) {
+    const p = (AC.per[st.id] ||= { good: [], weak: [] });
+    const opts = [...new Set([...AC.topics, ...st.mems.filter((m) => m.cat === "薄弱点" && m.qtype).map((m) => m.qtype), ...p.good, ...p.weak])];
+    return `<div class="ac-who" data-sid="${st.id}">${many ? `<b>${esc(st.name)}</b>` : ""}`
+        + AC_PERF.map(([k, nm, lv]) => `<div class="ac-row"><span>${nm}</span><div class="chips ac-chips">${acChips(k, lv, [p[k]])}</div></div>`).join("")
+        + [["good", "有进步"], ["weak", "要加强"]].map(([f, nm]) => `<div class="ac-row"><span>${nm}</span>${opts.length ? `<div class="chips ac-chips">${acChips(f, opts, p[f])}</div>` : `<span class="note">先在上面选这节课讲了什么</span>`}</div>`).join("")
+        + `</div>`;
+}
+const acPraiseText = (v) => (v >= 100 ? "只说好的" : v <= 0 ? "只说问题" : `表扬 ${v}% · 问题 ${100 - v}%`);
+function renderAcMix() {
+    const m = acPrefs().mix;
+    stackBar($("#acMix"), AC_MIX.map(([k, nm], i) => ({ key: k, label: nm, value: m[k], color: OKABE[i] })), {
+        unit: "%",
+        onMove: (i, a, b) => { m[AC_MIX[i][0]] = a; m[AC_MIX[i + 1][0]] = b; save(); renderAcMix(); },
+        // ± 改一部分，别的按原来的比例分剩下的，总数保持 100
+        onStep: (k, d) => {
+            m[k] = Math.max(0, Math.min(100, m[k] + d));
+            const others = AC_MIX.map(([x]) => x).filter((x) => x !== k), left = 100 - m[k], tot = others.reduce((a, x) => a + m[x], 0);
+            for (const x of others) m[x] = Math.round(tot ? m[x] / tot * left : left / others.length);
+            m[others.reduce((a, x) => (m[x] > m[a] ? x : a))] += 100 - AC_MIX.reduce((a, [x]) => a + m[x], 0);
+            save(); renderAcMix();
+        },
+    });
+}
+function renderAcForm(ms) {
+    $("#acTopics").innerHTML = acChips("t", Object.keys(data.stats.byType), AC.topics);
+    $("#acPerf").innerHTML = ms.map((st) => acWhoHTML(st, ms.length > 1)).join("");
+    $("#acHw").innerHTML = acChips("h", AC_HW, AC.hw);
+    renderAcMix();
+    $("#acPraise").value = acPrefs().praise; $("#acPraiseV").textContent = acPraiseText(acPrefs().praise);
+}
+$("#acTopics").onclick = (e) => { const b = e.target.closest("[data-v]"); if (b) { AC.topics = acToggle(AC.topics, b.dataset.v); renderAcForm(acPick().members); } };
+$("#acHw").onclick = (e) => {   // 「没留作业」和别的互斥
+    const b = e.target.closest("[data-v]"); if (!b) return;
+    const v = b.dataset.v; AC.hw = v === "没留作业" ? (AC.hw.includes(v) ? [] : [v]) : acToggle(AC.hw.filter((x) => x !== "没留作业"), v);
+    $("#acHw").innerHTML = acChips("h", AC_HW, AC.hw);
+};
+$("#acPerf").onclick = (e) => {   // 表现每项单选，再点一下取消；有进步 / 要加强多选，同一题型只能在一边
+    const b = e.target.closest("[data-v]"), box = b?.closest(".ac-who"); if (!box) return;
+    const p = AC.per[box.dataset.sid], f = b.dataset.f, v = b.dataset.v;
+    if (f === "good" || f === "weak") { p[f] = acToggle(p[f], v); const o = f === "good" ? "weak" : "good"; p[o] = p[o].filter((x) => x !== v); }
+    else p[f] = p[f] === v ? undefined : v;
+    $("#acPerf").innerHTML = acPick().members.map((st) => acWhoHTML(st, acPick().members.length > 1)).join("");
+};
+$("#acPraise").oninput = () => { $("#acPraiseV").textContent = acPraiseText(+$("#acPraise").value); };
+$("#acPraise").onchange = () => { acPrefs().praise = +$("#acPraise").value; save(); };
+const acPerfOf = (st) => { const p = AC.per[st.id] || {}; return { items: AC_PERF.filter(([k]) => p[k]).map(([k, nm]) => [nm, p[k]]), good: p.good || [], weak: p.weak || [] }; };
 function renderAcOut(ms) {
     $("#acOut").innerHTML = ms.map((x) => `<div class="ac-item" data-sid="${x.id}"><div class="row" style="justify-content:space-between">${ms.length > 1 ? `<b>${esc(x.name)}的家长</b>` : "<span></span>"}<span class="row"><span class="note ac-n">${x.lastAfter?.text ? hanN(x.lastAfter.text) + " 字" : ""}</span><button type="button" class="btn small ghost" data-copy>复制</button></span></div>`
         + `<textarea rows="${ms.length > 1 ? 8 : 14}" placeholder="生成以后在这里，可以直接改；改的也会存下来">${esc(x.lastAfter?.text || "")}</textarea></div>`).join("");
@@ -2984,11 +3083,12 @@ function renderAfter() {
     $("#acInfo").textContent = ms.length > 1
         ? `${ms.length} 个学生，各按自己的画像、进度、历史得分、薄弱点、课次记录写${ex ? ` · 下一场 ${ex}` : ""}${plan ? " · 这节课的大纲" : ""}`
         : `会参考：学生画像（进度 ${progText(progVal(st, n), n)}）· 历史得分 ${(st.scores || []).filter((x) => x.score != null).length} 次 · 薄弱点 ${st.mems.filter((m) => m.cat === "薄弱点").length} 条 · 课次记录 ${st.logs.length} 次${ex ? ` · 下一场 ${ex}` : ""}${plan ? " · 这节课的大纲" : ""}`;
-    $("#acMembersWrap").hidden = ms.length < 2;
-    if (keep !== id || !$("#acMembers").children.length) $("#acMembers").innerHTML = ms.length > 1 ? ms.map((x) => `<label><span>${esc(x.name)}</span><input data-sid="${x.id}" maxlength="100" placeholder="比如：这次完形只错 1 题"></label>`).join("") : "";
+    // 排过这节课大纲的，讲了哪些题型先勾好
+    if (AC?.id !== id) AC = { id, topics: U.W?.sid === id && U.W.outline ? [...new Set(U.W.outline.sections.map((x) => x.type).filter(Boolean))] : [], hw: [], per: {} };
+    renderAcForm(ms);
     if (keep !== id || !$("#acOut").children.length) renderAcOut(ms);
 }
-$("#acStu").onchange = () => { $("#acMembers").innerHTML = $("#acOut").innerHTML = ""; renderAfter(); };
+$("#acStu").onchange = () => { $("#acOut").innerHTML = ""; renderAfter(); };
 $("#acWordChips").onclick = (e) => { const b = e.target.closest(".chip"); if (b) $("#acWords").value = b.textContent; };
 $("#acOut").oninput = (e) => {
     const box = e.target.closest(".ac-item"), st = box && S.students.find((x) => x.id === box.dataset.sid); if (!st) return;
@@ -3006,10 +3106,10 @@ $("#acGo").onclick = async () => {
     const one = (st) => ({ name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), profile: profileLine(st) });
     $("#acWords").value = words; $("#acGo").disabled = true; $("#acNote").textContent = ms.length > 1 ? `在给 ${ms.length} 个学生写……` : "在写……";
     try {
-        const base = { action: "afterclass", words, lesson: $("#acLesson").value.trim(), examLabel: acExam(id, ms[0]), plan: acPlan(id) };
+        const base = { action: "afterclass", words, lesson: { topics: AC.topics, hw: AC.hw }, mix: acPrefs().mix, praise: acPrefs().praise, examLabel: acExam(id, ms[0]), plan: acPlan(id) };
         const { items, left } = await post(ms.length > 1
-            ? { ...base, members: ms.map((st) => ({ ...one(st), mems: st.mems, logs: logsLite(st), note: $(`#acMembers input[data-sid="${st.id}"]`)?.value.trim() || "" })) }
-            : { ...base, student: one(ms[0]), studentMems: ms[0].mems, logs: logsLite(ms[0]) });
+            ? { ...base, members: ms.map((st) => ({ ...one(st), mems: st.mems, logs: logsLite(st), perf: acPerfOf(st) })) }
+            : { ...base, student: one(ms[0]), studentMems: ms[0].mems, logs: logsLite(ms[0]), perf: acPerfOf(ms[0]) });
         ms.forEach((st, i) => { if (items[i]?.text) st.lastAfter = { date: TODAY, words, text: items[i].text }; });
         save(); renderAcOut(ms);
         const miss = ms.filter((_, i) => !items[i]?.text).map((x) => x.name);
