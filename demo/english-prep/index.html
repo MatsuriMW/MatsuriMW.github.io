@@ -1736,7 +1736,7 @@ function stackBar(el, segs, { unit, onMove, onStep, onPick }) {
 // 老师手动改占比（滑块、横条、±）：记进 overrides；排过大纲的话占比和大纲就对不上了
 function overrideShares(map) {
     Object.assign(U.overrides ||= {}, map);
-    if (U.lock) { U.lock = null; $("#writeNote").textContent = "占比改过了，和大纲对不上：可以「重新生成大纲」，或者到「审教」页让 agent 按新占比调大纲。"; }
+    if (U.lock) { U.lock = null; U.unlocked = true; $("#writeNote").textContent = "占比改过了，和大纲对不上：可以「重新生成大纲」，或者到「审教」页让 agent 按新占比调大纲。"; }
 }
 function renderMixBar() {
     // 和滑块列一样的题型：减到 0 的也留在图例里（横条上那段是 0 宽），手机上还能加回来
@@ -1933,7 +1933,7 @@ function lockFromOutline() {
     const by = {}; let tot = 0;
     for (const x of U.W?.outline?.sections || []) if (x.type && x.minutes > 0) { by[x.type] = (by[x.type] || 0) + x.minutes; tot += x.minutes; }
     if (!tot) return;
-    U.lock = Object.fromEntries(Object.entries(by).map(([t, m]) => [t, m / tot]));
+    U.lock = Object.fromEntries(Object.entries(by).map(([t, m]) => [t, m / tot])); U.unlocked = false;
     deriveCtx(); renderMix();
     $("#mixNote").textContent += " 现在的占比按大纲里各题型的分钟数算。";
 }
@@ -2359,10 +2359,10 @@ $("#chatLog").onclick = (e) => {
 // 改之前拍个快照，撤销时整体还原
 function snap() {
     return { outline: U.W?.outline ? clone(U.W.outline) : null, md: U.W?.md ?? null, items: U.W ? [...U.W.items] : null, alts: U.W ? [...U.W.alts] : null,
-        lock: U.lock ? { ...U.lock } : null, overrides: { ...(U.overrides || {}) }, frozen: U.frozen ? { ...U.frozen } : null, guidance: U.guidance, level: U.level, kind: U.kind };
+        lock: U.lock ? { ...U.lock } : null, overrides: { ...(U.overrides || {}) }, frozen: U.frozen ? { ...U.frozen } : null, unlocked: U.unlocked, guidance: U.guidance, level: U.level, kind: U.kind };
 }
 function restoreSnap(s) {
-    Object.assign(U, { lock: s.lock, overrides: s.overrides, frozen: s.frozen, guidance: s.guidance, level: s.level, kind: s.kind });
+    Object.assign(U, { lock: s.lock, overrides: s.overrides, frozen: s.frozen, unlocked: s.unlocked, guidance: s.guidance, level: s.level, kind: s.kind });
     if (U.W) { if (s.outline) U.W.outline = s.outline; if (s.md != null) U.W.md = s.md; if (s.items) U.W.items = s.items; if (s.alts) U.W.alts = s.alts; }
     if (U.W?.items) renderItems(); if (U.W?.outline) renderOutline(); if (U.W?.md) renderPlan(false);
 }
@@ -2400,7 +2400,7 @@ async function applyChatOps(stage, ops) {
     for (const op of ops) {
         try {
             if (stage === "setup") {
-                if (op.op === "set_share" && U.rows.some((r) => r.type === op.type)) { U.lock = null; (U.overrides ||= {})[op.type] = Math.max(0, Math.min(0.6, +op.share || 0)); changes.push(`${op.type} 占比调到 ${pct(U.overrides[op.type])}`); }
+                if (op.op === "set_share" && U.rows.some((r) => r.type === op.type)) { if (U.lock) U.unlocked = true; U.lock = null; (U.overrides ||= {})[op.type] = Math.max(0, Math.min(0.6, +op.share || 0)); changes.push(`${op.type} 占比调到 ${pct(U.overrides[op.type])}`); }
                 else if (op.op === "set_guidance" && op.text) { U.guidance = String(op.text).slice(0, 200); changes.push(`「这次课的要求」改成：${U.guidance}`); }
                 else if (op.op === "set_level" && ["统考", "不统考", "不知道"].includes(op.level)) { U.level = op.level; changes.push(`出卷来源改成「${op.level}」`); }
                 else if (op.op === "set_kind" && M.examKinds(U.gt).includes(op.kind)) { U.kind = op.kind; U.level = null; changes.push(`下一场考试改成 ${U.gt}${op.kind}`); }
@@ -2719,7 +2719,7 @@ function snapWork() {
     const st = stu(), W = U.W;
     if (!st || !U.gt) return;
     const snap = {
-        u: { gt: U.gt, kind: U.kind, unit: U.unit, minutes: U.minutes, level: U.level, guidance: U.guidance, overrides: U.overrides, frozen: U.frozen, difficulty: U.difficulty,
+        u: { gt: U.gt, kind: U.kind, unit: U.unit, minutes: U.minutes, level: U.level, guidance: U.guidance, overrides: U.overrides, frozen: U.frozen, unlocked: U.unlocked, difficulty: U.difficulty,
             template: U.template, planNote: U.planNote, review: U.review, reviewTouched: U.reviewTouched, chat: (U.chat || []).filter((m) => !m.wait).map(({ snap, ...m }) => m) },
         W: W?.outline ? { items: W.items.map(workRef), alts: W.alts.map(workRef), extras: W.extras, slots: W.slots, outline: W.outline, outline0: W.outline0, md: W.md,
             stale: [...W.stale].map(([c, set]) => [c, [...set]]), visual: W.visual, student: W.student, sid: W.sid, date: W.date, checked: W.checked } : null,
@@ -2746,7 +2746,7 @@ async function restoreWork() {
     if (stu().id !== st.id || U.W) return;   // 等题面的时候换了学生，或者已经在排新大纲
     if (items.some((x) => !x)) { toast("上次的题面没存下来（浏览器数据清过），大纲要重新生成"); return; }
     U.W = { ...w.W, items, alts: alts.filter(Boolean), stale: new Map(w.W.stale.map(([c, set]) => [c, new Set(set)])) };
-    renderItems(); lockFromOutline(); renderOutline();
+    renderItems(); if (U.unlocked) $("#writeNote").textContent = "占比改过了，和大纲对不上：可以「重新生成大纲」，或者到「审教」页让 agent 按新占比调大纲。"; else lockFromOutline(); renderOutline();   // 排完大纲又调过占比的，刷新后不按大纲锁回去（用户 10-29）
     if (U.W.md) { $("#step5").hidden = false; renderPlan(false); $("#planActs").hidden = false; }
     renderChat(); renderDraft(); if (page() === "home") renderHome();
 }
