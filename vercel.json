@@ -1,7 +1,6 @@
 {
   "functions": {
     "api/ask.mjs": { "includeFiles": "api/_data/**", "maxDuration": 60, "memory": 1024 },
-    "api/naming.mjs": { "maxDuration": 60 },
     "api/english.mjs": { "includeFiles": "api/_data/english/**", "maxDuration": 120, "memory": 1024 }
   },
   "redirects": [
