@@ -191,11 +191,13 @@ export function reviewShare(days) { return days == null ? 0.4 : days <= 14 ? 0.7
 // 所以从严到宽一层层对，哪层对上就停：名字本身 → 去掉「中学 / 学校」这类通用字（保留「实验」）→ 连「实验」也去掉（这一层就是默认总校）
 // → 总校名 + 分校名（先认出总校名，再拿后半截去找，天一宛山湖的正式名里没有「天一」）→ 去掉校区的校名 → 包含关系。
 // 还是对上几所的：说了区就只留那个区的；剩下的都有建校年份（schools.json 的 founded）就取最老的，用户口径「哪个建得老，哪个就是总校」；年份不全就让老师选
-const SCHOOL_ALIAS = { 锡外: "无锡外国语学校", 省锡中: "江苏省锡山高级中学实验学校", 一女中: "无锡市第一女子中学" };
+// 名录里的正式名看不出来的俗称：金桥两个老校区平时叫城中金桥（学前街）、新城金桥（太湖新城）
+const SCHOOL_ALIAS = { 锡外: "无锡外国语学校", 省锡中: "江苏省锡山高级中学实验学校", 一女中: "无锡市第一女子中学", 城中金桥: "无锡市梁溪区金桥双语实验学校", 新城金桥: "无锡金桥双语实验学校" };
 const sCore = (s) => s.replace(/^(江苏省|无锡市|无锡)/, "").replace(/[（）()\s]/g, "");
 const sBase = (s) => s.replace(/（[^）]*校区）$/, "");
 const sKeys = (name) => {
-    const k0 = sCore(name.replace(/（(暂定名|待更名|少年部)）$/, ""));   // 括号里只是备注的不算名字
+    // 括号里只是备注的不算名字；市区的区名去掉（梁溪区金桥双语平时就叫金桥双语），江阴、宜兴的学校平时带市名，留着
+    const k0 = sCore(name.replace(/（(暂定名|待更名|少年部)）$/, "")).replace(/^(梁溪区|锡山区|惠山区|滨湖区|新吴区|经开区|高新区)/, "");
     return { k0, k2: k0.replace(/(初级中学|中学|学校|分校|校区|初中部|初中)/g, ""), k1: k0.replace(/(初级中学|实验中学|实验学校|中学|学校|分校|校区|初中部|初中|实验)/g, "") };
 };
 export function matchSchool(raw, district, schools, districts = []) {
@@ -215,9 +217,10 @@ export function matchSchool(raw, district, schools, districts = []) {
         () => schools.filter((s) => sCore(sBase(s.name)) === sCore(sBase(q))),
         () => schools.filter((s) => sCore(s.name).includes(qc)),
     ];
-    let hits = [];
-    for (const t of tiers) if ((hits = t()).length) break;
+    let hits = [], tier = null;
+    for (const t of tiers) if ((hits = (tier = t)()).length) break;
     if (hits.length > 1 && districts.includes(district)) { const h = hits.filter((s) => s.district === district); if (h.length) hits = h; }
-    if (hits.length > 1 && hits.every((s) => s.founded)) { const y = Math.min(...hits.map((s) => s.founded)), h = hits.filter((s) => s.founded === y); if (h.length === 1) hits = h; }
+    // 取最老的只对「光说校名」：总校名 + 分校名那一层还对上几所，说明后半截没认出来（新城金桥会被拆成新城中学 + 金桥），让老师选
+    if (hits.length > 1 && tier !== branch && hits.every((s) => s.founded)) { const y = Math.min(...hits.map((s) => s.founded)), h = hits.filter((s) => s.founded === y); if (h.length === 1) hits = h; }
     return hits;
 }
