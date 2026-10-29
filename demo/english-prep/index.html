@@ -2488,7 +2488,7 @@ async function applyChatOps(stage, ops) {
 function clearStaleOutline() { if (U.W?.outline) $("#writeNote").textContent = "设置改过了，大纲还是按旧设置排的，可以「重新生成大纲」。"; }
 
 // ---------- 教案模板（MAT-502） ----------
-const KIND = { text: "普通", basis: "四维依据", flow: "课堂流程表", types: "分题型讲解" };
+const KIND = { text: "普通", basis: "四维依据", flow: "课堂流程", types: "分题型讲解" };
 function renderTplSel() {
     const cur = curTemplate(), st = stu();
     $("#tplSel").innerHTML = templates().map((t) => `<option value="${esc(t.id)}" ${t.id === cur.id ? "selected" : ""}>${esc(t.name)}${S.teacher.templates.includes(t) ? "（自建）" : ""}</option>`).join("");

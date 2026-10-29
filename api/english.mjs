@@ -165,7 +165,16 @@ export async function POST(request) {
             const { data, usage } = await json(afterclassMessages({ students, exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: { topics: strs(p.lesson?.topics), hw: strs(p.lesson?.hw, 8) }, mix, praise, words }), { signal: request.signal, cfg, max_tokens: tok });
             const raw = students.length > 1 ? (Array.isArray(data.items) ? data.items : []) : [{ text: data.text }];
             // 按顺序对上学生；模型给的名字只作核对，对不上就按位置
-            const items = students.map((x, i) => ({ name: x.name, text: noPronoun(String((raw.find((r) => clip(r?.name, 10) === x.name) || raw[i])?.text || "").trim().slice(0, 2000)) }));
+            // 按名字对上；模型给了名字但对不上的才按位置（漏写的学生不能被别人那段顶上）
+            const byName = raw.some((r) => students.some((x) => clip(r?.name, 10) === x.name));
+            const items = students.map((x, i) => ({ name: x.name, text: noPronoun(String((byName ? raw.find((r) => clip(r?.name, 10) === x.name) : raw[i])?.text || "").trim().slice(0, 2000)) }));
+            // 一对多还是漏了谁：给漏掉的人各单独写一次（同一节课的资料，不另计次）
+            if (students.length > 1) await Promise.all(items.map(async (x, i) => {
+                if (x.text) return;
+                const r = await json(afterclassMessages({ students: [students[i]], exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: { topics: strs(p.lesson?.topics), hw: strs(p.lesson?.hw, 8) }, mix, praise, words }),
+                    { signal: request.signal, cfg, max_tokens: Math.min(2500, words * 2 + 300) }).catch(() => null);
+                x.text = noPronoun(String(r?.data?.text || "").trim().slice(0, 2000));
+            }));
             if (!items.some((x) => x.text)) return Response.json({ error: "没写出来，再试一次" }, { status: 502 });
             await Promise.all(items.map(async (x) => { if (x.text) x.text = await fit(x.text); }));
             return Response.json({ items, text: items[0].text, usage, left });
