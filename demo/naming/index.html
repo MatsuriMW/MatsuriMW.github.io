@@ -90,11 +90,15 @@
   section.how li { margin-bottom: 6px; }
   footer { margin-top: 64px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  /* 回作品集：每个 demo 顶上一行，回到这个项目在作品集里的展示页 */
+  .back { display: inline-block; margin-bottom: 14px; font-size: 13px; color: var(--ink-3); text-decoration: none; }
+  .back:hover { color: var(--ink); }
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
+  <a class="back" href="/portfolio/#work">← 返回作品集</a>
   <div class="eyebrow">NAMING DEMO · 马自立</div>
   <h1>取名器</h1>
   <p class="lede">给公司、产品、项目、团队取名，也给人取名：新生儿、外企英文名、社媒昵称。「想要正式一点但别太死板」「短一点、好念」这类说不准的感觉，拆成几条光谱拖滑块定分寸，模型按档位一次出 8 个候选，每个都写清怎么来的、为什么合适、哪里要小心。</p>
@@ -164,7 +168,7 @@
   </ul>
 </section>
 
-<footer>马自立 · <a href="https://matsuri.site/projects/">作品集</a> · 模型：Kimi K2.6（硅基流动） · 名字仅供参考，商标、域名、重名请自己核实</footer>
+<footer>马自立 · <a href="/portfolio/">作品集</a> · 模型：Kimi K2.6（硅基流动） · 名字仅供参考，商标、域名、重名请自己核实</footer>
 </div>
 
 <script>

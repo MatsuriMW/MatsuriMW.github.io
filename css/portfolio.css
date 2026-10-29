@@ -207,3 +207,5 @@
   .pj-log > li::before { left: 5px; top: 7px; }
   .pj-v { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; text-align: left; }
 }
+/* demo 页「← 返回作品集」跳到对应卡片：让出吸顶的站点顶栏 */
+.pf-cell[id] { scroll-margin-top: 88px; }

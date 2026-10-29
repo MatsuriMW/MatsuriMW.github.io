@@ -40,11 +40,15 @@
   .quality button[aria-pressed="true"] small { color: inherit; opacity: .7; }
   .links { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 15px; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
+  /* 回作品集：每个 demo 顶上一行，回到这个项目在作品集里的展示页 */
+  .back { display: inline-block; margin-bottom: 14px; font-size: 13px; color: var(--ink-3); text-decoration: none; }
+  .back:hover { color: var(--ink); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
+    <a class="back" href="/portfolio/#nautilus-spiral">← 返回作品集</a>
     <div class="eyebrow">OBSIDIAN 插件 · 演示</div>
     <h1>螺旋日程（Nautilus Spiral）</h1>
     <p class="lede">给每一分钟安排一份工作。螺旋日程读今天的日记，把事件和待办画成一圈螺旋：固定事件钉在它的时刻上，待办按列表顺序和预计时长，从「现在」开始自动填进事件之间的空档。时间往前走，没做完的任务就跟着往后流；排不下的，当场告诉你缺多少。日历里的日程、Agent 会话的进度和用时，也都落在同一圈上。</p>
@@ -68,7 +72,7 @@
   <div class="links">
     <a href="https://github.com/MatsuriMW/nautilus-spiral">GitHub 仓库</a>
     <a href="/demo/agent-deck/">配套插件 Agent Deck 的演示</a>
-    <a href="/github/">马自立的其他项目</a>
+    <a href="/portfolio/">马自立的其他项目</a>
   </div>
 
   <footer>

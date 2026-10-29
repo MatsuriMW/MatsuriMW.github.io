@@ -40,11 +40,15 @@
   .quality button[aria-pressed="true"] small { color: inherit; opacity: .7; }
   .links { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 15px; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
+  /* 回作品集：每个 demo 顶上一行，回到这个项目在作品集里的展示页 */
+  .back { display: inline-block; margin-bottom: 14px; font-size: 13px; color: var(--ink-3); text-decoration: none; }
+  .back:hover { color: var(--ink); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
+    <a class="back" href="/portfolio/#agent-deck">← 返回作品集</a>
     <div class="eyebrow">OBSIDIAN 插件 · 演示</div>
     <h1>Agent Deck（智能体甲板）</h1>
     <p class="lede">Agent Deck 把散在各个客户端里的 AI Agent 会话收到 Obsidian 里的一张甲板上：哪个 Agent 在干活、哪个在等你、做到了哪一步，抬眼就能看到；要派活，就从笔记里正在写的那一行派出去，进度和结果再回到这一行。人写的计划和 Agent 跑的活，最后落在同一份日记里。</p>
@@ -68,7 +72,7 @@
 
   <div class="links">
     <a href="https://github.com/MatsuriMW/obsidian-agent-deck">GitHub 仓库</a>
-    <a href="/github/">马自立的其他项目</a>
+    <a href="/portfolio/">马自立的其他项目</a>
   </div>
 
   <footer>

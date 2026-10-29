@@ -69,11 +69,15 @@
   .score .name { color: var(--ink-2); text-align: right; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
   footer p { margin-bottom: 6px; }
+  /* 回作品集：每个 demo 顶上一行，回到这个项目在作品集里的展示页 */
+  .back { display: inline-block; margin-bottom: 14px; font-size: 13px; color: var(--ink-3); text-decoration: none; }
+  .back:hover { color: var(--ink); }
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
+  <a class="back" href="/portfolio/#yuqing-langgraph">← 返回作品集</a>
   <div class="eyebrow">舆情研判 · LangGraph 多平台版 · 2026/10/22 07:19:41</div>
   <h1>特斯拉：B站 + 知乎的舆情研判</h1>
   <p class="lede">上一版是 n8n 定时抓小红书。这一版把编排换成 LangGraph：先按品牌人群画像决定以哪个平台为主，再判断现在是「出了事」还是「日常」，规则检查没过就让模型带着问题返工，出报告前停下来等人复核，最后生成一条推送卡片。编码、指标、规则、评级还是同一份代码。</p>
