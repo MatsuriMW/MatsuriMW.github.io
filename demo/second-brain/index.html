@@ -115,8 +115,12 @@
   .step ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
   ul.plain { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 15px; }
   ul.plain li { margin-bottom: 6px; }
-  .score { display: grid; grid-template-columns: 9em 1fr 4em; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 8px; }
-  .score .track { height: 10px; background: var(--neutral-soft); border-radius: 99px; overflow: hidden; }
+  .score { display: grid; grid-template-columns: 9em 1fr 5.5em; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 8px; }
+  /* 放映进度条也叫 .track（grid 五列、带上内边距），这里覆盖回来，不然填充条只占五分之一宽、还被挤出条外看不见 */
+  .score .track { display: block; margin: 0; padding: 0; border: 0; position: relative; height: 10px; background: var(--neutral-soft); border-radius: 99px; overflow: hidden; }
+  /* 95% 区间：两端竖线 + 中间细线 */
+  .score .ci { position: absolute; top: 0; bottom: 0; border-inline: 2px solid var(--ink); background: linear-gradient(var(--ink), var(--ink)) center / 100% 2px no-repeat; opacity: .55; }
+  .score .num small { display: block; font-size: 11px; color: var(--ink-3); white-space: nowrap; }
   .score .fill { height: 100%; background: var(--blue); border-radius: 99px; }
   .score .name { color: var(--ink-2); text-align: right; }
   footer { margin-top: 64px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; }
@@ -722,9 +726,10 @@ function renderMeta(t, d) {
 // 评测结果：eval.json 由 eval/run.mjs 生成
 fetch("eval.json").then((r) => r.ok ? r.json() : null).then((E) => {
   if (!E) { $("evalSec").style.display = "none"; return; }
-  const bar = (name, v, fmt = (x) => Math.round(x * 100) + "%") => `<div class="score"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${Math.round(v * 100)}%"></div></div><div class="num">${fmt(v)}</div></div>`;
+  // ci：[下沿, 上沿]，95% 区间
+  const bar = (name, v, fmt = (x) => Math.round(x * 100) + "%", ci) => `<div class="score"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${Math.round(v * 100)}%"></div>${ci ? `<i class="ci" style="left:${(ci[0] * 100).toFixed(1)}%;width:${((ci[1] - ci[0]) * 100).toFixed(1)}%"></i>` : ""}</div><div class="num">${fmt(v)}${ci ? `<small>${fmt(ci[0])}–${fmt(ci[1])}</small>` : ""}</div></div>`;
   $("evalLede").textContent = E.lede;
-  $("evalBody").innerHTML = E.cards.map((c) => `<div class="card"><h3>${esc(c.title)}</h3>${c.bars.map((b) => bar(b[0], b[1], b[2] === "f3" ? f3 : undefined)).join("")}<p class="note" style="margin:10px 0 0">${esc(c.note)}</p></div>`).join("");
+  $("evalBody").innerHTML = E.cards.map((c) => `<div class="card"><h3>${esc(c.title)}</h3>${c.bars.map((b) => bar(b[0], b[1], b[2] === "f3" ? f3 : undefined, b[3])).join("")}<p class="note" style="margin:10px 0 0">${esc(c.note)}</p></div>`).join("");
   reveal($("evalBody"));
 }).catch(() => { $("evalSec").style.display = "none"; });
 </script>

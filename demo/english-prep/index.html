@@ -758,7 +758,7 @@ function toast(msg, action) {
 }
 
 // ---------- 统计 ----------
-$("#stats").innerHTML = [[data.stats.papers, "份无锡真卷（2022–2026）"], [data.stats.units, "个题组"], [data.stats.questions, "道小题"], [data.stats.images, "张图按位置入库"], ["85.7%", "检索 precision@5"], ["6/6", "记忆更新评测"]]
+$("#stats").innerHTML = [[data.stats.papers, "份无锡真卷（2022–2026）"], [data.stats.units, "个题组"], [data.stats.questions, "道小题"], [data.stats.images, "张图按位置入库"], ["85.7%", "检索 precision@5（20 条查询，95% 区间 71%–98%）"], ["6/6", "记忆更新评测"]]
     .map(([n, l]) => `<span><b>${n}</b>${l}</span>`).join("");
 
 // ---------- 1 档案 ----------
