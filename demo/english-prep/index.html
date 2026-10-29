@@ -54,9 +54,9 @@
   .btn.small { padding: 6px 14px; font-size: 14px; }
   .btn:disabled { opacity: .45; cursor: default; }
   .linkbtn { font: inherit; font-size: 13px; background: none; border: 0; color: var(--blue); cursor: pointer; padding: 0; }
-  textarea, input[type=text], input[type=number], select { font: inherit; font-size: 15px; padding: 8px 12px; border: 1px solid #d6d4cd; border-radius: 10px; background: #fff; color: var(--ink); }
+  textarea, input[type=text], input[type=password], input[type=number], select { font: inherit; font-size: 15px; padding: 8px 12px; border: 1px solid #d6d4cd; border-radius: 10px; background: #fff; color: var(--ink); }
   textarea { width: 100%; min-height: 84px; resize: vertical; line-height: 1.6; }
-  input[type=text] { width: 100%; }
+  input[type=text], input[type=password] { width: 100%; }
   textarea:focus, input:focus, select:focus { outline: 2px solid var(--blue); outline-offset: -1px; border-color: transparent; }
 
   /* 档案 */
@@ -290,6 +290,21 @@
   /* 导航右边：正在给谁备课（一对多时是组，MAT-509），翻到哪一页都看得见 */
   .topnav .nav-who { margin-left: auto; align-self: center; font-size: 13px; color: var(--ink-2); border: 1px solid var(--rule); border-radius: 99px; padding: 3px 12px; background: var(--surface); }
   .topnav .nav-who b { color: var(--ink); font-weight: 600; }
+  /* 「正在备」点开切换学生、右边的账号按钮（MAT-510）；菜单放在导航外面、fixed 定位，不被导航的横向滚动裁掉 */
+  .topnav button.nav-who { font-family: inherit; cursor: pointer; }
+  .topnav .nav-acct { align-self: center; font: inherit; font-size: 13px; color: var(--ink-2); background: none; border: 0; padding: 3px 2px; cursor: pointer; white-space: nowrap; }
+  .topnav .nav-acct:hover { color: var(--ink); }
+  .pop-menu { position: fixed; z-index: 20; min-width: 220px; max-width: min(320px, calc(100vw - 24px)); max-height: 60vh; overflow: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; box-shadow: 0 12px 32px -14px rgba(0, 0, 0, .3); padding: 6px; font-size: 14px; }
+  .pop-menu .h { font-size: 12px; color: var(--ink-3); padding: 8px 10px 4px; }
+  .pop-menu .pm-it { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; text-align: left; font: inherit; color: var(--ink); background: none; border: 0; border-radius: 8px; padding: 7px 10px; cursor: pointer; }
+  .pop-menu .pm-it:hover, .pop-menu .pm-it:focus-visible { background: var(--page); }
+  .pop-menu .pm-it[aria-current] { background: var(--blue-soft); }
+  .pop-menu .pm-it small { font-size: 12px; color: var(--ink-3); }
+  .pop-menu .foot { display: flex; gap: 16px; border-top: 1px solid var(--rule); margin-top: 6px; padding: 9px 10px 4px; font-size: 13px; }
+  .login { width: min(400px, calc(100% - 32px)); }
+  .login-b { display: grid; gap: 12px; padding: 16px 20px 20px; }
+  .login .or { font-size: 12px; color: var(--ink-3); text-align: center; border-top: 1px solid var(--rule); padding-top: 12px; }
+  .login .err { color: var(--red); }
   @media (max-width: 520px) { .topnav-in { flex-wrap: wrap; row-gap: 8px; } .topnav .nav-who { margin-left: 0; font-size: 12px; padding: 2px 10px; } }
   @media (max-width: 520px) { .topnav-in { padding: 12px 16px; gap: 14px; } .topnav .steps { gap: 5px; } .topnav a { font-size: 15px; } .topnav i { font-size: 12px; } }
   .page > section.step:first-of-type { margin-top: 0; }
@@ -422,19 +437,21 @@
 <body>
 <nav class="topnav" aria-label="页面"><div class="topnav-in">
   <a class="nav-back" href="/portfolio/english-prep/" title="回到这个项目在作品集里的展示页">← 项目页</a><a href="#/" data-page="home">首页</a><span class="steps"><a href="#/profile" data-page="profile">档案</a><i aria-hidden="true">→</i><a href="#/exam" data-page="exam">考试</a><i aria-hidden="true">→</i><a href="#/outline" data-page="outline">维度与大纲</a><i aria-hidden="true">→</i><a href="#/plan" data-page="plan">教案</a><i aria-hidden="true">→</i><a href="#/review" data-page="review">审教</a></span>
-  <a class="nav-who" id="navWho" href="#/profile" title="正在给谁备课：点一下回档案换人或换组"></a>
+  <button type="button" class="nav-who" id="navWho" aria-haspopup="true" aria-expanded="false" title="正在给谁备课：点一下换人或换组"></button>
+  <button type="button" class="nav-acct" id="acctBtn" aria-haspopup="true" aria-expanded="false">登录</button>
 </div></nav>
+<div class="pop-menu" id="whoMenu" hidden></div><div class="pop-menu" id="acctMenu" hidden></div>
 <div class="wrap">
 <div class="page" data-page="home">
 <header>
   <div class="eyebrow">ENGLISH PREP AGENT · 马自立</div>
   <h1>英语备课 Agent</h1>
   <p class="lede">给无锡初中英语老师用的备课助手。一份教案同时贴合四样东西：<b style="color:var(--s-grade)">年级</b>（下一场考试考什么）、<b style="color:var(--s-school)">学校</b>（这场考试用谁的卷子）、<b style="color:var(--s-student)">学生</b>（薄弱点）、<b style="color:var(--s-teacher)">老师</b>（讲题习惯和这次的要求）。老师和学生的档案是会自己更新的记忆：课后随手记一笔，agent 把它拆成增删改，每条都能撤销；课记得越多，它给的教案改进建议越具体。教案不一步到位：先出大纲，老师改环节、分钟、用题，确认后再写成教案；写好以后在「审教」页过一遍，要改的地方跟 agent 商量着改。每节课还会自动加一段<b style="color:var(--green)">课外知识补充</b>：按这节课用到的题，挑词根词缀、熟词僻义、真考过的俗语谚语这类现成讲解。</p>
-  <p class="note">学生是虚构的，学校是真实学校；你在这页上做的改动只存在你自己的浏览器里。</p>
+  <p class="note">学生是虚构的，学校是真实学校。没登录时，改动只存在这个浏览器里；登录后存进账号，换台电脑接着用。<button type="button" class="linkbtn" id="homeLogin">一键登录演示账号</button></p>
   <div class="stats" id="stats"></div>
 </header>
 <section class="flow-wrap">
-  <div class="step-h"><h2>备课流程</h2><span class="note">五步按顺序走：看档案 → 定下一场考试 → 调四个维度的占比、排大纲 → 写成教案 → 审教校验（自动检查 + 老师自己看，要改的跟 agent 说）。哪一步都能回头改，改动只存在你自己的浏览器里。</span></div>
+  <div class="step-h"><h2>备课流程</h2><span class="note">五步按顺序走：看档案 → 定下一场考试 → 调四个维度的占比、排大纲 → 写成教案 → 审教校验（自动检查 + 老师自己看，要改的跟 agent 说）。哪一步都能回头改，改动自动保存（登录了就存进账号）。</span></div>
   <div class="flow" id="flow"></div>
 </section>
 <section class="how">
@@ -701,6 +718,18 @@
 <footer><button class="linkbtn" id="resetAll">把这页恢复成示例数据</button></footer>
 </div>
 
+<dialog class="hist login" id="loginDlg" aria-labelledby="loginTitle"><form id="loginForm">
+  <div class="hist-h"><b id="loginTitle">登录</b><span class="sp"></span><button type="button" class="ico" id="loginClose" title="关上" aria-label="关上">×</button></div>
+  <div class="login-b">
+    <button type="button" class="btn" id="demoLogin">一键登录演示账号</button>
+    <p class="note">不用注册。每个人拿到一份独立的示例数据，存 7 天，和别人互不影响。</p>
+    <div class="or">或者用自己的账号</div>
+    <label class="field"><span class="lab">用户名</span><input type="text" id="loginUser" autocomplete="username" autocapitalize="off" spellcheck="false" required></label>
+    <label class="field"><span class="lab">密码</span><input type="password" id="loginPw" autocomplete="current-password" required></label>
+    <button type="submit" class="btn ghost" id="loginGo">登录</button>
+    <p class="note err" id="loginErr" role="alert" hidden></p>
+    <p class="note">登录后档案、大纲、教案存进账号，换台电脑登录接着用。正式账号找站长开通，联系方式在首页底部。</p>
+  </div></form></dialog>
 <dialog class="hist" id="histDlg" aria-labelledby="histTitle"><div class="hist-h"><b id="histTitle"></b><span class="sp"></span><button class="btn small" data-v="teacher">导出老师版</button><button class="btn small" data-v="student">导出学生版</button><button class="ico" id="histClose" title="关上" aria-label="关上">×</button></div><p class="note" id="histNote"></p><div class="md" id="histBody"></div></dialog>
 
 
@@ -725,10 +754,17 @@ const SRC_COLOR = { 年级: "var(--s-grade)", 学校: "var(--s-school)", 学生:
 
 // ---------- 状态：存在这个浏览器里 ----------
 const KEY = "en-prep-v1";
+// 账号（MAT-510）：AUTH = { token, name, demo, at: 上次和账号同步到的版本, dirty: 本机有没存进账号的改动 }，没登录是 null
+const AUTH_KEY = "en-prep-auth";
+let AUTH = (() => { try { return JSON.parse(localStorage.getItem(AUTH_KEY)) || null; } catch { return null; } })(), localRev = 0, pushT = 0;
+function keepAuth() { try { AUTH ? localStorage.setItem(AUTH_KEY, JSON.stringify(AUTH)) : localStorage.removeItem(AUTH_KEY); } catch {} }
 let S = load();
 function fresh() { const s = seed(TODAY); s.current = "chen"; s.forgotten = []; return Mem.upgradeState(s, data.kpByType); }
 function load() { try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.version === 1) return Mem.upgradeState(x, data.kpByType); } catch {} return fresh(); }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
+function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {}
+    if (AUTH) { localRev++; AUTH.dirty = true; keepAuth(); pushSoon(); }   // 登录了：停手 1.5 秒后存进账号
+}
 const stu = () => S.students.find((x) => x.id === S.current) || (groupOf(S.current) && groupView(groupOf(S.current)));   // 一对多时是组（MAT-509）
 const SET = () => S.teacher.settings;
 // 教案模板：内置的（rules.json）+ 老师自建的；这次课临时选的 > 学生的默认 > 老师设置里的默认
@@ -838,7 +874,7 @@ wireDims($("#whoDims"), () => stu(), (k, before) => {
 
 function renderStudents() {
     const st = stu();
-    $("#navWho").innerHTML = `正在备：<b>${esc(st.name)}</b>${st.members ? ` · 一对多 ${st.members.length} 人` : ""}`;
+    $("#navWho").innerHTML = `正在备：<b>${esc(st.name)}</b>${st.members ? ` · 一对多 ${st.members.length} 人` : ""}<span aria-hidden="true"> ▾</span>`;
     $("#recWrap").hidden = !!st.members; $("#recGrp").hidden = !st.members;
     if (st.members) return renderGroupCard(st);
     mountDims($("#whoDims"), st);
@@ -1527,14 +1563,14 @@ $("#reviewBtn").onclick = async () => {
 const BYOK = "en-prep-byok";
 function byok() { try { return JSON.parse(localStorage.getItem(BYOK)) || null; } catch { return null; } }
 async function post(payload, signal) {
-    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, byok: byok() }), signal });
+    const r = await fetch(API, { method: "POST", headers: authHeaders(), body: JSON.stringify({ ...payload, byok: byok() }), signal });
     const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
     if (!r.ok || j.error) throw new Error(j.error || `HTTP ${r.status}`);
     return j;
 }
 // 读 SSE：onEvent(event, data)
 async function sse(payload, onEvent, signal) {
-    const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, byok: byok() }), signal });
+    const res = await fetch(API, { method: "POST", headers: authHeaders(), body: JSON.stringify({ ...payload, byok: byok() }), signal });
     if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || `HTTP ${res.status}`); }
     const reader = res.body.getReader(), dec = new TextDecoder();
     let buf = "";
@@ -2396,7 +2432,7 @@ $("#how").innerHTML = [
     `<b>课外知识补充</b>：每节课自动加一小段课外知识：词根词缀、熟词僻义、易混词、近年真考过的俗语谚语这类，按这节课用到的题挑两三条，都是事先写好、核对过的。时长在课堂设置里改，设成 0 就不加。`,
     `<b>审教</b>：教案写好后在这一页过一遍：系统先自动查课时对不对、例题是不是本年级的、每道题讲到没有，再给你一份自己看的清单。哪里要改，在右边跟 agent 说，改完不满意可以整体撤销。`,
     `<b>复盘建议</b>：课记得越多，agent 越能看出「讲了几次还在错」「已经稳了还在花时间」这类情况，给下次课提建议，每条都指回具体哪一次课。`,
-    `<b>数据存在哪</b>：示例学生是虚构的，学校是真实学校。档案和教案只存在你自己的浏览器里，换台电脑就看不到了。agent 每人每天有免费次数，用完了可以在聊天框的设置里填自己的 DeepSeek key。`,
+    `<b>数据存在哪</b>：示例学生是虚构的，学校是真实学校。没登录时，档案和教案只存在这个浏览器里；登录后存进账号，换台电脑登录接着用（演示账号一键就能登，数据存 7 天；正式账号找站长开通）。agent 每人每天有免费次数，用完了可以在聊天框的设置里填自己的 DeepSeek key。`,
 ].map((x) => `<li>${x}</li>`).join("");
 // 首页反馈表单（MAT-509）：默认匿名；选「留个联系方式」才收称呼和联系方式
 let fbNamed = false;
@@ -2423,7 +2459,7 @@ $("#contactDirect").onclick = async (e) => {
     const n = e.target.dataset.copy; if (!n) return;
     try { await navigator.clipboard.writeText(n); toast("手机号复制好了，去微信里搜就能加"); } catch { toast(`复制没成功，手动记一下：${n}`); }
 };
-$("#resetAll").onclick = () => { if (!confirm("把档案、课堂设置、自建模板都恢复成示例数据？你在这页上的改动会全部丢掉，不能撤销。")) return; S = fresh(); save(); U = {}; renderAll(); clearPlan(); toast("已恢复成示例数据"); };
+$("#resetAll").onclick = () => { if (!confirm(`把档案、课堂设置、自建模板都恢复成示例数据？你在这页上的改动会全部丢掉${AUTH ? "，账号里的档案也会换成示例数据" : ""}，不能撤销。`)) return; S = fresh(); save(); U = {}; renderAll(); clearPlan(); toast("已恢复成示例数据"); };
 
 // ---------- 保存工作区（MAT-482）----------
 // 题面（含图）存在 IndexedDB，按「题目 id@年级学期」存一份（难度、生词跟年级走）；localStorage 里的工作区和课次记录只记 id，控制体积
@@ -2437,7 +2473,18 @@ async function getItems(keys) {
     catch { return keys.map(() => null); }
 }
 const workRef = (it) => ({ id: it.id, code: it.code, why: it.why, score: it.score });
-const withBodies = async (refs, gt) => { const its = await getItems(refs.map((r) => `${r.id}@${gt}`)); return refs.map((r, i) => its[i] && { ...its[i], ...r }); };
+const withBodies = async (refs, gt) => {
+    let its = await getItems(refs.map((r) => `${r.id}@${gt}`));
+    const miss = [...new Set(refs.filter((r, i) => !its[i]).map((r) => r.id))];
+    if (miss.length && AUTH) {   // 换了设备登录同一个账号：本机没缓存的题面回服务器取（MAT-510）
+        try {
+            const j = await acct({ action: "items", ids: miss.slice(0, 40), gt }), got = new Map((j.items || []).map((x) => [x.id, x]));
+            putItems(j.items || [], gt);
+            its = its.map((x, i) => x || got.get(refs[i].id) || null);
+        } catch {}
+    }
+    return refs.map((r, i) => its[i] && { ...its[i], ...r });
+};
 // 这次备课按学生存：考试设置、占比、要求、模板、大纲、教案、用题、聊天（撤销用的快照不存）。离开页面、排完大纲、写完教案、换学生时存
 let lastSnap = "", savedAt = "";
 function snapWork() {
@@ -2537,6 +2584,121 @@ function renderXHint() {
         : "课外知识补充现在不加（课堂设置里是 0 分钟），要加就到「档案 → 课堂设置」里填分钟数。";
 }
 
+// ---------- 账号（MAT-510）----------
+// 登录了：整个状态 S 存进账号（停手 1.5 秒推一次，切到后台立刻推），打开页面、切回前台时拉账号里的版本；换设备登录接着用。
+// 版本以账号为准：本机的版本落后于账号（别的设备改过），推的时候服务器回 409，就换成账号里的。没登录照旧只存在这个浏览器
+function authHeaders() { return { "Content-Type": "application/json", ...(AUTH ? { Authorization: `Bearer ${AUTH.token}` } : {}) }; }
+async function acct(payload) {
+    const r = await fetch(API, { method: "POST", headers: authHeaders(), body: JSON.stringify(payload) });
+    return { status: r.status, ...(await r.json().catch(() => ({ error: `HTTP ${r.status}` }))) };
+}
+let syncNote = "";
+const hm = (iso) => new Date(iso).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+function pushSoon() { clearTimeout(pushT); pushT = setTimeout(push, 1500); }
+async function push() {
+    clearTimeout(pushT);
+    if (!AUTH?.dirty) return;
+    if (push.busy) return pushSoon();
+    push.busy = true;
+    const sent = localRev;
+    try {
+        const j = await acct({ action: "save", data: S, base: AUTH.at });
+        if (j.status === 401) return expired();
+        if (j.conflict) { adopt(j); toast("账号里有更新的版本（在别的设备上改过），已换成账号里的"); return; }
+        if (j.error) { syncNote = `没存进账号：${j.error}`; return; }   // 改动留在本机，下次改动或下次打开再推
+        AUTH.at = j.at; if (localRev === sent) AUTH.dirty = false; else pushSoon();   // 推的时候又改了，再推一次
+        keepAuth(); syncNote = "";
+    } catch { syncNote = "连不上网，改动先存在这个浏览器里，联网后自动存进账号"; }
+    finally { push.busy = false; }
+}
+// 换成账号里的版本，整页重画（同换学生）
+function adopt(j) {
+    S = Mem.upgradeState(j.data, data.kpByType); AUTH.at = j.at; AUTH.dirty = false; keepAuth();
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {}
+    if (!stu()) S.current = S.students[0].id;
+    U = {}; renderAll(); clearPlan(); restoreWork(); route(); renderAcct();
+}
+function expired() {
+    AUTH = null; keepAuth(); renderAcct();
+    toast("登录过期了，改动还在这个浏览器里；重新登录就能存进账号", { label: "登录", fn: openLogin });
+}
+async function syncOnOpen() {
+    if (!AUTH) return;
+    if (AUTH.dirty) return push();
+    try {
+        const j = await acct({ action: "load" });
+        if (j.status === 401) return expired();
+        if (j.error) return;
+        if (!j.data) { localRev++; AUTH.dirty = true; return push(); }   // 账号是空的（演示账号过了 7 天）：把这个浏览器里的存进去
+        if (j.at !== AUTH.at) adopt(j);
+    } catch {}
+}
+// 登录：账号里有数据就换成账号里的；账号是空的（第一次登录、演示账号）就把这个浏览器里现有的存进去
+async function signIn(payload) {
+    const j = await acct(payload);
+    if (j.error) throw new Error(j.error);
+    AUTH = { token: j.token, name: j.user.name, demo: j.user.demo, at: null, dirty: false }; keepAuth();
+    const d = await acct({ action: "load" });
+    if (d.error) throw new Error(d.error);
+    if (d.data) { adopt(d); toast(`已登录${AUTH.name}，载入了账号里的档案`); }
+    else {
+        localRev++; AUTH.dirty = true; await push(); renderAcct();
+        toast(AUTH.dirty ? `已登录，但档案还没存进账号：${syncNote || "稍后自动再试"}` : AUTH.demo ? "已登录演示账号：示例数据存进了账号，7 天内回来接着用" : `已登录${AUTH.name}：这个浏览器里的档案已存进账号`);
+    }
+}
+async function signOut() {
+    await push();
+    if (AUTH?.dirty && !confirm("还有改动没存进账号（可能没联网），现在退出这些改动会丢。还要退出吗？")) return;
+    AUTH = null; keepAuth();
+    S = fresh(); save(); U = {}; renderAll(); clearPlan(); route(); renderAcct();   // 账号里的档案不留在这个浏览器里
+    toast("已退出；这个浏览器里换回了示例数据，账号里的档案还在");
+}
+function renderAcct() {
+    $("#acctBtn").textContent = AUTH ? `${AUTH.demo ? "演示账号" : AUTH.name} ▾` : "登录";
+    $("#homeLogin").hidden = !!AUTH;
+}
+// 导航上的两个下拉菜单：正在备谁（点一下换学生、换组），账号
+const POPS = [["#navWho", "#whoMenu"], ["#acctBtn", "#acctMenu"]];
+function closePops() { for (const [b, m] of POPS) { $(m).hidden = true; $(b).setAttribute("aria-expanded", "false"); } }
+function openPop(btn, menu, html) {
+    const wasOpen = !$(menu).hidden;
+    closePops();
+    if (wasOpen) return;
+    const m = $(menu), r = $(btn).getBoundingClientRect();
+    m.innerHTML = html; m.hidden = false; $(btn).setAttribute("aria-expanded", "true");
+    const w = m.offsetWidth;   // 和按钮右边对齐，放不下就往里挪，两边至少留 12px（手机上导航换行后按钮在左边）
+    m.style.top = `${r.bottom + 6}px`; m.style.left = `${Math.max(12, Math.min(r.right - w, innerWidth - w - 12))}px`;
+}
+document.addEventListener("click", (e) => { if (!e.target.closest(".pop-menu, #navWho, #acctBtn")) closePops(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePops(); });
+$("#navWho").onclick = () => {
+    const G = { 7: "七", 8: "八", 9: "九" };
+    const one = (id, name, sub) => `<button type="button" class="pm-it" data-who="${id}"${id === S.current ? ' aria-current="true"' : ""}><b>${esc(name)}</b><small>${esc(sub)}</small></button>`;
+    openPop("#navWho", "#whoMenu", `<div class="h">一对一</div>` + S.students.map((x) => one(x.id, x.name, `${G[x.grade]}年级 · ${x.schoolName}`)).join("")
+        + ((S.groups || []).length ? `<div class="h">一对多</div>` + S.groups.map((g) => one(g.id, g.name, `${membersOf(g).length} 人`)).join("") : "")
+        + `<div class="foot"><a href="#/profile">管理档案</a><a href="#/newstu">新建学生</a></div>`);
+};
+$("#whoMenu").onclick = (e) => { const b = e.target.closest("[data-who]"); closePops(); if (b) switchStudent(b.dataset.who); };
+$("#acctBtn").onclick = () => {
+    if (!AUTH) return openLogin();
+    const st = syncNote || (AUTH.dirty ? "有改动还没存进账号" : `都存进账号了${AUTH.at ? `（${hm(AUTH.at)}）` : ""}`);
+    openPop("#acctBtn", "#acctMenu", `<div class="h">${AUTH.demo ? "演示账号：数据存 7 天，和别人互不影响" : `已登录：${esc(AUTH.name)}`}</div><div class="h">${esc(st)}</div>`
+        + `<button type="button" class="pm-it" data-out>退出登录</button>`);
+};
+$("#acctMenu").onclick = (e) => { const b = e.target.closest("[data-out]"); closePops(); if (b) signOut(); };
+function openLogin() { $("#loginErr").hidden = true; $("#loginDlg").showModal(); }
+$("#loginClose").onclick = () => $("#loginDlg").close();
+async function loginWith(payload, btn) {
+    btn.disabled = true; $("#loginErr").hidden = true;
+    try { await signIn(payload); if ($("#loginDlg").open) $("#loginDlg").close(); $("#loginPw").value = ""; }
+    catch (e) { AUTH = null; keepAuth(); renderAcct(); $("#loginErr").textContent = e.message; $("#loginErr").hidden = false; if (!$("#loginDlg").open) toast(`没登上：${e.message}`); }
+    finally { btn.disabled = false; }
+}
+$("#loginForm").onsubmit = (e) => { e.preventDefault(); loginWith({ action: "login", user: $("#loginUser").value, pw: $("#loginPw").value }, $("#loginGo")); };
+$("#demoLogin").onclick = () => loginWith({ action: "demo" }, $("#demoLogin"));
+$("#homeLogin").onclick = () => loginWith({ action: "demo" }, $("#homeLogin"));
+document.addEventListener("visibilitychange", () => { if (!AUTH) return; document.visibilityState === "hidden" ? push() : syncOnOpen(); });
+
 // ---------- 多页面（用户 10-29）----------
 // 地址里的 #/档案 这类分页，都在这一个页面里切换：状态不用跨页面同步，正在生成的大纲、教案翻到别的页也不会断。
 // 用 pushState 换地址（不触发 hashchange），浏览器前进后退走 popstate；E 编号那种 #item-E3 锚点不当成分页
@@ -2584,7 +2746,7 @@ function recompute() { deriveCtx(); renderExam(); renderMix(); reminders(); rend
 function refresh() { renderMemories(); renderFolders(); deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); if (page() === "home") renderHome(); }
 function renderAll() { if (!U.gt) initExam(); renderStudents(); renderRecEx(); refresh(); renderTplSel(); }
 if (!stu()) S.current = S.students[0].id;
-renderAll(); route(); restoreWork();
+renderAll(); route(); restoreWork(); renderAcct(); syncOnOpen();
 </script>
 </body>
 </html>

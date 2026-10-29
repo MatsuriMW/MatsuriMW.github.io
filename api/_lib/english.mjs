@@ -237,12 +237,7 @@ export async function retrieve(slots, ctx, { signal, onStage } = {}) {
             else if (c.sameDistrict) why.push("同区的卷子");
             why.push(u.level);
             if (u.gt !== ctx.gt || u.kind !== ctx.kind) why.push(`来自${u.gt}${u.kind}`);
-            return {
-                id: u.id, type: u.type, gt: u.gt, kind: u.kind, year: u.year, level: u.level, school: u.name || u.district || u.school, title: u.title,
-                q: u.q, ans: u.ans, ans_src: u.ans_src, kp: u.kp, topic: u.topic, text: u.text, explain: u.explain,   // 给全文：学生版直接印、老师版带完整解析
-                imgs: (u.imgs || []).map((i) => ({ n: i.n, w: i.w, h: i.h, kind: i.kind, desc: i.desc, text: i.text, src: imageURI(i.hash) })),
-                why, score: { rr: +c.rr.toFixed(3), cos: +c.cos.toFixed(3) }, diff: diffView(u, ctx.gt),
-            };
+            return { ...itemView(u, ctx.gt), why, score: { rr: +c.rr.toFixed(3), cos: +c.cos.toFixed(3) } };
         };
         return {
             type: s.type, n: s.n, query: queries[si], relax: P.relax, extra: P.extra, levelRelaxed: P.levelRelaxed, pool: P.ids.length,
@@ -252,6 +247,21 @@ export async function retrieve(slots, ctx, { signal, onStage } = {}) {
     }));
     onStage?.("search", { ms: Date.now() - t0 });
     return out;
+}
+
+// 给页面的一道题：题面、答案、解析、图（图走加密图片的地址）。检索结果和「按 id 取回题面」用同一份
+function itemView(u, gt) {
+    return {
+        id: u.id, type: u.type, gt: u.gt, kind: u.kind, year: u.year, level: u.level, school: u.name || u.district || u.school, title: u.title,
+        q: u.q, ans: u.ans, ans_src: u.ans_src, kp: u.kp, topic: u.topic, text: u.text, explain: u.explain,   // 给全文：学生版直接印、老师版带完整解析
+        imgs: (u.imgs || []).map((i) => ({ n: i.n, w: i.w, h: i.h, kind: i.kind, desc: i.desc, text: i.text, src: imageURI(i.hash) })),
+        diff: diffView(u, gt),
+    };
+}
+// 换了设备登录同一个账号，本机没缓存过的题面按 id 取回（MAT-510）。只认题库里的 id；调用方要登录、按 IP 限量
+export function itemBodies(ids, gt) {
+    const db = loadDB();
+    return (Array.isArray(ids) ? ids : []).slice(0, 40).map((id) => db.byId.get(String(id))).filter((i) => i != null).map((i) => itemView(db.units[i], gt));
 }
 
 // 页面传回来的只有 [{code, id}]，题面一律从题库取，页面塞不进别的内容
@@ -823,8 +833,19 @@ export async function hit(ip, action, perIp) {
 
 // ---------- 首页反馈（MAT-509）：存进同一个 Upstash Redis 的列表，不记 IP；没配 Redis 就直说存不了，不退回函数内存（会丢） ----------
 const FB_KEY = "en:feedback";
+// 本地预览（没配 Upstash、也不在 Vercel 上）用函数内存顶上，账号能点通；只认账号用到的几个命令。线上没配就直说存不了
+const devKV = new Map();
+const devRedis = (cmds) => cmds.map(([op, k, ...a]) => {
+    if (op === "GET") return devKV.get(k) ?? null;
+    if (op === "SET") return devKV.set(k, a[0]) && "OK";
+    if (op === "DEL") return +devKV.delete(k);
+    if (op === "INCR" || op === "INCRBY") { const n = (+devKV.get(k) || 0) + (op === "INCR" ? 1 : +a[0]); devKV.set(k, String(n)); return n; }
+    if (op === "EXPIRE") return 1;
+    if (op === "KEYS") return [...devKV.keys()].filter((x) => x.startsWith(k.replace(/\*$/, "")));
+    throw new Error(`本地预览不支持 ${op}`);
+});
 async function redis(cmds) {
-    if (!RURL) throw new Error("没配存储");
+    if (!RURL) { if (process.env.VERCEL) throw new Error("没配存储"); return devRedis(cmds); }
     const r = await fetch(`${RURL}/pipeline`, { method: "POST", headers: { Authorization: `Bearer ${RTOKEN}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(5000), body: JSON.stringify(cmds) });
     if (!r.ok) throw new Error(`存储 ${r.status}`);
     return (await r.json()).map((x) => x.result);
@@ -833,3 +854,82 @@ export const feedbackPush = (entry) => redis([["LPUSH", FB_KEY, JSON.stringify(e
 export const feedbackList = async (n = 200) => (await redis([["LRANGE", FB_KEY, 0, n - 1]]))[0].map((s) => JSON.parse(s));
 // 读反馈的口令：从服务器上的 DeepSeek key 派生（同 dataKey），不用另配；本地 demo/feedback.mjs 用 .env 里同一个 key 算出来
 export const feedbackToken = (secret = process.env.DEEPSEEK_API_KEY) => crypto.createHmac("sha256", String(secret || "")).update("en-feedback-read").digest("hex").slice(0, 32);
+
+// ---------- 账号（MAT-510）：用户名 + 密码登录，整个工作区存进账号，换设备接着用 ----------
+// 账号 en:acct:<用户名> = { name, salt, hash, at }，由站长用 demo/account.mjs 建（不开放注册，防公开 demo 被刷）
+// 工作区 en:data:<uid> = { at, gz }：页面的整个状态 JSON，gzip 后 base64；演示账号的存 7 天
+// 令牌 = uid.过期时间.签名（HMAC），签名密钥和站长口令都从服务器上的 DeepSeek key 派生（同 dataKey），不另配环境变量
+const derive = (label, secret = process.env.DEEPSEEK_API_KEY) => crypto.createHmac("sha256", String(secret || "")).update(label).digest();
+export const adminToken = (secret) => derive("en-admin", secret).toString("hex").slice(0, 32);
+const sig = (body) => crypto.createHmac("sha256", derive("en-auth-v1")).update(body).digest("base64url");
+export function signToken(uid, days) {
+    const body = `${Buffer.from(uid).toString("base64url")}.${Date.now() + days * 864e5}`;
+    return `${body}.${sig(body)}`;
+}
+export function verifyToken(t) {
+    const [u, exp, s] = String(t || "").split(".");
+    if (!s || !(+exp > Date.now())) return null;
+    const want = sig(`${u}.${exp}`);
+    return s.length === want.length && crypto.timingSafeEqual(Buffer.from(s), Buffer.from(want)) ? Buffer.from(u, "base64url").toString() : null;
+}
+const USER_RE = /^[a-z0-9_.-]{2,24}$/;
+const pbkdf2 = (pw, salt) => new Promise((ok, no) => crypto.pbkdf2(String(pw), salt, 210000, 32, "sha256", (e, k) => (e ? no(e) : ok(k))));
+export async function acctLogin(user, pw, ip) {
+    user = String(user || "").trim().toLowerCase();
+    const fk = `en:${today()}:loginfail:${ip}`;
+    const [fails, raw] = await redis([["GET", fk], ["GET", `en:acct:${user}`]]);
+    if (+fails >= 20) return { error: "今天登录失败太多次了，明天再试", status: 429 };
+    const a = raw && JSON.parse(raw);
+    if (!a || !crypto.timingSafeEqual(await pbkdf2(pw, a.salt), Buffer.from(a.hash, "hex"))) {
+        await redis([["INCR", fk], ["EXPIRE", fk, 86400]]);
+        return { error: "用户名或密码不对", status: 401 };
+    }
+    return { token: signToken(`u:${user}`, 30), user: { name: a.name || user, demo: false } };
+}
+// 演示账号：一键登录，每个访客一份独立的数据（第一次同步时把页面上的示例数据存进去），存 7 天，互相不覆盖
+export async function acctDemo(ip) {
+    const k = `en:${today()}:demo:${ip}`;
+    const [n] = await redis([["INCR", k], ["EXPIRE", k, 86400]]);
+    if (n > 20) return { error: "今天这台机器开的演示账号太多了，明天再试", status: 429 };
+    return { token: signToken(`demo:${crypto.randomBytes(6).toString("hex")}`, 7), user: { name: "演示老师", demo: true } };
+}
+const unpack = (raw) => { const x = JSON.parse(raw); return { at: x.at, data: JSON.parse(zlib.gunzipSync(Buffer.from(x.gz, "base64")).toString()) }; };
+export async function dataLoad(uid) {
+    const [raw] = await redis([["GET", `en:data:${uid}`]]);
+    return raw ? unpack(raw) : { at: null, data: null };
+}
+// base：页面上次同步到的版本时间。账号里的版本比它新（别的设备改过）就不覆盖，把账号里的版本回给页面
+export async function dataSave(uid, data, base) {
+    if (!data || typeof data !== "object" || data.version !== 1) return { error: "数据格式不对", status: 400 };
+    const [raw] = await redis([["GET", `en:data:${uid}`]]);
+    if (raw && JSON.parse(raw).at !== base) return { conflict: true, ...unpack(raw) };
+    const gz = zlib.gzipSync(JSON.stringify(data)).toString("base64");
+    if (gz.length > 900_000) return { error: "账号里的数据太大了（压缩后超过 900 KB），先删掉一些旧的课次记录", status: 413 };
+    const at = new Date().toISOString();
+    await redis([["SET", `en:data:${uid}`, JSON.stringify({ at, gz }), ...(uid.startsWith("demo:") ? ["EX", 7 * 86400] : [])]]);
+    return { at };
+}
+// 本机没缓存的题面按 IP 每天限量取回，和排大纲、找题能拿到的量相当，免得题库被按 id 扒走
+export async function itemsQuota(ip, n) {
+    const k = `en:${today()}:items:${ip}`;
+    const [used] = await redis([["INCRBY", k, n], ["EXPIRE", k, 86400]]);
+    return used <= Number(process.env.EN_ITEMS_DAILY ?? 400);
+}
+// 站长管理账号（demo/account.mjs 调）：add / passwd / del / list
+export async function acctAdmin({ op, user, pw, name }) {
+    if (op === "list") {
+        const keys = await redis([["KEYS", "en:acct:*"]]);
+        return { users: keys[0].map((k) => k.slice(8)).sort() };
+    }
+    user = String(user || "").trim().toLowerCase();
+    if (!USER_RE.test(user)) return { error: "用户名只能用小写字母、数字和 _ . -，2–24 个字", status: 400 };
+    const key = `en:acct:${user}`, [raw] = await redis([["GET", key]]);
+    if (op === "del") { await redis([["DEL", key], ["DEL", `en:data:u:${user}`]]); return { ok: !!raw }; }
+    if (op !== "add" && op !== "passwd") return { error: "不认识的操作", status: 400 };
+    if (op === "add" && raw) return { error: "这个用户名已经有了", status: 409 };
+    if (op === "passwd" && !raw) return { error: "没有这个用户", status: 404 };
+    if (String(pw || "").length < 8) return { error: "密码至少 8 位", status: 400 };
+    const salt = crypto.randomBytes(16).toString("hex"), prev = raw ? JSON.parse(raw) : {};
+    await redis([["SET", key, JSON.stringify({ name: String(name || prev.name || user).slice(0, 12), salt, hash: (await pbkdf2(pw, salt)).toString("hex"), at: prev.at || new Date().toISOString() })]]);
+    return { ok: true };
+}

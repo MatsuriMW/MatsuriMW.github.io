@@ -10,13 +10,18 @@
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
 // POST { action: "feedback", ... }→ JSON { ok }：首页反馈表单，存进 Redis（不调模型）；GET ?feedback=口令 读最近的反馈（口令见 feedbackToken，本地用 demo/feedback.mjs）
+// POST { action: "login" | "demo" } → JSON { token, user }：账号登录 / 演示账号一键登录（MAT-510）
+// POST { action: "load" | "save" }  → 带 Authorization: Bearer 令牌，读写账号里的整个工作区；save 带 base（上次同步的版本），账号里更新就回 409 和账号里的版本
+// POST { action: "items", ids, gt } → 带令牌：换设备后本机没缓存的题面按 id 取回，按 IP 每天限量
+// POST { action: "admin", token, op } → 站长管理账号（demo/account.mjs，口令从 DeepSeek key 派生）
 // GET                              → 题库规模（带 ?feedback=口令 时返回反馈）
-// 状态（学生、老师档案、大纲、教案）都在浏览器里，函数不存任何东西。页面传回来的题目只有编号和 id，题面从题库取。
+// 状态（学生、老师档案、大纲、教案）在浏览器里；登录了账号的，整个状态再存一份进 Redis（en:data:<uid>），函数本身不存东西。页面传回来的题目只有编号和 id，题面从题库取。
 // 页面可以带自己的模型 key（byok），带了就不限次数；不带用站长的 DeepSeek，按 IP 限次。
 import crypto from "node:crypto";
 import {
     loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
     templateMessages, cleanTemplate, intakeMessages, cleanIntake, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
+    itemBodies, adminToken, verifyToken, acctLogin, acctDemo, dataLoad, dataSave, itemsQuota, acctAdmin,
 } from "./_lib/english.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
@@ -38,17 +43,42 @@ export async function GET(request) {
     catch (e) { return Response.json({ ready: false, error: String(e.message || e) }); }
 }
 
+// ---------- 账号（MAT-510）：登录、演示账号、读写工作区、取回题面、站长管理，都不调模型、不占次数 ----------
+const ACCOUNT = new Set(["login", "demo", "load", "save", "items", "admin"]);
+const ipOf = (request) => { const h = request.headers; return h.get("x-real-ip") || (h.get("x-forwarded-for") || "").split(",")[0].trim() || "local"; };
+const authOf = (request) => (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+const reply = ({ status = 200, ...x }) => Response.json(x, { status: x.conflict ? 409 : status });
+async function account(p, request) {
+    try {
+        const ip = ipOf(request);
+        if (p.action === "login") return reply(await acctLogin(p.user, p.pw, ip));
+        if (p.action === "demo") return reply(await acctDemo(ip));
+        if (p.action === "admin") {
+            const t = String(p.token || ""), ok = t.length === 32 && process.env.DEEPSEEK_API_KEY && crypto.timingSafeEqual(Buffer.from(t), Buffer.from(adminToken()));
+            return reply(ok ? await acctAdmin(p) : { error: "口令不对", status: 403 });
+        }
+        const uid = verifyToken(authOf(request));
+        if (!uid) return reply({ error: "登录过期了，请重新登录", status: 401 });
+        if (p.action === "load") return reply(await dataLoad(uid));
+        if (p.action === "save") return reply(await dataSave(uid, p.data, p.base ?? null));
+        const ids = (Array.isArray(p.ids) ? p.ids : []).slice(0, 40);   // items
+        if (!(await itemsQuota(ip, ids.length))) return reply({ error: "今天取回题面的次数用完了，明天再来", status: 429 });
+        return reply({ items: itemBodies(ids, String(p.gt || "").slice(0, 2)) });
+    } catch (e) { return reply({ error: String(e.message || e).slice(0, 200), status: 503 }); }
+}
+
 export async function POST(request) {
     let p = {};
     try { p = await request.json(); } catch {}
+    if (ACCOUNT.has(p.action)) return account(p, request);
     const action = Object.hasOwn(PER_IP, p.action) || p.action === "extras" ? p.action : "outline";
     const cfg = llmConfig(p.byok);
     let left = null;
     if (!cfg.own && action !== "extras") {   // extras 不调模型，不占次数
-        const h = request.headers;
-        const ip = h.get("x-real-ip") || (h.get("x-forwarded-for") || "").split(",")[0].trim() || "local";
-        const lim = await hit(ip, action, PER_IP[action]);
-        if (!lim.ok) return Response.json({ error: lim.global ? "今天全站的额度用完了，明天再来；也可以在聊天框的设置里填自己的 key" : `今天${LABEL[action]}的次数用完了（每人每天 ${PER_IP[action]} 次）。可以在聊天框的设置里填自己的 key，就不限次数了` }, { status: 429 });
+        // 正式账号按账号计次、额度放宽到 5 倍（一个老师自己备课够用）；演示账号和没登录的照旧按 IP
+        const uid = verifyToken(authOf(request)), real = !!uid?.startsWith("u:"), per = PER_IP[action] * (real ? 5 : 1);
+        const lim = await hit(real ? uid : ipOf(request), action, per);
+        if (!lim.ok) return Response.json({ error: lim.global ? "今天全站的额度用完了，明天再来；也可以在聊天框的设置里填自己的 key" : `今天${LABEL[action]}的次数用完了（每人每天 ${per} 次）。可以在聊天框的设置里填自己的 key，就不限次数了` }, { status: 429 });
         left = lim.left;
     }
     const studentMems = cleanMems(p.studentMems), teacherMems = cleanMems(p.teacherMems);
