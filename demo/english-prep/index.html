@@ -360,6 +360,24 @@
   .ns-notes label { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
   .ns-notes .q { font-size: 12px; color: var(--ink-3); }
   .ns-act { margin-top: 18px; }
+  /* 历史得分（用户 10-29） */
+  .sc-h { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; margin: 18px 0 8px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+  .sc-h .note { font-weight: 400; }
+  .scores { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+  .scores li { display: grid; grid-template-columns: minmax(0, 1fr) 4.6em auto 4.6em 3.4em 1.2em; gap: 6px; align-items: center; }
+  .scores input { width: 100%; font-size: 14px; padding: 5px 7px; }
+  .scores .slash { color: var(--ink-3); }
+  .scores .pct { font-size: 12.5px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+  .scores .x { border: 0; background: none; color: var(--ink-3); cursor: pointer; font-size: 15px; padding: 0; }
+  .scores .x:hover { color: var(--red); }
+  @media (max-width: 520px) { .scores li { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 3.4em 1.2em; } .scores input[data-f="name"] { grid-column: 1 / -1; } }
+  .ns-weak { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
+  .ns-weak li { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr) 1.2em; gap: 4px 8px; align-items: center; }
+  .ns-weak select, .ns-weak input { width: 100%; font-size: 14px; padding: 6px 8px; }
+  .ns-weak .x { border: 0; background: none; color: var(--ink-3); cursor: pointer; font-size: 15px; padding: 0; }
+  .ns-weak .x:hover { color: var(--red); }
+  .ns-weak .q { grid-column: 1 / -1; font-size: 12px; color: #a8621e; }
+  @media (max-width: 520px) { .ns-weak li { grid-template-columns: minmax(0, 1fr) 1.2em; } .ns-weak input { grid-column: 1 / -1; grid-row: 2; } }
   /* 学生画像的光谱（建档页和档案卡共用）：拖的时候右边的字跟着变 */
   .dims { display: grid; gap: 12px; }
   .dim { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) 7.5em 1.2em; gap: 0 10px; align-items: center; }
@@ -369,10 +387,20 @@
   .dim .x:hover { color: var(--red); }
   .dim .ends, .dim .q { grid-column: 2 / 3; font-size: 11.5px; color: var(--ink-3); }
   .dim .ends { display: flex; justify-content: space-between; gap: 8px; }
+  .dim .say { grid-column: 2 / 4; font-size: 12.5px; color: var(--ink-2); }
   .dim .q { color: #a8621e; }
-  @media (max-width: 520px) { .dim { grid-template-columns: minmax(0, 1fr) auto 1.2em; } .dim input { grid-column: 1 / -1; grid-row: 2; } .dim .ends, .dim .q { grid-column: 1 / -1; } }
+  @media (max-width: 520px) { .dim { grid-template-columns: minmax(0, 1fr) auto 1.2em; } .dim input, .dim .lv { grid-column: 1 / -1; grid-row: 2; } .dim .ends, .dim .q, .dim .say { grid-column: 1 / -1; } }
+  /* 分级的框（用户 10-29）：5 格从浅到深，选中那格放圆钮，后面的格子调淡 */
+  .dim .lv { display: flex; gap: 4px; height: 10px; margin: 9px 10px 5px; cursor: pointer; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  .dim .lv i { position: relative; flex: 1; border-radius: 3px; transition: opacity .15s; }
+  .dim .lv i:nth-child(1) { background: #dbe8f8; } .dim .lv i:nth-child(2) { background: #bcd2ef; } .dim .lv i:nth-child(3) { background: #9dbce6; } .dim .lv i:nth-child(4) { background: #7ea5dc; } .dim .lv i:nth-child(5) { background: #5f8fd3; }
+  .dim .lv i.off { opacity: .35; }
+  .dim .lv i.cur::after { content: ""; position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; box-sizing: border-box; border-radius: 50%; background: #fff; border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .dim .lv:focus { outline: none; }
+  .dim .lv:focus-visible { outline: 2px solid var(--blue); outline-offset: 6px; border-radius: 5px; }
   .dim input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; margin: 9px 0 5px; border-radius: 5px; background: linear-gradient(90deg, #ecc4b4, #ecebe6 50%, #b5d9c1); cursor: pointer; }
-  .dim input.prog { background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--n) - 2px), var(--surface) calc(100% / var(--n) - 2px) calc(100% / var(--n))), linear-gradient(90deg, #dbe8f8, #7fa9e0); }
+  /* 格子画在圆钮走得到的范围里（两头各让 10px），空隙落在单元交界正中：圆钮停在空隙上就是「Unit k 学完」 */
+  .dim input.prog { background: repeating-linear-gradient(90deg, var(--surface) 0 2px, transparent 2px calc(100% / var(--n) - 2px), var(--surface) calc(100% / var(--n) - 2px) calc(100% / var(--n))) 10px 0 / calc(100% - 20px) 100% no-repeat, linear-gradient(90deg, #dbe8f8, #7fa9e0) 10px 0 / calc(100% - 20px) 100% no-repeat; }
   .dim input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
   .dim input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
   .dim input[type=range]:focus { outline: none; }
@@ -504,6 +532,7 @@
     <div class="card">
       <div class="who" id="who"></div>
       <div id="whoDims"></div>
+      <div id="whoScoresWrap"><div class="sc-h">历史得分 <span class="note">按时间先后填，最下面是最近一次；满分按那张卷子填</span></div><div id="whoScores"></div></div>
       <div class="remind" id="remind"></div>
       <ul class="mems" id="stuMems"></ul>
       <details class="fold" id="ledgerWrap" open><summary id="ledgerSum">薄弱知识点</summary><div id="ledger"></div></details>
@@ -559,8 +588,12 @@
       </form>
     </div>
     <div class="card">
-      <h3>学生画像 <span class="note" style="font-weight:400">拖光谱；前三项直接显示，别的点「+ 更多维度」挑着加</span></h3>
+      <h3>学生画像 <span class="note" style="font-weight:400">拖到对应的那一格；前三项直接显示，别的点「+ 更多维度」挑着加</span></h3>
       <div id="nsDims"></div>
+      <h3 style="margin:20px 0 8px">薄弱知识点 <span class="note" style="font-weight:400">自己加、改、删；具体哪里弱说不清，就写「暂时未知」</span></h3>
+      <div id="nsWeak"></div>
+      <h3 style="margin:20px 0 8px">历史得分 <span class="note" style="font-weight:400">上学期期末、单元考、月考……按时间先后填；满分按那张卷子填</span></h3>
+      <div id="nsScores"></div>
     </div>
   </div>
   <div class="row ns-act"><button class="btn" form="nsForm">建档</button><a href="#/profile">取消，回档案</a></div>
@@ -718,6 +751,8 @@
 <footer><button class="linkbtn" id="resetAll">把这页恢复成示例数据</button></footer>
 </div>
 
+<datalist id="examHints"><option>上学期期中</option><option>上学期期末</option><option>本学期单元测验</option><option>本学期月考</option><option>本学期期中</option></datalist>
+<datalist id="fullHints"><option>100</option><option>120</option><option>130</option><option>140</option><option>150</option></datalist>
 <dialog class="hist login" id="loginDlg" aria-labelledby="loginTitle"><form id="loginForm">
   <div class="hist-h"><b id="loginTitle">登录</b><span class="sp"></span><button type="button" class="ico" id="loginClose" title="关上" aria-label="关上">×</button></div>
   <div class="login-b">
@@ -806,51 +841,125 @@ const CNG = { 7: "七", 8: "八", 9: "九" };
 const unitsOf = (gt) => (gt === "九下" ? 4 : 8);   // 译林版每册 8 个单元；九下还是旧版，4 个
 const stuGt = (st) => CNG[st.grade] + (st.term || M.termAt(TODAY));   // 没单独选过学期的，按今天的日期算
 const STAGES = ["刚开始", "学到一半", "快学完"];
-// 进度存成「第几个单元 + 这个单元学了多少」（3.5 = Unit 4 学到一半），st.unit 是取整后的单元，考试页和检索用它
-const progVal = (st, n) => (st.progress != null && Math.min(n, Math.floor(st.progress) + 1) === st.unit ? Math.min(st.progress, n) : Math.min(st.unit || 1, n) - 0.5);
-const progText = (v, n) => (v >= n ? "全册学完" : `Unit ${Math.floor(v) + 1} ${STAGES[Math.min(2, Math.floor((v % 1) * 3))]}`);
-function setProgress(st, v, n) { st.progress = v; st.unit = Math.min(n, Math.floor(v) + 1); }
+// 进度存成「第几个单元 + 这个单元学了多少」（3.5 = Unit 4 学到一半），st.unit 是正在学的单元，考试页和检索用它。
+// 单元交界前后 DONE 以内（进度条上格子之间的空隙）算「Unit k 学完」（用户 10-29），存成整数 k，st.unit 记学完的那个单元
+const DONE = 0.12;
+const progDone = (v) => v >= 1 - DONE && Math.abs(v - Math.round(v)) <= DONE;
+const progUnit = (v, n) => Math.max(1, Math.min(n, progDone(v) ? Math.round(v) : Math.floor(v) + 1));
+const progVal = (st, n) => {
+    const p = st.progress;
+    if (p != null && progUnit(p, n) === st.unit) return Math.min(p, n);
+    if (p != null && Math.floor(p) + 1 === st.unit) return Math.min(p + 0.15, n);   // 改版前存的：交界点算下一个单元刚开始
+    return Math.min(st.unit || 1, n) - 0.5;
+};
+const progText = (v, n) => (progDone(v) ? (Math.round(v) >= n ? "全册学完" : `Unit ${Math.round(v)} 学完`) : `Unit ${Math.floor(v) + 1} ${STAGES[Math.min(2, Math.floor((v % 1) * 3))]}`);
+function setProgress(st, v, n) { if (progDone(v)) v = Math.round(v); st.progress = v; st.unit = progUnit(v, n); }
 const shownDims = (st) => Mem.DIMS.filter((d) => d.core || st.dims?.[d.key] != null);
 // 发给模型的一行画像
 const profileLine = (st) => st.members ? `一对多，${st.members.length} 个学生一起上。` + st.members.map((m) => `\n${m.name}：${profileLine(m)}`).join("") : shownDims(st).map((d) => {
     if (d.key === "progress") { const n = unitsOf(stuGt(st)); return `学习进度：${stuGt(st)} ${progText(progVal(st, n), n)}`; }
-    const v = Mem.dimValue(st, d.key);
-    return `${d.label}：${Mem.dimZone(d, v)}（${v}；0 ${d.lo}，100 ${d.hi}）`;
-}).join("；");
+    const i = Mem.dimLevel(Mem.dimValue(st, d.key));
+    return `${d.label}：${d.levels[i].join("，")}（5 级里的第 ${i + 1} 级）`;
+}).concat(scoresLine(st) || []).join("；");
 function dimsHTML(st) {
     const n = unitsOf(stuGt(st)), why = st.dimsWhy || {}, shown = shownDims(st);
     const rows = shown.map((d) => {
-        const prog = d.key === "progress", v = prog ? progVal(st, n) : Mem.dimValue(st, d.key);
+        const prog = d.key === "progress", v = prog ? progVal(st, n) : Mem.dimValue(st, d.key), i = prog ? 0 : Mem.dimLevel(v);
         const input = prog ? `<input type="range" class="prog" min="0" max="${n}" step="0.05" value="${v}" style="--n:${n}" aria-label="学习进度">`
-            : `<input type="range" min="0" max="100" step="1" value="${v}" aria-label="${d.label}">`;
-        const ends = prog ? `<span>Unit 1</span><span>Unit ${n} 学完</span>` : `<span>${d.lo}</span><span>${d.hi}</span>`;
-        return `<div class="dim" data-k="${d.key}"><span class="nm">${d.label}</span>${input}<span class="v">${prog ? progText(v, n) : Mem.dimZone(d, v)}</span>`
-            + `${d.core ? "<span></span>" : `<button type="button" class="x" data-rm="${d.key}" title="去掉这一项" aria-label="去掉${d.label}">×</button>`}<span class="ends">${ends}</span>${why[d.key] ? `<span class="q">原文：${esc(why[d.key])}</span>` : ""}</div>`;
+            : `<div class="lv" role="slider" tabindex="0" aria-label="${d.label}" aria-valuemin="1" aria-valuemax="${d.levels.length}" aria-valuenow="${i + 1}" aria-valuetext="${d.levels[i].join("：")}">${d.levels.map((_, j) => `<i${j === i ? ' class="cur"' : j > i ? ' class="off"' : ""}></i>`).join("")}</div>`;
+        const below = prog ? `<span class="ends"><span>Unit 1</span><span>Unit ${n} 学完</span></span>` : `<span class="say">${d.levels[i][1]}</span>`;
+        return `<div class="dim" data-k="${d.key}"><span class="nm">${d.label}</span>${input}<span class="v">${prog ? progText(v, n) : d.levels[i][0]}</span>`
+            + `${d.core ? "<span></span>" : `<button type="button" class="x" data-rm="${d.key}" title="去掉这一项" aria-label="去掉${d.label}">×</button>`}${below}${why[d.key] ? `<span class="q">原文：${esc(why[d.key])}</span>` : ""}</div>`;
     });
     const more = Mem.DIMS.filter((d) => !shown.includes(d)), groups = [...new Set(more.map((d) => d.group))];
     return `<div class="dims">${rows.join("")}</div>${more.length ? `<details class="dim-add"><summary>+ 更多维度</summary>${groups.map((g) => `<div class="dim-g"><span class="note">${g}</span><div class="chips">${more.filter((d) => d.group === g).map((d) => `<button type="button" class="chip" data-add="${d.key}">${d.label}</button>`).join("")}</div></div>`).join("")}</details>` : ""}`;
 }
-// 重画时保住「更多维度」的展开状态和键盘焦点（方向键拖光谱每按一下就是一次 change）
+// ---------- 历史得分（用户 10-29）：以前考了多少分、满分多少（100、120……各卷自己填），按得分率大致判断现在的水平；建档页和档案卡共用 ----------
+const scorePct = (x) => (x.full > 0 && x.score != null ? x.score / x.full : null);
+// 最近 3 次的平均得分率落在 rules.json 的哪一档；两次以上再看第一次到最近一次是升是降
+function scoreLevel(st) {
+    const ps = (st.scores || []).map(scorePct).filter((p) => p != null && p <= 1);
+    if (!ps.length) return null;
+    const recent = ps.slice(-3), avg = recent.reduce((a, b) => a + b, 0) / recent.length, d = ps.at(-1) - ps[0];
+    return { avg, n: recent.length, band: R.student.scoreBands.find((b) => avg >= b.min).name, trend: ps.length < 2 ? "" : d > 0.05 ? "在变好" : d < -0.05 ? "在变差" : "差不多" };
+}
+const scoreLvText = (lv) => `最近 ${lv.n} 次平均得分率 ${Math.round(lv.avg * 100)}%，大致${lv.band}${lv.trend ? "，" + lv.trend : ""}`;
+const scoresLine = (st) => { const xs = (st.scores || []).filter((x) => scorePct(x) != null), lv = scoreLevel(st); return xs.length ? `历史得分：${xs.map((x) => `${x.name} ${x.score}/${x.full}`).join("、")}${lv ? `（${scoreLvText(lv)}）` : ""}` : ""; };
+const pctText = (x) => { const p = scorePct(x); return p == null ? "" : p > 1 ? "超满分" : Math.round(p * 100) + "%"; };
+function scoresSum(st) { const xs = st.scores || [], lv = scoreLevel(st); return lv ? scoreLvText(lv) : xs.length ? "填上得分，就能大致看出现在的水平" : "还没填。填几次以前的成绩，能大致看出现在的水平"; }
+function mountScores(el, st) {
+    const xs = st.scores || [];
+    el.innerHTML = (xs.length ? `<ul class="scores">${xs.map((x, i) => `<li data-i="${i}"><input type="text" data-f="name" list="examHints" maxlength="16" value="${esc(x.name)}" placeholder="哪次考试，比如：上学期期末" aria-label="哪次考试">`
+        + `<input type="number" data-f="score" min="0" step="0.5" value="${x.score ?? ""}" placeholder="得分" aria-label="得分"><span class="slash">/</span>`
+        + `<input type="number" data-f="full" min="1" step="1" list="fullHints" value="${x.full ?? ""}" placeholder="满分" aria-label="满分"><span class="pct">${pctText(x)}</span>`
+        + `<button type="button" class="x" data-rm title="删掉这一次" aria-label="删掉这一次">×</button></li>`).join("")}</ul>` : "")
+        + `<div class="row"><button type="button" class="btn small ghost" data-add>+ 加一次考试</button><span class="note sc-sum">${scoresSum(st)}</span></div>`;
+}
+// 打字时只改这一行的得分率和下面那句判断，不重画（不丢焦点）；改完（change）、加、删才存
+function wireScores(el, getSt, onSet) {
+    el.oninput = (e) => {
+        const li = e.target.closest("li[data-i]"), f = e.target.dataset.f; if (!li || !f) return;
+        const st = getSt(), x = st.scores[+li.dataset.i], v = e.target.value;
+        x[f] = f === "name" ? v : v === "" ? null : +v;
+        li.querySelector(".pct").textContent = pctText(x); el.querySelector(".sc-sum").textContent = scoresSum(st);
+    };
+    el.onchange = (e) => { if (e.target.dataset.f) onSet(); };
+    el.onclick = (e) => {
+        const st = getSt(), xs = (st.scores ||= []);
+        if (e.target.closest("[data-add]")) { xs.push({ name: "", score: null, full: xs.at(-1)?.full ?? 100 }); mountScores(el, st); el.querySelector("li:last-child input").focus(); }   // 满分默认跟上一次一样
+        else if (e.target.closest("[data-rm]")) { xs.splice(+e.target.closest("li").dataset.i, 1); mountScores(el, st); }
+        else return;
+        onSet();
+    };
+}
+wireScores($("#whoScores"), () => stu(), () => save());
+
+// 重画时保住「更多维度」的展开状态和键盘焦点（方向键每按一下就是一次改动）
 function mountDims(el, st) {
     const open = el.querySelector(".dim-add")?.open, fk = el.contains(document.activeElement) ? document.activeElement.closest(".dim")?.dataset.k : null;
     el.innerHTML = dimsHTML(st);
     if (open) el.querySelector(".dim-add")?.setAttribute("open", "");
-    if (fk) el.querySelector(`.dim[data-k="${fk}"] input`)?.focus();
+    if (fk) el.querySelector(`.dim[data-k="${fk}"] :is(input, .lv)`)?.focus();
 }
-// 拖的时候只改右边的字，松手（change）才写进档案；onSet(key, before) 里存盘、提示
+// 拖的时候只改字，松手才写进档案；onSet(key, before) 里存盘、提示
+// 分级的框（.lv）是自己画的：按下、拖动按指针落在第几格改字，松手写进去；方向键一格一格走，Home / End 到两头
+const lvAt = (bar, x) => { const r = bar.getBoundingClientRect(), n = bar.children.length; return Math.max(0, Math.min(n - 1, Math.floor((x - r.left) / r.width * n))); };
+function lvShow(bar, i) {
+    const row = bar.closest(".dim"), lv = Mem.DIM[row.dataset.k].levels[i];
+    [...bar.children].forEach((b, j) => { b.className = j === i ? "cur" : j > i ? "off" : ""; });
+    bar.setAttribute("aria-valuenow", i + 1); bar.setAttribute("aria-valuetext", lv.join("："));
+    row.querySelector(".v").textContent = lv[0]; row.querySelector(".say").textContent = lv[1];
+}
 function wireDims(el, getSt, onSet) {
-    el.oninput = (e) => {
-        const row = e.target.closest(".dim"); if (!row || e.target.type !== "range") return;
-        const k = row.dataset.k, v = +e.target.value;
-        row.querySelector(".v").textContent = k === "progress" ? progText(v, unitsOf(stuGt(getSt()))) : Mem.dimZone(Mem.DIM[k], v);
-    };
-    el.onchange = (e) => {
-        const row = e.target.closest(".dim"); if (!row || e.target.type !== "range") return;
-        const st = getSt(), k = row.dataset.k, v = +e.target.value;
+    const commit = (row, v) => {
+        const st = getSt(), k = row.dataset.k;
         const before = { progress: st.progress, unit: st.unit, attention: st.attention, v: st.dims?.[k], why: st.dimsWhy?.[k] };
         if (k === "progress") setProgress(st, v, unitsOf(stuGt(st))); else Mem.setDim(st, k, v);
         if (st.dimsWhy) delete st.dimsWhy[k];   // 老师自己拖过，就不是原文里来的了
         mountDims(el, st); onSet(k, before);
+    };
+    const lvCommit = (bar) => {
+        const row = bar.closest(".dim"), i = +bar.getAttribute("aria-valuenow") - 1;
+        if (i !== Mem.dimLevel(Mem.dimValue(getSt(), row.dataset.k))) commit(row, Mem.levelValue(i));
+    };
+    el.oninput = (e) => {
+        const row = e.target.closest(".dim"); if (!row || e.target.type !== "range") return;
+        row.querySelector(".v").textContent = progText(+e.target.value, unitsOf(stuGt(getSt())));
+    };
+    el.onchange = (e) => {
+        const row = e.target.closest(".dim"); if (!row || e.target.type !== "range") return;
+        commit(row, +e.target.value);
+    };
+    el.onpointerdown = (e) => { const bar = e.target.closest(".lv"); if (!bar || e.button) return; bar.setPointerCapture(e.pointerId); lvShow(bar, lvAt(bar, e.clientX)); };
+    el.onpointermove = (e) => { const bar = e.target.closest(".lv"); if (bar?.hasPointerCapture(e.pointerId)) lvShow(bar, lvAt(bar, e.clientX)); };
+    el.onpointerup = (e) => { const bar = e.target.closest(".lv"); if (bar?.hasPointerCapture(e.pointerId)) lvCommit(bar); };
+    el.onpointercancel = (e) => { if (e.target.closest(".lv")) mountDims(el, getSt()); };   // 手机上变成了上下滚动：拖到一半的不算
+    el.onkeydown = (e) => {
+        const bar = e.target.closest(".lv"); if (!bar) return;
+        const n = bar.children.length, cur = +bar.getAttribute("aria-valuenow") - 1;
+        const to = { ArrowLeft: cur - 1, ArrowDown: cur - 1, ArrowRight: cur + 1, ArrowUp: cur + 1, Home: 0, End: n - 1 }[e.key];
+        if (to == null) return;
+        e.preventDefault(); lvShow(bar, Math.max(0, Math.min(n - 1, to))); lvCommit(bar);
     };
     el.onclick = (e) => {
         const st = getSt(), add = e.target.dataset.add, rm = e.target.dataset.rm;
@@ -876,8 +985,9 @@ function renderStudents() {
     const st = stu();
     $("#navWho").innerHTML = `正在备：<b>${esc(st.name)}</b>${st.members ? ` · 一对多 ${st.members.length} 人` : ""}<span aria-hidden="true"> ▾</span>`;
     $("#recWrap").hidden = !!st.members; $("#recGrp").hidden = !st.members;
+    $("#whoScoresWrap").hidden = !!st.members;
     if (st.members) return renderGroupCard(st);
-    mountDims($("#whoDims"), st);
+    mountDims($("#whoDims"), st); mountScores($("#whoScores"), st);
     $("#who").innerHTML = `<div><div class="nm">${esc(st.name)}${isExample(st) ? ` <span class="tag">示例档案</span>` : ""}</div><div class="meta">${gradeLabel(st)}</div><div class="meta">${esc(schoolLabel(st))}</div></div>
       <div class="who-ctl">
         <label title="彩色版：题型配色、高亮线索词、步骤框。没勾过时按老师设置（${esc(SET().visual)}）"><input type="checkbox" id="visChk" ${isVisual(st) ? "checked" : ""}> 彩色讲义</label>
@@ -899,7 +1009,7 @@ function renderGroupCard(g) {
       <div class="who-ctl"><label title="彩色版：题型配色、高亮线索词、步骤框。没勾过时按老师设置（${esc(SET().visual)}）"><input type="checkbox" id="visChk" ${isVisual(g) ? "checked" : ""}> 彩色讲义</label>
         ${g.visual != null ? `<button type="button" class="linkbtn" id="visReset" title="不单独指定，按老师设置和注意力">跟设置走</button>` : ""}
         <label title="Bionic reading：英文单词前半截加粗"><input type="checkbox" id="bionicChk" ${g.bionic ? "checked" : ""}> Bionic 阅读</label></div>`;
-    $("#whoDims").innerHTML = `<table class="gm-table"><tr><th>组员</th><th>学习进度</th><th>学习习惯</th><th>注意力</th></tr>${g.members.map((x) => `<tr><td><button type="button" class="linkbtn" data-open="${x.id}">${esc(x.name)}</button></td><td>${progText(progVal(x, n), n)}</td><td>${Mem.dimZone(Mem.DIM.habit, Mem.dimValue(x, "habit"))}</td><td>${x.attention}</td></tr>`).join("")}</table>
+    $("#whoDims").innerHTML = `<table class="gm-table"><tr><th>组员</th><th>学习进度</th><th>学习习惯</th><th>注意力</th></tr>${g.members.map((x) => `<tr><td><button type="button" class="linkbtn" data-open="${x.id}">${esc(x.name)}</button></td><td>${progText(progVal(x, n), n)}</td><td>${Mem.DIM.habit.levels[Mem.dimLevel(Mem.dimValue(x, "habit"))][0]}</td><td>${Mem.DIM.attention.levels[Mem.dimLevel(Mem.dimValue(x, "attention"))][0]}</td></tr>`).join("")}</table>
       <p class="note" style="margin:8px 0 0">这组的进度按最慢的算（${progText(progVal(g, n), n)}），注意力按最需要照顾的算（${g.attention}${g.attention !== "集中" ? "：" + who((x) => x.attention === g.attention) : ""}）。下面的记忆和课次记录是组员合起来的，要改点名字回到各自的档案。</p>`;
     $("#recGrp").innerHTML = `一对多的课，课后记录记到每个学生自己的档案里：点${g.members.map((x) => `<button type="button" class="linkbtn" data-open="${x.id}">${esc(x.name)}</button>`).join("、")}切过去记，这组的教案会跟着记进他们的课次记录。`;
 }
@@ -1045,7 +1155,7 @@ $("#grpBatch").onclick = async () => {
 // ---------- 建档页（MAT-508）：贴一段话让 agent 填，或者直接选；区和学校双向联动，选了学校自动带出区和公办 / 私立 ----------
 const SCHOOLS = SCH.schools, DISTRICTS = SCH.districts;
 let NS = null;   // 建档草稿：翻到别的页再回来还在，建完清掉
-const nsFresh = () => ({ grade: 8, term: M.termAt(TODAY), progress: 0, unit: 1, attention: "一般", dims: { habit: 50, attention: 50 }, dimsWhy: {}, notes: [], schoolHint: "" });
+const nsFresh = () => ({ grade: 8, term: M.termAt(TODAY), progress: 0, unit: 1, attention: "一般", dims: { habit: 50, attention: 50 }, dimsWhy: {}, notes: [], weak: [], scores: [], schoolHint: "" });
 const nsSch = () => (/^\d+$/.test($("#nsSchool").value) ? SCHOOLS[+$("#nsSchool").value] : null);
 function renderNewStu() {
     NS ||= nsFresh();
@@ -1054,6 +1164,7 @@ function renderNewStu() {
     const gt = stuGt(NS);
     $("#nsGtNote").textContent = `${gt.replace(/^(.)/, "$1年级")} · ${M.cohortOf(NS.grade, TODAY)} 届 · 译林版${gt === "九下" ? "（九下还是旧版，4 个单元）" : ""}`;
     mountDims($("#nsDims"), NS);
+    renderNsWeak(); mountScores($("#nsScores"), NS);
     $("#nsNotesWrap").hidden = !NS.notes.length;
     $("#nsNotes").innerHTML = NS.notes.map((n, i) => `<li><label><input type="checkbox" data-i="${i}" ${n.on ? "checked" : ""}><span><span class="tag ${n.cat === "薄弱点" ? "weak" : n.cat === "已掌握" ? "ok" : ""}">${n.cat}</span>${esc(n.text)}${n.quote ? `<div class="q">原文：${esc(n.quote)}</div>` : ""}</span></label></li>`).join("");
     nsSchoolNote();
@@ -1062,7 +1173,23 @@ const nsClamp = () => { const n = unitsOf(stuGt(NS)); if (NS.progress > n) setPr
 $("#nsGrade").onclick = (e) => { const b = e.target.closest("[data-g]"); if (b) { NS.grade = +b.dataset.g; nsClamp(); renderNewStu(); } };
 $("#nsTerm").onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) { NS.term = b.dataset.t; nsClamp(); renderNewStu(); } };
 wireDims($("#nsDims"), () => NS, () => {});
+wireScores($("#nsScores"), () => NS, () => {});
 $("#nsNotes").onchange = (e) => { if (e.target.dataset.i != null) NS.notes[+e.target.dataset.i].on = e.target.checked; };
+// 薄弱知识点（用户 10-29）：老师自己加、改描述、删；描述说不清就写或留空，记成「暂时未知」，一条都不加也行。
+// agent 从那段话里抽的薄弱点也放这里（ai: true），重新让 agent 填表只换掉这些，老师自己加的留着
+function renderNsWeak() {
+    const types = Object.keys(data.stats.byType);
+    $("#nsWeak").innerHTML = (NS.weak.length ? `<ul class="ns-weak">${NS.weak.map((w, i) => `<li data-i="${i}"><select data-f="qtype" aria-label="题型"><option value="">题型不确定</option>${[...new Set([...types, w.qtype].filter(Boolean))].map((t) => `<option ${t === w.qtype ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`
+        + `<input type="text" data-f="text" maxlength="60" value="${esc(w.text)}" placeholder="哪里弱；说不清就写「暂时未知」" aria-label="薄弱点描述">`
+        + `<button type="button" class="x" data-rm title="删掉这一条" aria-label="删掉这一条">×</button>${w.quote ? `<div class="q">原文：${esc(w.quote)}</div>` : ""}</li>`).join("")}</ul>`
+        : `<p class="note" style="margin:0 0 8px">还没加。暂时不清楚也没关系，上几次课、记下错题以后会自己累计。</p>`)
+        + `<button type="button" class="btn small ghost" data-add>+ 加一个薄弱点</button>`;
+}
+$("#nsWeak").oninput = $("#nsWeak").onchange = (e) => { const li = e.target.closest("li[data-i]"); if (li && e.target.dataset.f) NS.weak[+li.dataset.i][e.target.dataset.f] = e.target.value; };
+$("#nsWeak").onclick = (e) => {
+    if (e.target.closest("[data-add]")) { NS.weak.push({ qtype: "", text: "" }); renderNsWeak(); $("#nsWeak li:last-child input").focus(); }
+    else if (e.target.closest("[data-rm]")) { NS.weak.splice(+e.target.closest("li").dataset.i, 1); renderNsWeak(); }
+};
 // 区选了就只列这个区的学校，没选按区分组列全部；选了学校，区跟着变
 $("#nsDistrict").innerHTML = `<option value="">全部区</option>` + DISTRICTS.map((d) => `<option>${d}</option>`).join("");
 function nsSchoolOpts() {
@@ -1112,7 +1239,8 @@ function nsApply(p) {
     nsClamp();
     if (p.progress) { const n = unitsOf(stuGt(NS)); setProgress(NS, Math.min(n, p.progress.unit - 1 + { 刚开始: 0.15, 学到一半: 0.5, 快学完: 0.85, 学完: 1 }[p.progress.stage]), n); got++; }
     for (const d of p.dims) { Mem.setDim(NS, d.key, d.value); if (d.quote) NS.dimsWhy[d.key] = d.quote; got++; }
-    NS.notes = p.notes.map((n) => ({ ...n, on: true })); got += p.notes.length;
+    NS.notes = p.notes.filter((n) => n.cat !== "薄弱点").map((n) => ({ ...n, on: true })); got += p.notes.length;
+    NS.weak = [...NS.weak.filter((w) => !w.ai), ...p.notes.filter((n) => n.cat === "薄弱点").map((n) => ({ qtype: n.qtype || "", text: n.text, quote: n.quote, ai: true }))];
     renderNewStu();
     return got;
 }
@@ -1135,8 +1263,10 @@ $("#nsForm").onsubmit = (e) => {
     // school 只在题库里有这所学校的卷子时才填（检索给「同校」加分）；学期和今天的日期对得上就不存，以后跟着日期走
     const st = { id: "s" + Date.now().toString(36), name, grade: NS.grade, ...(NS.term !== M.termAt(TODAY) ? { term: NS.term } : {}),
         school: sc?.key || "", schoolName: sc ? sc.name : $("#nsOther").value.trim() || "其他学校", district: sc ? sc.district : $("#nsDistrict").value, ownership: sc ? sc.own : $("#nsOwn").value,
-        textbook: "新", unit: NS.unit, progress: NS.progress, attention: NS.attention, dims: { ...NS.dims }, dimsWhy: { ...NS.dimsWhy }, mems: [], logs: [] };
-    const notes = NS.notes.filter((n) => n.on);
+        textbook: "新", unit: NS.unit, progress: NS.progress, attention: NS.attention, dims: { ...NS.dims }, dimsWhy: { ...NS.dimsWhy }, mems: [], logs: [],
+        scores: NS.scores.filter((x) => scorePct(x) != null).map((x) => ({ ...x, name: x.name.trim() || "某次考试" })) };
+    const weak = NS.weak.filter((w) => w.qtype || w.text.trim()).map((w) => ({ cat: "薄弱点", qtype: w.qtype, text: w.text.trim() || "暂时未知", quote: w.quote }));
+    const notes = [...weak, ...NS.notes.filter((n) => n.on)];
     if (notes.length) Mem.applyOps(memState(st), notes.map((n) => ({ op: "add", who: "student", cat: n.cat, text: n.text, qtype: n.qtype, evidence: n.quote, why: "建档时老师贴的描述" })), TODAY, "建档描述");
     S.students.push(st); snapWork();
     NS = null; e.target.reset(); $("#nsText").value = ""; $("#nsParseNote").textContent = ""; nsSchoolOpts();
