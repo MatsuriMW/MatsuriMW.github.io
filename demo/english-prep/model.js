@@ -189,7 +189,8 @@ export function reviewShare(days) { return days == null ? 0.4 : days <= 14 ? 0.7
 // ---------- 学校名对名录（MAT-508；建档时模型给的学校名 → web/schools.json） ----------
 // 用户口径（10-29）：只说学校名，默认指总校（侨谊中学 = 侨谊实验中学，天一中学 = 天一中学）；说分校会在总校名后面接上分校名（侨谊古运河、天一宛山湖）。
 // 所以从严到宽一层层对，哪层对上就停：名字本身 → 去掉「中学 / 学校」这类通用字（保留「实验」）→ 连「实验」也去掉（这一层就是默认总校）
-// → 总校名 + 分校名（先认出总校名，再拿后半截去找，天一宛山湖的正式名里没有「天一」）→ 去掉校区的校名 → 包含关系。对上几所就让老师选
+// → 总校名 + 分校名（先认出总校名，再拿后半截去找，天一宛山湖的正式名里没有「天一」）→ 去掉校区的校名 → 包含关系。
+// 还是对上几所的：说了区就只留那个区的；剩下的都有建校年份（schools.json 的 founded）就取最老的，用户口径「哪个建得老，哪个就是总校」；年份不全就让老师选
 const SCHOOL_ALIAS = { 锡外: "无锡外国语学校", 省锡中: "江苏省锡山高级中学实验学校", 一女中: "无锡市第一女子中学" };
 const sCore = (s) => s.replace(/^(江苏省|无锡市|无锡)/, "").replace(/[（）()\s]/g, "");
 const sBase = (s) => s.replace(/（[^）]*校区）$/, "");
@@ -217,5 +218,6 @@ export function matchSchool(raw, district, schools, districts = []) {
     let hits = [];
     for (const t of tiers) if ((hits = t()).length) break;
     if (hits.length > 1 && districts.includes(district)) { const h = hits.filter((s) => s.district === district); if (h.length) hits = h; }
+    if (hits.length > 1 && hits.every((s) => s.founded)) { const y = Math.min(...hits.map((s) => s.founded)), h = hits.filter((s) => s.founded === y); if (h.length === 1) hits = h; }
     return hits;
 }
