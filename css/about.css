@@ -1,0 +1,99 @@
+/* 关于页（layout: about）。色板、曲线沿用 blog.css，首屏背景和收尾横幅跟作品集页（portfolio.css）一个样子 */
+
+/* ===== 首屏：左边大字，右边一张名片 ===== */
+.ab-hero { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 56px; align-items: center; margin-top: 8px; }
+.ab-hero::before {
+  content: ""; position: absolute; z-index: -1; inset: -48px -30vw -24px; pointer-events: none; color: rgba(31, 31, 29, .16);
+  background: radial-gradient(36% 55% at 76% 48%, rgba(42, 120, 214, .16), transparent 70%), radial-gradient(currentColor 1px, transparent 1.3px) 0 0 / 22px 22px;
+  -webkit-mask-image: radial-gradient(70% 90% at 62% 42%, #000 25%, transparent 78%); mask-image: radial-gradient(70% 90% at 62% 42%, #000 25%, transparent 78%);
+}
+.ab-hero .intro { max-width: none; }
+.ab-hero h1 { font-size: clamp(38px, 5.6vw, 62px); line-height: 1.12; letter-spacing: -.015em; margin: 14px 0 22px; }
+/* 大标题时不时闪一下故障：blog.js 隔几秒随机给 .glitch 加 .on 约半秒。
+   本体横向抖一下，上下两层红、蓝副本（data-text）各露出几条横切片，错开几像素 */
+.glitch { position: relative; display: inline-block; }
+.glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; mix-blend-mode: multiply; }
+.glitch::before { color: #e34948; }
+.glitch::after { color: #2a78d6; }
+.glitch.on { animation: gl-jolt .5s steps(1) both; }
+.glitch.on::before { opacity: .9; animation: gl-red .5s steps(1) both; }
+.glitch.on::after { opacity: .9; animation: gl-blue .5s steps(1) both; }
+@keyframes gl-jolt {
+  0% { transform: translateX(-2px) skewX(-6deg); } 18% { transform: translateX(3px); } 36% { transform: none; clip-path: inset(0 0 0 0); }
+  52% { transform: translateX(-4px); clip-path: inset(38% 0 34% 0); } 64% { transform: none; clip-path: none; } 82% { transform: translateX(2px) skewX(4deg); } 100% { transform: none; }
+}
+@keyframes gl-red {
+  0% { clip-path: inset(8% 0 72% 0); transform: translate(-7px, -2px); } 16% { clip-path: inset(58% 0 18% 0); transform: translate(5px, 1px); }
+  32% { clip-path: inset(30% 0 52% 0); transform: translate(-3px, 2px); } 48% { clip-path: inset(80% 0 4% 0); transform: translate(8px, 0); }
+  64% { clip-path: inset(14% 0 66% 0); transform: translate(-5px, -1px); } 80% { clip-path: inset(46% 0 40% 0); transform: translate(3px, 1px); } 100% { clip-path: inset(50% 0 50% 0); transform: none; }
+}
+@keyframes gl-blue {
+  0% { clip-path: inset(64% 0 12% 0); transform: translate(6px, 2px); } 16% { clip-path: inset(4% 0 78% 0); transform: translate(-6px, -1px); }
+  32% { clip-path: inset(70% 0 10% 0); transform: translate(4px, 0); } 48% { clip-path: inset(22% 0 60% 0); transform: translate(-8px, 1px); }
+  64% { clip-path: inset(52% 0 30% 0); transform: translate(5px, -2px); } 80% { clip-path: inset(6% 0 84% 0); transform: translate(-3px, 0); } 100% { clip-path: inset(50% 0 50% 0); transform: none; }
+}
+.ab-hero .lede { font-size: 18px; line-height: 1.8; max-width: 520px; }
+.ab-hero .cta-row { margin-top: 30px; }
+
+.ab-card { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 36px 28px 26px; border: 0; border-radius: 20px; background: linear-gradient(165deg, #fff 0%, var(--surface) 55%, var(--accent-bg) 100%); box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 34px 64px -32px rgba(31, 31, 29, .4), 0 0 0 1px rgba(31, 31, 29, .06); transform: rotate(1.6deg); transition: transform .8s var(--ease), box-shadow .5s; animation: ab-card-in 1s var(--ease) .3s backwards; }
+.ab-card:hover { transform: translateY(-4px); box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 40px 70px -32px rgba(42, 120, 214, .4), 0 0 0 1px rgba(42, 120, 214, .25); }
+@keyframes ab-card-in { from { opacity: 0; translate: 0 50px; rotate: 6deg; } }
+.ab-card .orb-slot { width: 64px; height: 64px; margin: 4px 0 16px; }   /* orb 组件只认 20、32、64 三种尺寸 */
+.ab-name { font-size: 26px; line-height: 1.3; letter-spacing: .02em; }
+.ab-handle { margin-top: 2px; font: 13px/1.5 "SF Mono", Menlo, Consolas, monospace; color: var(--ink-3); }
+.ab-facts { width: 100%; list-style: none; margin: 22px 0 0; padding: 20px 4px 0; border-top: 1px dashed var(--rule); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 14px; text-align: left; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.ab-facts li { display: flex; align-items: center; }
+.ab-facts .ph { color: var(--blue); }
+.ab-social { display: flex; gap: 8px; margin-top: 22px; }
+.ab-social a { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--neutral-soft); color: var(--ink-2); transition: background .2s, color .2s, transform .25s var(--ease); }
+.ab-social a:hover { background: var(--ink); color: var(--surface); transform: translateY(-2px); }
+.ab-social .ph { margin: 0; }
+
+/* ===== 正文：一节一节，左边编号，右边内容 ===== */
+.ab-sec { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 0 32px; margin-top: 104px; }
+.ab-no { padding-top: 14px; border-top: 2px solid var(--ink); font: 600 28px/1.1 "SF Mono", Menlo, Consolas, monospace; color: #c9c7c0; align-self: start; }
+.ab-sec > .prose { padding: 0; max-width: none; font-size: 16px; }
+.ab-sec .prose > h2:first-child { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.3; margin: 0 0 20px; }
+.ab-sec .prose > p { max-width: 760px; color: var(--ink-2); }
+.ab-sec .prose strong { color: var(--ink); }
+/* 第一节（自我介绍）字放大，一行一句 */
+.ab-hero + .ab-sec .prose > p { font-size: 19px; line-height: 2.05; color: var(--ink); }
+
+/* 无序列表排成两列卡片：名字（加粗的那段）单独一行，链接在最后；第一张占整行、深色 */
+.ab-sec .prose > ul { list-style: none; margin: 26px 0 8px; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ab-sec .prose > ul > li { margin: 0; padding: 18px 20px 16px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); font-size: 14px; line-height: 1.75; color: var(--ink-2); transition: border-color .25s, transform .3s var(--ease), box-shadow .3s; }
+.ab-sec .prose > ul > li:hover { border-color: #d6d4cd; transform: translateY(-2px); box-shadow: 0 18px 32px -24px rgba(31, 31, 29, .45); }
+.ab-sec .prose > ul > li > strong:first-child { display: block; margin-bottom: 4px; font-size: 16px; }
+.ab-sec .prose > ul > li:first-child { grid-column: 1 / -1; position: relative; overflow: hidden; isolation: isolate; padding: 24px 26px 22px; border-color: #1b1b19; background: #1b1b19; color: rgba(246, 245, 241, .72); font-size: 15px; --blue-soft: rgba(246, 245, 241, .2); }
+.ab-sec .prose > ul > li:first-child::before { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: radial-gradient(60% 120% at 100% 0%, rgba(42, 120, 214, .4), transparent 70%); }
+.ab-sec .prose > ul > li:first-child > strong:first-child { color: #fff; font-size: 18px; }
+.ab-sec .prose > ul > li:first-child a { color: #fff; }
+
+/* 引用排成大字引语 */
+.ab-sec .prose blockquote { position: relative; margin: 32px 0; padding: 28px 32px; border: 0; border-radius: 16px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--rule); font-size: clamp(20px, 2.6vw, 26px); line-height: 1.65; font-weight: 600; color: var(--ink); }
+.ab-sec .prose blockquote::before { content: "“"; position: absolute; right: 24px; top: -14px; font: 700 120px/1 Georgia, "Times New Roman", serif; color: var(--blue-soft); pointer-events: none; }
+
+/* ===== 最后一节：深色收尾 ===== */
+.ab-end { display: block; position: relative; isolation: isolate; overflow: hidden; margin-top: 112px; padding: 72px 40px 60px; border-radius: 20px; text-align: center; color: #f6f5f1; background: #1b1b19; --blue-soft: rgba(246, 245, 241, .22); }
+.ab-end::before {
+  content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; color: rgba(246, 245, 241, .12);
+  background: radial-gradient(50% 80% at 50% 0%, rgba(42, 120, 214, .38), transparent 70%), radial-gradient(currentColor 1px, transparent 1.3px) 0 0 / 22px 22px;
+}
+.ab-end .prose > h2:first-child { color: #fff; font-size: clamp(26px, 3.8vw, 40px); }
+.ab-end .prose > p { max-width: 640px; margin-left: auto; margin-right: auto; color: rgba(246, 245, 241, .72); font-size: 17px; }
+.ab-end .prose > p:last-child { margin: 26px auto 0; font-size: 14px; color: rgba(246, 245, 241, .45); }
+.ab-end a { color: #fff; }
+
+@media (max-width: 860px) {
+  .ab-hero { grid-template-columns: 1fr; gap: 40px; }
+  .ab-card { width: min(380px, 100%); margin: 0 auto; }
+  .ab-sec { grid-template-columns: 1fr; margin-top: 80px; }
+  .ab-no { width: 72px; margin-bottom: 18px; font-size: 22px; padding-top: 10px; }
+  .ab-sec .prose > ul { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .ab-hero + .ab-sec .prose > p { font-size: 17px; line-height: 1.95; }
+  .ab-card { padding: 30px 20px 22px; }
+  .ab-sec .prose blockquote { padding: 22px 20px; }
+  .ab-end { padding: 52px 20px 44px; border-radius: 16px; }
+}

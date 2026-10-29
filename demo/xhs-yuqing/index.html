@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小红书舆情研判 Demo</title>
+<meta name="description" content="一个定时跑的小红书舆情研判工作流：抓笔记和评论、逐条编码、代码算指标、模型写研判、规则和模型双重评测。示例数据：2026-10-16 特斯拉。">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f6f5f1;
+    --surface: #fcfcfb;
+    --ink: #1f1f1d;
+    --ink-2: #55544f;
+    --ink-3: #8a8984;
+    --rule: #e6e4de;
+    --grid: #eeece7;
+    --blue: #2a78d6;
+    --blue-soft: #dbe8f8;
+    --red: #e34948;
+    --red-soft: #f8dedc;
+    --violet: #4a3aa7;
+    --neutral: #cfcdc6;
+    --neutral-soft: #ecebe6;
+    --accent-bg: #f1f5fb;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font: 16px/1.7 -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+  header .eyebrow { font-size: 13px; letter-spacing: .08em; color: var(--ink-3); }
+  h1 { font-size: 34px; line-height: 1.3; margin: 8px 0 12px; font-weight: 700; }
+  h2 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
+  h3 { font-size: 15px; margin: 0 0 12px; font-weight: 600; color: var(--ink-2); }
+  p { margin: 0 0 12px; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 760px; }
+  .note { font-size: 13px; color: var(--ink-3); }
+  .disclaimer { margin-top: 16px; font-size: 13px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px; max-width: 760px; }
+  section { margin-top: 56px; }
+  .sec-head { margin-bottom: 20px; max-width: 760px; }
+  .sec-head p { color: var(--ink-2); }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px 22px; }
+  .grid { display: grid; gap: 16px; }
+  .grid > * { min-width: 0; }
+  .g5 { grid-template-columns: repeat(5, 1fr); }
+  .g4 { grid-template-columns: repeat(4, 1fr); }
+  .g2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 860px) { .g5 { grid-template-columns: repeat(2, 1fr); } .g5 > :last-child { grid-column: span 2; } .g4 { grid-template-columns: repeat(2, 1fr); } .g2 { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .wrap { padding: 32px 16px 64px; } h1 { font-size: 27px; } .g5, .g4 { grid-template-columns: 1fr 1fr; } }
+
+  .stat .label { font-size: 13px; color: var(--ink-2); }
+  .stat .value { font-size: 30px; font-weight: 700; line-height: 1.25; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+  .verdict .k { font-size: 13px; color: var(--ink-2); }
+  .verdict .v { font-size: 20px; font-weight: 700; margin: 4px 0 6px; }
+  .verdict .why { font-size: 13px; color: var(--ink-2); }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--neutral-soft); color: var(--ink-2); margin-right: 4px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin: 0 0 10px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+  /* 横向条形 */
+  .hbars { display: grid; gap: 8px; }
+  .hbar { display: grid; grid-template-columns: 8.5em 1fr 3.4em; align-items: center; gap: 10px; font-size: 13px; }
+  .hbar .name { color: var(--ink-2); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hbar .track { height: 14px; position: relative; }
+  .hbar .fill { height: 100%; border-radius: 0 4px 4px 0; background: var(--c, var(--blue)); min-width: 2px; transition: filter .15s; }
+  .hbar .num { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .hbar:hover .fill, .hbar:focus-visible .fill { filter: brightness(1.12); }
+  .hbar:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
+  .hbars.wide .hbar { grid-template-columns: 13em 1fr 4.6em; }
+  @media (max-width: 520px) { .hbars.wide .hbar { grid-template-columns: 8.5em 1fr 4.2em; } }
+
+  /* 100% 堆叠条 */
+  .stack { display: flex; gap: 2px; height: 28px; margin: 6px 0 10px; }
+  .stack div { height: 100%; transition: filter .15s; }
+  .stack div:first-child { border-radius: 4px 0 0 4px; }
+  .stack div:last-child { border-radius: 0 4px 4px 0; }
+  .stack div:hover { filter: brightness(1.1); }
+
+  /* 时间柱状 */
+  .chart-svg { width: 100%; height: auto; display: block; }
+  .chart-svg text { font-size: 12px; fill: var(--ink-3); }
+  .chart-svg .bar { cursor: default; }
+  .chart-svg .bar:hover rect { filter: brightness(1.1); }
+
+  /* 安全高压线复核 */
+  .tiles { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 10px 0 14px; max-width: 520px; }
+  @media (max-width: 520px) { .tiles { gap: 4px; } .tile { font-size: 10px; } }
+  .tile { aspect-ratio: 1; min-width: 0; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+  .tile.meme { background: repeating-linear-gradient(135deg, var(--neutral-soft) 0 5px, var(--surface) 5px 9px); border: 1px solid var(--neutral); color: var(--ink-2); }
+  .tile.real { background: var(--red); color: #fff; }
+  .quotes { display: grid; gap: 8px; margin-top: 8px; }
+  .quote { font-size: 14px; color: var(--ink-2); border-left: 2px solid var(--rule); padding-left: 10px; }
+  .quote b { color: var(--ink); font-weight: 600; }
+
+  /* 流程 */
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; counter-reset: s; }
+  .step { position: relative; }
+  .step .n { font-size: 12px; color: var(--blue); font-weight: 700; letter-spacing: .06em; }
+  .step .t { font-weight: 700; margin: 2px 0 6px; }
+  .step ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--ink-2); }
+  .step .who { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+  @media (max-width: 860px) { .flow { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .flow { grid-template-columns: 1fr; } }
+
+  /* 评测 */
+  .score { display: grid; grid-template-columns: 7em 1fr 3.4em; gap: 10px; align-items: center; font-size: 13px; margin-bottom: 8px; }
+  .score .track { height: 10px; background: var(--neutral-soft); border-radius: 99px; overflow: hidden; }
+  .score .fill { height: 100%; background: var(--blue); border-radius: 99px; }
+  .score .name { color: var(--ink-2); text-align: right; }
+  .score .num { font-variant-numeric: tabular-nums; }
+  .rules { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+  .rules div::before { content: "✓"; color: var(--blue); font-weight: 700; margin-right: 6px; }
+  .rules div.new { color: var(--ink-3); }
+  .rules div.new::before { content: "+"; color: var(--violet); }
+
+  details { margin-top: 14px; font-size: 13px; color: var(--ink-2); }
+  details summary { cursor: pointer; color: var(--ink-3); }
+  table { border-collapse: collapse; margin-top: 8px; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { border-bottom: 1px solid var(--rule); padding: 4px 8px; text-align: left; }
+  th { color: var(--ink-3); font-weight: 500; }
+  .table-scroll { overflow-x: auto; }
+
+  #tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: #fff; font-size: 12px; line-height: 1.5; padding: 6px 10px; border-radius: 6px; opacity: 0; transition: opacity .1s; max-width: 260px; }
+  #tip b { font-size: 14px; }
+  /* 机器初判 → 人工复核 */
+  .review { border: 1px solid #c9d9ef; background: var(--accent-bg); }
+  .steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+  .steps3 > div { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; }
+  .steps3 .k { font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+  .steps3 .v { font-weight: 700; margin: 2px 0 4px; }
+  .steps3 .d { font-size: 13px; color: var(--ink-2); }
+  .steps3 .human .k { color: var(--violet); }
+  @media (max-width: 680px) { .steps3 { grid-template-columns: 1fr; } }
+  .diff { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .diff th, .diff td { padding: 10px 12px; vertical-align: top; border-bottom: 1px solid var(--rule); text-align: left; }
+  .diff tr:last-child td { border-bottom: 0; }
+  .diff th { font-size: 12px; color: var(--ink-3); font-weight: 500; background: #faf9f6; }
+  .diff td:first-child { color: var(--ink-2); white-space: nowrap; }
+  .diff .before { color: var(--ink-3); text-decoration: line-through; text-decoration-color: #c9c7c0; }
+  .diff .after { color: var(--ink); }
+  .diff .after b { color: var(--violet); }
+  @media (max-width: 680px) { .diff td:first-child { white-space: normal; } .diff { font-size: 13px; } }
+  .badge { display: inline-block; font-size: 11px; color: var(--violet); border: 1px solid var(--violet); border-radius: 4px; padding: 0 4px; margin-left: 6px; vertical-align: 2px; font-weight: 500; }
+  .links { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 680px) { .links { grid-template-columns: 1fr; } }
+  .links ul { list-style: none; margin: 0; padding: 0; }
+  .links li { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .links li:last-child { border-bottom: 0; }
+  .links a { color: var(--blue); text-decoration: none; font-weight: 600; }
+  .links a:hover { text-decoration: underline; }
+  .links .d { display: block; font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+  .links .t { font-size: 11px; color: var(--ink-3); border: 1px solid var(--rule); border-radius: 4px; padding: 0 4px; margin-left: 6px; font-weight: 400; }
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-3); }
+  footer p { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">DEMO · n8n + 小红书 MCP + DeepSeek · 机器初判 + 人工复核</div>
+    <h1>小红书舆情研判：特斯拉 Roadster 发布后的 24 小时</h1>
+    <p class="lede">一个每天自动跑两次的舆情工作流。它在小红书搜品牌关键词，抓笔记和评论，逐条判断是不是在说这个品牌、什么语气、有没有碰到高压线，再由代码算指标、模型写研判，最后用规则和另一个模型给研判打分。下面是 2026 年 10 月 16 日 20:58 那一次的结果，以及人工复核之后的修正：自动评测给了 A，复核仍然找出了一处会把结论带偏的误判。</p>
+    <div class="disclaimer">个人作品演示，与特斯拉公司无关。数据是 2026-10-16 小红书公开笔记和评论的样本（24 篇笔记、906 条记录），用户 ID 只存哈希，结论只对这个时间点、这个平台、这批样本成立。</div>
+    <p class="note" style="margin-top:12px">新版：<a href="/demo/yuqing-langgraph/" style="color:var(--blue)">多平台舆情研判 · LangGraph 版（B站 + 知乎）→</a></p>
+  </header>
+
+  <section>
+    <div class="grid g5">
+      <div class="card stat"><div class="label">窗口内相关记录</div><div class="value">341</div><div class="sub">前一个 24 小时 33 条</div></div>
+      <div class="card stat"><div class="label">负面</div><div class="value">31</div><div class="sub">占 9%，314 个独立用户</div></div>
+      <div class="card stat"><div class="label">相关笔记互动</div><div class="value">15.7万</div><div class="sub">11 篇笔记的累计值</div></div>
+      <div class="card stat"><div class="label">安全线索（人工复核后）<span class="badge">已修正</span></div><div class="value">8 → 2</div><div class="sub">6 条是拿别家事故做对比的梗</div></div>
+      <div class="card stat"><div class="label">自动评测（复核前）</div><div class="value">A · 88</div><div class="sub">规则 14/14，抽检一致率 92%</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>机器初判，人工复核</h2>
+      <p>自动评测只能查出机械性的错（编造的 ID、算不出来的百分比、证据不够就下结论），查不出「这条到底在说谁」。所以每份研判都要人看一遍，复核出的问题写回流程，下一轮自动生效。</p>
+    </div>
+    <div class="card review">
+      <div class="steps3">
+        <div><div class="k">① 机器初判</div><div class="v">评测 A · 88 分</div><div class="d">规则 14/14 通过，盲抽检一致率 92%，看起来可以直接用。</div></div>
+        <div class="human"><div class="k">② 人工复核</div><div class="v">发现一处误判</div><div class="d">「#刹车 #踩断」说的是懂车帝测出的江淮尊界刹车踏板断裂，不是特斯拉；模型把这批对比梗算成了特斯拉的安全风险。</div></div>
+        <div class="human"><div class="k">③ 写回流程</div><div class="v">下一轮自动生效</div><div class="d">新增「对比对象 / 谁占上风」编码字段；别家的事故不算本品牌高压线；核实过的背景写进配置，编码、研判、抽检都会读到。</div></div>
+      </div>
+      <div class="table-scroll">
+      <table class="diff">
+        <tr><th></th><th>机器初判</th><th>人工复核后</th></tr>
+        <tr><td>「刹车踩断」话题笔记</td><td class="before">窗口内量级最高的负面向内容，指向待核实</td><td class="after">拿尊界刹车踏板断裂对比 Roadster「会飞」的<b>玩梗帖</b>，特斯拉是占上风的一方</td></tr>
+        <tr><td>「安全」高压线</td><td class="before">8 条</td><td class="after"><b>2 条</b>指向特斯拉车况，其余 6 条是对比梗</td></tr>
+        <tr><td>舆情实质</td><td class="before">把飞行秀和刹车安全并置，翻安全旧账</td><td class="after">真实风险在另一面：对比带出国产车和特斯拉的<b>阵营情绪</b></td></tr>
+        <tr><td>升级条件</td><td class="before">「刹车踩断」以特斯拉名义扩散到其他平台</td><td class="after">特斯拉一方借梗点名友商，被截图成<b>外资品牌嘲讽国产</b></td></tr>
+        <tr><td>第一条自查</td><td class="before">核查标签指向，排查刹车相关售后工单和 400 记录</td><td class="after"><b>不借势</b>：官方号、销售、合作博主不接这个梗；梗本身不需要回应</td></tr>
+        <tr><td>不变的部分</td><td class="after" colspan="2">分档「舆情前夜」、阶段「暂不可判断」、下一步「内部自查」；跳票、续航承诺的旧账和一条 Model Y 刹车亲历反馈仍要跟进</td></tr>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>讨论在发布会当天中午起量</h2>
+      <p>按北京时间每小时统计的相关记录（笔记按发布时间，评论按发表时间）。Roadster「会飞」的发布会转述笔记一篇就有 13 万互动，评论区从中午开始持续涌入；负面一直只占很小一部分。</p>
+    </div>
+    <div class="card">
+      <div class="legend"><span style="--c: var(--blue)">其他记录</span><span style="--c: var(--red)">负面</span></div>
+      <div id="hourly"></div>
+      <p class="note">每篇只抓前 30 条热评，越早的评论越可能没被抓到，前一天的数字偏少，只看方向不看幅度。</p>
+      <details><summary>查看数据表</summary><div class="table-scroll" id="hourly-table"></div></details>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>研判结论<span class="badge">人工复核后</span></h2>
+      <p>判断顺序：是否形成舆情 → 舆情实质 → 走势 → 对业务的参考意义。没有连续传播数据时不判断阶段，只看一个平台时不说「尚未形成」。</p>
+    </div>
+    <div class="grid g4">
+      <div class="card verdict"><div class="k">是否形成舆情</div><div class="v">舆情前夜</div><div class="why">跳票、续航承诺的旧账被翻出来，国产车和特斯拉的对比带出阵营情绪；只覆盖小红书一个平台，不能判为已形成。</div></div>
+      <div class="card verdict"><div class="k">走势</div><div class="v">阶段暂不可判断</div><div class="why">快照还没跨满一个 24 小时窗口，没有连续传播证据。</div></div>
+      <div class="card verdict"><div class="k">风险量级</div><div class="v">高</div><div class="why"><span class="tag">传播 高</span><span class="tag">情感 中</span><span class="tag">内容 高</span><br>三维度取最高不取平均；内容维度的「高」来自安全高压线，复核后只剩 2 条。</div></div>
+      <div class="card verdict"><div class="k">下一步</div><div class="v">内部自查</div><div class="why">不接「刹车踩断」对比梗、不点名友商；跟进一条 Model Y 刹车亲历反馈；核对 Roadster 交付口径。</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>复核细节：「刹车踩断」说的不是特斯拉</h2>
+      <p>窗口内互动最高的负面向笔记只挂了「#特斯拉 #刹车 #踩断」三个话题。模型据此把 8 条记录标成了特斯拉的「安全」高压线，人工复核发现其中 6 条在拿懂车帝测出的江淮尊界刹车踏板断裂，对比 Roadster「会飞」。被嘲讽的是别家，特斯拉是对照里占上风的一方。</p>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>8 条「安全」高压线记录</h3>
+        <div class="tiles" id="tiles" role="img" aria-label="8 条安全高压线记录中，6 条是尊界对比梗，2 条指向特斯拉车况"></div>
+        <div class="legend"><span style="--c: repeating-linear-gradient(135deg, #ecebe6 0 3px, #fcfcfb 3px 5px)">对比梗（说的是尊界）6</span><span style="--c: var(--red)">指向特斯拉车况 2</span></div>
+        <p class="note">这次复核之后，工作流加了两个编码字段：<b>对比对象</b>和<b>谁占上风</b>；高压线只标品牌自己碰到的，人工核实的背景写进配置，编码、研判、抽检都会读到。</p>
+      </div>
+      <div class="card">
+        <h3>评论区原话</h3>
+        <div class="quotes">
+          <div class="quote"><b>「如果你后面的车刹车踏板断了，你可以飞起来躲避。」</b> 2088 赞，这篇笔记下的最高赞</div>
+          <div class="quote">「遥遥领先的车 100 时速刹车测试结果刹车踏板踩断了」</div>
+          <div class="quote">「同样都是遥遥领先，一个是正向领先，一个是负向领先」</div>
+          <div class="quote">「刹车踏板断裂和汽车会飞之间的差距巨大」</div>
+          <div class="quote">真正要跟进的：一位 Model Y 车主提车一个月，「刹车经历了三次 有两次莫名其妙」</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>情绪和语气</h2>
+      <p>情感说的是对品牌的态度，语气说的是怎么说。同样是负面，抱怨和避雷警告的传播力不一样；这一轮以玩梗和陈述为主。</p>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>情感（窗口内 341 条）</h3>
+        <div class="stack" id="sent-stack"></div>
+        <div class="legend" id="sent-legend"></div>
+        <details><summary>查看数据表</summary><div id="sent-table"></div></details>
+      </div>
+      <div class="card">
+        <h3>语气</h3>
+        <div class="hbars" id="tone"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>新话题和老账</h2>
+      <p>左边是过去 24 小时在聊什么，右边是窗口外的存量负面集中在哪。存量不算进这次的指标，但它是这轮热度随时可以翻出来的素材。</p>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>窗口内话题（条）</h3><div class="hbars" id="topics"></div></div>
+      <div class="card"><h3>存量负面集中在（条）</h3><div class="hbars" id="bg"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>被看见最多的笔记</h2>
+      <p>互动量只说明被看见的程度，不说明有多少人持这个态度。报告里这一段单独写成「公众实际看到的版本」，规则会拦下「公众认为」「形成共识」这类说法。</p>
+    </div>
+    <div class="card"><div class="hbars wide" id="topnotes"></div></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>工作流怎么跑</h2>
+      <p>定时触发，每天 9:00 和 18:00。编码过的记录按 ID 缓存，下次只编码新增的；每次留一份互动快照，跑满一个窗口后才判断传播阶段。</p>
+    </div>
+    <div class="flow">
+      <div class="card step"><div class="n">01 采集</div><div class="t">搜索与抓取</div><ul><li>每个关键词取前 8 篇，记下搜索排名</li><li>每篇抓前 30 条一级评论</li><li>可选：官方号最近几篇的评论区</li></ul><div class="who">小红书 MCP</div></div>
+      <div class="card step"><div class="n">02 编码</div><div class="t">逐条打标签</div><ul><li>指向、情感、语气、烈度</li><li>话题、高压线、动员 0–6 级</li><li>格式、对比对象、谁占上风</li><li>原话必须能在原文里找到</li></ul><div class="who">DeepSeek Flash</div></div>
+      <div class="card step"><div class="n">03 研判</div><div class="t">指标 + 结论</div><ul><li>传播、情感、内容三维度由代码算</li><li>公众实际看到的版本</li><li>分档、实质、走势、业务参考</li><li>需要决策时附八字段交接包</li></ul><div class="who">代码 + DeepSeek Flash</div></div>
+      <div class="card step"><div class="n">04 评测</div><div class="t">规则 + 打分 + 抽检</div><ul><li>19 条规则硬检查，不过就封顶</li><li>七维度打分，舆情任务加权证据</li><li>另一个模型盲编码 12 条算一致率</li></ul><div class="who">代码 + DeepSeek V4 Pro</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>这份研判的自动评测</h2>
+      <p>最终等级取模型等级和规则封顶里更低的那个；低于 B 时报告顶上会写「只能作为讨论素材」。分数针对人工复核之前的版本：评测打出 A 的同一份报告，复核时仍改掉了一条会带偏结论的判断，这也是为什么流程里留着人。</p>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>七维度打分（合计 88 / 100）</h3><div id="dims"></div></div>
+      <div class="card">
+        <h3>规则检查</h3>
+        <div class="rules" id="rules"></div>
+        <p class="note" style="margin-top:12px">✓ 是这份报告通过的 14 条；+ 是复核之后新加的四条，下一次运行起生效。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>其他时间点和原始数据</h2>
+      <p>上面是 20:58 那次、经过人工复核的版本。同一天前后还跑过三次，报告都放在下面；每次运行的模型直出、指标和逐条编码都公开在仓库里，可以对着查。</p>
+    </div>
+    <div class="links">
+      <div class="card">
+        <h3>其他时间点的报告</h3>
+        <ul>
+          <li><a href="runs/2026-10-16_2009/">10-16 20:09 · 首跑</a><span class="t">已复核</span><span class="d">不限时间窗口，24 篇笔记、794 条记录，评测 B（83）</span></li>
+          <li><a href="runs/2026-10-16_2037/">10-16 20:37 · 第 2 次快照</a><span class="t">机器直出</span><span class="d">第一次按 24 小时窗口统计；「特斯拉 投诉」超时没抓到，样本不完整，评测 B（83）</span></li>
+          <li><a href="runs/2026-10-17_0723/">10-17 07:23 · 新字段首次实跑</a><span class="t">机器直出</span><span class="d">复核结论写回流程后的第一次运行，「尊界」被编成对比对象；评测 C（84）</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>数据来源与调研过程</h3>
+        <ul>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/tree/main/examples/tesla-2026-10/">四次运行总览</a><span class="d">每次做了什么、样本多少、评测几分、复核改了什么</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/examples/tesla-2026-10/2026-10-16_2058/模型直出.json">本页这次的模型直出</a><span class="d">研判和评测模型的原始输出，复核前的样子</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/examples/tesla-2026-10/2026-10-16_2058/编码表.csv">本页这次的逐条编码</a><span class="d">906 条笔记和评论的指向、情感、语气、高压线、动员等标签</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/examples/tesla-2026-10/2026-10-16_2058/指标.json">本页这次的指标</a><span class="d">代码算的三维度、窗口对比、热度最高的笔记</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/blob/main/framework/研判与评测体系.md">研判与评测标准</a><span class="d">编码字段、指标口径、19 条规则和七维度打分</span></li>
+          <li><a href="https://github.com/MatsuriMW/xhs-yuqing/">工作流源码</a><span class="d">n8n 节点代码、提示词、导出脚本</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="note" style="margin-top:12px">数据来自小红书公开笔记和评论，用 xiaohongshu-mcp 在本机抓取。公开前去掉了评论全文、用户 ID 哈希、IP 属地和链接里的访问令牌。</p>
+  </section>
+
+  <footer>
+    <p>工作流源码：<a href="https://github.com/MatsuriMW/xhs-yuqing" style="color:var(--blue)">github.com/MatsuriMW/xhs-yuqing</a>（n8n 2.15 · 小红书 MCP · DeepSeek Flash / V4 Pro）。研判维度参考开源项目 Chuwu-PR-OS（MIT）。</p>
+    <p>2026-10-17</p>
+  </footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const DATA = {
+  hourly: [["10-14 20",0,0],["10-14 21",0,0],["10-14 22",0,0],["10-14 23",0,0],["10-15 00",0,0],["10-15 01",0,0],["10-15 02",1,1],["10-15 03",0,0],["10-15 04",0,0],["10-15 05",0,0],["10-15 06",0,0],["10-15 07",0,0],["10-15 08",0,0],["10-15 09",6,2],["10-15 10",2,0],["10-15 11",3,2],["10-15 12",2,0],["10-15 13",0,0],["10-15 14",2,0],["10-15 15",5,2],["10-15 16",2,0],["10-15 17",1,0],["10-15 18",3,0],["10-15 19",6,0],["10-15 20",0,0],["10-15 21",1,0],["10-15 22",4,0],["10-15 23",4,0],["10-16 00",5,1],["10-16 01",2,0],["10-16 02",0,0],["10-16 03",0,0],["10-16 04",0,0],["10-16 05",0,0],["10-16 06",0,0],["10-16 07",1,1],["10-16 08",2,0],["10-16 09",4,0],["10-16 10",5,0],["10-16 11",5,0],["10-16 12",24,3],["10-16 13",26,3],["10-16 14",26,3],["10-16 15",20,4],["10-16 16",24,2],["10-16 17",29,4],["10-16 18",52,2],["10-16 19",41,4],["10-16 20",66,4]],
+  sentiment: [["中性",268,"var(--neutral)"],["正面",40,"var(--blue)"],["负面",31,"var(--red)"],["混合",2,"var(--violet)"]],
+  tone: [["玩梗",134],["陈述",116],["询问",38],["质疑",22],["嘲讽",21],["抱怨",6],["推荐",4]],
+  topics: [["设计与配置",119],["品牌与创始人言论",23],["其他",16],["安全事故",15],["产品质量与故障",11],["价格与优惠",11],["辅助驾驶",10],["销售与交付",8],["续航与充电",5],["车机与软件",5]],
+  background: [["价格与优惠",61],["售后与维修",48],["产品质量与故障",32],["设计与配置",27],["品牌与创始人言论",21],["销售与交付",15],["车机与软件",14],["其他",9]],
+  topnotes: [["特斯拉把SpaceX的火箭技术装到了新车上",130816],["特斯拉现场直播会飞的跑车",11141],["有了特斯拉，再也不怕隧道堵车了",5379],["特斯拉会飞的创作已经开始啦",4388],["「。。。。。」#刹车 #踩断",2167]],
+  dims: [["问题识别",8,10],["事实和证据",18,20],["公共语境",16,20],["品牌和业务匹配",9,10],["策略可执行性",14,15],["表达质量",8,10],["风险控制",15,15]],
+  rules: [["R0 采集完整"],["R1 结构完整"],["R2 分档取值合法"],["R3 快照不足不判阶段"],["R4 引用的记录真实存在"],["R4b 引用写全 ID"],["R5 百分比都来自指标"],["R6 单平台写明未覆盖"],["R7 同名占比高时交代"],["R8 没有空话"],["R9 不外推成整体公众"],["R10 不替法务定责"],["R11 决策主体和时间锚点"],["R12 窗口变化只引窗口内"],["R6b 官方号覆盖情况",1],["R13 可见性不写成态度",1],["R14 公众实际看到的版本",1],["R15 交接包八字段",1]],
+};
+
+const tip = document.getElementById('tip');
+function showTip(e, value, label) {
+  tip.replaceChildren();
+  const b = document.createElement('b'); b.textContent = value;
+  const s = document.createElement('div'); s.textContent = label;
+  tip.append(b, s);
+  const x = Math.min(window.innerWidth - 270, (e.clientX ?? 0) + 14);
+  tip.style.left = x + 'px'; tip.style.top = ((e.clientY ?? 0) + 14) + 'px';
+  tip.style.opacity = 1;
+}
+function hideTip() { tip.style.opacity = 0; }
+function hoverable(el, value, label) {
+  el.tabIndex = 0;
+  el.setAttribute('aria-label', `${label}：${value}`);
+  el.addEventListener('pointermove', e => showTip(e, value, label));
+  el.addEventListener('pointerleave', hideTip);
+  el.addEventListener('focus', () => { const r = el.getBoundingClientRect(); showTip({ clientX: r.left, clientY: r.bottom }, value, label); });
+  el.addEventListener('blur', hideTip);
+}
+const fmt = n => n >= 10000 ? (n / 10000).toFixed(1).replace(/\.0$/, '') + '万' : String(n);
+
+function hbars(id, rows, color = 'var(--blue)', unit = '条') {
+  const host = document.getElementById(id);
+  const max = Math.max(...rows.map(r => r[1]));
+  for (const [name, v] of rows) {
+    const row = document.createElement('div'); row.className = 'hbar';
+    const n = document.createElement('div'); n.className = 'name'; n.textContent = name; n.title = name;
+    const t = document.createElement('div'); t.className = 'track';
+    const f = document.createElement('div'); f.className = 'fill'; f.style.width = (v / max * 100) + '%'; f.style.setProperty('--c', color);
+    t.append(f);
+    const num = document.createElement('div'); num.className = 'num'; num.textContent = fmt(v);
+    row.append(n, t, num);
+    hoverable(row, `${v.toLocaleString()} ${unit}`, name);
+    host.append(row);
+  }
+}
+hbars('tone', DATA.tone);
+hbars('topics', DATA.topics);
+hbars('bg', DATA.background, 'var(--red)');
+hbars('topnotes', DATA.topnotes, 'var(--blue)', '次互动');
+
+// 情感 100% 堆叠
+(() => {
+  const total = DATA.sentiment.reduce((s, r) => s + r[1], 0);
+  const stack = document.getElementById('sent-stack'), lg = document.getElementById('sent-legend');
+  const tb = document.createElement('table');
+  tb.innerHTML = '<tr><th>情感</th><th>条数</th><th>占比</th></tr>';
+  for (const [name, v, c] of DATA.sentiment) {
+    const seg = document.createElement('div'); seg.style.flex = String(v); seg.style.background = c; seg.style.minWidth = '3px';
+    hoverable(seg, `${v} 条（${Math.round(v / total * 100)}%）`, name);
+    stack.append(seg);
+    const l = document.createElement('span'); l.style.setProperty('--c', c); l.textContent = `${name} ${v}`; lg.append(l);
+    const tr = document.createElement('tr');
+    for (const cell of [name, v, Math.round(v / total * 100) + '%']) { const td = document.createElement('td'); td.textContent = cell; tr.append(td); }
+    tb.append(tr);
+  }
+  document.getElementById('sent-table').append(tb);
+})();
+
+// 每小时柱状（堆叠：负面在下）
+(() => {
+  const rows = DATA.hourly, W = 760, H = 260, L = 34, R = 8, T = 16, B = 34;
+  const max = 70, step = (W - L - R) / rows.length, bw = Math.max(2, step - 2);
+  const y = v => T + (H - T - B) * (1 - v / max);
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'chart-svg');
+  svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', '过去 48 小时每小时相关记录数，10 月 16 日中午起明显增多');
+  const el = (tag, attrs, parent = svg) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); parent.append(n); return n; };
+  for (const g of [0, 20, 40, 60]) {
+    el('line', { x1: L, x2: W - R, y1: y(g), y2: y(g), stroke: g ? '#eeece7' : '#d9d7d0', 'stroke-width': 1 });
+    const t = el('text', { x: L - 6, y: y(g) + 4, 'text-anchor': 'end' }); t.textContent = g;
+  }
+  // 研判窗口底色
+  const wi = rows.findIndex(r => r[0] === '10-15 21');
+  el('rect', { x: L + wi * step, y: T, width: (rows.length - wi) * step, height: H - T - B, fill: '#f1f5fb' }).parentNode.insertBefore(svg.lastChild, svg.firstChild);
+  const wl = el('text', { x: L + wi * step + 6, y: T + 12 }); wl.textContent = '研判窗口：过去 24 小时';
+  const path = (x, y0, w, h, round) => {
+    const r = round ? Math.min(4, w / 2, h) : 0;
+    return `M${x},${y0}v${-(h - r)}${r ? `q0,${-r} ${r},${-r}h${w - 2 * r}q${r},0 ${r},${r}` : `h${w}`}v${h - r}z`;
+  };
+  rows.forEach(([h, total, neg], i) => {
+    const x = L + i * step + 1, base = y(0);
+    const g = el('g', { class: 'bar' });
+    el('rect', { x: L + i * step, y: T, width: step, height: H - T - B, fill: 'transparent' }, g);
+    const negH = base - y(neg), othH = base - y(total - neg);
+    if (neg) el('path', { d: path(x, base, bw, negH, total === neg), fill: '#e34948' }, g);
+    if (total - neg) el('path', { d: path(x, base - negH - (neg ? 2 : 0), bw, Math.max(0, othH - (neg ? 2 : 0)), true), fill: '#2a78d6' }, g);
+    hoverable(g, `${total} 条（负面 ${neg}）`, `10月${h.slice(3, 5)}日 ${h.slice(6)}:00`);
+    if (h.endsWith(' 00') || h.endsWith(' 12')) {
+      const t = el('text', { x: x + bw / 2, y: H - B + 16, 'text-anchor': 'middle' });
+      t.textContent = h.endsWith(' 00') ? `${+h.slice(0, 2)}/${+h.slice(3, 5)}` : '12 时';
+    }
+  });
+  const pk = rows.length - 1, pkX = L + pk * step + 1 + bw / 2;
+  const lab = el('text', { x: pkX - 4, y: y(66) - 6, 'text-anchor': 'end' }); lab.textContent = '20 时 66 条'; lab.style.fill = '#1f1f1d';
+  document.getElementById('hourly').append(svg);
+  const tb = document.createElement('table');
+  tb.innerHTML = '<tr><th>时间</th><th>相关记录</th><th>其中负面</th></tr>';
+  for (const [h, t, n] of rows) { if (!t) continue; const tr = document.createElement('tr'); for (const c of [h + ':00', t, n]) { const td = document.createElement('td'); td.textContent = c; tr.append(td); } tb.append(tr); }
+  document.getElementById('hourly-table').append(tb);
+})();
+
+// 安全高压线复核
+(() => {
+  const host = document.getElementById('tiles');
+  const kinds = ['meme', 'meme', 'meme', 'meme', 'meme', 'meme', 'real', 'real'];
+  const labels = ['#刹车 #踩断 话题笔记', '「啊，我们又赢了」', '「那还是刹车断了震撼」', '「刹车踏板断裂和汽车会飞之间的差距巨大」', '「刹车踏板会断吗」', '「零到60公里一秒刹得住吗？」', 'Model Y 车主：刹车三次有两次莫名其妙', '「这个车出事了没有人遮盖起来」'];
+  kinds.forEach((k, i) => {
+    const t = document.createElement('div'); t.className = 'tile ' + k; t.textContent = k === 'meme' ? '梗' : '车况';
+    hoverable(t, k === 'meme' ? '对比梗，说的是尊界' : '指向特斯拉车况', labels[i]);
+    host.append(t);
+  });
+})();
+
+// 七维度
+(() => {
+  const host = document.getElementById('dims');
+  for (const [name, s, m] of DATA.dims) {
+    const row = document.createElement('div'); row.className = 'score';
+    const n = document.createElement('div'); n.className = 'name'; n.textContent = name;
+    const t = document.createElement('div'); t.className = 'track';
+    const f = document.createElement('div'); f.className = 'fill'; f.style.width = (s / m * 100) + '%'; t.append(f);
+    const v = document.createElement('div'); v.className = 'num'; v.textContent = `${s}/${m}`;
+    row.append(n, t, v); hoverable(row, `${s} / ${m}`, name); host.append(row);
+  }
+  const rh = document.getElementById('rules');
+  for (const [name, isNew] of DATA.rules) { const d = document.createElement('div'); d.textContent = name; if (isNew) { d.className = 'new'; } rh.append(d); }
+})();
+</script>
+</body>
+</html>

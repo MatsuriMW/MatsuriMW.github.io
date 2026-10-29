@@ -1,0 +1,2149 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>英语备课 Agent Demo</title>
+<meta name="description" content="无锡初中英语备课助手：一份教案同时贴合年级、学校、学生薄弱点和老师的讲题习惯。老师和学生的档案是会自己更新的记忆，题库来自 71 份无锡真卷。">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f6f5f1; --surface: #fcfcfb; --ink: #1f1f1d; --ink-2: #55544f; --ink-3: #8a8984;
+    --rule: #e6e4de; --blue: #2a78d6; --blue-soft: #dbe8f8; --red: #c4534a; --red-soft: #f6e4e1;
+    --green: #3d8b5a; --green-soft: #e1f0e6; --neutral-soft: #ecebe6; --accent-bg: #f1f5fb; --violet: #7c56b8; --violet-soft: #ece5f6;
+    --s-grade: #2a78d6; --s-school: #1f9e89; --s-student: #d9822b; --s-teacher: #7c56b8;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.7 -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 36px 24px 80px; }
+  @media (max-width: 520px) { .wrap { padding: 32px 16px 64px; } h1 { font-size: 27px !important; } }
+  .eyebrow { font-size: 13px; letter-spacing: .08em; color: var(--ink-3); }
+  h1 { font-size: 34px; line-height: 1.3; margin: 8px 0 12px; font-weight: 700; }
+  h2 { font-size: 21px; margin: 0; font-weight: 700; }
+  h3 { font-size: 15px; margin: 0 0 8px; font-weight: 600; color: var(--ink-2); }
+  p { margin: 0 0 12px; }
+  a { color: var(--blue); text-decoration: none; }
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 820px; }
+  .note { font-size: 13px; color: var(--ink-3); }
+  .card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px 22px; min-width: 0; }
+  @media (max-width: 520px) { .card { padding: 16px 14px; } }
+  header > * { animation: rise .7s var(--ease) backwards; }
+  header > :nth-child(2) { animation-delay: .06s; } header > :nth-child(3) { animation-delay: .12s; } header > :nth-child(4) { animation-delay: .18s; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+  [hidden] { display: none !important; }
+  .stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 18px; font-size: 13px; color: var(--ink-2); }
+  .stats b { font-size: 18px; color: var(--ink); font-weight: 650; margin-right: 3px; font-variant-numeric: tabular-nums; }
+
+  section.step { margin-top: 40px; }
+  .step-h { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .step-h .n { font: 600 13px/1 ui-monospace, Menlo, monospace; color: var(--ink-3); border: 1px solid var(--rule); border-radius: 99px; padding: 4px 9px; }
+  .step-h .note { flex-basis: 100%; margin-left: 46px; }
+  @media (max-width: 520px) { .step-h .note { margin-left: 0; } }
+  .grid2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .chip { font: inherit; font-size: 14px; padding: 5px 13px; border-radius: 99px; border: 1px solid var(--rule); background: #fff; color: var(--ink-2); cursor: pointer; transition: border-color .2s, color .2s, background .2s; }
+  .chip:hover { border-color: var(--blue); color: var(--blue); }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { font: inherit; font-weight: 600; padding: 10px 22px; border: 0; border-radius: 10px; background: var(--ink); color: #fff; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid #d6d4cd; font-weight: 500; }
+  .btn.small { padding: 6px 14px; font-size: 14px; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .linkbtn { font: inherit; font-size: 13px; background: none; border: 0; color: var(--blue); cursor: pointer; padding: 0; }
+  textarea, input[type=text], input[type=number], select { font: inherit; font-size: 15px; padding: 8px 12px; border: 1px solid #d6d4cd; border-radius: 10px; background: #fff; color: var(--ink); }
+  textarea { width: 100%; min-height: 84px; resize: vertical; line-height: 1.6; }
+  input[type=text] { width: 100%; }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--blue); outline-offset: -1px; border-color: transparent; }
+
+  /* 档案 */
+  .who { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .who .nm { font-size: 22px; font-weight: 700; }
+  .who .meta { font-size: 14px; color: var(--ink-2); }
+  .remind { margin: 14px 0 4px; padding: 10px 14px; background: var(--accent-bg); border-radius: 10px; font-size: 14px; color: var(--ink-2); }
+  .remind div::before { content: "› "; color: var(--blue); font-weight: 700; }
+  .mems { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+  .mem { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: start; padding: 9px 11px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; transition: background .6s; }
+  .mem.flash { background: #fff6d9; }
+  .mem .id { font: 600 12px/22px ui-monospace, Menlo, monospace; color: var(--ink-3); }
+  .mem .tx { font-size: 14px; line-height: 1.55; }
+  .mem .sub { grid-column: 2 / 3; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--ink-3); align-items: center; }
+  .mem .x { border: 0; background: none; color: var(--ink-3); cursor: pointer; font-size: 15px; line-height: 22px; padding: 0 2px; }
+  .mem .x:hover { color: var(--red); }
+  .tag { display: inline-block; font-size: 12px; padding: 0 7px; border-radius: 6px; background: var(--neutral-soft); color: var(--ink-2); margin-right: 6px; line-height: 20px; white-space: nowrap; }
+  .tag.weak { background: var(--red-soft); color: #9a3e36; } .tag.ok { background: var(--green-soft); color: #2f6e47; }
+  .tag.t { background: var(--violet-soft); color: #5e3f94; }
+  .bar { display: inline-block; width: 64px; height: 6px; border-radius: 3px; background: var(--neutral-soft); position: relative; overflow: hidden; vertical-align: middle; }
+  .bar i { position: absolute; inset: 0 auto 0 0; background: var(--red); border-radius: 3px; }
+  details.fold { margin-top: 12px; font-size: 14px; }
+  details.fold summary { cursor: pointer; color: var(--ink-3); font-size: 13px; }
+  .logs { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+  .logs li { margin-bottom: 4px; }
+
+  /* 学生画像：注意力、薄弱知识点（MAT-500 / 501） */
+  .who-ctl { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 13px; color: var(--ink-2); }
+  .who-ctl select { font-size: 13px; padding: 3px 8px; }
+  .ledger { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .ledger th, .ledger td { border-bottom: 1px solid var(--rule); padding: 5px 6px; text-align: left; vertical-align: top; }
+  .ledger th { color: var(--ink-3); font-weight: 500; }
+  .ledger td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .st-long { color: #9a3e36; font-weight: 600; } .st-watch { color: var(--ink-3); }
+  /* 老师设置和画像（MAT-498） */
+  .setgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin-top: 10px; }
+  @media (max-width: 520px) { .setgrid { grid-template-columns: 1fr; } }
+  .setgrid label { display: grid; gap: 3px; font-size: 12.5px; color: var(--ink-2); }
+  .setgrid select, .setgrid input { font-size: 14px; padding: 5px 8px; width: 100%; }
+  .slog { list-style: none; padding: 0; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); display: grid; gap: 3px; }
+  .habit { padding: 9px 11px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; font-size: 14px; margin-top: 8px; }
+  .habit .ev { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+  .addmem { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .addmem input { flex: 1 1 12em; font-size: 14px; padding: 5px 8px; }
+  .addmem select { font-size: 13px; padding: 4px 6px; }
+  .rec { margin-top: 16px; }
+  .examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
+  .examples button { font: inherit; font-size: 12.5px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2); cursor: pointer; text-align: left; }
+  .examples button:hover { border-color: var(--blue); color: var(--blue); }
+  .ops { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
+  .op { display: grid; grid-template-columns: 48px 1fr auto; gap: 8px; font-size: 13.5px; padding: 8px 10px; border-radius: 10px; background: #fff; border: 1px solid var(--rule); animation: rise .4s var(--ease) backwards; }
+  .op .k { font-weight: 650; font-size: 12px; } .op.add .k { color: var(--green); } .op.update .k { color: var(--blue); } .op.delete .k { color: var(--red); }
+  .op .why { color: var(--ink-3); font-size: 12px; }
+  .op.undone { opacity: .45; text-decoration: line-through; }
+  .status { font-size: 14px; color: var(--ink-2); display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: baseline; margin-top: 10px; }
+  .err { color: var(--red); }
+
+  /* 考试 */
+  .row { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+  .field { display: grid; gap: 6px; }
+  .field > .lab { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .exam-grid { display: grid; grid-template-columns: repeat(4, auto); gap: 14px 24px; align-items: end; justify-content: start; }
+  @media (max-width: 720px) { .exam-grid { grid-template-columns: 1fr 1fr; } }
+  .why { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+  .why .ev { color: var(--ink-3); }
+  .badge { font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--blue-soft); color: var(--blue); margin-left: 6px; }
+  .kv { display: grid; grid-template-columns: 5.5em 1fr; gap: 6px 12px; font-size: 14px; margin-top: 16px; }
+  .kv dt { color: var(--ink-3); } .kv dd { margin: 0; }
+
+  /* 占比 */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  #sankey { width: 100%; display: block; }
+  #sankey text { font-size: 12.5px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+  #sankey path { transition: opacity .2s; }
+  .sliders { display: grid; gap: 8px; margin-top: 6px; }
+  .sl { display: grid; grid-template-columns: 7.5em 1fr 7.5em; gap: 10px; align-items: center; font-size: 14px; }
+  .sl input { width: 100%; accent-color: var(--ink); }
+  .sl .v { font-variant-numeric: tabular-nums; text-align: right; color: var(--ink-2); font-size: 13px; }
+  .sl .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sl.off .nm { color: var(--ink-3); }
+  .stack { grid-column: 2 / 3; height: 4px; display: flex; border-radius: 2px; overflow: hidden; margin-top: -6px; background: var(--neutral-soft); }
+  .sug { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+  .sug li { padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--rule); font-size: 14px; animation: rise .4s var(--ease) backwards; }
+  .sug .t { font-weight: 650; } .sug .ev { color: var(--ink-3); font-size: 12.5px; margin-top: 2px; }
+  .sug .acts { margin-top: 6px; display: flex; gap: 10px; align-items: center; }
+
+  /* 教案 */
+  .stages { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+  .stages span { font-size: 13px; padding: 3px 11px; border-radius: 99px; border: 1px dashed var(--rule); color: var(--ink-3); }
+  .stages span.on { border-style: solid; border-color: var(--blue); color: var(--blue); background: linear-gradient(90deg, #fff 30%, var(--accent-bg) 50%, #fff 70%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+  .stages span.done { border-style: solid; color: var(--ink-2); }
+  .items { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: 860px) { .items { grid-template-columns: 1fr; } }
+  .it { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; min-width: 0; animation: rise .4s var(--ease) backwards; scroll-margin-top: 16px; }
+  .it.hl { outline: 2px solid var(--blue); }
+  .it .hd { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .it .code { font: 650 13px ui-monospace, Menlo, monospace; }
+  .it .src { color: var(--ink-3); font-size: 12.5px; }
+  .it .ws { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+  .it .ws span { font-size: 11.5px; padding: 0 7px; border-radius: 6px; background: var(--neutral-soft); color: var(--ink-2); }
+  .it .ws span.k { background: var(--red-soft); color: #9a3e36; }
+  .dtier { font-size: 11.5px; padding: 0 7px; border-radius: 6px; cursor: help; }
+  .dtier.偏易 { background: #e3f0fa; color: #1f5ea8; } .dtier.适中 { background: var(--neutral-soft); color: var(--ink-2); } .dtier.偏难 { background: #fbeadb; color: #9a5a17; }
+  .ochip .dtier { margin-left: 2px; }
+  /* 比例横条（照 iPhone「存储空间」）：一条分段的彩色横条 + 图例；拖两段之间的分界线，在相邻两段之间挪比例；图例上 ± 微调 */
+  .sbar { position: relative; display: flex; height: 26px; border-radius: 8px; overflow: hidden; background: var(--neutral-soft); margin: 6px 0 4px; touch-action: none; user-select: none; }
+  .sbar .seg { min-width: 0; transition: flex-grow .15s; } .sbar.drag .seg { transition: none; }
+  .sbar .grip { flex: 0 0 0; position: relative; z-index: 1; }
+  .sbar .grip::after { content: ""; position: absolute; top: 0; bottom: 0; left: -11px; width: 22px; cursor: ew-resize; }
+  .sbar .grip::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: -1.5px; width: 3px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+  .slegend { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 12px; font-size: 13px; }
+  .slegend li { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .slegend .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .slegend .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .slegend .v { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .slegend button { border: 1px solid var(--rule); background: #fff; border-radius: 6px; width: 24px; height: 24px; padding: 0; font: inherit; line-height: 1; cursor: pointer; color: var(--ink-2); }
+  @media (max-width: 520px) { #sankey, #sliders, .legend { display: none; } .slegend { grid-template-columns: 1fr; } .slegend button { width: 32px; height: 30px; } }
+  .qt { white-space: pre-wrap; font-size: 13px; line-height: 1.6; max-height: 9.6em; overflow: hidden; position: relative; color: var(--ink); overflow-wrap: anywhere; }
+  .qt.open { max-height: none; }
+  .qt:not(.open)::after { content: ""; position: absolute; inset: auto 0 0 0; height: 2.4em; background: linear-gradient(transparent, #fff); }
+  .qt img { max-width: 100%; display: block; margin: 6px 0; border-radius: 6px; border: 1px solid var(--rule); }
+  .ans { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
+  footer { margin-bottom: 56px; }
+  .md { font-size: 15px; line-height: 1.75; overflow-wrap: anywhere; }
+  .md h1 { font-size: 22px; margin: 4px 0 12px; } .md h2 { font-size: 18px; margin: 26px 0 8px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .md h3 { font-size: 15.5px; margin: 18px 0 6px; color: var(--ink); }
+  .md table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin: 8px 0; display: block; overflow-x: auto; }
+  .md th, .md td { border: 1px solid var(--rule); padding: 6px 8px; text-align: left; vertical-align: top; }
+  .md th { background: var(--neutral-soft); }
+  .md ul, .md ol { padding-left: 22px; }
+  .cite { font: 600 11px/1 ui-monospace, Menlo, monospace; padding: 2px 5px; border-radius: 5px; vertical-align: 1px; cursor: help; white-space: nowrap; }
+  .cite.S { background: #fbeadb; color: #9a5a17; } .cite.T { background: var(--violet-soft); color: #5e3f94; }
+  .cite.考 { background: var(--blue-soft); color: #1f5ea8; } .cite.校 { background: #dcf1ec; color: #17695b; }
+  .ecode { font-weight: 650; }
+  .caret::after { content: "▍"; color: var(--blue); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .secbtn { margin-left: 10px; font-size: 12.5px; font-weight: 400; opacity: .75; }
+  .secbtn:hover, .secbtn.warn { opacity: 1; } .secbtn.warn { color: #b0612a; }
+  .secform { margin: 4px 0 12px; padding: 10px 12px; border: 1px solid var(--blue-soft); background: var(--accent-bg); border-radius: 10px; display: grid; gap: 4px; }
+  .secform .examples { margin: 2px 0; }
+  a.ecode.stale { color: #b0612a; text-decoration: underline wavy; }
+  #editor { width: 100%; font: 13px/1.6 ui-monospace, Menlo, monospace; min-height: 360px; }
+  /* 彩色视觉版（MAT-501）：题型一个颜色（Okabe-Ito 色盲友好配色），==词== 高亮且加粗下划线，黑白打印也分得清 */
+  .md.visual { font-size: 16px; line-height: 1.85; }
+  .md.visual h3 { border-left: 6px solid var(--tc, #55544f); padding: 4px 10px; background: color-mix(in srgb, var(--tc, #55544f) 9%, #fff); border-radius: 4px; }
+  .md mark { background: #fff1a8; color: inherit; font-weight: 650; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; padding: 0 2px; border-radius: 3px; }
+  /* 教案模板（MAT-502） */
+  .tplrow { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 18px; font-size: 14px; }
+  .tplrow select { font-size: 14px; padding: 5px 8px; }
+  .tpled { margin-top: 10px; padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; display: grid; gap: 8px; font-size: 13.5px; }
+  .tpled .secrow { display: grid; grid-template-columns: minmax(6em, 10em) 8.5em 1fr auto; gap: 6px; align-items: center; }
+  @media (max-width: 620px) { .tpled .secrow { grid-template-columns: 1fr 1fr; } }
+  .tpled input, .tpled select { font-size: 13.5px; padding: 4px 7px; width: 100%; }
+  .tpled .o-ctl { white-space: nowrap; }
+  .trace { margin-top: 12px; }
+  .trace table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 8px 0; display: block; overflow-x: auto; }
+  .trace th, .trace td { border-bottom: 1px solid var(--rule); padding: 5px 8px; text-align: left; vertical-align: top; }
+  .trace th { color: var(--ink-3); font-weight: 500; }
+  .acts-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+
+  /* 大纲 */
+  .o-title { font-size: 20px !important; font-weight: 700; margin-top: 14px; border-color: transparent !important; background: transparent !important; padding-left: 0 !important; }
+  .o-title:hover { border-color: #d6d4cd !important; }
+  .o-basis { display: grid; grid-template-columns: 3.2em 1fr; gap: 6px 10px; margin: 6px 0 14px; font-size: 14px; }
+  .o-basis dt { font-weight: 650; } .o-basis dd { margin: 0; }
+  .o-basis dd textarea { min-height: 0; font-size: 14px; padding: 4px 8px; border-color: transparent; background: transparent; }
+  .o-basis dd textarea:hover { border-color: #d6d4cd; background: #fff; }
+  .o-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  @media (max-width: 720px) { .o-grid { grid-template-columns: 1fr; } }
+  .o-list { min-height: 72px; font-size: 14px; }
+  .o-head { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0 8px; }
+  #oTotal { font-size: 13px; font-variant-numeric: tabular-nums; } #oTotal.bad { color: var(--red); font-weight: 600; }
+  .o-secs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }   /* 不让「+ 加题」下拉框的长选项把卡片撑出屏幕 */
+  .o-sec { border: 1px solid var(--rule); border-left: 4px solid #cfcdc6; border-radius: 10px; background: #fff; padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; transition: background .6s; }
+  .o-sec.flash { background: #fff6d9; }
+  .o-top { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+  .o-time { font: 600 12px ui-monospace, Menlo, monospace; color: var(--ink-3); min-width: 5.6em; }
+  .o-name { flex: 1 1 10em; width: auto !important; font-weight: 600; padding: 4px 8px !important; }
+  .o-type { font-size: 13px !important; padding: 4px 6px !important; }
+  .o-min input { width: 4.2em; padding: 4px 6px; font-size: 14px; }
+  .o-min { font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+  .o-ctl button { border: 0; background: none; color: var(--ink-3); cursor: pointer; font-size: 14px; padding: 2px 4px; }
+  .o-ctl button:hover { color: var(--ink); } .o-ctl [data-del]:hover { color: var(--red); }
+  /* 拖动排序（环节、要点）：按住把手上下拖，手机上手指也能拖 */
+  .drag { cursor: grab; color: var(--ink-3); touch-action: none; user-select: none; padding: 2px 4px; font-size: 14px; line-height: 1; }
+  .dragging { position: relative; z-index: 3; opacity: .92; box-shadow: 0 8px 24px rgba(0,0,0,.14); }
+  .o-pts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .o-pts li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px; align-items: center; background: #fff; border-radius: 6px; }
+  .o-pts input { font-size: 13.5px; padding: 4px 8px; width: 100%; }
+  .o-pts li.ro { display: block; padding: 4px 8px; font-size: 13.5px; color: var(--ink-2); background: transparent; }   /* 课外知识环节的要点跟着条目走，不在这里改 */
+  .o-pts .o-ctl button { padding: 2px 3px; }
+  .secmove { margin-left: 6px; font-size: 12.5px; font-weight: 400; opacity: .6; } .secmove:hover { opacity: 1; }
+  .o-items { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; }
+  .ochip { display: inline-flex; gap: 4px; align-items: center; padding: 1px 4px 1px 8px; border-radius: 99px; background: var(--neutral-soft); color: var(--ink-2); }
+  .ochip a { font-weight: 650; } .ochip button { border: 0; background: none; color: var(--ink-3); cursor: pointer; padding: 0 3px; }
+  .o-items select { font-size: 12.5px; padding: 2px 6px; border-radius: 99px; max-width: 100%; min-width: 0; }
+  .o-find { display: flex; gap: 6px; width: 100%; } .o-find input { font-size: 13px; padding: 4px 8px; }
+
+  /* 聊天 */
+  .chat { position: sticky; top: 64px; height: min(680px, calc(100vh - 88px)); background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; display: flex; flex-direction: column; min-width: 0; }
+  .chat-h { display: flex; align-items: center; gap: 6px; padding: 10px 12px 8px 14px; border-bottom: 1px solid var(--rule); }
+  .chat-h > div { flex: 1; min-width: 0; }
+  .chat-h .ico { border: 0; background: none; font-size: 17px; color: var(--ink-3); cursor: pointer; padding: 2px 6px; }
+  .chat-set { padding: 10px 14px; border-bottom: 1px solid var(--rule); display: grid; gap: 8px; background: var(--accent-bg); }
+  .chat-set input, .chat-set select { width: 100%; font-size: 14px; padding: 6px 10px; }
+  .chat-log { flex: 1; overflow-y: auto; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
+  .msg { font-size: 14px; line-height: 1.6; max-width: 92%; padding: 8px 11px; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; animation: rise .3s var(--ease); }
+  .msg.me { justify-self: end; background: var(--ink); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.ai { justify-self: start; background: #fff; border: 1px solid var(--rule); border-bottom-left-radius: 4px; }
+  .msg.sys { justify-self: center; font-size: 12.5px; color: var(--ink-3); background: none; padding: 0; text-align: center; }
+  .msg.wait { color: var(--ink-3); background: linear-gradient(90deg, #fff 30%, var(--accent-bg) 50%, #fff 70%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+  .msg .chg { list-style: none; margin: 6px 0 0; padding: 6px 0 0; border-top: 1px dashed var(--rule); font-size: 12.5px; color: var(--ink-2); white-space: normal; }
+  .msg .chg li::before { content: "✓ "; color: var(--green); }
+  .msg .undo { margin-top: 4px; font-size: 12.5px; }
+  .msg.undone .chg { text-decoration: line-through; opacity: .6; }
+  .chat-ex { padding: 0 14px; margin: 0 0 6px; }
+  .chat-in { display: flex; gap: 8px; padding: 8px 12px 6px; border-top: 1px solid var(--rule); align-items: flex-end; }
+  .chat-in textarea { min-height: 0; flex: 1; font-size: 14px; padding: 7px 10px; resize: none; }
+  .chat-foot { padding: 0 14px 9px; font-size: 12px; }
+
+  section.how { margin-top: 56px; max-width: 860px; }
+  /* 顶部导航（用户 10-29）：纯文字，当前页深色、其他灰色 */
+  .topnav { position: sticky; top: 0; z-index: 8; background: var(--page); border-bottom: 1px solid var(--rule); }
+  .topnav-in { max-width: 1120px; margin: 0 auto; padding: 14px 24px; display: flex; gap: 36px; overflow-x: auto; scrollbar-width: none; }
+  .topnav a { color: var(--ink-3); font-size: 17px; white-space: nowrap; transition: color .15s; }
+  .topnav a:hover { color: var(--ink-2); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+  .topnav .steps { display: flex; align-items: center; gap: 12px; }
+  .topnav i { font-style: normal; font-size: 14px; color: #c9c7c0; }
+  @media (max-width: 520px) { .topnav-in { padding: 12px 16px; gap: 14px; } .topnav .steps { gap: 5px; } .topnav a { font-size: 15px; } .topnav i { font-size: 12px; } }
+  .page > section.step:first-of-type { margin-top: 0; }
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 15px; }
+  a.btn { display: inline-block; }
+  #step5:not([hidden]) ~ #planEmpty { display: none; }
+  .empty { color: var(--ink-2); }
+  /* 课次记录里的历史教案（MAT-482） */
+  .hist { width: min(860px, calc(100% - 32px)); max-height: calc(100% - 48px); border: 1px solid var(--rule); border-radius: 12px; padding: 0; background: var(--surface); color: var(--ink); }
+  .hist::backdrop { background: rgba(0, 0, 0, .25); }
+  .hist-h { position: sticky; top: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--rule); }
+  .hist-h .sp { flex: 1; }
+  #histNote { margin: 8px 20px 0; } #histNote:empty { display: none; }
+  #histBody { padding: 4px 20px 20px; }
+  /* 审教校验：左边自动检查、老师自己看、教案，右边和 agent 讨论 */
+  .review { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; align-items: start; }
+  .rv-main { display: grid; gap: 16px; min-width: 0; }
+  @media (max-width: 960px) { .review { grid-template-columns: 1fr; } .chat { position: static; height: 560px; } }
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 14.5px; }
+  .checks li { display: grid; grid-template-columns: 4.2em minmax(0, 1fr); gap: 8px; align-items: baseline; }
+  .ck { font: 600 11.5px/1.7 ui-monospace, Menlo, monospace; text-align: center; border-radius: 6px; letter-spacing: .04em; }
+  .ck.ok { color: var(--green); background: var(--green-soft); } .ck.warn { color: #9a5a12; background: #f8ecd9; } .ck.info { color: var(--blue); background: var(--blue-soft); }
+  .mcheck label { display: flex; gap: 8px; align-items: baseline; font-size: 14.5px; margin-bottom: 6px; cursor: pointer; }
+  /* 课外知识补充：大纲里的环节、教案里的那一节都用绿色标出来 */
+  .o-sec.o-extra { background: #f3f8f4; }
+  .xtag { font-size: 12px; font-weight: 600; color: var(--green); background: var(--green-soft); border-radius: 99px; padding: 1px 9px; white-space: nowrap; }
+  .xhint { margin: 8px 0 0; } .xhint b { color: var(--green); }
+  .o-pts li.xcard { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: baseline; padding: 6px 4px 6px 10px; font-size: 13.5px; background: #fff; border: 1px solid #d9eadf; }
+  .xcard .xcat { color: var(--green); font-weight: 600; margin-right: 6px; } .xcard button { border: 0; background: none; color: var(--ink-3); cursor: pointer; }
+  .md .xsec { background: #f3f8f4; border-left: 3px solid var(--green); margin: 0; padding: 4px 16px 4px 14px; }
+  .md h2.xsec { margin-top: 22px; padding-top: 12px; } .md .xsec + :not(.xsec) { margin-top: 16px; }
+  /* 档案页顶部：学生档案、历史教案两个毛玻璃文件夹（组件从博客拷来），旁边是新建和全部档案 */
+  .folders { display: grid; grid-template-columns: 320px 320px minmax(0, 1fr); gap: 20px 28px; align-items: end; margin: 44px 0 18px; }   /* 上面留空：文件夹打开时纸会往上扇 */
+  .fslot { min-width: 0; }
+  .fside { display: grid; gap: 10px; align-content: end; justify-items: start; }
+  .fside .fold { width: 100%; }
+  @media (max-width: 1000px) { .folders { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+  .stulist { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+  .stulist li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 4px 8px; border-radius: 8px; }
+  .stulist li.on { background: var(--accent-bg); }
+  .tag { font-size: 11.5px; color: var(--ink-3); border: 1px solid var(--rule); border-radius: 99px; padding: 0 7px; font-weight: 400; vertical-align: 1px; }
+  .newstu { margin-bottom: 18px; }
+  .draft { color: var(--green); }
+  .flow-wrap { margin-top: 40px; } .flow-wrap .step-h .note { margin-left: 0; }
+  .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 30px; }
+  .flow .fcard { position: relative; }
+  /* 步骤之间的箭头连接线：宽屏横着连，窄屏竖着连 */
+  .flow .fcard:not(:last-child)::after { content: ""; position: absolute; top: 50%; right: -26px; width: 20px; height: 2px; background: #b9b7b0; }
+  .flow .fcard:not(:last-child)::before { content: ""; position: absolute; top: calc(50% - 5px); right: -28px; border: 6px solid transparent; border-left: 8px solid #b9b7b0; border-right: 0; }
+  @media (max-width: 960px) {
+    .flow { grid-template-columns: 1fr; gap: 26px; }
+    .flow .fcard:not(:last-child)::after { top: auto; bottom: -22px; right: auto; left: 32px; width: 2px; height: 16px; }
+    .flow .fcard:not(:last-child)::before { top: auto; bottom: -26px; right: auto; left: 27px; border: 6px solid transparent; border-top: 8px solid #b9b7b0; border-bottom: 0; }
+  }
+  .fcard { display: grid; gap: 4px; align-content: start; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; color: var(--ink); transition: border-color .15s, transform .15s var(--ease); }
+  .fcard:hover { border-color: #cfcdc6; transform: translateY(-1px); }
+  .fcard .n { font: 600 12px/1 ui-monospace, Menlo, monospace; color: var(--ink-3); }
+  .fcard b { font-size: 17px; }
+  .fcard .now { font-size: 14.5px; color: var(--ink); }
+  .fcard .go { font-size: 13px; color: var(--blue); margin-top: 6px; }
+  section.how ul { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 15px; }
+  section.how li { margin-bottom: 8px; }
+  footer { margin-top: 64px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; }
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: #fff; font-size: 14px; padding: 9px 16px; border-radius: 10px; display: flex; gap: 14px; align-items: center; z-index: 9; animation: rise .3s var(--ease); max-width: calc(100% - 32px); }
+  .toast button { background: none; border: 0; color: #9cc3f5; font: inherit; cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<nav class="topnav" aria-label="页面"><div class="topnav-in">
+  <a href="#/" data-page="home">首页</a><span class="steps"><a href="#/profile" data-page="profile">档案</a><i aria-hidden="true">→</i><a href="#/exam" data-page="exam">考试</a><i aria-hidden="true">→</i><a href="#/outline" data-page="outline">维度与大纲</a><i aria-hidden="true">→</i><a href="#/plan" data-page="plan">教案</a><i aria-hidden="true">→</i><a href="#/review" data-page="review">审教</a></span>
+</div></nav>
+<div class="wrap">
+<div class="page" data-page="home">
+<header>
+  <div class="eyebrow">ENGLISH PREP AGENT · 马自立</div>
+  <h1>英语备课 Agent</h1>
+  <p class="lede">给无锡初中英语老师用的备课助手。一份教案同时贴合四样东西：<b style="color:var(--s-grade)">年级</b>（下一场考试考什么）、<b style="color:var(--s-school)">学校</b>（这场考试用谁的卷子）、<b style="color:var(--s-student)">学生</b>（薄弱点）、<b style="color:var(--s-teacher)">老师</b>（讲题习惯和这次的要求）。老师和学生的档案是会自己更新的记忆：课后随手记一笔，agent 把它拆成增删改，每条都能撤销；课记得越多，它给的教案改进建议越具体。教案不一步到位：先出大纲，老师改环节、分钟、用题，确认后再写成教案；写好以后在「审教」页过一遍，要改的地方跟 agent 商量着改。每节课还会自动加一段<b style="color:var(--green)">课外知识补充</b>：按这节课用到的题，挑词根词缀、熟词僻义、真考过的俗语谚语这类现成讲解。</p>
+  <p class="note">学生是虚构的，学校是真实学校；你在这页上做的改动只存在你自己的浏览器里。</p>
+  <div class="stats" id="stats"></div>
+</header>
+<section class="flow-wrap">
+  <div class="step-h"><h2>备课流程</h2><span class="note">五步按顺序走：看档案 → 定下一场考试 → 调四个维度的占比、排大纲 → 写成教案 → 审教校验（自动检查 + 老师自己看，要改的跟 agent 说）。哪一步都能回头改，改动只存在你自己的浏览器里。</span></div>
+  <div class="flow" id="flow"></div>
+</section>
+<section class="how">
+  <h2 style="margin-bottom:10px">怎么做的</h2>
+  <ul id="how"></ul>
+</section>
+</div>
+
+<div class="page" data-page="profile" hidden>
+<!-- 1 档案 -->
+<section class="step">
+  <div class="step-h"><span class="n">1</span><h2>档案</h2><span class="note">上面两个文件夹是学生档案和这个学生的历史教案；下面左边是当前学生，右边是老师。点 × 让 agent 忘掉一条，每条记忆都写着依据和来源。</span></div>
+  <div class="folders">
+    <div class="fslot" id="stuFolder"></div>
+    <div class="fslot" id="histFolder"></div>
+    <div class="fside">
+      <p class="note">点开文件夹，点一张就切到那份档案、打开那份教案。前三份是示例档案，看明白了就给自己的学生建档；档案和教案只存在你的浏览器里。</p>
+      <button class="btn small" id="newStuBtn">+ 新建学生档案</button>
+      <details class="fold" id="allStu"><summary id="allStuSum">全部档案</summary><ul class="stulist" id="stuList"></ul></details>
+    </div>
+  </div>
+  <form class="card newstu" id="newStu" hidden>
+    <h3>新建学生档案</h3>
+    <div class="setgrid">
+      <label>名字<input id="nsName" maxlength="10" required placeholder="比如：王同学"></label>
+      <label>年级<select id="nsGrade"><option value="7">七年级</option><option value="8" selected>八年级</option><option value="9">九年级</option></select></label>
+      <label>学校<select id="nsSchool"></select></label>
+      <label id="nsOtherWrap" hidden>学校名<input id="nsOther" maxlength="20" placeholder="比如：天一中学"></label>
+      <label>所在区<select id="nsDistrict"></select></label>
+      <label>公办 / 私立<select id="nsOwn"><option>公办</option><option>私立</option></select></label>
+      <label>注意力<select id="nsAttn"><option>集中</option><option selected>一般</option><option>容易分心</option></select></label>
+      <label>现在学到<select id="nsUnit"></select></label>
+    </div>
+    <p class="note" style="margin-top:10px">新档案从空白开始：上完课记一笔，agent 会把薄弱点、学习习惯一条条记进来；排大纲时按年级和学校找题。</p>
+    <div class="row" style="margin-top:6px"><button class="btn small">建档</button><button type="button" class="linkbtn" id="nsCancel">取消</button></div>
+  </form>
+  <div class="grid2">
+    <div class="card">
+      <div class="who" id="who"></div>
+      <div class="remind" id="remind"></div>
+      <ul class="mems" id="stuMems"></ul>
+      <details class="fold" id="ledgerWrap" open><summary id="ledgerSum">薄弱知识点</summary><div id="ledger"></div></details>
+      <details class="fold"><summary id="logsSum">课次记录</summary><ol class="logs" id="logs"></ol></details>
+      <details class="fold" id="forgotWrap" hidden><summary>已忘记</summary><ul class="mems" id="forgot"></ul></details>
+    </div>
+    <div class="card">
+      <h3>老师档案 · 示例老师</h3>
+      <ul class="mems" id="teaMems"></ul>
+      <form class="addmem" id="addMem"><select id="amCat" aria-label="分类"></select><select id="amType" aria-label="题型"></select><input id="amText" maxlength="60" placeholder="自己加一条，比如：讲阅读先让学生划关键词"><button class="btn small ghost">加上</button></form>
+      <details class="fold" id="setWrap"><summary id="setSum">课堂设置</summary><form class="setgrid" id="setForm"></form><ul class="slog" id="setLog"></ul></details>
+      <details class="fold" id="profWrap"><summary id="profSum">老师画像：从你的操作里看出来的习惯</summary><div id="prof"></div></details>
+      <div class="rec">
+        <h3 style="margin-bottom:2px">课后记一笔 <span class="note" style="font-weight:400">课后记录、随口交代、对教案的意见都行</span></h3>
+        <div class="examples" id="recEx"></div>
+        <textarea id="recText" maxlength="1000" placeholder="比如：今天完形 10 错 4，都错在转折处；动词填空全对了。"></textarea>
+        <div class="row" style="margin-top:10px"><button class="btn small" id="recBtn">交给 agent</button><span class="note" id="recNote"></span></div>
+        <ul class="ops" id="ops"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="pager"><a href="#/">← 首页</a><a class="btn" href="#/exam">下一步：考试 →</a></nav>
+</div>
+
+<div class="page" data-page="exam" hidden>
+<!-- 2 下一场考试 -->
+<section class="step">
+  <div class="step-h"><span class="n">2</span><h2>下一场考试</h2><span class="note">按今天的日期推出下一场考试，老师可以改。统不统考由老师选，系统只给建议。</span></div>
+  <div class="card">
+    <div class="exam-grid">
+      <label class="field"><span class="lab">考试</span><select id="examKind"></select></label>
+      <label class="field"><span class="lab">当前单元</span><select id="unit"></select></label>
+      <label class="field"><span class="lab">课时（分钟）</span><input type="number" id="minutes" min="40" max="240" step="10" style="width:7em"></label>
+      <div class="field"><span class="lab">离考试</span><span id="days" style="font-size:15px"></span></div>
+    </div>
+    <div class="field" style="margin-top:18px"><span class="lab">这场考试用谁的卷子 <span class="badge" id="lvBadge"></span></span>
+      <div class="chips" id="level"></div>
+      <div class="why" id="lvWhy"></div>
+    </div>
+    <div class="field" style="margin-top:18px"><span class="lab">例题难度 <span class="note" style="font-weight:400">按选项和文章里的课外词、难词算（同一题型里分三档）；默认取老师设置</span></span>
+      <div class="chips" id="diffChips"></div>
+    </div>
+    <dl class="kv" id="kv"></dl>
+    <div class="field" style="margin-top:18px"><span class="lab">这次课的要求 <span class="note" style="font-weight:400">优先级最高；提到的题型会自动加权</span></span>
+      <input type="text" id="guidance" maxlength="200" placeholder="比如：这次重点讲阅读的推理判断题">
+      <div class="examples" id="gEx"></div>
+    </div>
+  </div>
+</section>
+
+<nav class="pager"><a href="#/profile">← 档案</a><a class="btn" href="#/outline">下一步：维度与大纲 →</a></nav>
+</div>
+
+<div class="page" data-page="outline" hidden>
+<!-- 3 占比 -->
+<section class="step">
+  <div class="step-h"><span class="n">3</span><h2>四个维度怎么分这节课</h2><span class="note">每个题型的份额拆成四个来源。拖滑块改占比，其他题型按比例让出时间；老师调高的部分记在「老师」名下。</span></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="legend"><span><i style="background:var(--s-grade)"></i>年级 · 考试结构</span><span><i style="background:var(--s-school)"></i>学校 · 本校本区卷</span><span><i style="background:var(--s-student)"></i>学生 · 薄弱点</span><span><i style="background:var(--s-teacher)"></i>老师 · 侧重和要求</span></div>
+      <svg id="sankey" role="img" aria-label="四个来源到各题型的占比桑基图"></svg>
+      <p class="note" id="mixNote" style="margin-top:8px"></p>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h3 style="margin:0">各题型占比</h3><button class="linkbtn" id="resetMix">恢复建议</button></div>
+      <div id="mixBar"></div>
+      <div class="sliders" id="sliders"></div>
+      <div class="field" style="margin-top:16px"><span class="lab">单元安排</span>
+        <div class="sl" style="grid-template-columns:7.5em 1fr 7.5em"><span class="nm">旧单元复习</span><input type="range" id="review" min="0" max="100" step="5"><span class="v" id="reviewV"></span></div>
+        <div class="note" id="reviewNote"></div>
+      </div>
+      <div style="margin-top:16px; border-top:1px solid var(--rule); padding-top:14px">
+        <div class="row" style="justify-content:space-between"><h3 style="margin:0">让 agent 复盘前几次课</h3><button class="btn small ghost" id="reviewBtn">复盘</button></div>
+        <p class="note" style="margin:4px 0 0">对照每次课的教案怎么排、课后错在哪，给这次课提改进建议。课记得越多越准。</p>
+        <ul class="sug" id="sug"></ul>
+        <div class="note" id="sugNote"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 大纲 -->
+<section class="step" id="step4">
+  <div class="step-h"><span class="n">3</span><h2>大纲设计</h2><span class="note">先按占比从题库检索例题，排一份大纲。环节、分钟、要点、用哪道题都能直接改，也可以到「审教」页跟 agent 说；大纲里的分钟数会同步到上面的占比。</span></div>
+  <div class="card">
+    <div class="row"><button class="btn" id="outlineBtn">生成大纲</button><span class="note" id="outlineNote"></span></div>
+    <p class="note xhint" id="xHint"></p>
+      <div class="tplrow"><label>教案模板 <select id="tplSel" aria-label="教案模板"></select></label><span class="note" id="tplNote"></span><button type="button" class="linkbtn" id="tplStu"></button><button type="button" class="linkbtn" id="tplEdit">管理模板</button></div>
+      <div class="tpled" id="tplEd" hidden></div>
+      <label class="field" style="margin-top:8px"><span class="lab">对这份教案还有什么要求 <span class="note" style="font-weight:400">结构、风格都可以写，优先于模板</span></span>
+        <input type="text" id="planNote" maxlength="300" placeholder="比如：开头先放 5 分钟听力热身；讲解写成我能直接念的话；不要板书设计"></label>
+    <div class="stages" id="stages" hidden><span data-k="retrieve">检索例题</span><span data-k="outline">排大纲</span><span data-k="done">完成</span></div>
+    <div id="outlineWrap" hidden>
+      <input type="text" class="o-title" id="oTitle" maxlength="60" aria-label="大纲标题">
+      <dl class="o-basis" id="oBasis"></dl>
+      <div class="o-grid">
+        <label class="field"><span class="lab">教学目标 <span class="note">一行一条</span></span><textarea class="o-list" data-list="goals" rows="3"></textarea></label>
+        <label class="field"><span class="lab">根据前几次课的调整</span><textarea class="o-list" data-list="adjust" rows="3"></textarea></label>
+      </div>
+      <div class="o-head"><h3 style="margin:0">课堂环节</h3><span id="oTotal"></span></div>
+      <div id="secBar"></div>
+      <ol class="o-secs" id="oSecs"></ol>
+      <button class="linkbtn" id="oAdd">+ 加一个环节</button>
+      <div class="o-grid" style="margin-top:14px">
+        <label class="field"><span class="lab">课后作业</span><textarea class="o-list" data-list="homework" rows="3"></textarea></label>
+        <label class="field"><span class="lab">下次课观察点</span><textarea class="o-list" data-list="watch" rows="3"></textarea></label>
+      </div>
+      <div class="acts-row"><button class="btn" id="writeBtn">按大纲写教案</button><button class="btn small ghost" id="reOutline">重新生成大纲</button><span class="note" id="writeNote"></span><span class="note draft" data-draft></span></div>
+    </div>
+    <div id="itemsWrap" hidden><h3 style="margin-top:22px">这份大纲用到的例题 <span class="note" style="font-weight:400">不合适的可以「换一题」，编号不变</span></h3><div class="items" id="items"></div><details class="fold trace" id="trace"></details></div>
+  </div>
+</section>
+
+<nav class="pager"><a href="#/exam">← 考试</a><a class="btn ghost" href="#/plan">去教案 →</a></nav>
+</div>
+
+<div class="page" data-page="plan" hidden>
+<!-- 5 教案 -->
+<section class="step" id="step5" hidden>
+  <div class="step-h"><span class="n">4</span><h2>教案</h2><span class="note">按大纲写成的完整教案。每一节都能单独改，也能直接改文字，或者到「审教」页跟 agent 说；导出 Word 时例题原文和图片放在附录。</span></div>
+  <div class="card plan">
+    <div class="md" id="plan"></div>
+    <textarea id="editor" hidden spellcheck="false"></textarea>
+    <div class="acts-row" id="planActs" hidden>
+      <button class="btn small" id="docxBtn" data-v="teacher">导出老师版</button>
+      <button class="btn small" id="docxStu" data-v="student">导出学生版</button>
+      <button class="btn small ghost" id="editBtn">直接改文字</button>
+      <button class="btn small ghost" id="copyBtn">复制 Markdown</button>
+      <button class="btn small ghost" id="afterBtn">上完课记一笔</button>
+      <span class="note" id="usage"></span><span class="note draft" data-draft></span>
+    </div>
+  </div>
+</section>
+
+<div class="card empty" id="planEmpty">还没有教案。先到「维度与大纲」生成大纲，改好以后点「按大纲写教案」，写好的教案会出现在这里。<div style="margin-top:12px"><a class="btn small" href="#/outline">去维度与大纲 →</a></div></div>
+<nav class="pager"><a href="#/outline">← 维度与大纲</a><a class="btn" href="#/review">下一步：审教 →</a></nav>
+</div>
+
+<div class="page" data-page="review" hidden>
+<!-- 5 审教 -->
+<section class="step">
+  <div class="step-h"><span class="n">5</span><h2>审教校验</h2><span class="note">教案写好以后在这里过一遍：系统先做几项自动检查，老师自己再看一遍；哪里要改，直接在右边跟 agent 说，改动同步到教案，每次都能撤销。</span></div>
+  <div class="review">
+    <div class="rv-main">
+      <div class="card"><h3>自动检查</h3><ul class="checks" id="rvChecks"></ul></div>
+      <div class="card" id="rvManualWrap"><div class="row" style="justify-content:space-between"><h3 style="margin:0">老师自己看</h3><span class="note" id="rvManualN"></span></div><div class="mcheck" id="rvManual"></div></div>
+      <div class="card plan" id="rvPlanWrap"><div class="row" style="justify-content:space-between"><h3 style="margin:0">教案</h3><span class="row"><button class="btn small" id="rvDocxT" data-v="teacher">导出老师版</button><button class="btn small" id="rvDocxS" data-v="student">导出学生版</button></span></div><div class="md" id="rvPlan"></div></div>
+    </div>
+    <div class="chat" id="chat" role="region" aria-label="和备课 agent 讨论修改">
+      <div class="chat-h"><div><b>备课 agent</b><div class="note" id="chatStage"></div></div><button class="ico" id="chatGear" title="模型和 key">⚙</button></div>
+      <form class="chat-set" id="chatSet" hidden>
+        <div class="note">不填就用站长的额度（硅基流动上的 DeepSeek V4.1 Flash），每人每天有次数限制。填了自己的 key 就不限次数：key 只存在这个浏览器里，每次请求经本站的函数转发给模型，不落盘。</div>
+        <label class="field"><span class="lab">模型服务</span><select id="byProv"><option value="deepseek">DeepSeek 官方</option><option value="siliconflow">硅基流动</option></select></label>
+        <label class="field"><span class="lab">API key</span><input type="password" id="byKey" autocomplete="off" placeholder="sk-…"></label>
+        <label class="field"><span class="lab">模型 <span class="note">可不填</span></span><input type="text" id="byModel" placeholder="deepseek-chat"></label>
+        <div class="row"><button class="btn small">保存</button><button type="button" class="linkbtn" id="byClear">清除，用站长的额度</button></div>
+      </form>
+      <div class="chat-log" id="chatLog"></div>
+      <div class="examples chat-ex" id="chatEx"></div>
+      <form class="chat-in" id="chatForm"><textarea id="chatText" rows="2" maxlength="600" placeholder="比如：作文再加 10 分钟，从阅读里挪"></textarea><button class="btn small" id="chatSend">发送</button></form>
+      <div class="note chat-foot" id="chatQuota"></div>
+    </div>
+  </div>
+</section>
+<nav class="pager"><a href="#/plan">← 教案</a><a href="#/profile">上完课去档案记一笔 →</a></nav>
+</div>
+
+<footer><button class="linkbtn" id="resetAll">把这页恢复成示例数据</button></footer>
+</div>
+
+<dialog class="hist" id="histDlg" aria-labelledby="histTitle"><div class="hist-h"><b id="histTitle"></b><span class="sp"></span><button class="btn small" data-v="teacher">导出老师版</button><button class="btn small" data-v="student">导出学生版</button><button class="ico" id="histClose" title="关上" aria-label="关上">×</button></div><p class="note" id="histNote"></p><div class="md" id="histBody"></div></dialog>
+
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<link rel="stylesheet" href="glass-folder.css">
+<script src="glass-folder.js"></script>
+<script type="module">
+import * as M from "./model.js";
+import * as Mem from "./memory.js";
+import { seed } from "./seed.js";
+
+const API = "/api/english";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const pct = (x) => Math.round(x * 100) + "%";
+const TODAY = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+const md5 = (d) => d.slice(5);
+const data = await (await fetch("./data.json")).json();
+const R = data.rules, HALF = R.params.decayHalfLifeDays;
+const SRC_COLOR = { 年级: "var(--s-grade)", 学校: "var(--s-school)", 学生: "var(--s-student)", 老师: "var(--s-teacher)" };
+
+// ---------- 状态：存在这个浏览器里 ----------
+const KEY = "en-prep-v1";
+let S = load();
+function fresh() { const s = seed(TODAY); s.current = "chen"; s.forgotten = []; return Mem.upgradeState(s, data.kpByType); }
+function load() { try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.version === 1) return Mem.upgradeState(x, data.kpByType); } catch {} return fresh(); }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
+const stu = () => S.students.find((x) => x.id === S.current);
+const SET = () => S.teacher.settings;
+// 教案模板：内置的（rules.json）+ 老师自建的；这次课临时选的 > 学生的默认 > 老师设置里的默认
+const templates = () => [...R.planTemplates, ...S.teacher.templates];
+const tplById = (id) => templates().find((t) => t.id === id) || R.planTemplates[0];
+const curTemplate = () => tplById(U.template || stu().template || SET().template);
+// 彩色视觉版：学生单独勾过的优先；其次老师设置里明确的「都用彩色 / 都用黑白」；按注意力时，选了彩色模板或学生容易分心就用彩色
+function isVisual(st = stu(), tpl = curTemplate()) {
+    if (st.visual != null) return st.visual;
+    const v = SET().visual;
+    if (v !== "按学生注意力") return v === "都用彩色";
+    return !!tpl.visual || st.attention === "容易分心";
+}
+const ledger = (st) => Mem.kpLedger(st.logs, R.student);
+const logsLite = (st) => st.logs.map(({ plan, ...l }) => ({ ...l, plan: plan && { mix: plan.mix } }));   // 课次记录里的教案全文不发给函数
+let U = {};   // 这一屏的临时状态：考试、出卷、占比、检索结果
+let flashIds = new Set();
+
+function toast(msg, action) {
+    document.querySelector(".toast")?.remove();
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML = `<span>${esc(msg)}</span>`;
+    if (action) { const b = document.createElement("button"); b.textContent = action.label; b.onclick = () => { action.fn(); t.remove(); }; t.append(b); }
+    document.body.append(t);
+    setTimeout(() => t.remove(), 6000);
+}
+
+// ---------- 统计 ----------
+$("#stats").innerHTML = [[data.stats.papers, "份无锡真卷（2022–2026）"], [data.stats.units, "个题组"], [data.stats.questions, "道小题"], [data.stats.images, "张图按位置入库"], ["85.7%", "检索 precision@5"], ["6/6", "记忆更新评测"]]
+    .map(([n, l]) => `<span><b>${n}</b>${l}</span>`).join("");
+
+// ---------- 1 档案 ----------
+const gradeLabel = (st) => `${({ 7: "七", 8: "八", 9: "九" })[st.grade]}年级 · ${M.cohortOf(st.grade, TODAY)} 届 · 译林版新教材`;
+const schoolLabel = (st) => `${st.schoolName}${st.district ? " · " + st.district : ""} · ${st.ownership}`;
+
+function renderStudents() {
+    const st = stu();
+    $("#who").innerHTML = `<div><div class="nm">${esc(st.name)}${isExample(st) ? ` <span class="tag">示例档案</span>` : ""}</div><div class="meta">${gradeLabel(st)}</div><div class="meta">${esc(schoolLabel(st))}</div></div>
+      <div class="who-ctl"><label>注意力 <select id="attn">${Mem.ATTENTION.map((a) => `<option ${a === st.attention ? "selected" : ""}>${a}</option>`).join("")}</select></label>
+        <label title="彩色版：题型配色、高亮线索词、步骤框。没勾过时按老师设置（${esc(SET().visual)}）"><input type="checkbox" id="visChk" ${isVisual(st) ? "checked" : ""}> 彩色讲义</label>
+        ${st.visual != null ? `<button type="button" class="linkbtn" id="visReset" title="不单独指定，按老师设置和注意力">跟设置走</button>` : ""}
+        <label title="Bionic reading：英文单词前半截加粗，把视线往后带，给注意力容易分散、有 ADHD 的学生用。学生版 Word 和页面上的题目都按它来"><input type="checkbox" id="bionicChk" ${st.bionic ? "checked" : ""}> Bionic 阅读</label></div>`;
+}
+$("#who").onchange = (e) => {
+    const st = stu();
+    if (e.target.id === "attn") {
+        const before = st.attention; st.attention = e.target.value; save(); renderStudents(); clearStaleOutline();
+        toast(`${st.name}的注意力改成「${st.attention}」${st.attention === "容易分心" ? "：大纲每个环节不超过 " + R.student.attentionMaxMinutes + " 分钟，讲义默认用彩色版" : ""}`, { label: "撤销", fn: () => { st.attention = before; save(); renderStudents(); } });
+    }
+    if (e.target.id === "bionicChk") { st.bionic = e.target.checked; save(); if (U.W?.items) renderItems(); toast(`${st.name}${st.bionic ? "的题目英文开了 Bionic 阅读（词头加粗），学生版 Word 也是" : "关了 Bionic 阅读"}`); }
+    if (e.target.id === "visChk") { st.visual = e.target.checked; save(); renderStudents(); toast(`${st.name}的讲义${st.visual ? "用彩色版" : "用黑白版"}，下次写教案时生效`); }
+};
+$("#who").onclick = (e) => { if (e.target.id !== "visReset") return; delete stu().visual; save(); renderStudents(); toast("讲义版式改回按老师设置和注意力"); };
+// ---------- 学生档案：示例三份，老师可以自己建、删（用户 10-29） ----------
+const isExample = (st) => ["lin", "zhou", "chen"].includes(st.id);
+function loadStudent(id) {
+    S.current = id; save(); U = {}; renderAll(); clearPlan(); restoreWork();
+    $("#ops").innerHTML = ""; $("#recNote").textContent = "";   // 上一个学生的改动列表，撤销会落到新学生身上
+}
+function switchStudent(id) { if (id !== S.current && S.students.some((x) => x.id === id)) { snapWork(); loadStudent(id); } }
+function deleteStudent(id) {
+    if (S.students.length <= 1) { toast("至少要留一份档案"); return; }
+    const i = S.students.findIndex((x) => x.id === id), st = S.students[i], work = S.work?.[id], cur = S.current;
+    S.students.splice(i, 1); delete S.work?.[id];
+    if (cur === id) loadStudent(S.students[0].id); else { save(); renderFolders(); }
+    toast(`删掉了「${st.name}」的档案`, { label: "撤销", fn: () => { S.students.splice(i, 0, st); if (work) (S.work ||= {})[id] = work; if (cur === id) loadStudent(id); else { save(); renderFolders(); } } });
+}
+// 文件夹里的每一张（学生档案 / 历史教案）
+document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#stu="], a[href^="#hist="]'); if (!a) return;
+    e.preventDefault();
+    const [k, v] = a.getAttribute("href").slice(1).split("=");
+    if (k === "stu") switchStudent(v); else openHist(+v);
+});
+let folderKey = "";
+const folderHTML = (label, meta, art, seed, files) => `<div class="gfolder" data-label="${esc(label)}" data-meta="${esc(meta)}" data-art="${art}" data-seed="${seed}">${files.map(([name, href, m]) => `<a href="${href}" data-meta="${esc(m)}">${esc(name)}</a>`).join("")}</div>`;
+function renderFolders() {
+    const st = stu(), others = S.students.filter((x) => x !== st);
+    const stuFiles = [st, ...others].map((x) => [x.name, `#stu=${x.id}`, `${({ 7: "七", 8: "八", 9: "九" })[x.grade]}年级 · ${x.schoolName}${isExample(x) ? " · 示例" : ""}`]);
+    const hist = st.logs.map((l, i) => [l, i]).filter(([l]) => l.plan?.md).reverse();
+    const histFiles = hist.map(([l, i]) => [l.plan.outline?.title || `${md5(l.date)} 的教案`, `#hist=${i}`, md5(l.date)]);
+    $("#allStuSum").textContent = `全部档案（${S.students.length}）`;
+    $("#stuList").innerHTML = S.students.map((x) => `<li${x.id === S.current ? ' class="on"' : ""}><span><b>${esc(x.name)}</b> <span class="note">${({ 7: "七", 8: "八", 9: "九" })[x.grade]}年级 · ${esc(x.schoolName)}</span>${isExample(x) ? ' <span class="tag">示例</span>' : ""}</span>
+      <span>${x.id === S.current ? '<span class="note">正在看</span>' : `<button class="linkbtn" data-open="${x.id}">打开</button>`} · <button class="linkbtn" data-delstu="${x.id}">删除</button></span></li>`).join("");
+    // 文件夹内容没变就不重挂（重挂会重新播组装动画）
+    const key = JSON.stringify([stuFiles, histFiles]);
+    if (key === folderKey) return;
+    folderKey = key;
+    const n = S.students.filter(isExample).length;
+    $("#stuFolder").innerHTML = folderHTML("学生档案", `${S.students.length} 份${n ? `，${n} 份示例` : ""}`, "aurora", 3, stuFiles);
+    $("#histFolder").innerHTML = folderHTML(`${st.name}的历史教案`, hist.length ? `${hist.length} 份` : "还没有，记一笔就有了", "glacier", 5, histFiles);
+    document.querySelectorAll("#stuFolder .gfolder, #histFolder .gfolder").forEach((el) => window.mountGlassFolder?.(el));
+}
+$("#stuList").onclick = (e) => {
+    if (e.target.dataset.open) switchStudent(e.target.dataset.open);
+    if (e.target.dataset.delstu) deleteStudent(e.target.dataset.delstu);
+};
+const SCHOOLS = [["东林", "东林中学", "梁溪区", "公办"], ["侨谊", "侨谊实验中学", "梁溪区", "公办"], ["省锡中", "锡山高级中学实验学校", "惠山区", "公办"], ["外国语", "无锡外国语学校", "", "私立"]];
+const DISTRICTS = ["梁溪区", "滨湖区", "新吴区", "惠山区", "锡山区", "经开区", "江阴市", "宜兴市"];
+$("#nsSchool").innerHTML = SCHOOLS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("") + `<option value="">其他学校（自己填）</option>`;
+$("#nsDistrict").innerHTML = `<option value="">（不分区）</option>` + DISTRICTS.map((d) => `<option>${d}</option>`).join("");
+$("#nsUnit").innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}">Unit ${i + 1}</option>`).join("");
+const fillSchool = () => { const sc = SCHOOLS.find((x) => x[0] === $("#nsSchool").value); $("#nsOtherWrap").hidden = !!sc; if (sc) { $("#nsDistrict").value = sc[2]; $("#nsOwn").value = sc[3]; } };
+$("#nsSchool").onchange = fillSchool; fillSchool();
+$("#newStuBtn").onclick = () => { $("#newStu").hidden = false; $("#nsName").focus(); };
+$("#nsCancel").onclick = () => { $("#newStu").hidden = true; };
+$("#newStu").onsubmit = (e) => {
+    e.preventDefault();
+    const name = $("#nsName").value.trim(), sc = SCHOOLS.find((x) => x[0] === $("#nsSchool").value);
+    if (!name) return;
+    // 不在题库常见学校里的，school 留空（检索不加「同校」分），区照填
+    const st = { id: "s" + Date.now().toString(36), name, grade: +$("#nsGrade").value, school: sc ? sc[0] : "", schoolName: sc ? sc[1] : $("#nsOther").value.trim() || "其他学校",
+        district: $("#nsDistrict").value, ownership: $("#nsOwn").value, textbook: "新", unit: +$("#nsUnit").value, attention: $("#nsAttn").value, mems: [], logs: [] };
+    S.students.push(st); snapWork();
+    $("#newStu").hidden = true; e.target.reset(); fillSchool();
+    loadStudent(st.id); toast(`建好了「${name}」的档案`);
+};
+
+function memHTML(m, who) {
+    const cls = m.cat === "薄弱点" ? "weak" : m.cat === "已掌握" ? "ok" : who === "teacher" ? "t" : "";
+    const eff = Mem.effStrength(m, TODAY, HALF);
+    const days = M.daysBetween(m.updated || TODAY, TODAY);
+    const bar = eff != null ? `<span title="原强度 ${m.strength.toFixed(2)}，${days} 天前更新，按 ${HALF} 天半衰后 ${eff.toFixed(2)}"><span class="bar"><i style="width:${eff * 100}%"></i></span> ${eff.toFixed(2)}</span>` : "";
+    const sub = [m.qtype && `${m.qtype}${m.kp ? " · " + m.kp : ""}`, bar, m.evidence && `依据：${esc(m.evidence)}`, `${esc(m.source || "")} ${md5(m.updated || "")}`].filter(Boolean);
+    return `<li class="mem${flashIds.has(who + m.id) ? " flash" : ""}" data-who="${who}" data-id="${m.id}"><span class="id">${m.id}</span><span class="tx"><span class="tag ${cls}">${m.cat}</span>${esc(m.text)}</span><button class="x" title="让 agent 忘掉这条" aria-label="忘掉 ${m.id}">×</button><span class="sub">${sub.map((x) => `<span>${x}</span>`).join("")}</span></li>`;
+}
+function renderMemories() {
+    const st = stu();
+    $("#stuMems").innerHTML = st.mems.map((m) => memHTML(m, "student")).join("");
+    $("#teaMems").innerHTML = S.teacher.mems.map((m) => memHTML(m, "teacher")).join("");
+    const led = ledger(st);
+    $("#ledgerWrap").hidden = !led.length;
+    $("#ledgerSum").textContent = `薄弱知识点（${led.length} 个，按课次记录累计）`;
+    $("#ledger").innerHTML = `<table class="ledger"><tr><th>考点</th><th>练了</th><th>错了</th><th>判断</th></tr>${led.map((r) => `<tr><td>${esc(r.kp)} <span class="note">${esc(r.qtype)}</span><div class="note">${esc(r.notes.join("；"))}</div></td><td class="n">${r.practiced} 次</td><td class="n">${r.wrongN} 次<div class="note">最近 ${md5(r.last)}</div></td><td><span class="${r.status === "长期薄弱" ? "st-long" : r.status === "待观察" ? "st-watch" : ""}">${r.status}</span>${r.trend ? `<div class="note">${r.trend}</div>` : ""}</td></tr>`).join("")}</table>
+      <p class="note">跨 ${R.student.longMinLessons} 次课以上都错、错误率过半的算长期薄弱，排占比时权重 ×${R.student.longWeight}；只错过一次的先观察（×${R.student.watchWeight}）。</p>`;
+    renderSettings(); renderProfile();
+    $("#logsSum").textContent = `课次记录（${st.logs.length} 次）`;
+    $("#logs").innerHTML = st.logs.map((l, i) => [l, i]).reverse().map(([l, i]) => `<li><b>${md5(l.date)}</b> ${esc(l.summary)}${l.plan?.md ? ` <button class="linkbtn" data-hist="${i}">看当时的教案</button>` : ""}${l.errors?.length ? `<br><span class="note">错在：${esc(l.errors.map((e) => `${e.qtype}${e.kp ? "·" + e.kp : ""}${e.note ? "（" + e.note + "）" : ""}`).join("；"))}</span>` : ""}${l.plan?.mix?.length ? `<br><span class="note">当时教案：${esc(l.plan.mix.map(([t, v]) => `${t} ${pct(v)}`).join("、"))}</span>` : ""}</li>`).join("");
+    const fg = (S.forgotten || []).filter((m) => m.who === "teacher" || m.sid === st.id);
+    $("#forgotWrap").hidden = !fg.length;
+    $("#forgot").innerHTML = fg.map((m, i) => `<li class="mem"><span class="id">${m.id}</span><span class="tx"><span class="tag">${m.cat}</span>${esc(m.text)}</span><button class="linkbtn" data-restore="${S.forgotten.indexOf(m)}">恢复</button><span class="sub">${m.who === "teacher" ? "老师档案" : "学生档案"} · ${md5(m.forgotten)} 忘掉</span></li>`).join("");
+    flashIds = new Set();
+}
+// st：这次改动属于哪个学生。请求发出后老师可能切到了别的学生，所以用发请求时的学生
+function memState(st = stu()) {
+    return { teacher: S.teacher.mems, student: st.mems, forgotten: S.forgotten, settings: SET(), settingsLog: S.teacher.settingsLog, profile: st, students: S.students, kpByType: data.kpByType };
+}
+
+// ---------- 老师自己加一条记忆、课堂设置、画像（MAT-498） ----------
+$("#amCat").innerHTML = Mem.TEACHER_CATS.map((c) => `<option>${c}</option>`).join("");
+$("#amType").innerHTML = `<option value="">不限题型</option>` + Object.keys(data.stats.byType).map((t) => `<option>${esc(t)}</option>`).join("");
+$("#addMem").onsubmit = (e) => {
+    e.preventDefault();
+    const text = $("#amText").value.trim(); if (!text) return;
+    const [a] = Mem.applyOps(memState(), [{ op: "add", who: "teacher", cat: $("#amCat").value, text, qtype: $("#amType").value }], TODAY, "老师填的");
+    if (!a) return;
+    flashIds.add("teacher" + a.after.id); $("#amText").value = ""; save(); refresh();
+    toast(`加上了 ${a.after.id}`, { label: "撤销", fn: () => { Mem.undo(memState(), a); save(); refresh(); } });
+};
+const showVal = (k, v) => (k === "template" ? tplById(v).name : Mem.showSetting(k, v));
+function renderSettings() {
+    const st = SET();
+    $("#setSum").textContent = `课堂设置 · ${st.lessonType} · ${st.minutes} 分钟 · 每周 ${st.perWeek} 次${st.focusTypes ? ` · 主攻 ${st.focusTypes} 个题型` : ""}`;
+    $("#setForm").innerHTML = Object.entries(Mem.SETTINGS).map(([k, f]) => {
+        const opts = k === "template" ? templates().map((t) => [t.id, t.name]) : f.options?.map((o) => [o, f.names?.[o] ?? o]);
+        const ctl = opts ? `<select data-k="${k}">${opts.map(([v, l]) => `<option value="${esc(v)}" ${String(v) === String(st[k]) ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`
+            : `<input type="number" data-k="${k}" min="${f.min}" max="${f.max}" value="${st[k]}">`;
+        return `<label>${f.label}${ctl}</label>`;
+    }).join("");
+    const L = S.teacher.settingsLog.map((x, i) => ({ ...x, i })).slice(-5).reverse();
+    $("#setLog").innerHTML = L.length ? `<li class="note">最近的改动</li>` + L.map((x) => `<li>${md5(x.date || TODAY)} ${esc(Mem.SETTINGS[x.field]?.label || x.field)}：${esc(showVal(x.field, x.before))} → ${esc(showVal(x.field, x.after))} <span class="note">${esc(x.source || "")}</span> <button type="button" class="linkbtn" data-undo="${x.i}">撤销</button></li>`).join("") : "";
+}
+function setSetting(k, raw, source) {
+    const st = SET(), v = Mem.validSetting(k, raw, templates().map((t) => t.id));
+    if (v === undefined || v === st[k]) { renderSettings(); return; }
+    const before = st[k];
+    st[k] = v; Mem.logSetting(S.teacher, k, before, v, TODAY, source);
+    save(); syncSettings([k]);
+}
+// 设置变了：课时、难度跟着变（固定环节见 fixedMin），占比重算
+function syncSettings(fields) {
+    if (fields.includes("minutes")) U.minutes = SET().minutes;   // 只有改课时才覆盖这节课临时改的课时
+    if (fields.includes("difficulty")) U.difficulty = SET().difficulty;
+    renderSettings(); renderStudents(); renderTplSel(); recompute();
+    if (fields.some((k) => !["answerPos", "fontSize", "visual", "template"].includes(k))) clearStaleOutline();   // 这几项只影响教案和导出，和大纲无关
+}
+// 记忆改动生效或撤销以后：改了老师设置走 syncSettings（里面会重画学生），否则只重画学生（注意力可能变了）
+function afterApply(as) {
+    const f = as.filter((a) => a.op === "set" && a.who === "teacher").map((a) => a.field);
+    if (f.length) syncSettings(f); else renderStudents();
+}
+$("#setForm").onchange = (e) => { const k = e.target.dataset.k; if (k) setSetting(k, e.target.value, "老师改的"); };
+$("#setLog").onclick = (e) => { const b = e.target.closest("[data-undo]"); if (!b) return; const x = S.teacher.settingsLog[+b.dataset.undo]; setSetting(x.field, x.before, "撤销"); };
+let habits = [];
+const signed = (n) => `${n > 0 ? "+" : ""}${n}`;
+function renderProfile() {
+    const r = Mem.teacherHabits(S.teacher.events), stats = r.stats, bias = SET().bias;
+    habits = r.habits;
+    $("#profSum").textContent = `老师画像：从你的操作里看出来的习惯${habits.length ? `（${habits.length} 条建议）` : ""}`;
+    if (habits.length && !renderProfile.shown) $("#profWrap").open = renderProfile.shown = true;   // 有新建议时第一次自动展开，之后随老师开关
+    $("#prof").innerHTML = habits.map((h, i) => `<div class="habit"><div>${esc(h.text)}（${h.n} 次）</div><div class="ev">依据：${esc(h.evidence.join("；"))}</div><div class="acts" style="margin-top:6px"><button type="button" class="btn small ghost" data-bias="${i}">${bias[h.type] != null ? `在现在的默认上再${h.delta > 0 ? "加" : "减"} ${Math.abs(h.delta)}` : "设成默认"}</button></div></div>`).join("")
+        + (habits.length ? "" : `<p class="note">还没有反复出现的调整。同一个题型往同一个方向调 3 次以上，这里会提议设成默认。</p>`)
+        + Object.entries(bias).map(([t, pp]) => `<div class="habit"><div>已设成默认：建议占比里${esc(t)} ${signed(pp)} 个百分点</div><div class="acts" style="margin-top:6px"><button type="button" class="linkbtn" data-unbias="${esc(t)}">取消</button></div></div>`).join("")
+        + `<p class="note" style="margin-top:8px">生成大纲 ${stats.outlines} 次，改过 ${stats.edited} 次；改写教案 ${stats.sections} 节；在聊天里改 ${stats.chats} 次；换题 ${stats.swaps} 次${stats.swapTop ? `，换得最多的是${stats.swapTop[0]}（${stats.swapTop[1]} 次）` : ""}${stats.offGrade ? `，${stats.offGrade} 道换掉的题不是这个年级的` : ""}${stats.hard ? `，${stats.hard} 道是偏难的` : ""}。</p>`;
+}
+// 设成默认：偏好累加到 bias 上，用掉的那几次调整标 used（不再提议）；取消默认时，当初用掉的调整放回来
+$("#prof").onclick = (e) => {
+    const b = e.target.closest("[data-bias], [data-unbias]"); if (!b) return;
+    const bias = SET().bias, h = b.dataset.bias != null ? habits[+b.dataset.bias] : null, t = h ? h.type : b.dataset.unbias, before = bias[t];
+    const evs = h ? h.events : S.teacher.events.filter((x) => x.kind === "mix" && x.type === t && x.used);
+    if (h) bias[t] = Math.max(-20, Math.min(20, (before || 0) + h.delta)); else delete bias[t];
+    for (const x of evs) x.used = !!h;
+    const restore = () => { if (before == null) delete bias[t]; else bias[t] = before; for (const x of evs) x.used = !h; save(); renderProfile(); recompute(); };
+    save(); renderProfile(); recompute(); clearStaleOutline();
+    toast(h ? `以后${t}的建议占比默认 ${signed(bias[t])} 个百分点` : `取消了${t}的默认偏好`, { label: "撤销", fn: restore });
+};
+document.addEventListener("click", (e) => {
+    const x = e.target.closest(".mem .x");
+    if (x) {
+        const li = x.closest(".mem"), who = li.dataset.who, list = who === "teacher" ? S.teacher.mems : stu().mems;
+        const i = list.findIndex((m) => m.id === li.dataset.id);
+        const [m] = list.splice(i, 1);
+        S.forgotten.push({ ...m, who, sid: stu().id, forgotten: TODAY });
+        save(); refresh();
+        toast(`已忘掉 ${m.id}`, { label: "撤销", fn: () => { restore(S.forgotten.length - 1); } });
+    }
+    const r = e.target.closest("[data-restore]");
+    if (r) restore(+r.dataset.restore);
+});
+function restore(i) {
+    const [m] = S.forgotten.splice(i, 1);
+    if (!m) return;
+    const { who, sid, forgotten, ...rest } = m;
+    const list = who === "teacher" ? S.teacher.mems : (S.students.find((s) => s.id === sid) || stu()).mems;
+    list.push(rest); list.sort((a, b) => +a.id.slice(1) - +b.id.slice(1));
+    flashIds.add(who + rest.id); save(); refresh();
+}
+
+// agent 主动提醒：考试临近、反复出错、库里缺这所学校的卷子、2027 届口径
+function reminders() {
+    const st = stu(), out = [], c = U.ctx;
+    if (c.days != null) out.push(`离${c.gt}${c.kind}还有 ${c.days} 天${c.days <= 14 ? "，进入考前两周，旧单元复习默认调到 70%" : ""}。`);
+    for (const m of st.mems.filter((m) => m.cat === "薄弱点")) {
+        // 从最近一次课往回数：讲了这个题型又没错就断
+        let n = 0;
+        for (const l of st.logs.slice().reverse()) {
+            if ((l.errors || []).some((e) => e.qtype === m.qtype && (!m.kp || !e.kp || e.kp.includes(m.kp) || m.kp.includes(e.kp)))) n++;
+            else if ((l.covered || []).some((c) => c.includes(m.qtype) || (m.kp && c.includes(m.kp)))) break;
+        }
+        if (n >= 2) out.push(`${m.id}「${m.kp || m.qtype}」最近 ${n} 次课都出错，光加时间可能不够，点「复盘」看换什么讲法。`);
+    }
+    if (!data.papers.some((p) => p.school === st.school && p.gt === c.gt && p.kind === c.kind)) out.push(`库里没有${st.schoolName}的${c.gt}${c.kind}卷子，结构按${c.tpl.label}${st.district ? "，例题优先取" + st.district + "和同类学校的卷子" : ""}。`);
+    if (st.grade === 9 && M.cohortOf(9, TODAY) >= R.newTextbookAdjust.cohortFrom) out.push(`${M.cohortOf(9, TODAY)} 届中考不考单项选择，这次教案不练单选。`);
+    $("#remind").innerHTML = out.slice(0, 4).map((x) => `<div>${esc(x)}</div>`).join("");
+}
+
+// ---------- 课后记一笔 ----------
+const REC_EX = {
+    lin: ["今天词汇运用 10 空只错 1 空，词形变化进步很大；阅读还是不划关键词。", "动词填空第三人称单数又漏了 2 处 -s。她今天主动问问题了。"],
+    zhou: ["今天完形 10 错 4，还是只看空格前后；现在完成时 5 道全对。", "作文开始会用 however 了。以后讲完形我都先让他圈转折词。"],
+    chen: ["推理题 3 道全对了，会先排除原文照抄的选项；作文分了三段。", "这次教案阅读太多了，作文时间不够。以后作文每次至少给 25 分钟。"],
+};
+function renderRecEx() { $("#recEx").innerHTML = (REC_EX[S.current] || []).map((t) => `<button type="button">${esc(t)}</button>`).join(""); }
+$("#recEx").onclick = (e) => { const b = e.target.closest("button"); if (b) $("#recText").value = b.textContent; };
+
+$("#recBtn").onclick = async () => {
+    const text = $("#recText").value.trim();
+    if (text.length < 4) return;
+    const st = stu();
+    $("#recBtn").disabled = true; $("#recNote").textContent = "agent 在对照档案……"; $("#ops").innerHTML = "";
+    try {
+        const j = await post({
+            action: "memory", date: TODAY, text, student: { name: st.name, gradeLabel: gradeLabel(st), attention: st.attention },
+            studentMems: st.mems, teacherMems: S.teacher.mems, settings: SET(), observations: S.teacher.observations, kpByType: data.kpByType,
+        });
+        const applied = Mem.applyOps(memState(st), j.ops, TODAY);
+        for (const m of S.forgotten) if (!m.sid) m.sid = st.id;
+        if (j.log) {
+            const W = U.W?.sid === st.id && U.W.md ? U.W : null;   // 这节课的教案（MAT-482）：从课次记录能打开、重新导出
+            const lastPlan = S.lastPlan?.sid === st.id && (!st.logs.length || S.lastPlan.date >= st.logs.at(-1).date)
+                ? { mix: S.lastPlan.mix, ...(W ? { gt: U.gt, outline: W.outline, md: W.md, items: W.items.map(workRef), extras: W.extras, visual: W.visual } : {}) } : null;
+            const errors = (j.log.errors || []).map((e) => ({ ...e, kp: Mem.alignKp(e.qtype, e.kp, data.kpByType) }));   // 考点对齐到考点表，账本才累计得起来
+            st.logs.push({ date: TODAY, summary: j.log.summary || text.slice(0, 40), covered: j.log.covered || [], errors, plan: lastPlan });
+        }
+        for (const a of applied) if (a.after?.id) flashIds.add(a.who + a.after.id);
+        save(); refresh(); afterApply(applied);
+        $("#recNote").textContent = applied.length ? `改了 ${applied.length} 条记忆，课次记录也记上了。` : "没有需要改的长期记忆，只记进了课次记录。";
+        $("#ops").innerHTML = applied.map((a, i) => {
+            const K = { add: "新增", update: "更新", delete: "删除", set: "改设置" }[a.op];
+            const ch = a.op === "update" && a.before.strength != null && a.after.strength != null && a.before.strength !== a.after.strength ? ` <span class="note">强度 ${a.before.strength.toFixed(2)} → ${a.after.strength.toFixed(2)}</span>` : "";
+            return `<li class="op ${a.op === "set" ? "update" : a.op}" data-i="${i}"><span class="k">${K}</span><span>${esc(Mem.describe(a))}${ch}<div class="why">${esc(a.why)}</div></span><button class="linkbtn">撤销</button></li>`;
+        }).join("");
+        $("#ops").onclick = (e) => {
+            const li = e.target.closest(".op"); if (!li || !e.target.matches("button") || li.classList.contains("undone")) return;
+            const a = applied[+li.dataset.i];
+            Mem.undo(memState(), a); li.classList.add("undone"); save(); refresh(); afterApply([a]);
+        };
+        $("#recText").value = "";
+    } catch (e) { $("#recNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; }
+    $("#recBtn").disabled = false;
+};
+
+// ---------- 2 下一场考试 ----------
+function initExam() {
+    const st = stu();
+    const ex = M.nextExam(st.grade, TODAY, R) || { kind: "期末", gt: M.gtOf(st.grade, TODAY), date: null, days: null };
+    U.gt = ex.gt; U.kind = ex.kind; U.unit = st.unit || 1; U.level = null; U.reviewTouched = false;
+    U.minutes = SET().minutes;   // 课时从老师设置读（固定环节见 fixedMin）
+    U.difficulty = SET().difficulty; U.template = null;
+    U.guidance = "";
+}
+function deriveCtx() {
+    const st = stu(), cohort = M.cohortOf(st.grade, TODAY);
+    const date = M.examDate(st.grade, U.gt, U.kind, TODAY, R);
+    const days = date ? M.daysBetween(TODAY, date) : null;
+    const tpl = M.pickTemplate(data, U.gt, U.kind, cohort);
+    const lv = M.suggestLevel(data, st, U.gt, U.kind);
+    const level = U.level || lv.suggest;
+    const pools = M.schoolPools(data, st, U.gt, U.kind, level);
+    const led = ledger(st);
+    const { w, kps } = Mem.weakness(st.mems, TODAY, HALF, led, R.student);
+    const gTypes = M.typesInText(U.guidance, R);
+    const emph = Mem.emphasis(S.teacher.mems, gTypes);
+    const mix = M.computeMix({ data, tpl, pools, cohort, gt: U.gt, today: TODAY, weak: w, emph });
+    M.keepTop(mix.rows, SET().focusTypes);
+    U.ctx = { st, cohort, date, days, tpl, lv, level, pools, w, kps, gTypes, emph, mix, led, gt: U.gt, kind: U.kind };
+    U.rows = mix.rows.map((r) => ({ ...r, c: { ...r.c } }));
+    // 画像里「设成默认」的偏好：在建议占比上加减几个百分点（老师这次手动调过的题型不动）
+    const fixed = {};
+    U.biased = [];
+    for (const [t, pp] of Object.entries(SET().bias || {})) {
+        const r = U.rows.find((x) => x.type === t);
+        if (!r?.suggested || U.overrides?.[t] != null) continue;
+        fixed[t] = Math.max(0, Math.min(0.6, r.suggested + pp / 100));
+        U.biased.push(`${t} ${pp > 0 ? "+" : ""}${pp}%`);
+    }
+    M.setShares(U.rows, fixed);
+    for (const r of U.rows) r.base = r.share;   // 老师动手之前看到的占比（带上默认偏好），画像按它算老师调了多少
+    const addRow = (t) => { if (!U.rows.find((r) => r.type === t)) U.rows.push({ type: t, share: 0, suggested: 0, c: { 年级: 0, 学校: 0, 学生: 0, 老师: 0 } }); };   // 这次建议里没有的题型补一行
+    for (const t of Object.keys(U.overrides || {})) addRow(t);
+    M.setShares(U.rows, U.overrides || {});   // 老师手动调过的占比（滑块、横条、采纳复盘建议）重算后一起套回去
+    if (U.lock) {   // 排好大纲以后，占比按大纲里各题型的分钟数来
+        for (const t in U.lock) addRow(t);
+        for (const r of U.rows) r.share = U.lock[r.type] || 0;
+    }
+    if (!U.reviewTouched) U.review = Math.round(M.reviewShare(days) * 100);
+}
+function renderExam() {
+    const c = U.ctx, st = c.st;
+    $("#examKind").innerHTML = M.examKinds(U.gt).map((k) => `<option ${k === U.kind ? "selected" : ""}>${k}</option>`).join("").replace(/<option( selected)?>([^<]+)<\/option>/g, (m, s, k) => `<option value="${k}"${s || ""}>${U.gt}${k}</option>`);
+    $("#unit").innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}" ${i + 1 === U.unit ? "selected" : ""}>Unit ${i + 1}</option>`).join("");
+    $("#minutes").value = U.minutes;
+    $("#days").textContent = c.days != null ? `${md5(c.date)} · 还有 ${c.days} 天` : "日历里没有这场考试的日期";
+    $("#level").innerHTML = ["统考", "不统考", "不知道"].map((k) => `<button class="chip" data-lv="${k}" aria-pressed="${k === c.level}">${k}${k === c.lv.suggest ? " ·建议" : ""}</button>`).join("");
+    $("#lvBadge").textContent = `系统建议：${c.lv.suggest}`;
+    $("#lvWhy").innerHTML = `${esc(c.lv.why)}${c.lv.evidence.length ? `<div class="ev">库里的记录：${esc(c.lv.evidence.join("；"))}</div>` : ""}<div class="ev">选「统考」从往年统考卷里挑题，「不统考」从校考卷里挑，「不知道」两边各一半。</div>`;
+    const tplTypes = Object.entries(c.tpl.pts).sort((a, b) => b[1] - a[1]).map(([t, p]) => `${t} ${Math.round(p)}`).join("、");
+    const sch = [c.pools.ls ? `本校卷占 ${pct(c.pools.ls)}（${c.pools.school.length} 份：${[...new Set(c.pools.school.map((p) => p.year + p.gt + p.kind))].join("、")}）` : "", c.pools.ld ? `${st.district}统考卷占 ${pct(c.pools.ld)}（${c.pools.district.length} 份）` : ""].filter(Boolean).join("；");
+    $("#kv").innerHTML = `<dt>结构模板</dt><dd>${esc(c.tpl.label)}：${esc(tplTypes)}${c.tpl.fullMarks ? `；满分 ${c.tpl.fullMarks}` : ""}${c.tpl.listening >= 0.5 ? "，含听力（课上不练）" : ""}${c.tpl.notes.length ? `<div class="note">${esc(c.tpl.notes.join("；"))}</div>` : ""}</dd>
+      <dt>学校微调</dt><dd>${esc(sch || "库里没有可用的本校 / 本区同类卷子，不微调")}</dd>
+      ${c.mix.zkNote ? `<dt>中考趋势</dt><dd>按离中考的远近混入 ${pct(c.mix.beta)} 中考结构。<span class="note">${esc(c.mix.zkNote)}</span></dd>` : ""}
+      <dt>考试范围</dt><dd>${esc(R.examCalendar.scope[U.gt[1]]?.[U.kind] || "—")}（按往年进度估，老师可以在要求里改）</dd>`;
+    $("#diffChips").innerHTML = Mem.SETTINGS.difficulty.options.map((k) => `<button class="chip" data-d="${k}" aria-pressed="${k === U.difficulty}">${k}${k === SET().difficulty ? " ·设置" : ""}</button>`).join("");
+    $("#guidance").value = U.guidance;
+    $("#gEx").innerHTML = ["这次重点讲阅读的推理判断题", "作文多练，至少 25 分钟", "期中前最后一次课，以复习为主"].map((t) => `<button type="button">${t}</button>`).join("");
+}
+$("#examKind").onchange = (e) => { U.kind = e.target.value; U.level = null; U.reviewTouched = false; recompute(); };
+$("#unit").onchange = (e) => { U.unit = +e.target.value; renderReview(); };
+$("#minutes").onchange = (e) => { U.minutes = Math.max(40, Math.min(240, +e.target.value || 120)); renderMix(); };
+$("#level").onclick = (e) => { const b = e.target.closest("[data-lv]"); if (b) { U.level = b.dataset.lv; recompute(); } };
+$("#diffChips").onclick = (e) => { const b = e.target.closest("[data-d]"); if (b) { U.difficulty = b.dataset.d; renderExam(); clearStaleOutline(); } };
+let gTimer;
+$("#guidance").oninput = (e) => { clearTimeout(gTimer); gTimer = setTimeout(() => { U.guidance = e.target.value.trim(); recompute(); }, 350); };
+$("#gEx").onclick = (e) => { const b = e.target.closest("button"); if (b) { U.guidance = b.textContent; $("#guidance").value = U.guidance; recompute(); } };
+
+// ---------- 3 占比 ----------
+function drawSankey() {
+    const svg = $("#sankey"), W = svg.clientWidth;
+    if (!W) return;   // 页面隐藏着，显示出来时 ResizeObserver 会画
+    const F = M.flows(U.rows);
+    const H = Math.max(240, F.length * 34 + 30);
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("height", H);
+    const NW = 10, LX = 0, RX = W - NW, padL = 12, padR = 6;
+    const src = M.SOURCES.map((k) => ({ k, v: F.reduce((a, f) => a + f.c[k], 0) })).filter((s) => s.v > 0.0005);
+    const scaleL = (H - padL * (src.length - 1)) / 1, scaleR = (H - padR * (F.length - 1)) / 1;
+    let y = 0;
+    for (const s of src) { s.y = y; s.h = s.v * scaleL; s.off = 0; y += s.h + padL; }
+    y = 0;
+    for (const f of F) { f.y = y; f.h = f.share * scaleR; f.off = 0; y += f.h + padR; }
+    const mid = (W - 2 * NW) * 0.5;
+    let paths = "";
+    for (const s of src) for (const f of F) {
+        const v = f.c[s.k]; if (v < 0.0005) continue;
+        const h0 = v * scaleL, h1 = v * scaleR;
+        const a0 = s.y + s.off, a1 = f.y + f.off; s.off += h0; f.off += h1;
+        const x0 = LX + NW, x1 = RX, cx = x0 + mid;
+        paths += `<path data-s="${s.k}" data-t="${esc(f.type)}" d="M${x0},${a0} C${cx},${a0} ${cx},${a1} ${x1},${a1} L${x1},${a1 + h1} C${cx},${a1 + h1} ${cx},${a0 + h0} ${x0},${a0 + h0} Z" fill="${SRC_COLOR[s.k]}" fill-opacity=".32"><title>${s.k} → ${esc(f.type)}：${pct(v)}</title></path>`;
+    }
+    const nodes = src.map((s) => `<rect x="${LX}" y="${s.y}" width="${NW}" height="${Math.max(1, s.h)}" rx="2" fill="${SRC_COLOR[s.k]}"/><text x="${NW + 6}" y="${s.y + s.h / 2 + 4}">${s.k} ${pct(s.v)}</text>`).join("")
+        + F.map((f) => `<rect x="${RX}" y="${f.y}" width="${NW}" height="${Math.max(1, f.h)}" rx="2" fill="#55544f"/><text x="${RX - 6}" y="${f.y + f.h / 2 + 4}" text-anchor="end">${esc(f.type)} ${pct(f.share)}</text>`).join("");
+    svg.innerHTML = paths + nodes;
+    svg.onmouseover = (e) => { const p = e.target.closest("path"); svg.querySelectorAll("path").forEach((q) => (q.style.opacity = !p || q.dataset.s === p.dataset.s || q.dataset.t === p.dataset.t ? 1 : 0.25)); };
+    svg.onmouseleave = () => svg.querySelectorAll("path").forEach((q) => (q.style.opacity = 1));
+}
+const fixedMin = () => SET().dictation + SET().recap + SET().extrasMinutes;   // 固定环节（默写、课外知识补充、回顾）从老师设置读
+const teachMin = () => Math.max(20, U.minutes - fixedMin());
+function renderSliders(rebuild) {
+    const rows = U.rows.filter((r) => r.suggested > 0 || r.share > 0 || U.ctx.tpl.pts[r.type]);
+    if (rebuild) {
+        $("#sliders").innerHTML = rows.map((r) => `<div class="sl" data-t="${esc(r.type)}"><span class="nm" title="${esc(r.type)}">${esc(r.type)}</span><input type="range" min="0" max="60" step="1" aria-label="${esc(r.type)}占比"><span class="v"></span><div class="stack"></div></div>`).join("");
+    }
+    for (const el of $("#sliders").children) {
+        const r = U.rows.find((x) => x.type === el.dataset.t); if (!r) continue;
+        const inp = el.querySelector("input");
+        if (document.activeElement !== inp) inp.value = Math.round(r.share * 100);
+        el.classList.toggle("off", r.share < 0.005);
+        el.querySelector(".v").textContent = r.share < 0.005 ? "这次不讲" : `${pct(r.share)} · ${Math.round(r.share * teachMin())} 分钟`;
+        const f = M.flows([r])[0];
+        el.querySelector(".stack").innerHTML = f ? M.SOURCES.map((k) => `<i style="width:${(f.c[k] / f.share) * 100}%;background:${SRC_COLOR[k]}"></i>`).join("") : "";
+    }
+}
+$("#sliders").oninput = (e) => {
+    const el = e.target.closest(".sl"); if (!el) return;
+    overrideShares({ [el.dataset.t]: +e.target.value / 100 });
+    deriveCtx();   // 和下一次重算用同一套（所有手动值一起套回），拖完的显示不会再跳
+    renderSliders(false); renderMixBar(); drawSankey(); mixNote();
+};
+$("#resetMix").onclick = () => { U.overrides = {}; recompute(); };
+function mixNote() {
+    const c = U.ctx;
+    const changed = Object.keys(U.overrides || {});
+    const weak = Object.entries(c.w).filter(([, v]) => v > 0).map(([t, v]) => `${t} ${v.toFixed(2)}`).join("、");
+    $("#mixNote").textContent = `课时 ${U.minutes} 分钟，去掉老师设置里固定的 ${fixedMin()} 分钟（默写、课外知识补充、回顾），按 ${teachMin()} 分钟分配。学生薄弱程度：${weak || "无"}。` +
+        (SET().focusTypes ? `老师设置一节课最多主攻 ${SET().focusTypes} 个题型。` : "") +
+        (U.biased?.length ? `按老师画像里设的默认偏好：${U.biased.join("、")}。` : "") +
+        (Object.keys(c.gTypes).length ? `从「这次课的要求」里认出：${Object.keys(c.gTypes).join("、")}。` : "") +
+        (changed.length ? `老师手动调了 ${changed.join("、")}。` : "");
+}
+function renderReview() {
+    $("#review").value = U.review;
+    $("#reviewV").textContent = `${U.review}% / 新 ${100 - U.review}%`;
+    const c = U.ctx;
+    $("#reviewNote").textContent = `当前在 Unit ${U.unit}，${c.days != null ? `离考试 ${c.days} 天，` : ""}${U.reviewTouched ? "老师手动设的。" : c.days != null && c.days <= 14 ? "考前两周，默认多复习旧单元。" : "离考试还远，默认重点放在新单元。"}`;
+}
+$("#review").oninput = (e) => { U.review = +e.target.value; U.reviewTouched = true; renderReview(); };
+function renderMix() { renderSliders(true); renderMixBar(); drawSankey(); mixNote(); renderReview(); }
+
+// ---------- 比例横条（照 iPhone「存储空间」）：手机上调占比、调环节分钟 ----------
+// segs：[{ key, label, value, color }]。拖第 i 条分界线 → onMove(i, 左段新值, 右段新值)（两段之和不变）；
+// 图例 ± → onStep(key, ±5)；点图例名字 → onPick(key)
+function stackBar(el, segs, { unit, onMove, onStep, onPick }) {
+    const tot = segs.reduce((a, s) => a + s.value, 0) || 1;
+    el.innerHTML = `<div class="sbar">${segs.map((s, i) => `${i ? `<div class="grip" data-i="${i - 1}"></div>` : ""}<div class="seg" style="flex-grow:${s.value};background:${s.color}" title="${esc(s.label)}：${s.value}${unit}"></div>`).join("")}</div>
+      <ul class="slegend">${segs.map((s) => `<li data-k="${esc(s.key)}"><i class="dot" style="background:${s.color}"></i><span class="nm">${esc(s.label)}</span><span class="v">${s.value}${unit}</span><button type="button" data-d="-5" aria-label="${esc(s.label)}减少">−</button><button type="button" data-d="5" aria-label="${esc(s.label)}增加">+</button></li>`).join("")}</ul>`;
+    const bar = el.querySelector(".sbar"), segEls = bar.querySelectorAll(".seg"), vEls = el.querySelectorAll(".slegend .v");
+    bar.onpointerdown = (e) => {
+        const g = e.target.closest(".grip"); if (!g) return;
+        const i = +g.dataset.i, a0 = segs[i].value, b0 = segs[i + 1].value, x0 = e.clientX, W = bar.clientWidth;
+        let a = a0;
+        bar.setPointerCapture(e.pointerId); bar.classList.add("drag");
+        bar.onpointermove = (ev) => {
+            a = Math.max(0, Math.min(a0 + b0, a0 + Math.round((ev.clientX - x0) / W * tot)));
+            segEls[i].style.flexGrow = a; segEls[i + 1].style.flexGrow = a0 + b0 - a;
+            vEls[i].textContent = a + unit; vEls[i + 1].textContent = a0 + b0 - a + unit;
+        };
+        bar.onpointerup = bar.onpointercancel = () => {
+            bar.onpointermove = bar.onpointerup = bar.onpointercancel = null; bar.classList.remove("drag");
+            if (a !== a0) onMove(i, a, a0 + b0 - a);
+        };
+    };
+    el.querySelector(".slegend").onclick = (e) => {
+        const li = e.target.closest("li"); if (!li) return;
+        if (e.target.dataset.d) onStep(li.dataset.k, +e.target.dataset.d);
+        else if (e.target.closest(".nm")) onPick?.(li.dataset.k);
+    };
+}
+// 老师手动改占比（滑块、横条、±）：记进 overrides；排过大纲的话占比和大纲就对不上了
+function overrideShares(map) {
+    Object.assign(U.overrides ||= {}, map);
+    if (U.lock) { U.lock = null; $("#writeNote").textContent = "占比改过了，和大纲对不上：可以「重新生成大纲」，或者到「审教」页让 agent 按新占比调大纲。"; }
+}
+function renderMixBar() {
+    // 和滑块列一样的题型：减到 0 的也留在图例里（横条上那段是 0 宽），手机上还能加回来
+    const rows = U.rows.filter((r) => r.suggested > 0 || r.share > 0 || U.ctx.tpl.pts[r.type]), set = (map) => { overrideShares(map); deriveCtx(); renderMix(); };
+    stackBar($("#mixBar"), rows.map((r, i) => ({ key: r.type, label: r.type, value: Math.round(r.share * 100), color: OKABE[i % OKABE.length] })), {
+        unit: "%",
+        onMove: (i, a, b) => set({ [rows[i].type]: a / 100, [rows[i + 1].type]: b / 100 }),
+        onStep: (t, d) => set({ [t]: Math.max(0, Math.min(0.9, U.rows.find((r) => r.type === t).share + d / 100)) }),
+    });
+}
+function renderSecBar() {
+    const secs = U.W.outline.sections, types = outlineTypes();
+    stackBar($("#secBar"), secs.map((x) => ({ key: x.id, label: x.name, value: x.minutes, color: x.type ? OKABE[types.indexOf(x.type) % OKABE.length] : "#b9b7b0" })), {
+        unit: " 分",
+        onMove: (i, a, b) => { secs[i].minutes = a; secs[i + 1].minutes = b; outlineChanged(true, [secs[i].id, secs[i + 1].id]); },
+        onStep: (id, d) => { const x = secs.find((y) => y.id === id); x.minutes = Math.max(0, Math.min(240, x.minutes + d)); outlineChanged(true, [id]); },
+        onPick: (id) => document.querySelector(`.o-sec[data-id="${id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+    });
+}
+// 桑基图按容器宽度画：宽度变了才重画（切到「维度与大纲」页、窗口变宽变窄都走这里）；隐藏时宽度是 0，记成 0，显示出来时一定重画
+let sankeyW = 0;
+new ResizeObserver(([en]) => { const w = Math.round(en.contentRect.width); if (w !== sankeyW) { sankeyW = w; if (w) drawSankey(); } }).observe($("#sankey").parentElement);
+
+// 复盘：读最近几次课的记录，提改进建议；可以一键采纳
+$("#reviewBtn").onclick = async () => {
+    const st = stu();
+    $("#reviewBtn").disabled = true; $("#sug").innerHTML = ""; $("#sugNote").textContent = "agent 在翻前几次课的记录……";
+    try {
+        const j = await post({
+            action: "review", student: { name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st) }, studentMems: st.mems, teacherMems: S.teacher.mems,
+            settings: SET(), weakKps: weakKpsText(U.ctx.led),
+            logs: logsLite(st), observations: S.teacher.observations, mix: U.rows.filter((r) => r.share > 0).map((r) => ({ type: r.type, share: r.share })), examLabel: examLabel(),
+        });
+        $("#sug").innerHTML = j.suggestions.map((s, i) => `<li data-i="${i}"><div class="t">${esc(s.title)}</div><div>${esc(s.detail)}</div><div class="ev">依据：${esc(s.evidence)}</div><div class="acts"><button class="btn small ghost">采纳</button><span class="note">${s.type && s.delta ? `${s.type} ${s.delta > 0 ? "+" : ""}${Math.round(s.delta * 100)}%` : "写进这次课的要求"}</span></div></li>`).join("");
+        $("#sugNote").textContent = `${j.suggestions.length ? "" : "记录还不够，没有把握的建议。"}${j.gaps ? "还缺：" + j.gaps : ""}`;
+        $("#sug").onclick = (e) => {
+            const li = e.target.closest("li"); if (!li || !e.target.matches("button")) return;
+            const s = j.suggestions[+li.dataset.i];
+            if (s.type && s.delta) {
+                const r = U.rows.find((r) => r.type === s.type);
+                overrideShares({ [s.type]: Math.max(0, Math.min(0.6, (r?.share || 0) + s.delta)) });
+            } else U.guidance = [U.guidance, s.detail].filter(Boolean).join("；").slice(0, 200);
+            recompute();
+            observe(`采纳了复盘建议：${s.title}`);
+            e.target.disabled = true; e.target.textContent = "已采纳";
+        };
+    } catch (e) { $("#sugNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; }
+    $("#reviewBtn").disabled = false;
+};
+
+// ---------- 请求：都带上「自带 key」设置 ----------
+const BYOK = "en-prep-byok";
+function byok() { try { return JSON.parse(localStorage.getItem(BYOK)) || null; } catch { return null; } }
+async function post(payload, signal) {
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, byok: byok() }), signal });
+    const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    if (!r.ok || j.error) throw new Error(j.error || `HTTP ${r.status}`);
+    return j;
+}
+// 读 SSE：onEvent(event, data)
+async function sse(payload, onEvent, signal) {
+    const res = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, byok: byok() }), signal });
+    if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || `HTTP ${res.status}`); }
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+        const { value, done } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i;
+        while ((i = buf.indexOf("\n\n")) >= 0) {
+            const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+            const ev = /^event: (.*)$/m.exec(chunk)?.[1], d = JSON.parse(/^data: (.*)$/m.exec(chunk)?.[1] || "null");
+            if (ev === "error") throw new Error(d.message);
+            if (ev) onEvent(ev, d);
+        }
+    }
+}
+// 大纲、教案、聊天共用的材料：学生、档案、考试、占比
+const examLabel = () => `${U.gt}${U.kind}${U.ctx.date ? `（${U.ctx.date}，还有 ${U.ctx.days} 天）` : ""}`;
+function ctxPayload() {
+    const c = U.ctx, st = c.st;
+    const fl = M.flows(U.rows.filter((r) => r.share >= 0.005));
+    return {
+        student: { name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), school: st.school, district: st.district, textbook: st.textbook, attention: st.attention },
+        studentMems: st.mems, teacherMems: S.teacher.mems, logs: logsLite(st), guidance: U.guidance, minutes: U.minutes,
+        settings: SET(), difficulty: U.difficulty, weakKps: weakKpsText(c.led), attentionMax: R.student.attentionMaxMinutes,
+        visual: U.W?.md ? !!U.W.visual : isVisual(st),
+        unitPlan: `当前在 Unit ${U.unit}；下一场考试范围 ${R.examCalendar.scope[U.gt[1]]?.[U.kind] || "未知"}；旧单元复习 ${U.review}% / 新单元 ${100 - U.review}%`,
+        exam: { gt: U.gt, kind: U.kind, level: c.level, label: examLabel(), levelLabel: `老师选「${c.level}」；系统建议「${c.lv.suggest}」：${c.lv.why}`,
+            structure: `${c.tpl.label}：${Object.entries(c.tpl.pts).map(([t, p]) => `${t} ${Math.round(p)} 分`).join("、")}${c.tpl.notes.length ? "（" + c.tpl.notes.join("；") + "）" : ""}${c.mix.zkNote ? "；中考趋势：" + c.mix.zkNote : ""}`,
+            school: `${schoolLabel(st)}。${c.lv.evidence.length ? "库里的记录：" + c.lv.evidence.join("；") : "库里没有这所学校这类考试的卷子"}` },
+        mix: fl.map((f) => ({ type: f.type, share: f.share, minutes: Math.round(f.share * teachMin()), kps: c.kps[f.type] || [],
+            from: M.SOURCES.map((k) => `${k} ${Math.round((f.c[k] / f.share) * 100)}%`).join("、") })),
+    };
+}
+const itemRefs = () => (U.W?.items || []).map(({ code, id }) => ({ code, id }));
+// 长期薄弱、反复出错的知识点，给模型看
+const weakKpsText = (led) => (led || []).filter((r) => r.status !== "待观察").slice(0, 6).map((r) => `${r.qtype}·${r.kp} ${r.status}（练了 ${r.practiced} 次错 ${r.wrongN} 次，最近 ${r.last}）`).join("；");
+// 观察老师：text 进「最近的调整」给模型看；evs 进画像的操作记录（MAT-498）
+function observe(text, ...evs) {
+    if (text) { S.teacher.observations.push(`${TODAY} ${text}`); S.teacher.observations = S.teacher.observations.slice(-12); }
+    if (evs.length) { S.teacher.events.push(...evs.map((ev) => ({ date: TODAY, student: stu().name, ...ev }))); S.teacher.events = S.teacher.events.slice(-200); }
+    save();
+}
+const clone = (x) => JSON.parse(JSON.stringify(x));
+
+// ---------- 4 大纲 ----------
+// U.W：这一次备课的工作区 { items, alts, slots, outline, outline0（模型给的原样，用来看老师改了什么）, md, stale, student, sid, date }
+function clearPlan() {
+    $("#stages").hidden = true; $("#outlineWrap").hidden = true; $("#itemsWrap").hidden = true; $("#step5").hidden = true;
+    $("#outlineNote").textContent = ""; U.W = null; U.lock = null; U.chat = []; renderChat(); renderDraft();
+}
+let ctrl = null;
+function setStage(k) {
+    const order = ["retrieve", "outline", "done"];
+    for (const s of $("#stages").children) { const i = order.indexOf(s.dataset.k), j = order.indexOf(k); s.className = i < j || k === "done" ? "done" : i === j ? "on" : ""; }
+}
+async function makeOutline() {
+    const st = stu();
+    ctrl?.abort(); ctrl = new AbortController();
+    $("#outlineBtn").disabled = true; $("#reOutline").disabled = true; $("#outlineNote").textContent = "";
+    $("#stages").hidden = false; setStage("retrieve");
+    $("#outlineWrap").hidden = true; $("#itemsWrap").hidden = true; $("#step5").hidden = true;
+    U.lock = null;
+    const W = U.W = { items: [], alts: [], extras: {}, stale: new Map(), md: "", student: st.name, sid: st.id, date: TODAY };
+    const t0 = Date.now();
+    try {
+        await sse({ action: "outline", ...ctxPayload() }, (ev, d) => {
+            if (ev === "stage" && d.k === "outline") setStage("outline");
+            else if (ev === "items") { W.items = d.items; W.alts = d.alts || []; W.slots = d.slots; renderItems(); }
+            else if (ev === "extras") W.extras = Object.fromEntries([...d.picked, ...d.candidates].map((e) => [e.id, e]));
+            else if (ev === "outline") { W.outline = d; W.outline0 = clone(d); }
+            else if (ev === "done") { setStage("done"); $("#outlineNote").textContent = `用时 ${((Date.now() - t0) / 1000).toFixed(1)} 秒${d.left != null ? ` · 今天还能排 ${d.left} 次` : ""}`; }
+        }, ctrl.signal);
+        recordMix(st);   // 排成功了才算一次（被限次、出错的不算）
+        putItems([...W.items, ...W.alts], U.gt); snapWork();
+        lockFromOutline(); renderOutline(); if (page() === "home") renderHome();
+        $("#outlineWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+        if (e.name !== "AbortError") $("#outlineNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`;
+        $("#stages").hidden = true;
+    }
+    $("#outlineBtn").disabled = false; $("#reOutline").disabled = false;
+}
+// 老师这次手动调过的占比记进画像：同一天同一个学生同一个题型只记最后一次，重排大纲不重复算
+function recordMix(st) {
+    const adj = Object.entries(U.overrides || {}).map(([t, v]) => {
+        const r = U.rows.find((x) => x.type === t);
+        return { type: t, from: Math.round((r?.base || 0) * 100), to: Math.round(v * 100) };
+    }).filter((x) => x.from !== x.to);
+    const T = S.teacher, tag = `${TODAY} 给${st.name}的教案：`;
+    for (const x of adj) {
+        const i = T.events.findIndex((e) => e.kind === "mix" && e.date === TODAY && e.student === st.name && e.type === x.type);
+        if (i >= 0) T.events.splice(i, 1);
+    }
+    T.observations = T.observations.filter((o) => !o.startsWith(tag));
+    observe(adj.length ? `给${st.name}的教案：${adj.map((x) => `${x.type} ${x.from}% → ${x.to}%`).join("、")}` : "",
+        ...adj.map((x) => ({ kind: "mix", ...x, delta: x.to - x.from })), { kind: "outline_gen" });
+}
+$("#outlineBtn").onclick = makeOutline;
+$("#reOutline").onclick = makeOutline;
+
+// 大纲里各题型的分钟数 → 上面的占比（桑基图跟着变）
+function lockFromOutline() {
+    const by = {}; let tot = 0;
+    for (const x of U.W?.outline?.sections || []) if (x.type && x.minutes > 0) { by[x.type] = (by[x.type] || 0) + x.minutes; tot += x.minutes; }
+    if (!tot) return;
+    U.lock = Object.fromEntries(Object.entries(by).map(([t, m]) => [t, m / tot]));
+    deriveCtx(); renderMix();
+    $("#mixNote").textContent += " 现在的占比按大纲里各题型的分钟数算。";
+}
+const move = (a, from, to) => a.splice(to, 0, ...a.splice(from, 1));   // 数组里挪一项
+const outlineMin = (o) => o.sections.reduce((a, x) => a + x.minutes, 0);
+const secTimes = (o) => { let t = 0; return o.sections.map((x) => { const r = `${t}–${t + x.minutes}`; t += x.minutes; return r; }); };
+const itemLabel = (it) => `${it.type} · ${it.school} ${it.year}`;
+// 难度（MAT-499）：档位 + 生词数，点开看是哪几个词
+const POS_CN = { v: "动", n: "名", adj: "形", other: "其他" };
+const wordList = (ws) => ws.map((x) => `${x.w}（${POS_CN[x.pos] || "其他"}，${x.book}）`).join("、");
+const diffWords = (d) => { const q = d.words.filter((x) => x.loc === "q"), p = d.words.filter((x) => x.loc === "p");
+    return [`难度系数 ${d.score}（按这个学生学到的册算）`, q.length && `题目里没学过的词：${wordList(q)}`, p.length && `文章里没学过的词：${wordList(p)}`, !d.words.length && "没有这个学生没学过的词"].filter(Boolean).join("\n"); };
+const dtier = (d, short) => (d ? `<span class="dtier ${d.tier}" title="${esc(diffWords(d))}"${short ? "" : " data-dw"}>${d.tier}${!short && d.words.length ? ` · 生词 ${d.words.length}` : ""}</span>` : "");
+function renderOutline(flash = []) {
+    const W = U.W, o = W.outline;
+    $("#outlineWrap").hidden = false;
+    $("#oTitle").value = o.title;
+    $("#oBasis").innerHTML = ["年级", "学校", "学生", "老师"].map((k) => `<dt style="color:${SRC_COLOR[k]}">${k}</dt><dd><textarea rows="2" data-basis="${k}">${esc(o.basis[k] || "")}</textarea></dd>`).join("");
+    document.querySelectorAll(".o-list").forEach((t) => (t.value = (o[t.dataset.list] || []).join("\n")));
+    const times = secTimes(o);
+    const typeOpts = (cur) => `<option value="">（不练题型）</option>` + [...new Set([...U.rows.map((r) => r.type), ...Object.keys(data.stats.byType)])].map((t) => `<option ${t === cur ? "selected" : ""}>${esc(t)}</option>`).join("");
+    $("#oSecs").innerHTML = o.sections.map((x, i) => {
+        const used = new Set(o.sections.flatMap((y) => y.items));
+        const pool = x.extras ? [] : W.items.filter((it) => !x.items.includes(it.code)).sort((a, b) => (b.type === x.type) - (a.type === x.type) || used.has(a.code) - used.has(b.code));
+        return `<li class="o-sec${x.extras ? " o-extra" : ""}${flash.includes(x.id) ? " flash" : ""}" data-id="${x.id}" style="border-left-color:${x.extras ? "var(--green)" : x.type ? "var(--s-grade)" : "#cfcdc6"}">
+      <div class="o-top"><span class="drag drag-sec" title="按住拖动，调整环节顺序" aria-label="拖动">⠿</span><span class="o-time">${times[i]}′</span><input type="text" class="o-name" value="${esc(x.name)}" maxlength="30" aria-label="环节名">${x.extras ? `<span class="xtag">课外知识</span>` : ""}<select class="o-type" aria-label="题型">${typeOpts(x.type)}</select>
+        <span class="o-min"><input type="number" min="0" max="240" step="5" value="${x.minutes}" aria-label="分钟"> 分钟</span>
+        <span class="o-ctl"><button data-up title="上移">↑</button><button data-down title="下移">↓</button><button data-del title="删掉这个环节">×</button></span></div>
+      <ol class="o-pts">${x.extras ? extrasOf(x).map((e) => `<li class="xcard"><span><span class="xcat">${esc(e.cat)}</span><b>${esc(e.key)}</b>　${esc(e.mean)}${e.where ? `<span class="note"> · ${esc(e.where)}</span>` : ""}</span><button data-xrm="${e.id}" title="不要这条" aria-label="不要这条">×</button></li>`).join("") : x.points.map((t, pi) => `<li data-i="${pi}"><span class="drag drag-pt" title="按住拖动，调整要点顺序" aria-label="拖动">⠿</span><input class="o-pt" value="${esc(t)}" maxlength="160" aria-label="要点 ${pi + 1}"><span class="o-ctl"><button data-pup title="上移">↑</button><button data-pdown title="下移">↓</button><button data-pdel title="删掉这条">×</button></span></li>`).join("")}</ol>
+      ${x.extras ? "" : `<button class="linkbtn" data-padd style="justify-self:start">+ 加一条要点</button>`}
+      ${x.extras ? extrasChips(x) : `<div class="o-items">${x.items.map((c) => { const it = W.items.find((y) => y.code === c); return it ? `<span class="ochip"><a href="#item-${c}" class="ecode">${c}</a>${esc(itemLabel(it))}${dtier(it.diff, true)}<button data-rm="${c}" title="不用这道">×</button></span>` : ""; }).join("")}
+        ${pool.length ? `<select data-add aria-label="加题"><option value="">+ 加题</option>${pool.map((it) => `<option value="${it.code}">${it.code} ${esc(itemLabel(it))}${used.has(it.code) ? "（别处已用）" : ""}</option>`).join("")}</select>` : ""}
+        ${x.type ? `<button class="linkbtn" data-find>再找一道…</button>` : ""}</div>`}</li>`;
+    }).join("");
+    renderTotal();
+    // 环节、每个环节里的要点都能拖动排序
+    dragSort($("#oSecs"), ".drag-sec", (a, b) => { move(o.sections, a, b); outlineChanged(true, [o.sections[b].id]); });
+    $("#oSecs").querySelectorAll(".o-pts").forEach((ol) => dragSort(ol, ".drag-pt", (a, b) => { const x = secOf(ol); move(x.points, a, b); outlineChanged(true, [x.id]); }));
+}
+// 课外知识补充（用户 10-29）：函数按这节课的例题挑好条目，这里只增删（条目卡片上的 ×、下面的「+ 加一条」）；要点跟着条目重写
+const extrasOf = (x, E = U.W.extras) => x.extras.map((id) => E[id]).filter(Boolean);
+function extrasChips(x) {
+    const cands = Object.values(U.W.extras).filter((e) => !x.extras.includes(e.id));
+    return `<div class="o-items">${cands.length ? `<select data-xadd aria-label="加一条课外知识"><option value="">+ 加一条</option>${cands.map((e) => `<option value="${e.id}">${esc(e.cat)} · ${esc(e.key)}</option>`).join("")}</select>` : ""}</div>`;
+}
+const syncExtras = (x) => { x.points = extrasOf(x).map((e) => e.point); };
+// 换题、找题以后，课外知识按现在的用题重算（不调模型）：还对得上的条目留着、更新「这节课里对上了什么」，对不上的换成新挑的，条数不变；教案里那一节跟着重拼
+async function refreshExtras() {
+    const W = U.W, x = extrasSec();
+    if (!x?.extras.length) return;
+    try {
+        const j = await post({ action: "extras", ...ctxPayload(), items: itemRefs() });
+        W.extras = Object.fromEntries([...j.picked, ...j.candidates].map((e) => [e.id, e]));
+        const keep = x.extras.filter((id) => W.extras[id]);
+        x.extras = [...keep, ...j.picked.map((e) => e.id).filter((id) => !keep.includes(id))].slice(0, x.extras.length);
+        syncExtras(x);
+        if (W.md) { W.md = spliceExtras(W.md); renderPlan(false); }
+        renderOutline([x.id]);
+    } catch (e) { toast("课外知识没能按新题重算：" + e.message); }
+}
+// 拖动排序（手机上手指也能拖）：按住把手上下拖，松手时按位置插进去 → onDrop(原位置, 新位置)。行是 list 的直接子元素
+function dragSort(list, handle, onDrop) {
+    list.onpointerdown = (e) => {   // 赋值而不是 addEventListener：每次重画都会调，只留一个
+        const h = e.target.closest(handle), rows = [...list.children], row = h && rows.find((r) => r.contains(h));
+        if (!row) return;
+        const from = rows.indexOf(row), y0 = e.clientY;
+        let to = from;
+        e.preventDefault(); h.setPointerCapture(e.pointerId); row.classList.add("dragging");
+        h.onpointermove = (ev) => {
+            row.style.transform = `translateY(${ev.clientY - y0}px)`;
+            to = rows.filter((r) => r !== row).map((r) => r.getBoundingClientRect()).filter((b) => b.top + b.height / 2 < ev.clientY).length;
+        };
+        h.onpointerup = h.onpointercancel = () => {
+            h.onpointermove = h.onpointerup = h.onpointercancel = null;
+            row.style.transform = ""; row.classList.remove("dragging");
+            if (to !== from) onDrop(from, to);
+        };
+    };
+}
+function renderTotal() {
+    const tot = outlineMin(U.W.outline);
+    $("#oTotal").textContent = `合计 ${tot} / ${U.minutes} 分钟`;
+    $("#oTotal").classList.toggle("bad", tot !== U.minutes);
+    secTimes(U.W.outline).forEach((t, i) => { const el = $("#oSecs").children[i]?.querySelector(".o-time"); if (el) el.textContent = t + "′"; });
+    renderSecBar();
+}
+function outlineChanged(structural, flash) {
+    if (structural) renderOutline(flash); else renderTotal();
+    lockFromOutline();
+    if (U.W.md) $("#writeNote").textContent = "大纲改过了，下面的教案还是按旧大纲写的，可以重新写。";
+}
+const secOf = (el) => U.W.outline.sections.find((x) => x.id === el.closest(".o-sec")?.dataset.id);
+$("#oTitle").oninput = (e) => { U.W.outline.title = e.target.value; };
+$("#oBasis").oninput = (e) => { if (e.target.dataset.basis) U.W.outline.basis[e.target.dataset.basis] = e.target.value; };
+document.querySelectorAll(".o-list").forEach((t) => (t.oninput = () => { U.W.outline[t.dataset.list] = t.value.split("\n").map((x) => x.trim()).filter(Boolean); }));
+$("#oSecs").oninput = (e) => {
+    const x = secOf(e.target); if (!x) return;
+    if (e.target.matches(".o-name")) x.name = e.target.value;
+    else if (e.target.matches(".o-pt")) x.points[+e.target.closest("li").dataset.i] = e.target.value.trim();
+    else if (e.target.matches(".o-min input")) { x.minutes = Math.max(0, Math.min(240, Math.round(+e.target.value || 0))); outlineChanged(false); }
+};
+$("#oSecs").onchange = (e) => {
+    const x = secOf(e.target); if (!x) return;
+    if (e.target.matches(".o-type")) { x.type = e.target.value; outlineChanged(true, [x.id]); }
+    else if (e.target.matches("[data-add]") && e.target.value) { x.items.push(e.target.value); outlineChanged(true, [x.id]); }
+    else if (e.target.matches("[data-xadd]") && e.target.value) { x.extras.push(e.target.value); syncExtras(x); outlineChanged(true, [x.id]); }
+};
+$("#oSecs").onclick = async (e) => {
+    const x = secOf(e.target); if (!x) return;
+    const o = U.W.outline, i = o.sections.indexOf(x);
+    if (e.target.closest("a.ecode")) { e.preventDefault(); jumpItem(e.target.closest("a.ecode").getAttribute("href").slice(1)); return; }
+    const pi = +e.target.closest("[data-i]")?.dataset.i;   // 要点那一行
+    if (e.target.matches("[data-pup]") && pi > 0) { move(x.points, pi, pi - 1); outlineChanged(true, [x.id]); return; }
+    if (e.target.matches("[data-pdown]") && pi < x.points.length - 1) { move(x.points, pi, pi + 1); outlineChanged(true, [x.id]); return; }
+    if (e.target.matches("[data-pdel]")) { x.points.splice(pi, 1); outlineChanged(true, [x.id]); return; }
+    if (e.target.matches("[data-padd]")) { x.points.push(""); outlineChanged(true, [x.id]); $(`.o-sec[data-id="${x.id}"] .o-pts li:last-child input`)?.focus(); return; }
+    if (e.target.matches("[data-up]") && i > 0) { move(o.sections, i, i - 1); outlineChanged(true, [x.id]); }
+    else if (e.target.matches("[data-down]") && i < o.sections.length - 1) { move(o.sections, i, i + 1); outlineChanged(true, [x.id]); }
+    else if (e.target.matches("[data-del]")) { o.sections.splice(i, 1); outlineChanged(true); toast(`删掉了「${x.name}」`, { label: "撤销", fn: () => { o.sections.splice(i, 0, x); outlineChanged(true, [x.id]); } }); }
+    else if (e.target.matches("[data-rm]")) { x.items = x.items.filter((c) => c !== e.target.dataset.rm); outlineChanged(true, [x.id]); }
+    else if (e.target.matches("[data-xrm]")) { x.extras = x.extras.filter((id) => id !== e.target.dataset.xrm); syncExtras(x); outlineChanged(true, [x.id]); }
+    else if (e.target.matches("[data-find]")) {
+        const box = e.target.closest(".o-items");
+        if (box.querySelector(".o-find")) return;
+        box.insertAdjacentHTML("beforeend", `<div class="o-find"><input type="text" maxlength="120" placeholder="要什么样的${esc(x.type)}？比如：环保话题、考推理判断"><button class="btn small">找</button></div>`);
+        const inp = box.querySelector(".o-find input"); inp.focus();
+        const search = async () => {
+            const btn = box.querySelector(".o-find .btn"); btn.disabled = true; btn.textContent = "找…";
+            try { const got = await findItems(x.type, inp.value.trim(), 1, x); toast(got.length ? `找到 ${got.map((it) => it.code).join("、")}，加进了「${x.name}」` : "库里没找到合适的"); }
+            catch (err) { toast("没找到：" + err.message); }
+        };
+        box.querySelector(".o-find .btn").onclick = search;
+        inp.onkeydown = (ev) => { if (ev.key === "Enter") { ev.preventDefault(); search(); } };
+    }
+};
+$("#oAdd").onclick = () => {
+    const o = U.W.outline, id = "s" + (Math.max(0, ...o.sections.map((x) => +x.id.slice(1) || 0)) + 1);
+    o.sections.push({ id, name: "新环节", minutes: 10, type: "", items: [], points: [] });
+    outlineChanged(true, [id]);
+};
+// 从题库再找题：编号接着往后排，加进某个环节（sec 可空）
+async function findItems(type, query, n, sec) {
+    const j = await post({ action: "search", type, query: query || `${type}${U.ctx.kps[type]?.length ? "：" + U.ctx.kps[type].join("、") : ""}`, n, exclude: U.W.items.map((it) => it.id), ...ctxPayload() });
+    let k = Math.max(0, ...U.W.items.map((it) => +it.code.slice(1)));
+    const got = j.items.map((it) => ({ ...it, code: `E${++k}` }));
+    U.W.items.push(...got); putItems(got, U.gt);
+    if (sec) sec.items.push(...got.map((it) => it.code));
+    renderItems();
+    if (U.W.outline) outlineChanged(true, sec ? [sec.id] : []);
+    refreshExtras();
+    return got;
+}
+
+// ---------- 例题卡片 ----------
+// Bionic reading：英文单词前半截加粗（3 个字母以内加粗 1 个，长词加粗约 45%），把视线往后带
+const bionicCut = (w) => (w.length <= 3 ? 1 : Math.ceil(w.length * 0.45));
+const bionicHTML = (h) => h.replace(/&[a-z]+;|[A-Za-z][A-Za-z'’-]*/g, (w) => (w[0] === "&" ? w : `<b>${w.slice(0, bionicCut(w))}</b>${w.slice(bionicCut(w))}`));
+function qHTML(it) {
+    const h = esc(it.text);
+    return (stu().bionic ? bionicHTML(h) : h).replace(/⟦图(\d+)⟧/g, (m, n) => { const im = it.imgs.find((x) => x.n === +n); return im ? `<img src="${im.src}" alt="${esc(im.desc)}" loading="lazy">` : ""; });
+}
+function renderItems() {
+    const W = U.W;
+    $("#itemsWrap").hidden = false;
+    $("#items").innerHTML = W.items.map((it, i) => `<div class="it" id="item-${it.code}" data-i="${i}"><div class="hd"><span class="code">${it.code}</span><b>${esc(it.type)}</b><span class="src">${esc(it.school)} ${it.year} ${it.gt}${it.kind} · ${esc(it.level)}</span></div>
+      <div class="ws">${dtier(it.diff)}${it.why.map((w) => `<span class="${w.startsWith("考点") ? "k" : ""}">${esc(w)}</span>`).join("")}${it.imgs.length ? `<span>${it.imgs.length} 张图</span>` : ""}<span title="重排分 / 余弦">rr ${it.score.rr} · cos ${it.score.cos}</span></div>
+      ${it.diff ? `<div class="ans dwords" hidden style="white-space:pre-line">${esc(diffWords(it.diff))}</div>` : ""}
+      <div class="qt">${qHTML(it)}</div>
+      <div class="ans"><button class="linkbtn" data-open>展开</button> · <button class="linkbtn" data-ans>看答案</button>${W.alts.some((a) => a.type === it.type) ? ` · <button class="linkbtn" data-swap>换一题</button>` : ""}<span hidden> 答案：${esc(it.ans.filter(Boolean).join(" "))}${it.ans_src === "模型作答" ? "（原卷没有答案，这是模型作答，未核对）" : ""}</span></div></div>`).join("");
+    const sl = W.slots || [];
+    $("#trace").innerHTML = `<summary>检索过程</summary><table><tr><th>题型</th><th>查询</th><th>候选池</th><th>范围</th><th>选中 / 考点对上</th></tr>${sl.map((s) => `<tr><td>${esc(s.type)}</td><td>${esc(s.query)}</td><td>${s.pool} → 重排 ${s.candidates}</td><td>${esc(s.relax)}${s.extra ? `，补进 ${s.extra} 道考点对口的` : ""}${s.levelRelaxed ? "；出卷来源不够，放宽了" : ""}</td><td>${s.n}${s.kpCovered != null ? ` / ${s.kpCovered}` : ""}</td></tr>`).join("")}</table><p class="note">先按题型、出卷来源、年级学期和考试类型过滤，不够就逐级放宽；再用 BM25 + 向量 + 考点 / 同校加分排序，交给重排模型精排。考点对不上的不硬凑，选中理由写在每道题上。</p>`;
+}
+// 元素在别的页：先切过去（同步切，接着就能滚动）
+const reveal = (el) => { const pg = el.closest(".page"); if (pg.hidden) go(pg.dataset.page); };
+function jumpItem(id) { const it = document.getElementById(id); if (!it) return; reveal(it); it.scrollIntoView({ behavior: "smooth", block: "center" }); it.classList.add("hl"); setTimeout(() => it.classList.remove("hl"), 1600); }
+$("#items").onclick = (e) => {
+    const card = e.target.closest(".it"); if (!card) return;
+    if (e.target.closest("[data-dw]")) { const d = card.querySelector(".dwords"); if (d) d.hidden = !d.hidden; }
+    if (e.target.matches("[data-open]")) { const q = card.querySelector(".qt"); q.classList.toggle("open"); e.target.textContent = q.classList.contains("open") ? "收起" : "展开"; }
+    if (e.target.matches("[data-ans]")) { const s = e.target.parentElement.querySelector("span[hidden], span:last-child"); s.hidden = !s.hidden; }
+    if (e.target.matches("[data-swap]")) {
+        const W = U.W, i = +card.dataset.i, old = W.items[i];
+        const alt = W.alts.splice(W.alts.findIndex((a) => a.type === old.type), 1)[0];
+        W.items[i] = { ...alt, code: old.code };
+        const { code, ...back } = old; W.alts.push(back);
+        if (W.md) W.stale.set(old.code, new Set(staleSecs(W.md, old.code)));
+        observe(`给${W.student}备课时换掉了 ${old.code}（${old.type}，${old.school} ${old.year}${old.gt}${old.kind}${old.diff ? "，" + old.diff.tier : ""}）`, { kind: "swap", type: old.type, offGrade: old.gt !== U.ctx.gt, tier: old.diff?.tier });
+        renderItems(); if (W.outline) renderOutline(); if (W.md) renderPlan(false);
+        refreshExtras();
+        document.getElementById(`item-${code}`)?.classList.add("hl");
+        toast(`${code} 换成了 ${alt.school} ${alt.year} 的题${W.md ? "，教案里用到它的那几节标出来了，可以按新题重写" : ""}`);
+    }
+};
+
+// ---------- 5 按大纲写教案 ----------
+$("#writeBtn").onclick = async () => {
+    const W = U.W, st = stu();
+    const tot = outlineMin(W.outline);
+    if (tot !== U.minutes && !confirm(`大纲合计 ${tot} 分钟，课时是 ${U.minutes} 分钟，还是按大纲写吗？`)) return;
+    ctrl?.abort(); ctrl = new AbortController();
+    $("#writeBtn").disabled = true; $("#writeNote").textContent = "正在按大纲写……";
+    $("#step5").hidden = false; $("#planActs").hidden = true; $("#editor").hidden = true; $("#plan").hidden = false;
+    W.md = ""; W.stale = new Map();
+    go("plan");
+    const t0 = Date.now();
+    let raf = 0;
+    try {
+        const tpl = curTemplate(); W.visual = isVisual(st, tpl);
+        await sse({ action: "plan", ...ctxPayload(), visual: W.visual, template: tpl, planNote: U.planNote || "", outline: W.outline, items: itemRefs() }, (ev, d) => {
+            if (ev === "delta") { W.md += d.t; if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderPlan(true); }); }
+            else if (ev === "done") $("#usage").textContent = `用时 ${((Date.now() - t0) / 1000).toFixed(1)} 秒 · ${d.usage?.total_tokens ?? "?"} tokens${d.left != null ? ` · 今天还能写 ${d.left} 次` : ""}`;
+        }, ctrl.signal);
+        W.md = spliceExtras(W.md);
+        cancelAnimationFrame(raf); renderPlan(false);
+        $("#planActs").hidden = false; $("#writeNote").textContent = "";
+        renderChat();   // 聊天从「改大纲」换成「改教案」
+        snapWork();
+        if (page() === "home") renderHome();
+        // 记下老师对大纲的改动（和模型原样比），供记忆和复盘「观察」老师的习惯
+        const diff = outlineDiff(W.outline0, W.outline);
+        if (diff) observe(`给${st.name}改了大纲：${diff}`, { kind: "outline_edit" });
+        S.lastPlan = { sid: st.id, date: TODAY, mix: Object.entries(U.lock || {}).map(([t, v]) => [t, +v.toFixed(2)]) };
+        save();
+    } catch (e) {
+        if (e.name !== "AbortError") $("#writeNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`;
+    }
+    $("#writeBtn").disabled = false;
+};
+// 课外知识补充这一节不让模型写，用现成条目拼：替换模型自己写的同名一节，没有就放在「课后作业」前面，再没有就放最后
+function extrasMd(x) {
+    return `## ${x.name}（${x.minutes} 分钟）\n\n` + extrasOf(x).map((e) => [
+        `### ${e.cat} · ${e.key}（${e.mean}）`, e.detail, e.where && `- ${e.where}`,
+        ...e.ex.map((t) => (e.src ? `- 真题（${e.src}${e.freq > 1 ? `，近年 ${e.freq} 份卷子考过` : ""}）：${t}` : `- ${t}`)),
+        `- 怎么讲：${e.how}`,
+    ].filter(Boolean).join("\n")).join("\n\n") + "\n";
+}
+const extrasSec = () => U.W?.outline?.sections.find((y) => y.extras);
+const ownExtras = (secs, x) => x && secs.find((s) => s.level === 2 && s.title.replace(/[（(].*$/, "").trim() === x.name.trim());
+function spliceExtras(md) {
+    const x = extrasSec();
+    if (!x?.extras.length) return md;
+    const secs = sections(md), own = ownExtras(secs, x), hw = secs.find((s) => s.level === 2 && s.title.includes("作业"));
+    return own ? replaceSec(md, own, extrasMd(x)) : hw ? replaceSec(md, { start: hw.start, end: hw.start }, extrasMd(x)) : md.trimEnd() + "\n\n" + extrasMd(x);
+}
+// 把教案里的一节（sections() 给的行号范围）换成 text；start === end 就是插进去
+const replaceSec = (md, sec, text) => { const L = md.split("\n"); return [...L.slice(0, sec.start), text.trim(), "", ...L.slice(sec.end)].join("\n").replace(/\n{3,}/g, "\n\n"); };
+function outlineDiff(a, b) {
+    if (!a || !b) return "";
+    const by = (o) => o.sections.reduce((m, x) => ((m[x.type || x.name] = (m[x.type || x.name] || 0) + x.minutes), m), {});
+    const A = by(a), B = by(b), out = [];
+    for (const k of new Set([...Object.keys(A), ...Object.keys(B)])) if ((A[k] || 0) !== (B[k] || 0)) out.push(`${k} ${A[k] || 0}→${B[k] || 0} 分钟`);
+    const na = a.sections.map((x) => x.name), nb = b.sections.map((x) => x.name);
+    const add = nb.filter((n) => !na.includes(n)), del = na.filter((n) => !nb.includes(n));
+    if (add.length) out.push(`加了「${add.join("」「")}」`);
+    if (del.length) out.push(`删了「${del.join("」「")}」`);
+    return out.slice(0, 6).join("，");
+}
+// 换题以后要改的节：提到这个题号的节；小节里提到了，大节就不再算
+const mentions = (t, c) => new RegExp(`(?<![A-Za-z0-9])${c}(?![0-9])`).test(t);
+function staleSecs(md, code) {
+    const secs = sections(md), own = ownExtras(secs, extrasSec());   // 课外知识那一节是系统拼的，换题后跟着重算（refreshExtras），不让老师按新题重写
+    return secs.filter((s) => !(own && s.start >= own.start && s.start < own.end) && mentions(s.text, code) && !secs.some((t) => t.level > s.level && t.start > s.start && t.start < s.end && mentions(t.text, code))).map((s) => s.title);
+}
+// 教案按节拆：标题行到下一个同级或更高级标题
+function sections(md) {
+    const L = md.split("\n"), out = [];
+    L.forEach((l, i) => { const m = /^(#{2,3})\s+(.*)$/.exec(l); if (m) out.push({ level: m[1].length, title: m[2].trim(), start: i }); });
+    out.forEach((s, k) => { const nxt = out.slice(k + 1).find((t) => t.level <= s.level); s.end = nxt ? nxt.start : L.length; s.text = L.slice(s.start, s.end).join("\n"); });
+    return out;
+}
+// 彩色版里题型的颜色：Okabe-Ito 色盲友好配色，按这节课大纲里题型出现的顺序分
+const OKABE = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9", "#D55E00", "#7a6a00", "#555555"];
+const outlineTypes = (o = U.W?.outline) => [...new Set((o?.sections || []).map((x) => x.type).filter(Boolean))];
+function typeColor(text, o = U.W?.outline) {
+    const secs = o?.sections || [], types = outlineTypes(o);
+    const i = types.findIndex((t) => text.includes(t) || secs.some((x) => x.type === t && text.includes(x.name)));
+    return i >= 0 ? OKABE[i % OKABE.length] : null;
+}
+function renderPlan(streaming) {
+    const W = U.W;
+    const el = $("#plan");
+    el.innerHTML = marked.parse(W.md);
+    el.classList.toggle("caret", streaming);
+    el.classList.toggle("visual", !!W.visual);
+    if (W.visual) el.querySelectorAll("h3").forEach((h) => { const c = typeColor(h.textContent); if (c) h.style.setProperty("--tc", c); });
+    // 引用记忆 / 考试 / 学校的标记做成小标签（方括号、圆括号、裸写的编号都认），E 编号链到上面的例题
+    const all = { ...Object.fromEntries(stu().mems.map((m) => [m.id, m])), ...Object.fromEntries(S.teacher.mems.map((m) => [m.id, m])) };
+    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodes = []; while (walk.nextNode()) nodes.push(walk.currentNode);
+    const cite = (k) => `<span class="cite ${k[0] === "S" || k[0] === "T" ? k[0] : k}" title="${esc(all[k] ? `${k} ${all[k].cat}：${all[k].text}` : k === "考" ? "依据：下一场考试的结构" : k === "校" ? "依据：学校 / 出卷来源" : "")}">${k}</span>`;
+    for (const n of nodes) {
+        if (!/\[(考|校)\]|(?<![A-Za-z0-9])[ST]\d{1,2}(?![0-9A-Za-z])|(?<![A-Za-z0-9])E\d+(?![0-9A-Za-z])|==[^=]/.test(n.nodeValue)) continue;
+        const span = document.createElement("span");
+        span.innerHTML = esc(n.nodeValue)
+            .replace(/==([^=\n]{1,40})==/g, "<mark>$1</mark>")
+            .replace(/\[(考|校)\]/g, (m, k) => cite(k))
+            .replace(/\[((?:[ST]\d{1,2})(?:[、,，\]\[ ]+[ST]\d{1,2})*)\]/g, (m, ks) => ks.split(/[^STE0-9]+/).filter(Boolean).map((k) => all[k] ? cite(k) : k).join(""))
+            .replace(/(?<![A-Za-z0-9>"])([ST]\d{1,2})(?![0-9A-Za-z<])/g, (m, k) => (all[k] ? cite(k) : m))
+            .replace(/(?<![A-Za-z0-9])(E\d+)(?![0-9A-Za-z])/g, (m) => (W.items.some((i) => i.code === m) ? `<a class="ecode${W.stale.has(m) ? " stale" : ""}" href="#item-${m}">${m}</a>` : m));
+        n.replaceWith(...span.childNodes);
+    }
+    if (streaming) return;
+    // 每节一个「改这一节」；换过题的节标出来
+    const secs = sections(W.md);
+    const hs = el.querySelectorAll("h2, h3");
+    hs.forEach((h, i) => {
+        const sec = (hs.length === secs.length && secs[i].level === +h.tagName[1] ? secs[i] : null) || secs.find((s) => s.level === +h.tagName[1] && s.title.replace(/[*`]/g, "") === h.textContent.trim().replace(/\s+/g, " ").replace(/[*`]/g, ""))
+            || secs.find((s) => s.level === +h.tagName[1] && h.textContent.trim().startsWith(s.title.replace(/[*`]/g, "").slice(0, 6)));
+        if (!sec) return;
+        const stale = [...W.stale].filter(([, set]) => set.has(sec.title)).map(([c]) => c);
+        const b = document.createElement("button");
+        b.className = "linkbtn secbtn"; b.textContent = stale.length ? `${stale.join("、")} 换了题，按新题重写` : "改这一节";
+        if (stale.length) b.classList.add("warn");
+        b.onclick = () => openSecForm(h, sec, stale);
+        h.append(b);
+        // 和同一级的前后一节换位置（题型小节、大节都行），不用重写
+        for (const [dir, label] of [[-1, "↑"], [1, "↓"]]) {
+            const other = siblingOf(secs, sec, dir);
+            if (!other) continue;
+            const m = document.createElement("button");
+            m.className = "linkbtn secmove"; m.textContent = label; m.title = dir < 0 ? "这一节往前挪" : "这一节往后挪";
+            m.onclick = () => { W.md = dir < 0 ? swapSections(W.md, other, sec) : swapSections(W.md, sec, other); renderPlan(false); };
+            h.append(m);
+        }
+    });
+    markExtras(el); renderAudit();
+}
+// 教案里系统拼的课外知识那一节加底色：从它的二级标题到下一个二级标题
+function markExtras(el) {
+    const x = extrasSec(); if (!x?.name.trim()) return;
+    const h = [...el.querySelectorAll("h2")].find((t) => t.textContent.startsWith(x.name));
+    for (let n = h; n && (n === h || n.tagName !== "H2"); n = n.nextElementSibling) n.classList.add("xsec");
+}
+// 同一个上级下面、同一级的前一节 / 后一节
+function siblingOf(secs, sec, dir) {
+    const parent = (s) => secs.filter((t) => t.level < s.level && t.start < s.start).at(-1);
+    const sibs = secs.filter((t) => t.level === sec.level && parent(t) === parent(sec));
+    return sibs[sibs.indexOf(sec) + dir];
+}
+// a 在前、b 在后，两节对调（W.md 一变就整体重画，按钮里存的行号不会过期）
+function swapSections(md, a, b) {
+    const L = md.split("\n");
+    return [...L.slice(0, a.start), ...L.slice(b.start, b.end), ...L.slice(a.start, a.end), ...L.slice(b.end)].join("\n");
+}
+function openSecForm(h, sec, stale) {
+    document.querySelector(".secform")?.remove();
+    const f = document.createElement("div");
+    f.className = "secform";
+    f.innerHTML = `<input type="text" maxlength="200" placeholder="想怎么改？比如：讲浅一点；加一道变式练习；压缩一半"><div class="examples">${["讲浅一点，多举例", "加一个让学生先说的环节", "压缩一半", "换一种讲法"].map((t) => `<button type="button">${t}</button>`).join("")}</div><div class="row"><button class="btn small">重写这一节</button><button class="linkbtn" data-x>取消</button><span class="note"></span></div>`;
+    const inp = f.querySelector("input");
+    if (stale.length) inp.value = `${stale.join("、")} 换成了新题，按新题重写这一节的讲解`;
+    f.querySelector(".examples").onclick = (e) => { if (e.target.matches("button")) inp.value = e.target.textContent; };
+    f.querySelector("[data-x]").onclick = () => f.remove();
+    f.querySelector(".btn").onclick = () => rewriteSection(sec, inp.value.trim() || "改得更具体", f, stale);
+    h.after(f); inp.focus();
+}
+async function rewriteSection(sec, instruction, form, stale) {
+    const W = U.W, st = stu();
+    const btn = form.querySelector(".btn"); btn.disabled = true; form.querySelector(".note").textContent = "重写中……";
+    const md0 = W.md;
+    let neu = "", raf = 0;
+    try {
+        await sse({ action: "section", student: { name: st.name, gradeLabel: gradeLabel(st) }, studentMems: st.mems, teacherMems: S.teacher.mems, visual: !!W.visual,
+            exam: { gt: U.gt, kind: U.kind }, planNote: U.planNote || "",
+            plan: W.md, section: sec.text, instruction, items: itemRefs() }, (ev, d) => {
+            if (ev === "delta") { neu += d.t; if (!raf) raf = requestAnimationFrame(() => { raf = 0; W.md = replaceSec(md0, sec, neu); renderPlan(true); }); }
+        });
+        cancelAnimationFrame(raf);
+        W.md = replaceSec(md0, sec, neu);
+        for (const c of stale) { const set = W.stale.get(c); set?.delete(sec.title); if (!set?.size) W.stale.delete(c); }
+        renderPlan(false);
+        observe(`改了给${st.name}的教案「${sec.title.replace(/[*`#]/g, "")}」一节：${instruction}`, { kind: "section" });
+    } catch (e) { form.querySelector(".note").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; btn.disabled = false; }
+}
+$("#plan").onclick = (e) => { const a = e.target.closest("a.ecode"); if (!a) return; e.preventDefault(); jumpItem(a.getAttribute("href").slice(1)); };
+$("#editBtn").onclick = () => {
+    const ed = $("#editor");
+    if (ed.hidden) { ed.value = U.W.md; ed.hidden = false; ed.style.height = Math.min(900, $("#plan").offsetHeight) + "px"; $("#plan").hidden = true; $("#editBtn").textContent = "改好了"; }
+    else { U.W.md = ed.value; ed.hidden = true; $("#plan").hidden = false; $("#editBtn").textContent = "直接改文字"; renderPlan(false); }
+};
+$("#copyBtn").onclick = async () => { try { await navigator.clipboard.writeText(U.W.md); toast("已复制 Markdown"); } catch { toast("复制失败，浏览器不让写剪贴板"); } };
+$("#afterBtn").onclick = () => { reveal($("#recText")); $("#recText").value = `今天按教案讲了${(U.W.outline?.sections || []).filter((x) => x.type).map((x) => x.name).join("、")}。`; $("#recText").focus(); $("#recText").scrollIntoView({ behavior: "smooth", block: "center" }); };
+
+// ---------- 审教页的聊天：有教案改教案，只有大纲改大纲，都没有就改设置 ----------
+U.chat = [];
+const STAGE = { setup: "现在能改：考试、出卷来源、占比、这次课的要求", outline: "现在能改：大纲（环节、分钟、要点、用题），也能让它去题库找题", plan: "现在能改：教案的任意一节，也能让它去题库找题" };
+const CHAT_EX = {
+    setup: ["这次多练作文，阅读少一点", "这场考试其实是区统考", "为什么阅读占这么多？"],
+    outline: ["作文加 10 分钟，从阅读里挪", "完形换一篇环保话题的", "把错题回顾挪到开头"],
+    plan: ["阅读那节讲浅一点，多给例子", "作业减一半", "以后讲阅读都先让学生划关键词"],
+};
+const chatStage = () => (U.W?.md ? "plan" : U.W?.outline ? "outline" : "setup");
+function renderChat() {
+    const stage = chatStage();
+    $("#chatStage").textContent = STAGE[stage] + (byok() ? " · 用你自己的 key" : "");
+    $("#chatEx").innerHTML = U.chat.length > 2 ? "" : CHAT_EX[stage].map((t) => `<button type="button">${esc(t)}</button>`).join("");
+    $("#chatLog").innerHTML = (U.chat.length ? "" : `<div class="msg sys">我是这节课的备课 agent，读得到档案、占比、大纲和教案。哪里要改直接说，改动会同步到教案；每次都能撤销。</div>`) +
+        U.chat.map((m, i) => m.role === "user" ? `<div class="msg me">${esc(m.content)}</div>` : m.role === "sys" ? `<div class="msg sys">${esc(m.content)}</div>` :
+            `<div class="msg ai${m.undone ? " undone" : ""}${m.wait ? " wait" : ""}" data-i="${i}">${esc(m.content)}${m.changes?.length ? `<ul class="chg">${m.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>${m.snap && !m.undone ? `<button class="linkbtn undo">撤销这次修改</button>` : ""}` : ""}</div>`).join("");
+    $("#chatLog").scrollTop = $("#chatLog").scrollHeight;
+}
+$("#chatGear").onclick = () => {
+    const f = $("#chatSet"); f.hidden = !f.hidden;
+    const b = byok(); $("#byProv").value = b?.provider || "deepseek"; $("#byKey").value = b?.key || ""; $("#byModel").value = b?.model || "";
+};
+$("#byProv").onchange = () => { $("#byModel").placeholder = $("#byProv").value === "deepseek" ? "deepseek-chat" : "deepseek-ai/DeepSeek-V4.1-Flash"; };
+$("#chatSet").onsubmit = (e) => {
+    e.preventDefault();
+    const key = $("#byKey").value.trim();
+    try { if (key) localStorage.setItem(BYOK, JSON.stringify({ provider: $("#byProv").value, key, model: $("#byModel").value.trim() })); else localStorage.removeItem(BYOK); } catch {}
+    $("#chatSet").hidden = true; renderChat(); toast(key ? "存好了：之后的请求都用你的 key，不限次数" : "已清除，用站长的额度");
+};
+$("#byClear").onclick = () => { try { localStorage.removeItem(BYOK); } catch {} $("#byKey").value = ""; $("#chatSet").hidden = true; renderChat(); toast("已清除，用站长的额度"); };
+$("#chatEx").onclick = (e) => { if (e.target.matches("button")) { $("#chatText").value = e.target.textContent; $("#chatText").focus(); } };
+$("#chatText").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#chatForm").requestSubmit(); } };
+$("#chatForm").onsubmit = (e) => { e.preventDefault(); const t = $("#chatText").value.trim(); if (t) { $("#chatText").value = ""; chatSend(t); } };
+$("#chatLog").onclick = (e) => {
+    if (!e.target.matches(".undo")) return;
+    const m = U.chat[+e.target.closest(".msg").dataset.i];
+    restoreSnap(m.snap); for (const a of (m.memApplied || []).slice().reverse()) Mem.undo(memState(), a);
+    m.undone = true; save(); refresh(); afterApply(m.memApplied || []); renderChat(); toast("撤销了这次修改");
+};
+// 改之前拍个快照，撤销时整体还原
+function snap() {
+    return { outline: U.W?.outline ? clone(U.W.outline) : null, md: U.W?.md ?? null, items: U.W ? [...U.W.items] : null, alts: U.W ? [...U.W.alts] : null,
+        lock: U.lock ? { ...U.lock } : null, overrides: { ...(U.overrides || {}) }, guidance: U.guidance, level: U.level, kind: U.kind };
+}
+function restoreSnap(s) {
+    Object.assign(U, { lock: s.lock, overrides: s.overrides, guidance: s.guidance, level: s.level, kind: s.kind });
+    if (U.W) { if (s.outline) U.W.outline = s.outline; if (s.md != null) U.W.md = s.md; if (s.items) U.W.items = s.items; if (s.alts) U.W.alts = s.alts; }
+    if (U.W?.items) renderItems(); if (U.W?.outline) renderOutline(); if (U.W?.md) renderPlan(false);
+}
+async function chatSend(text, auto = false) {
+    const stage = chatStage(), st = stu();
+    const history = U.chat.filter((m) => (m.role === "user" || m.role === "ai") && !m.wait).slice(-8)
+        .map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content + (m.undone ? "（老师撤销了这次修改，现在是改之前的样子）" : "") }));
+    U.chat.push(auto ? { role: "sys", content: "（agent 拿到新题，接着改）" } : { role: "user", content: text });
+    const wait = { role: "ai", content: "想一想……", wait: true };
+    U.chat.push(wait); renderChat();
+    $("#chatSend").disabled = true;
+    try {
+        const j = await post({ action: "chat", stage, message: text, history, ...ctxPayload(), outline: U.W?.outline, plan: U.W?.md, items: itemRefs() });
+        const s0 = snap();
+        const { changes, found } = await applyChatOps(stage, j.ops || []);
+        const memApplied = (j.memory || []).length ? Mem.applyOps(memState(st), j.memory, TODAY, "聊天") : [];
+        for (const a of memApplied) { changes.push(`${{ add: "记住了", update: "更新了", delete: "忘掉了", set: "改了" }[a.op]}：${Mem.describe(a)}`); if (a.after?.id) flashIds.add(a.who + a.after.id); }
+        Object.assign(wait, { content: j.reply || "好的。", wait: false, changes, snap: changes.length ? s0 : null, memApplied });
+        if (memApplied.length) { save(); renderMemories(); afterApply(memApplied); }
+        if (changes.length) observe(`在聊天里让 agent：${text.slice(0, 40)}`, { kind: "chat" });
+        $("#chatQuota").textContent = byok() ? "用的是你自己的 key" : j.left != null ? `今天还能聊 ${j.left} 次 · 填自己的 key 不限次数（⚙）` : "";
+        renderChat();
+        // 找到新题以后再问一轮：agent 这时才知道新题号，好把旧题换掉 / 把新题写进教案
+        if (found.length && stage !== "setup" && !auto)
+            chatSend(`（系统）已从题库找到：${found.map((it) => `${it.code}（${it.type}，${it.school} ${it.year}${it.gt}${it.kind}，考点 ${it.kp.join("、")}${it.topic ? "，话题 " + it.topic : ""}）`).join("；")}。先看新题符不符合老师刚才的要求：符合的话，${stage === "plan" ? "用 replace_section 把它们写进教案" : "用 set_items 换掉旧题号，并按新题改要点"}；不符合就别换（大纲里多出的新题用 set_items 去掉），直接告诉老师库里的实际情况。`, true);
+    } catch (e) { Object.assign(wait, { content: `没成功：${e.message}`, wait: false }); renderChat(); }
+    $("#chatSend").disabled = false;
+}
+// 执行 agent 给的修改；每条都先校验，对不上的跳过。返回给老师看的改动清单
+async function applyChatOps(stage, ops) {
+    const changes = [], found = [];
+    const o = U.W?.outline, secById = (id) => o?.sections.find((x) => x.id === id);
+    const flash = [];
+    for (const op of ops) {
+        try {
+            if (stage === "setup") {
+                if (op.op === "set_share" && U.rows.some((r) => r.type === op.type)) { U.lock = null; (U.overrides ||= {})[op.type] = Math.max(0, Math.min(0.6, +op.share || 0)); changes.push(`${op.type} 占比调到 ${pct(U.overrides[op.type])}`); }
+                else if (op.op === "set_guidance" && op.text) { U.guidance = String(op.text).slice(0, 200); changes.push(`「这次课的要求」改成：${U.guidance}`); }
+                else if (op.op === "set_level" && ["统考", "不统考", "不知道"].includes(op.level)) { U.level = op.level; changes.push(`出卷来源改成「${op.level}」`); }
+                else if (op.op === "set_kind" && M.examKinds(U.gt).includes(op.kind)) { U.kind = op.kind; U.level = null; changes.push(`下一场考试改成 ${U.gt}${op.kind}`); }
+            } else if (stage === "outline" && o) {
+                const x = secById(op.sec);
+                if (op.op === "set_minutes" && x) { const m0 = x.minutes; x.minutes = Math.max(0, Math.min(240, Math.round(+op.minutes || 0))); changes.push(`「${x.name}」${m0} → ${x.minutes} 分钟`); flash.push(x.id); }
+                else if (op.op === "edit_section" && x) {
+                    if (op.name) x.name = String(op.name).slice(0, 30);
+                    if (op.type !== undefined && (op.type === "" || data.stats.byType[op.type])) x.type = op.type;
+                    if (Array.isArray(op.points)) x.points = op.points.map(String).filter(Boolean).slice(0, 6);
+                    changes.push(`改了「${x.name}」${Array.isArray(op.points) ? "的要点" : ""}`); flash.push(x.id);
+                } else if (op.op === "add_section") {
+                    const id = "s" + (Math.max(0, ...o.sections.map((y) => +y.id.slice(1) || 0)) + 1);
+                    const nx = { id, name: String(op.name || "新环节").slice(0, 30), minutes: Math.max(0, Math.round(+op.minutes || 0)), type: data.stats.byType[op.type] ? op.type : "",
+                        items: (op.items || []).filter((c) => U.W.items.some((it) => it.code === c)), points: (op.points || []).map(String).slice(0, 6) };
+                    const at = op.after ? o.sections.findIndex((y) => y.id === op.after) + 1 : 0;
+                    o.sections.splice(at, 0, nx); changes.push(`加了环节「${nx.name}」（${nx.minutes} 分钟）`); flash.push(id);
+                } else if (op.op === "remove_section" && x) { o.sections.splice(o.sections.indexOf(x), 1); changes.push(`删掉了「${x.name}」`); }
+                else if (op.op === "move_section" && x) {
+                    o.sections.splice(o.sections.indexOf(x), 1);
+                    const at = op.after ? o.sections.findIndex((y) => y.id === op.after) + 1 : 0;
+                    o.sections.splice(Math.max(0, at), 0, x); changes.push(`把「${x.name}」挪了位置`); flash.push(x.id);
+                } else if (op.op === "set_items" && x) { x.items = (op.items || []).filter((c) => U.W.items.some((it) => it.code === c)); changes.push(`「${x.name}」用题改成 ${x.items.join("、") || "（无）"}`); flash.push(x.id); }
+                else if (op.op === "edit_meta" && ["title", "goals", "homework", "watch", "adjust"].includes(op.field)) {
+                    o[op.field] = op.field === "title" ? String(op.value || "").slice(0, 60) : (Array.isArray(op.value) ? op.value : [op.value]).map(String).filter(Boolean).slice(0, 6);
+                    changes.push(`改了${{ title: "标题", goals: "教学目标", homework: "课后作业", watch: "观察点", adjust: "调整" }[op.field]}`);
+                } else if (op.op === "find_items" && data.stats.byType[op.type]) {
+                    const tgt = x || o.sections.find((y) => y.type === op.type);
+                    const got = await findItems(op.type, op.query, Math.max(1, Math.min(3, +op.n || 1)), tgt);
+                    found.push(...got); changes.push(got.length ? `从题库找到 ${got.map((it) => `${it.code}（${it.school} ${it.year}）`).join("、")}${tgt ? `，加进「${tgt.name}」` : ""}` : `题库里没找到：${op.query}`);
+                    if (tgt) flash.push(tgt.id);
+                }
+            } else if (stage === "plan" && U.W?.md) {
+                if (op.op === "replace_section" && op.md) {
+                    const norm = (t) => String(t).replace(/^#+\s*/, "").replace(/[*`\s]/g, "");
+                    const secs = sections(U.W.md);
+                    const sec = secs.find((y) => norm(y.title) === norm(op.title)) || secs.find((y) => norm(op.title) && norm(y.title).startsWith(norm(op.title).slice(0, 6)));
+                    if (sec) {
+                        U.W.md = replaceSec(U.W.md, sec, String(op.md));
+                        changes.push(`重写了「${sec.title.replace(/[*`]/g, "")}」`);
+                    }
+                } else if (op.op === "find_items" && data.stats.byType[op.type]) {
+                    const got = await findItems(op.type, op.query, Math.max(1, Math.min(3, +op.n || 1)), null);
+                    found.push(...got); changes.push(got.length ? `从题库找到 ${got.map((it) => `${it.code}（${it.school} ${it.year}）`).join("、")}` : `题库里没找到：${op.query}`);
+                }
+            }
+        } catch (e) { changes.push(`没做成：${e.message}`); }
+    }
+    if (stage === "setup" && changes.length) { recompute(); clearStaleOutline(); }
+    if (stage === "outline" && changes.length) outlineChanged(true, flash);
+    if (stage === "plan" && changes.length) renderPlan(false);
+    return { changes, found };
+}
+function clearStaleOutline() { if (U.W?.outline) $("#writeNote").textContent = "设置改过了，大纲还是按旧设置排的，可以「重新生成大纲」。"; }
+
+// ---------- 教案模板（MAT-502） ----------
+const KIND = { text: "普通", basis: "四维依据", flow: "课堂流程表", types: "分题型讲解" };
+function renderTplSel() {
+    const cur = curTemplate(), st = stu();
+    $("#tplSel").innerHTML = templates().map((t) => `<option value="${esc(t.id)}" ${t.id === cur.id ? "selected" : ""}>${esc(t.name)}${S.teacher.templates.includes(t) ? "（自建）" : ""}</option>`).join("");
+    $("#tplNote").textContent = cur.note || cur.sections.map((x) => x.title).join(" / ");
+    $("#tplStu").textContent = st.template === cur.id ? `${st.name}默认用这个` : `设成${st.name}的默认`;
+    $("#tplStu").disabled = st.template === cur.id;
+    $("#planNote").value = U.planNote || "";
+    renderTplEd();
+}
+$("#tplSel").onchange = (e) => {
+    U.template = e.target.value; renderTplSel();
+    if (U.W?.md) $("#writeNote").textContent = "换了模板：点「按大纲写教案」按新模板重写，大纲不变。";
+};
+$("#planNote").oninput = (e) => { U.planNote = e.target.value.trim(); };
+$("#tplStu").onclick = () => { const st = stu(); st.template = curTemplate().id; save(); renderTplSel(); toast(`以后给${st.name}写教案默认用「${curTemplate().name}」`); };
+$("#tplEdit").onclick = () => { $("#tplEd").hidden = !$("#tplEd").hidden; renderTplEd(); };
+function renderTplEd() {
+    const ed = $("#tplEd");
+    if (ed.hidden) return;
+    const t = curTemplate(), own = S.teacher.templates.includes(t);
+    ed.innerHTML = (own ? `<label class="field"><span class="lab">模板名</span><input data-f="name" maxlength="16" value="${esc(t.name)}"></label>
+        ${t.sections.map((x, i) => `<div class="secrow" data-i="${i}"><input data-f="title" maxlength="16" value="${esc(x.title)}" aria-label="小节标题"><select data-f="kind" aria-label="这一节的写法">${Object.entries(KIND).map(([k, l]) => `<option value="${k}" ${k === x.kind ? "selected" : ""}>${l}</option>`).join("")}</select><input data-f="hint" maxlength="80" value="${esc(x.hint)}" placeholder="这一节写什么（可不填）" aria-label="写法说明"><span class="o-ctl"><button type="button" data-up title="上移">↑</button><button type="button" data-down title="下移">↓</button><button type="button" data-del title="删掉这一节">×</button></span></div>`).join("")}
+        <div class="row"><button type="button" class="linkbtn" data-add>+ 加一节</button><label title="小节只当参考，模型按大纲和你写的要求自己组织"><input type="checkbox" data-f="free" ${t.free ? "checked" : ""}> 不定小节</label><label><input type="checkbox" data-f="visual" ${t.visual ? "checked" : ""}> 彩色版式</label><label>篇幅 <select data-f="length"><option value="normal">标准</option><option value="short" ${t.length === "short" ? "selected" : ""}>一页纸</option></select></label><button type="button" class="linkbtn" data-rmtpl style="color:var(--red)">删掉这个模板</button></div>`
+        : `<p class="note" style="margin:0">「${esc(t.name)}」是内置模板，不能直接改：${esc(t.sections.length ? t.sections.map((x) => `${x.title}（${KIND[x.kind]}）`).join(" / ") : "不定小节，按大纲和你写的要求自己组织")}</p>`)
+        + `<div class="row"><button type="button" class="btn small ghost" data-copy>复制「${esc(t.name)}」另存一份来改</button><label class="btn small ghost" style="cursor:pointer">从我的 Word 教案抽取<input type="file" accept=".docx" data-upload hidden></label></div>
+        <p class="note" id="tplUpNote" style="margin:0">上传的教案只读出小节标题和写法交给模型，文件本身不上传、不保存。</p>`;
+}
+const curOwn = () => S.teacher.templates.find((t) => t.id === curTemplate().id);
+$("#tplEd").oninput = (e) => {
+    const t = curOwn(), f = e.target.dataset.f; if (!t || !f) return;
+    const row = e.target.closest(".secrow");
+    if (row) t.sections[+row.dataset.i][f] = e.target.value;
+    else if (f === "visual" || f === "free") t[f] = e.target.checked;
+    else t[f] = e.target.value;
+    save(); if (f === "name") { renderSettings(); $("#tplSel").selectedOptions[0].textContent = t.name + "（自建）"; }
+};
+$("#tplEd").onclick = (e) => {
+    const t = curOwn(), row = e.target.closest(".secrow"), i = row ? +row.dataset.i : -1;
+    if (e.target.matches("[data-copy]")) {
+        const src = curTemplate(), id = "c" + Date.now().toString(36);
+        S.teacher.templates.push({ ...clone(src), id, name: `${src.name}（改）`.slice(0, 16), note: "" });
+        U.template = id; save(); renderTplSel(); renderSettings(); return;
+    }
+    if (!t) return;
+    if (e.target.matches("[data-up]") && i > 0) move(t.sections, i, i - 1);
+    else if (e.target.matches("[data-down]") && i < t.sections.length - 1) move(t.sections, i, i + 1);
+    else if (e.target.matches("[data-del]") && t.sections.length > 1) t.sections.splice(i, 1);
+    else if (e.target.matches("[data-add]") && t.sections.length < 10) t.sections.push({ title: "新的一节", kind: "text", hint: "" });
+    else if (e.target.matches("[data-rmtpl]")) {
+        S.teacher.templates = S.teacher.templates.filter((x) => x !== t);
+        if (SET().template === t.id) SET().template = "four";
+        for (const st of S.students) if (st.template === t.id) delete st.template;
+        U.template = null; save(); renderTplSel(); renderSettings(); toast(`删掉了模板「${t.name}」`); return;
+    } else return;
+    save(); renderTplEd();
+};
+$("#tplEd").onchange = (e) => { if (e.target.matches("[data-upload]") && e.target.files[0]) uploadTpl(e.target.files[0]); };
+async function loadScript(src, name) {
+    if (window[name]) return window[name];
+    await new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => bad(new Error("组件没加载上")); document.head.append(s); });
+    return window[name];
+}
+// 读 Word 教案：mammoth 转成 HTML，在不执行脚本、不加载图片的文档里取出标题、段落、表格行
+async function uploadTpl(file) {
+    const note = $("#tplUpNote");
+    note.textContent = "读文件……";
+    try {
+        const mm = await loadScript("https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js", "mammoth");
+        // 只要文字：图片不解压、不转 base64
+        const { value } = await mm.convertToHtml({ arrayBuffer: await file.arrayBuffer() }, { convertImage: mm.images.imgElement(() => ({ src: "" })) });
+        const doc = new DOMParser().parseFromString(value, "text/html");
+        const text = [...doc.body.children].flatMap((el) => /^H\d$/.test(el.tagName) ? [`【${el.textContent.trim()}】`]
+            : el.tagName === "TABLE" ? [...el.rows].map((r) => [...r.cells].map((c) => c.textContent.trim()).join(" | "))
+            : /^(UL|OL)$/.test(el.tagName) ? [...el.children].map((li) => "· " + li.textContent.trim()) : [el.textContent.trim()]).filter(Boolean).join("\n");
+        note.textContent = "交给 agent 抽结构……";
+        const j = await post({ action: "template", text: text.slice(0, 4000) });
+        const t = { ...j.template, id: "c" + Date.now().toString(36), name: j.template.name || file.name.replace(/\.docx$/i, "").slice(0, 16), note: `从「${file.name.slice(0, 30)}」抽的` };
+        S.teacher.templates.push(t); U.template = t.id; save(); renderTplSel(); renderSettings();
+        toast(`抽出了 ${t.sections.length} 节：${t.sections.map((x) => x.title).join(" / ")}`);
+    } catch (e) { note.innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; }
+}
+
+// Word：教案正文 + 附录（例题原文，图片放回原位置）+ 参考答案
+const loadDocx = () => loadScript("https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.iife.js", "docx");
+// Word 两版（用户 10-28）：老师版 = 教案正文 + 例题，答案和解析放在每道题下面或文档末尾（老师设置）；
+// 学生版 = 按大纲环节排的题，题号换成「练习 N」，不带答案、解析和 [S1]、[考] 这类内部标记
+async function buildDocx(version = "teacher", W = U.W) {
+        const D = await loadDocx();
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, ImageRun, BorderStyle, ShadingType } = D;
+        const V = !!W.visual, big = V || SET().fontSize === "大";
+        // ==词== 高亮 + 加粗 + 下划线：彩色打印看颜色，黑白打印看粗细和下划线
+        const runs = (t, o = {}) => String(t).split(/(\*\*[^*]+\*\*|==[^=]+==)/).filter(Boolean).map((p) => {
+            const mark = /^==.*==$/.test(p);
+            return new TextRun({ text: p.replace(/^\*\*|\*\*$|^==|==$/g, "").replace(/[`*]/g, ""), bold: o.bold || p.startsWith("**") || mark, color: o.color, size: o.size,
+                ...(mark ? { highlight: "yellow", underline: {} } : {}) });
+        });
+        const tint = (hex) => hex.slice(1).match(/../g).map((x) => Math.round(255 - (255 - parseInt(x, 16)) * 0.12).toString(16).padStart(2, "0")).join("");
+        // 彩色版的题型小节：标题用题型的颜色，左边一道粗色条，底色是同色的浅色
+        const head = (depth, text) => {
+            const c = V && depth >= 3 ? typeColor(text, W.outline) : null;
+            return new Paragraph({ heading: H[Math.min(4, depth)], children: runs(text, c ? { color: c.slice(1) } : {}),
+                ...(c ? { border: { left: { style: BorderStyle.SINGLE, size: 36, color: c.slice(1), space: 8 } }, shading: { type: ShadingType.CLEAR, color: "auto", fill: tint(c) } } : {}) });
+        };
+        const H = [null, HeadingLevel.HEADING_1, HeadingLevel.HEADING_2, HeadingLevel.HEADING_3, HeadingLevel.HEADING_4];
+        const body = [], items = W.items;
+        const bytes = (src) => Uint8Array.from(atob(src.split(",")[1]), (c) => c.charCodeAt(0));
+        // 排题：每道小题（题号开头的行）前面多留一点空，题和题之间也加大间距（gap）。
+        // 学生版：这份教案的学生开了 Bionic 阅读的，英文单词前半截加粗
+        const bionic = version === "student" && S.students.find((x) => x.id === W.sid)?.bionic;
+        const textRuns = (t) => (bionic ? t.split(/([A-Za-z][A-Za-z'’-]*)/).filter(Boolean).flatMap((w) => /^[A-Za-z]/.test(w)
+            ? [new TextRun({ text: w.slice(0, bionicCut(w)), bold: true }), new TextRun(w.slice(bionicCut(w)))] : [new TextRun(w)]) : [new TextRun(t)]);
+        const quiz = (it) => it.text.split("\n").flatMap((line) => {
+            const m = line.match(/^⟦图(\d+)⟧$/), im = m && it.imgs.find((x) => x.n === +m[1]);
+            if (im) { const k = Math.min(1, 460 / im.w); return [new Paragraph({ children: [new ImageRun({ type: "jpg", data: bytes(im.src), transformation: { width: Math.round(im.w * k), height: Math.round(im.h * k) } })] })]; }
+            return line.trim() ? [new Paragraph({ children: textRuns(line.replace(/⟦图\d+⟧/g, "")), spacing: { before: /^\s*\d+\s*[.．]/.test(line) ? 200 : 0, after: 60 } })] : [];
+        });
+        const gap = () => new Paragraph({ children: [], spacing: { after: 360 } });
+        const answers = (it) => [
+            new Paragraph({ children: [new TextRun({ text: "答案：", bold: true }), new TextRun(`${it.q.map((q, i) => `${q}. ${it.ans[i] ?? "—"}`).join("　")}${it.ans_src === "模型作答" ? "（原卷无答案，模型作答，未核对）" : ""}`)], spacing: { before: 80 } }),
+            ...(it.explain || "").replace(/【答案】[^\n]*\n?/, "").split("\n").filter((l) => l.trim()).map((l) => new Paragraph({ children: [new TextRun({ text: l.trim(), color: "555555", size: 20 })], spacing: { after: 30 } })),
+        ];
+        const clean = (t) => String(t).replace(/\s*\[(?:[ST]\d{1,2}|考|校)(?:[、,，\s]*(?:[ST]\d{1,2}|考|校))*\]/g, "").replace(/(?<![A-Za-z0-9])[ST]\d{1,2}(?![0-9A-Za-z])/g, "");
+        if (version === "student") {
+            // 先按大纲环节分好题、编好「练习 N」，再写标题、目标、环节和作业，这样目标、环节名、作业里的 E 编号都能换成练习号。
+            // 环节没挂题时按题型补，但不抢别的环节明确挂的题；哪个环节都没放、只在作业里提到的题放「课后作业用题」；
+            // 老师从所有环节都去掉的题不放
+            const o = W.outline, no = new Map(), byCode = new Map(items.map((it) => [it.code, it]));
+            const assigned = new Set(o.sections.flatMap((x) => x.items));
+            const take = (its) => its.filter((it) => it && !no.has(it.code)).map((it) => (no.set(it.code, `练习 ${no.size + 1}`), it));
+            const groups = o.sections.map((x) => ({ x, its: take(x.items.length ? x.items.map((c) => byCode.get(c)) : items.filter((it) => x.type && it.type === x.type && !assigned.has(it.code))) }))
+                .filter((g) => g.its.length || g.x.extras?.length);   // 默写、回顾这类不放题的环节先跳过（默写单要等教材单元数据）
+            const inHomework = new Set((o.homework || []).join(" ").match(/(?<![A-Za-z0-9])E\d+(?![0-9])/g) || []);
+            const hw = take(items.filter((it) => inHomework.has(it.code)));
+            const swap = (t) => clean(t).replace(/(?<![A-Za-z0-9])E\d+(?![0-9])/g, (c) => no.get(c) || "").replace(/[（(]\s*[)）]/g, "").replace(/\s{2,}/g, " ").trim();
+            const block = (it) => body.push(head(3, `${no.get(it.code)} · ${it.type}`), ...quiz(it), gap());
+            body.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: runs(swap(o.title || `${W.student}的练习`)) }));
+            if (o.goals?.length) { body.push(head(2, "本节目标")); for (const g of o.goals) body.push(new Paragraph({ children: runs("• " + swap(g)), indent: { left: 360 } })); }
+            const bar = { left: { style: BorderStyle.SINGLE, size: 18, color: "999999", space: 8 } };
+            const card = (x) => extrasOf(x, W.extras).forEach((e) => body.push(
+                new Paragraph({ children: runs(`**${e.key}**　${e.mean}`), border: bar, spacing: { before: 200, after: 40 } }),
+                ...[e.detail, ...e.ex.map((t) => (e.src ? `${t}（${e.src}）` : t))].filter(Boolean).map((t) => new Paragraph({ children: textRuns(t), border: bar, spacing: { after: 40 } }))));
+            for (const g of groups) {
+                if (g.x.extras?.length) { body.push(head(2, "课外知识卡")); card(g.x); continue; }
+                body.push(head(2, swap(g.x.name))); g.its.forEach(block);
+            }
+            if (hw.length) { body.push(head(2, "课后作业用题")); hw.forEach(block); }
+            if (o.homework?.length) { body.push(head(2, "课后作业")); for (const h of o.homework) body.push(new Paragraph({ children: runs("• " + swap(h)), indent: { left: 360 } })); }
+        } else {
+            for (const t of marked.lexer(W.md)) {
+                if (t.type === "heading") body.push(head(t.depth, t.text));
+                else if (t.type === "paragraph") body.push(new Paragraph({ children: runs(t.text), spacing: { after: 120 } }));
+                else if (t.type === "list") t.items.forEach((it, i) => body.push(new Paragraph({ children: runs((t.ordered ? `${(t.start || 1) + i}. ` : "• ") + it.text), indent: { left: 360 }, spacing: { after: 60 } })));
+                else if (t.type === "table") body.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [t.header, ...t.rows].map((r, ri) => new TableRow({ children: r.map((c) => new TableCell({ children: [new Paragraph({ children: runs(c.text, { bold: ri === 0 }) })] })) })) }), new Paragraph(""));
+            }
+            const below = SET().answerPos !== "文档末尾";
+            body.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("附：例题与练习")], pageBreakBefore: true }));
+            for (const it of items) {
+                body.push(head(3, `${it.code} · ${it.type}`));
+                body.push(new Paragraph({ children: [new TextRun({ text: `出处：${it.school} ${it.year} ${it.gt}${it.kind}（${it.level}）· 考点：${it.kp.join("、")}${it.diff ? ` · 难度：${it.diff.tier}${it.diff.words.length ? `（生词：${it.diff.words.map((x) => x.w).join("、")}）` : ""}` : ""}`, color: "888888", size: 18 })] }));
+                body.push(...quiz(it));
+                if (below) body.push(...answers(it));
+                body.push(gap());
+            }
+            if (!below) {
+                body.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun("参考答案与解析")], pageBreakBefore: true }));
+                for (const it of items) body.push(head(3, `${it.code} · ${it.type}`), ...answers(it));
+            }
+        }
+        const doc = new Document({ creator: "英语备课 Agent Demo", title: `${W.student} ${version === "student" ? "学生版" : "教案"}`,
+            styles: { default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times New Roman", eastAsia: "宋体" }, size: big ? 24 : 22 } } } },
+            sections: [{ properties: { page: { margin: { top: 1000, bottom: 1000, left: 1100, right: 1100 } } }, children: body }] });
+        return Packer.toBlob(doc);
+}
+window.__buildDocx = buildDocx;
+const docxName = (W, v) => `${W.student}-${v === "student" ? "学生版" : "教案老师版"}-${W.date}.docx`;
+function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+// 两个导出按钮共用：data-v 是 teacher / student
+for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) btn.onclick = async () => {
+    btn.disabled = true;
+    try {
+        const v = btn.dataset.v;
+        download(await buildDocx(v), docxName(U.W, v));
+    } catch (e) { toast("导出失败：" + e.message); }
+    btn.disabled = false;
+};
+
+// ---------- 怎么做的 ----------
+$("#how").innerHTML = [
+    `<b>题库</b>：${data.stats.papers} 份 2022–2026 年无锡初中英语卷（学校卷、区统考卷、中考真题）。模型读带行号的卷子，只返回每道题的行号范围、答案、考点和话题，原文由脚本按行号切出来，72 份一分钟、不到一块钱；原卷没有答案的，答案标「模型作答」。题库存成 SQLite（卷子 / 题组 / 图片三张表）。`,
+    `<b>图片</b>：卷子里的图按原位置放回题组（题面里的 ⟦图n⟧），模型把图分类并转写图中文字（海报、通知、流程图），检索和写教案都读得到；导出 Word 时原图放回原位置。`,
+    `<b>结构模板</b>：按「年级学期 × 考试类型 × 教材版本」汇总配分；库里没有的格子借最近的一格，并写明借的是哪格。2027 届中考不考单选，九年级借旧教材卷子时去掉单选、补语法填空（推测，样本两份）。这些教研口径都在一份规则配置里，每年变了改配置、不改代码。`,
+    `<b>占比</b>：结构配分 × (1 + 学生薄弱程度) × (1 + 老师侧重)，结构配分里按老师选的出卷来源混入本校 / 本区卷，九年级再按离中考的远近混入中考结构。每个题型的份额拆成四个来源画成桑基图。`,
+    `<b>检索</b>：按题型、出卷来源（统考 / 校考）、年级学期和考试类型过滤，不够就逐级放宽，考点对口的题优先补进来；再用 BM25 + bge-m3 向量 + 考点 / 同校加分排序，bge-reranker 重排。20 条「年级 × 考试 × 题型 × 考点」查询，前 5 条考点对得上的比例 85.7%。`,
+    `<b>记忆</b>：参照 Meta Muse、Grok 的做法，老师和学生各一份档案，记忆来自老师直接说的、课后记录，以及观察到的老师调占比的习惯。模型只提议增删改，落到档案上的每条改动都显示原因、能撤销；薄弱点做对一次只降强度，连续做好才转成「已掌握」，强度按 ${HALF} 天半衰。连录 3 次课的评测 6/6 符合预期。`,
+    `<b>复盘</b>：读最近几次课的记录（当时教案怎么排、课后错在哪），找「讲了几次还在错」「已经稳了还在花时间」这类信号，给下次课提建议，每条都指回具体某次课。`,
+    `<b>先大纲、后教案</b>：检索完例题先排一份结构化大纲（四维依据、目标、环节、分钟、要点、用题、作业），老师逐项改、加题减题、从题库再找一道；大纲里各题型的分钟数实时同步到上面的占比。确认后再按大纲写成教案，环节、分钟、用题都不变。老师对大纲的改动会记成「观察」，反复出现就成了老师的偏好。`,
+    `<b>审教校验</b>：教案写好以后在「审教」页过一遍：系统先查课时对不对得上、例题是不是本年级的、每道题讲到没有、换过的题重写没有、引用的档案编号在不在；老师再按清单自己看。`,
+    `<b>跟 agent 商量</b>：聊天放在「审教」页，按进度改：有教案就改教案，只有大纲就改大纲，都还没有就改设置；设置阶段改占比和要求，大纲阶段改环节、分钟、用题，教案阶段改任意一节。agent 只能给出一组限定好的修改（改分钟、换题、重写某节……），页面校验后执行，每次都能整体撤销；要新题时它先去题库检索，拿到新题号再接着改。老师说「以后都这样」的，同时写进老师档案。不填 key 用站长在硅基流动的额度、按 IP 限次；可以填自己的 DeepSeek / 硅基流动 key，只存在你的浏览器里，经本站函数转发，不限次数。`,
+    `<b>老师画像</b>：课型、课时、固定环节、作业、讲义版式、默认模板、例题难度这些课堂设置老师自己填，排占比、写大纲和教案都按它来；每次改动留历史、能撤销，课后记录和聊天里说出来的长期变化由 agent 提议改设置。同时统计老师的操作（调了哪个题型的占比、改了大纲哪里、换掉什么样的题），同一个方向调 3 次以上就提议设成默认。`,
+    `<b>学生画像</b>：课次记录里的错误对齐到考点表，按知识点累计练了几次、错了几次、最近一次和趋势，跨 ${R.student.longMinLessons} 次课以上都错的算长期薄弱，排占比时权重更大。注意力容易分散的学生，大纲每个环节不超过 ${R.student.attentionMaxMinutes} 分钟、讲练交替，教案和 Word 用彩色版：题型配色（色盲友好）、高亮线索词、步骤框，黑白打印也分得清。`,
+    `<b>难度系数</b>：看一篇阅读理解、完形填空、语法填空里，这个学生还没学过的生词有多少。哪个词哪一册学，查译林版（苏教版）七上到九下的单词表（九下新版还没出，用旧版）；学生在哪一册，这一册以后才学的、初中不学的都算生词。动词 > 名词 > 形容词 > 其他，题目（题干加选项）里的 > 文章里的；同一篇题对不同年级的学生难度不一样，所以每篇按六册各算一档。`,
+    `<b>教案模板和两版</b>：结构不框死：可以套四维备课、机构常用格式、一对一精简版、彩色视觉版，也可以选「自由结构」，或者直接写一句「这份教案还要……」；老师可以复制模板改、上传自己的 Word 教案抽结构。导出分两版：老师版每道题下面跟答案和解析（也可以放到文档末尾），学生版按上课环节排题、题号换成「练习 N」，没有答案、解析和内部标记。题面末尾附了答案的旧卷子，建库时就把答案切掉。`,
+    `<b>课外知识补充</b>：词根词缀、构词法、熟词僻义、短语动词、易混词、英美差异、俗语谚语、习语、文化常识九类现成条目，自己写好、核对过，不让模型临场编。俗语谚语只收近年无锡卷单选（多是最后一道情景交际题）真考过的，真题对话就是使用场景。每节课按这节用到的题挑 2–3 条：词根词缀优先拆这个学生没学过的生词，易混词看同一道题的选项，熟词僻义、短语动词看原文里有没有，谚语和文化常识对文章话题。大纲里多一个环节（分钟数在课堂设置里改，也可以不加），老师能删条目、从候选里加；教案里这一节直接拼现成的讲解，学生版 Word 是一张「课外知识卡」。`,
+    `<b>手机上调比例</b>：照 iPhone「存储空间」的样子，一条分段的彩色横条加图例：拖两段之间的分界线，比例就在相邻两段之间挪；图例上的 ± 微调。占比和大纲各环节的分钟都这样调。`,
+    `<b>版权和隐私</b>：题库和图片加密后才放进公开仓库，函数里解密，页面只拿到被选中的单道题和出处，不提供整份原卷；页面回传的题目只有编号，题面一律从题库取。学生档案只存在你的浏览器里。模型默认用硅基流动上的 DeepSeek V4.1 Flash，向量和重排用硅基流动的 bge-m3 / bge-reranker-v2-m3。`,
+].map((x) => `<li>${x}</li>`).join("");
+$("#resetAll").onclick = () => { if (!confirm("把档案、课堂设置、自建模板都恢复成示例数据？你在这页上的改动会全部丢掉，不能撤销。")) return; S = fresh(); save(); U = {}; renderAll(); clearPlan(); toast("已恢复成示例数据"); };
+
+// ---------- 保存工作区（MAT-482）----------
+// 题面（含图）存在 IndexedDB，按「题目 id@年级学期」存一份（难度、生词跟年级走）；localStorage 里的工作区和课次记录只记 id，控制体积
+const idb = new Promise((ok, no) => { const r = indexedDB.open("en-prep-items", 1); r.onupgradeneeded = () => r.result.createObjectStore("items", { keyPath: "key" }); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+idb.catch(() => {});   // 隐私模式等打不开就不存，页面照常用
+async function putItems(its, gt) {
+    try { const st = (await idb).transaction("items", "readwrite").objectStore("items"); for (const { code, why, score, ...it } of its) st.put({ ...it, key: `${it.id}@${gt}` }); } catch {}
+}
+async function getItems(keys) {
+    try { const st = (await idb).transaction("items").objectStore("items"); return await Promise.all(keys.map((k) => new Promise((ok) => { const r = st.get(k); r.onsuccess = () => ok(r.result); r.onerror = () => ok(null); }))); }
+    catch { return keys.map(() => null); }
+}
+const workRef = (it) => ({ id: it.id, code: it.code, why: it.why, score: it.score });
+const withBodies = async (refs, gt) => { const its = await getItems(refs.map((r) => `${r.id}@${gt}`)); return refs.map((r, i) => its[i] && { ...its[i], ...r }); };
+// 这次备课按学生存：考试设置、占比、要求、模板、大纲、教案、用题、聊天（撤销用的快照不存）。离开页面、排完大纲、写完教案、换学生时存
+let lastSnap = "", savedAt = "";
+function snapWork() {
+    const st = stu(), W = U.W;
+    if (!st || !U.gt) return;
+    const snap = {
+        u: { gt: U.gt, kind: U.kind, unit: U.unit, minutes: U.minutes, level: U.level, guidance: U.guidance, overrides: U.overrides, difficulty: U.difficulty,
+            template: U.template, planNote: U.planNote, review: U.review, reviewTouched: U.reviewTouched, chat: (U.chat || []).filter((m) => !m.wait).map(({ snap, ...m }) => m) },
+        W: W?.outline ? { items: W.items.map(workRef), alts: W.alts.map(workRef), extras: W.extras, slots: W.slots, outline: W.outline, outline0: W.outline0, md: W.md,
+            stale: [...W.stale].map(([c, set]) => [c, [...set]]), visual: W.visual, student: W.student, sid: W.sid, date: W.date, checked: W.checked } : null,
+    };
+    const json = JSON.stringify(snap);
+    if (json === lastSnap) return;   // 没变就不写
+    lastSnap = json;
+    if (W?.outline) savedAt = new Date().toTimeString().slice(0, 5);
+    (S.work ||= {})[st.id] = { ...snap, at: savedAt };
+    save(); renderDraft();
+}
+// 大纲、教案旁边的「草稿已存」：每 3 秒看一次，有改动就存
+const renderDraft = () => document.querySelectorAll("[data-draft]").forEach((el) => (el.textContent = U.W?.outline && savedAt ? `草稿已自动存在这个浏览器 · ${savedAt}` : ""));
+setInterval(snapWork, 3000);
+async function restoreWork() {
+    const st = stu(), w = S.work?.[st.id];
+    if (!w?.u) return;
+    savedAt = w.at || ""; lastSnap = JSON.stringify({ u: w.u, W: w.W });   // 刚恢复的不算改动
+    Object.assign(U, w.u);
+    $("#planNote").value = U.planNote || "";
+    refresh(); renderTplSel(); renderChat();
+    if (!w.W) return;
+    const [items, alts] = await Promise.all([withBodies(w.W.items, U.gt), withBodies(w.W.alts, U.gt)]);
+    if (stu().id !== st.id || U.W) return;   // 等题面的时候换了学生，或者已经在排新大纲
+    if (items.some((x) => !x)) { toast("上次的题面没存下来（浏览器数据清过），大纲要重新生成"); return; }
+    U.W = { ...w.W, items, alts: alts.filter(Boolean), stale: new Map(w.W.stale.map(([c, set]) => [c, new Set(set)])) };
+    renderItems(); lockFromOutline(); renderOutline();
+    if (U.W.md) { $("#step5").hidden = false; renderPlan(false); $("#planActs").hidden = false; }
+    renderChat(); renderDraft(); if (page() === "home") renderHome();
+}
+addEventListener("pagehide", snapWork);
+document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && snapWork());
+// 课次记录里存着当时的大纲、教案和用题 id：点开看，能重新导出 Word
+let histW = null;
+$("#logs").onclick = (e) => { const b = e.target.closest("[data-hist]"); if (b) openHist(+b.dataset.hist); };
+async function openHist(i) {
+    const st = stu(), l = st.logs[i], p = l?.plan;
+    if (!p?.md) return;
+    const items = await withBodies(p.items || [], p.gt);
+    histW = { items: items.filter(Boolean), outline: p.outline, md: p.md, extras: p.extras || {}, visual: p.visual, student: st.name, sid: st.id, date: l.date };
+    $("#histTitle").textContent = `${st.name} · ${md5(l.date)} 的教案`;
+    const lost = items.filter((x) => !x).length;
+    $("#histNote").textContent = lost ? `有 ${lost} 道题的题面没存下来（浏览器数据清过），导出的 Word 里不带这几道。` : "";
+    $("#histBody").innerHTML = marked.parse(p.md);
+    $("#histDlg").showModal();
+}
+$("#histDlg").onclick = async (e) => {
+    if (e.target.id === "histClose" || e.target === e.currentTarget) { e.currentTarget.close(); return; }
+    const btn = e.target.closest("[data-v]"); if (!btn) return;
+    btn.disabled = true;
+    try { download(await buildDocx(btn.dataset.v, histW), docxName(histW, btn.dataset.v)); } catch (err) { toast("导出失败：" + err.message); }
+    btn.disabled = false;
+};
+
+// ---------- 审教校验（用户 10-29）：系统先查几项，老师按清单自己看，要改的在右边跟 agent 说 ----------
+const MANUAL = ["讲解顺序和每段时间合理", "例题难度适合这个学生", "课外知识这几条值得讲", "作业量在设置的时长以内", "学生版 Word 能直接打印"];
+function auditChecks() {
+    const W = U.W, out = [], ck = (k, t) => out.push([k, t]);
+    const tot = outlineMin(W.outline);
+    ck(tot === U.minutes ? "ok" : "warn", `大纲合计 ${tot} 分钟，这节课 ${U.minutes} 分钟${tot === U.minutes ? "" : "，对不上"}`);
+    const off = W.items.filter((it) => it.gt[0] !== U.gt[0]);
+    ck(off.length <= W.items.length * 0.2 ? "ok" : "warn", `例题 ${W.items.length} 道，${W.items.length - off.length} 道是${U.gt[0]}年级的卷子${off.length ? `；借别的年级的：${off.map((it) => `${it.code}（${it.gt}${it.kind}）`).join("、")}` : ""}`);
+    const unused = W.items.filter((it) => !mentions(W.md, it.code)).map((it) => it.code);
+    ck(unused.length ? "warn" : "ok", unused.length ? `教案里没讲到的例题：${unused.join("、")}` : "每道例题教案里都讲到了");
+    const stale = [...new Set([...W.stale.values()].flatMap((set) => [...set]))];
+    ck(stale.length ? "warn" : "ok", stale.length ? `换过题、还没按新题重写的节：${stale.join("、")}` : "没有换过题还没重写的节");
+    const ids = new Set([...stu().mems, ...S.teacher.mems].map((m) => m.id));
+    const bad = [...new Set(W.md.match(/(?<![A-Za-z0-9])[ST]\d{1,2}(?![0-9A-Za-z])/g) || [])].filter((k) => !ids.has(k));
+    ck(bad.length ? "warn" : "ok", bad.length ? `引用了档案里没有的编号：${bad.join("、")}` : "引用的档案编号都对得上");
+    const x = extrasSec();
+    ck("info", x?.extras.length ? `课外知识补充 ${x.minutes} 分钟：${extrasOf(x).map((e) => e.key).join("、")}` : SET().extrasMinutes ? "这份教案没有课外知识补充（大纲里删掉了）" : "没加课外知识补充（课堂设置里是 0 分钟）");
+    ck(W.md.includes("作业") ? "ok" : "warn", W.md.includes("作业") ? `写了课后作业（课堂设置的上限是 ${SET().homeworkMinutes} 分钟）` : "教案里没有写课后作业");
+    return out;
+}
+function renderAudit() {
+    const W = U.W, has = !!W?.md;
+    $("#rvManualWrap").hidden = $("#rvPlanWrap").hidden = !has;
+    if (!has) { $("#rvChecks").innerHTML = `<li style="display:block" class="note">还没有教案可以审：先在「维度与大纲」排好大纲，再到「教案」页写成教案。右边的 agent 现在能帮你改${W?.outline ? "大纲" : "占比和这次课的要求"}。</li>`; return; }
+    $("#rvChecks").innerHTML = auditChecks().map(([k, t]) => `<li><span class="ck ${k}">${{ ok: "OK", warn: "注意", info: "说明" }[k]}</span><span>${esc(t)}</span></li>`).join("");
+    W.checked ||= [];
+    $("#rvManual").innerHTML = MANUAL.map((t, i) => `<label><input type="checkbox" data-mi="${i}"${W.checked[i] ? " checked" : ""}>${esc(t)}</label>`).join("");
+    $("#rvManualN").textContent = `已核对 ${MANUAL.filter((_, i) => W.checked[i]).length} / ${MANUAL.length}`;
+    $("#rvPlan").innerHTML = marked.parse(W.md); markExtras($("#rvPlan"));
+}
+$("#rvManual").onchange = (e) => { if (e.target.dataset.mi == null) return; U.W.checked[+e.target.dataset.mi] = e.target.checked; renderAudit(); };
+// 维度与大纲页：生成大纲之前就说清楚会加课外知识补充
+function renderXHint() {
+    const m = SET().extrasMinutes;
+    $("#xHint").innerHTML = m ? `大纲里会自动加 <b>课外知识补充 ${m} 分钟</b>：按这节课用到的题，挑词根词缀、熟词僻义、真考过的俗语谚语等 2–3 条现成讲解。分钟数在「档案 → 课堂设置」里改，填 0 就不加。`
+        : "课外知识补充现在不加（课堂设置里是 0 分钟），要加就到「档案 → 课堂设置」里填分钟数。";
+}
+
+// ---------- 多页面（用户 10-29）----------
+// 地址里的 #/档案 这类分页，都在这一个页面里切换：状态不用跨页面同步，正在生成的大纲、教案翻到别的页也不会断。
+// 用 pushState 换地址（不触发 hashchange），浏览器前进后退走 popstate；E 编号那种 #item-E3 锚点不当成分页
+const PAGES = { home: "首页", profile: "档案", exam: "考试", outline: "维度与大纲", plan: "教案", review: "审教" };
+const page = () => { const k = /^#\/(\w*)/.exec(location.hash)?.[1] || "home"; return Object.hasOwn(PAGES, k) ? k : "home"; };
+function route() {
+    const k = page();
+    document.querySelectorAll(".page").forEach((el) => (el.hidden = el.dataset.page !== k));
+    document.querySelectorAll(".topnav a").forEach((a) => (a.dataset.page === k ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+    document.title = k === "home" ? "英语备课 Agent Demo" : `${PAGES[k]} · 英语备课 Agent`;
+    if (k === "home") renderHome();
+    if (k === "review") renderAudit();
+    renderChat();
+}
+function go(k) {
+    if (page() === k) return;
+    history.pushState(null, "", k === "home" ? location.pathname : `#/${k}`);
+    route(); window.scrollTo(0, 0);
+}
+window.addEventListener("popstate", route);
+document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#/"]');
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault(); go(a.getAttribute("href").slice(2) || "home");
+});
+// 首页：四步流程，每一步现在是什么状态
+function renderHome() {
+    const st = stu(), c = U.ctx, W = U.W, o = W?.outline;
+    const top = U.rows.filter((r) => r.share > 0.005).sort((a, b) => b.share - a.share).slice(0, 3).map((r) => `${r.type} ${pct(r.share)}`).join("、");
+    const cards = [
+        ["profile", `${st.name} · ${schoolLabel(st)}`, `学生记忆 ${st.mems.length} 条、课次记录 ${st.logs.length} 次；老师记忆 ${S.teacher.mems.length} 条`, "看档案、记一笔"],
+        ["exam", examLabel(), `出卷：${c.level}（系统建议${c.lv.suggest}）· 这节课 ${U.minutes} 分钟`, "改考试和要求"],
+        ["outline", o ? `大纲 ${o.sections.length} 个环节，合计 ${outlineMin(o)} 分钟` : "还没排大纲", `占比最多的：${top || "—"}${SET().extrasMinutes ? `；含课外知识补充 ${SET().extrasMinutes} 分钟` : ""}`, o ? "改大纲" : "调占比、排大纲"],
+        ["plan", W?.md ? `${W.student}的教案写好了` : "还没写", W?.md ? "可以导出老师版、学生版 Word" : "大纲确认以后写", W?.md ? "看教案" : "去看看"],
+        ["review", ...(W?.md ? ((c, n = c.filter(([k]) => k === "warn").length) => [`自动检查 ${c.length} 项，${n ? `${n} 项要看` : "都没问题"}`, `老师自己看了 ${(W.checked || []).filter(Boolean).length} / ${MANUAL.length} 项；要改的跟 agent 说`, "去审教"])(auditChecks())
+            : ["教案写好以后审", "自动检查 + 老师自己看，要改的跟 agent 说", "去看看"])],
+    ];
+    $("#flow").innerHTML = cards.map(([k, now, sub, cta], i) => `<a class="fcard" href="#/${k}"><span class="n">${i + 1}</span><b>${PAGES[k]}</b><span class="now">${esc(now)}</span><span class="note">${esc(sub)}</span><span class="go">${cta} →</span></a>`).join("");
+}
+
+// ---------- 刷新 ----------
+function recompute() { deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); }
+function refresh() { renderMemories(); renderFolders(); deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); if (page() === "home") renderHome(); }
+function renderAll() { if (!U.gt) initExam(); renderStudents(); renderRecEx(); refresh(); renderTplSel(); }
+renderAll(); route(); restoreWork();
+</script>
+</body>
+</html>

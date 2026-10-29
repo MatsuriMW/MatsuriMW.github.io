@@ -1,0 +1,4243 @@
+{
+ "说明": "课外知识补充的现成条目（用户 10-29：词根词缀、俗语谚语、熟词僻义、生僻用法等；谚语俗语从近年单选最后一题里找）。每节课按这节用到的文章和题目自动挑 2–4 条拼进大纲和教案，不调模型，挑法见 api/_lib/english.mjs pickExtras。字段：level 最低适用年级；words 在题目原文里找的词或短语（小写）；match 按单词匹配的正则；groups 易混词各组，同一道题的选项里出现两组以上才算；topics 和文章话题对的关键词；src / freq 谚语俗语、习语的真题出处和在几份卷子里出现过。可以直接增删改，改完重跑 node demo/build.mjs。",
+ "how": {
+  "词根词缀": "先让学生猜这节课文章里那个词的意思，再讲词缀的规律，最后用下面的词快速过一遍。",
+  "构词法": "先把文章里的词拆开让学生猜，再讲规律。",
+  "熟词僻义": "先读原句，让学生用熟悉的意思翻译，发现讲不通再给出僻义。",
+  "短语动词": "把文章里的原句挖空让学生填，再对比同一个短语的几个意思。",
+  "易混词辨析": "就用这节课题目里的选项现场辨析，再让学生各造一个句子。",
+  "英美差异": "指出文章里的写法是英式还是美式，提醒学生写作时前后统一。",
+  "谚语俗语": "先把对话里这句话遮住，让学生猜该说什么，再讲意思和什么场合用；标了出处的是真考过的。",
+  "习语": "先让学生按字面猜，再讲真正的意思，和中文里类似的说法对比。",
+  "文化常识": "结合这篇文章的话题讲两三句，和中国的情况对比，也可以当写作素材。"
+ },
+ "entries": [
+  {
+   "id": "aff-un",
+   "cat": "词根词缀",
+   "key": "un-",
+   "mean": "不；相反",
+   "detail": "加在形容词、动词前面，表示否定或者把动作反过来。",
+   "ex": [
+    "happy 开心的 → unhappy 不开心的",
+    "lucky 幸运的 → unlucky 不幸的",
+    "usual 平常的 → unusual 不寻常的",
+    "lock 锁上 → unlock 开锁"
+   ],
+   "match": "^un(happy|lucky|usual|lock|fair|friendly|healthy|known|able|kind|tidy|believable|comfortable|important|necessary|clear|safe|polite|forgettable|expected|like|wrap|do|load|pack|certain|interesting)",
+   "level": 7
+  },
+  {
+   "id": "aff-dis",
+   "cat": "词根词缀",
+   "key": "dis-",
+   "mean": "不；相反",
+   "detail": "加在动词、形容词、名词前面，表示「不」或者相反的动作。",
+   "ex": [
+    "like 喜欢 → dislike 不喜欢",
+    "agree 同意 → disagree 不同意",
+    "appear 出现 → disappear 消失",
+    "honest 诚实的 → dishonest 不诚实的"
+   ],
+   "match": "^dis(like|agree|appear|honest|cover|advantage|able|abled|courage|connect|order|obey|trust|please)",
+   "level": 7
+  },
+  {
+   "id": "aff-im-in-ir-il",
+   "cat": "词根词缀",
+   "key": "im- / in- / ir- / il-",
+   "mean": "不",
+   "detail": "都表示「不」。b、m、p 前多用 im-，r 前用 ir-，l 前用 il-，其余多用 in-。",
+   "ex": [
+    "possible → impossible 不可能的",
+    "polite → impolite 不礼貌的",
+    "correct → incorrect 不正确的",
+    "regular → irregular 不规则的",
+    "legal → illegal 违法的"
+   ],
+   "words": [
+    "impossible",
+    "impolite",
+    "impatient",
+    "incorrect",
+    "incomplete",
+    "independent",
+    "invisible",
+    "inactive",
+    "inconvenient",
+    "informal",
+    "irregular",
+    "illegal",
+    "impatience",
+    "imperfect"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-re",
+   "cat": "词根词缀",
+   "key": "re-",
+   "mean": "再；重新；回",
+   "detail": "加在动词前面，表示「再做一次」或者「回到原来」。",
+   "ex": [
+    "write 写 → rewrite 重写",
+    "tell 讲 → retell 复述",
+    "use 使用 → reuse 重复使用",
+    "cycle 循环 → recycle 回收利用",
+    "build 建 → rebuild 重建"
+   ],
+   "match": "^re(write|tell|use|cycle|cycled|cycling|build|built|read|do|fill|play|start|turn|place|pay|charge|view|visit|think|make|new|wind)",
+   "level": 7
+  },
+  {
+   "id": "aff-mis",
+   "cat": "词根词缀",
+   "key": "mis-",
+   "mean": "错误地",
+   "detail": "加在动词前面，表示「做错」。",
+   "ex": [
+    "understand 理解 → misunderstand 误解",
+    "spell 拼写 → misspell 拼错",
+    "use 使用 → misuse 误用",
+    "lead 带领 → mislead 误导"
+   ],
+   "words": [
+    "misunderstand",
+    "misunderstanding",
+    "misunderstood",
+    "misspell",
+    "misuse",
+    "mislead",
+    "misread",
+    "mistake"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-pre",
+   "cat": "词根词缀",
+   "key": "pre-",
+   "mean": "在……之前；预先",
+   "detail": "加在词前面，表示时间上「提前」。",
+   "ex": [
+    "view 看 → preview 预习",
+    "pay 付款 → prepay 预付",
+    "school 学校 → preschool 学前的",
+    "historic 历史的 → prehistoric 史前的"
+   ],
+   "words": [
+    "preview",
+    "prepay",
+    "preschool",
+    "prehistoric",
+    "prepare",
+    "predict",
+    "prefix"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-over",
+   "cat": "词根词缀",
+   "key": "over-",
+   "mean": "过度；在……上面；越过",
+   "detail": "表示「太多」或者「在上面、越过」。",
+   "ex": [
+    "eat 吃 → overeat 吃得过多",
+    "work 工作 → overwork 工作过度",
+    "weight 体重 → overweight 超重的",
+    "seas 海 → overseas 海外的"
+   ],
+   "words": [
+    "overeat",
+    "overwork",
+    "overweight",
+    "overseas",
+    "overcome",
+    "overcame",
+    "overnight",
+    "overhead",
+    "overuse",
+    "overall"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-under",
+   "cat": "词根词缀",
+   "key": "under-",
+   "mean": "在……下面；不足",
+   "detail": "表示「在下面」或者「不够」。",
+   "ex": [
+    "ground 地面 → underground 地下的；地铁",
+    "line 线 → underline 在下面画线",
+    "water 水 → underwater 水下的",
+    "weight 体重 → underweight 体重不足的"
+   ],
+   "words": [
+    "underground",
+    "underline",
+    "underlined",
+    "underwater",
+    "underweight",
+    "underwear"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-inter",
+   "cat": "词根词缀",
+   "key": "inter-",
+   "mean": "在……之间；相互",
+   "detail": "表示「在……之间」或者「互相」。",
+   "ex": [
+    "national 国家的 → international 国际的",
+    "net 网 → internet 互联网",
+    "view 看 → interview 采访；面试",
+    "act 行动 → interact 互动"
+   ],
+   "words": [
+    "international",
+    "internet",
+    "interview",
+    "interviewed",
+    "interact",
+    "interaction",
+    "interactive"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-tele",
+   "cat": "词根词缀",
+   "key": "tele-",
+   "mean": "远",
+   "detail": "表示「远距离的」。",
+   "ex": [
+    "phone 声音 → telephone 电话",
+    "scope 看的器具 → telescope 望远镜",
+    "vision 视觉 → television 电视"
+   ],
+   "words": [
+    "telephone",
+    "telescope",
+    "television",
+    "telegraph"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-bi-tri-multi",
+   "cat": "词根词缀",
+   "key": "bi- / tri- / multi-",
+   "mean": "二 / 三 / 多",
+   "detail": "表示数量：bi- 二，tri- 三，multi- 多。",
+   "ex": [
+    "bicycle 自行车（两个轮子）",
+    "bilingual 双语的",
+    "tricycle 三轮车",
+    "triangle 三角形",
+    "multicultural 多元文化的"
+   ],
+   "words": [
+    "bicycle",
+    "bilingual",
+    "tricycle",
+    "triangle",
+    "multicultural",
+    "multimedia",
+    "multiple"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-auto",
+   "cat": "词根词缀",
+   "key": "auto-",
+   "mean": "自己的；自动的",
+   "detail": "表示「自己」或者「自动」。",
+   "ex": [
+    "automatic 自动的",
+    "autobiography 自传",
+    "autograph 亲笔签名"
+   ],
+   "words": [
+    "automatic",
+    "automatically",
+    "autobiography",
+    "autograph",
+    "automobile"
+   ],
+   "level": 9
+  },
+  {
+   "id": "aff-able-ible",
+   "cat": "词根词缀",
+   "key": "-able / -ible",
+   "mean": "能……的；值得……的",
+   "detail": "加在动词后面变成形容词。",
+   "ex": [
+    "enjoy 享受 → enjoyable 令人愉快的",
+    "comfort 安慰 → comfortable 舒服的",
+    "wash 洗 → washable 可洗的",
+    "vision 视觉 → visible 看得见的"
+   ],
+   "match": "^(?!(vegetable|possible|impossible|terrible|horrible|available|unavailable|intangible|responsible|irresponsible|probable|flexible|incredible|miserable|capable|incapable|inevitable|vulnerable)$)[a-z]{3,}(able|ible)$",
+   "level": 7
+  },
+  {
+   "id": "aff-ful",
+   "cat": "词根词缀",
+   "key": "-ful",
+   "mean": "充满……的",
+   "detail": "加在名词后面变成形容词。",
+   "ex": [
+    "help 帮助 → helpful 有帮助的",
+    "care 小心 → careful 仔细的",
+    "use 用处 → useful 有用的",
+    "peace 和平 → peaceful 平静的"
+   ],
+   "match": "^(?!(grateful|ungrateful)$)[a-z]{3,}ful$",
+   "level": 7
+  },
+  {
+   "id": "aff-less",
+   "cat": "词根词缀",
+   "key": "-less",
+   "mean": "没有……的",
+   "detail": "加在名词后面变成形容词，和 -ful 意思相反。",
+   "ex": [
+    "care → careless 粗心的",
+    "use → useless 没用的",
+    "home → homeless 无家可归的",
+    "end → endless 无尽的",
+    "help → helpless 无助的"
+   ],
+   "match": "^(?!(nevertheless)$)[a-z]{3,}less$",
+   "level": 7
+  },
+  {
+   "id": "aff-ly",
+   "cat": "词根词缀",
+   "key": "-ly",
+   "mean": "……地（副词）",
+   "detail": "形容词加 -ly 变副词，说明动作怎么样；注意 friendly、lovely、lonely 是形容词。",
+   "ex": [
+    "quick → quickly 快速地",
+    "careful → carefully 仔细地",
+    "happy → happily 开心地（y 变 i）",
+    "friendly 友好的（形容词）"
+   ],
+   "match": "^(?!(family|supply|butterfly|assembly|bully|jelly|belly|holly|lily|apply|reply|imply|multiply|rely|ally|wiggly|shelly|mihaly|googly|dragonfly|firefly|chilly|smelly)$)[a-z]{4,}ly$",
+   "level": 7
+  },
+  {
+   "id": "aff-ness",
+   "cat": "词根词缀",
+   "key": "-ness",
+   "mean": "……的性质、状态（名词）",
+   "detail": "形容词加 -ness 变名词。",
+   "ex": [
+    "happy → happiness 幸福",
+    "kind → kindness 善良",
+    "dark → darkness 黑暗",
+    "ill → illness 疾病"
+   ],
+   "match": "^(?!(business|harness|wilderness|witness)$)[a-z]{3,}ness$",
+   "level": 7
+  },
+  {
+   "id": "aff-ment",
+   "cat": "词根词缀",
+   "key": "-ment",
+   "mean": "……的行为、结果（名词）",
+   "detail": "动词加 -ment 变名词。",
+   "ex": [
+    "move → movement 运动；动作",
+    "agree → agreement 同意；协议",
+    "develop → development 发展",
+    "achieve → achievement 成就"
+   ],
+   "match": "^(?!(apartment|experiment|environment|instrument|element|compliment|complement|document|department|monument|comment|moment|segment|garment|fragment|supplement|sentiment|ornament|tournament|implement)$)[a-z]{3,}ment$",
+   "level": 7
+  },
+  {
+   "id": "aff-tion-sion",
+   "cat": "词根词缀",
+   "key": "-tion / -sion",
+   "mean": "……的行为、过程（名词）",
+   "detail": "动词变名词最常见的后缀。",
+   "ex": [
+    "educate → education 教育",
+    "invent → invention 发明",
+    "decide → decision 决定",
+    "discuss → discussion 讨论",
+    "celebrate → celebration 庆祝"
+   ],
+   "match": "^(?!(question|situation|position|mention|population|vacation|television|condition|friction|conversation|fiction|function|emotion|version|auction|destination|section|mission|mansion|passion|station|tradition|occasion|tension|pension|portion|proportion|caution|ambition|nutrition|dimension|petition|transition|tuition|sensation|duration|dissertation|vision|caption|fraction|session|illusion)$)[a-z]{3,}(tion|sion)$",
+   "level": 7
+  },
+  {
+   "id": "aff-er-or-ist",
+   "cat": "词根词缀",
+   "key": "-er / -or / -ist",
+   "mean": "做……的人",
+   "detail": "加在动词或名词后面，表示做这件事的人。",
+   "ex": [
+    "teach → teacher 老师",
+    "visit → visitor 游客",
+    "invent → inventor 发明家",
+    "science → scientist 科学家",
+    "art → artist 艺术家"
+   ],
+   "words": [
+    "visitor",
+    "visitors",
+    "inventor",
+    "inventors",
+    "actor",
+    "actors",
+    "director",
+    "writer",
+    "writers",
+    "dancer",
+    "dancers",
+    "reporter",
+    "reporters",
+    "explorer",
+    "explorers",
+    "scientist",
+    "scientists",
+    "artist",
+    "artists",
+    "tourist",
+    "tourists",
+    "pianist",
+    "dentist",
+    "journalist",
+    "journalists",
+    "novelist",
+    "violinist",
+    "cyclist",
+    "cyclists",
+    "guitarist",
+    "chemist"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-ese-an-ish",
+   "cat": "词根词缀",
+   "key": "-ese / -an / -ish",
+   "mean": "……国家的；……国人；……语",
+   "detail": "国家名变成国籍、语言。",
+   "ex": [
+    "China → Chinese",
+    "Japan → Japanese",
+    "America → American",
+    "Canada → Canadian",
+    "England → English",
+    "Spain → Spanish"
+   ],
+   "words": [
+    "chinese",
+    "japanese",
+    "american",
+    "canadian",
+    "australian",
+    "english",
+    "spanish",
+    "british",
+    "italian",
+    "russian",
+    "french",
+    "german"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-y",
+   "cat": "词根词缀",
+   "key": "-y",
+   "mean": "有……的；多……的",
+   "detail": "名词加 -y 变形容词，天气词最常见。",
+   "ex": [
+    "rain → rainy 下雨的",
+    "sun → sunny 晴朗的（双写 n）",
+    "wind → windy 有风的",
+    "health → healthy 健康的",
+    "noise → noisy 吵闹的（去 e）"
+   ],
+   "words": [
+    "rainy",
+    "sunny",
+    "windy",
+    "cloudy",
+    "snowy",
+    "foggy",
+    "healthy",
+    "noisy",
+    "lucky",
+    "salty",
+    "smelly",
+    "messy",
+    "sleepy",
+    "hungry",
+    "thirsty"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-en",
+   "cat": "词根词缀",
+   "key": "-en",
+   "mean": "使……；变得……",
+   "detail": "加在形容词后面变动词。",
+   "ex": [
+    "wide → widen 加宽",
+    "short → shorten 缩短",
+    "bright → brighten 使明亮",
+    "strength 力量 → strengthen 加强"
+   ],
+   "words": [
+    "widen",
+    "shorten",
+    "brighten",
+    "strengthen",
+    "sharpen",
+    "lengthen",
+    "loosen",
+    "frighten",
+    "frightened",
+    "tighten",
+    "weaken"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-ize-ise",
+   "cat": "词根词缀",
+   "key": "-ize / -ise",
+   "mean": "使……化；做……",
+   "detail": "加在名词、形容词后面变动词。英式多写 -ise，美式多写 -ize。",
+   "ex": [
+    "real → realize 意识到",
+    "memory → memorize 记住",
+    "apology → apologize 道歉",
+    "modern → modernize 使现代化"
+   ],
+   "words": [
+    "realize",
+    "realise",
+    "organize",
+    "organise",
+    "apologize",
+    "apologise",
+    "recognize",
+    "recognise",
+    "modernize",
+    "memorize",
+    "memorise",
+    "advertise"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-ward-s",
+   "cat": "词根词缀",
+   "key": "-ward(s)",
+   "mean": "向……",
+   "detail": "表示方向。",
+   "ex": [
+    "forward(s) 向前",
+    "backward(s) 向后",
+    "upward(s) 向上",
+    "toward(s) 朝着"
+   ],
+   "words": [
+    "forward",
+    "forwards",
+    "backward",
+    "backwards",
+    "upward",
+    "upwards",
+    "downward",
+    "downwards",
+    "toward",
+    "towards",
+    "homeward"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-hood",
+   "cat": "词根词缀",
+   "key": "-hood",
+   "mean": "……时期；……状态",
+   "detail": "加在名词后面变抽象名词。",
+   "ex": [
+    "child → childhood 童年",
+    "neighbour → neighbourhood 街区；邻里",
+    "brother → brotherhood 兄弟情谊"
+   ],
+   "words": [
+    "childhood",
+    "neighbourhood",
+    "neighborhood",
+    "brotherhood",
+    "parenthood"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-ship",
+   "cat": "词根词缀",
+   "key": "-ship",
+   "mean": "……关系；……身份、能力",
+   "detail": "加在名词后面变抽象名词。",
+   "ex": [
+    "friend → friendship 友谊",
+    "relation → relationship 关系",
+    "leader → leadership 领导力",
+    "member → membership 会员资格"
+   ],
+   "words": [
+    "friendship",
+    "friendships",
+    "relationship",
+    "relationships",
+    "leadership",
+    "membership",
+    "championship",
+    "citizenship"
+   ],
+   "level": 7
+  },
+  {
+   "id": "aff-ous",
+   "cat": "词根词缀",
+   "key": "-ous",
+   "mean": "有……性质的（形容词）",
+   "detail": "加在名词后面变形容词。",
+   "ex": [
+    "fame → famous 著名的",
+    "danger → dangerous 危险的",
+    "nerve → nervous 紧张的",
+    "humour → humorous 幽默的"
+   ],
+   "match": "^(?!(serious|curious|delicious|generous|ungenerous|precious|numerous|previous|porous|obvious|rufous|suspicious|jealous|phosphorous|tremendous|anxious|enormous|ridiculous|conscious|unconscious|fabulous|gorgeous|hilarious)$)[a-z]{3,}ous$",
+   "level": 7
+  },
+  {
+   "id": "aff-ive",
+   "cat": "词根词缀",
+   "key": "-ive",
+   "mean": "有……倾向的（形容词）",
+   "detail": "加在动词后面变形容词。",
+   "ex": [
+    "act → active 积极的",
+    "create → creative 有创造力的",
+    "attract → attractive 有吸引力的",
+    "expense → expensive 昂贵的"
+   ],
+   "words": [
+    "active",
+    "creative",
+    "attractive",
+    "expensive",
+    "inexpensive",
+    "impressive",
+    "effective",
+    "positive",
+    "negative",
+    "interactive",
+    "protective",
+    "productive",
+    "sensitive",
+    "competitive",
+    "talkative",
+    "supportive",
+    "imaginative",
+    "attentive",
+    "massive",
+    "inventive",
+    "persuasive",
+    "destructive"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-th",
+   "cat": "词根词缀",
+   "key": "-th",
+   "mean": "……的程度（名词）",
+   "detail": "形容词、动词变名词。",
+   "ex": [
+    "long → length 长度",
+    "wide → width 宽度",
+    "deep → depth 深度",
+    "grow → growth 成长",
+    "true → truth 真相",
+    "warm → warmth 温暖"
+   ],
+   "words": [
+    "length",
+    "width",
+    "depth",
+    "growth",
+    "truth",
+    "warmth",
+    "strength",
+    "health",
+    "wealth"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-bio",
+   "cat": "词根词缀",
+   "key": "bio-",
+   "mean": "生命；生物",
+   "detail": "源自希腊语，表示「生命」。",
+   "ex": [
+    "biology 生物学",
+    "biography 传记（写一个人的一生）",
+    "biodiversity 生物多样性"
+   ],
+   "words": [
+    "biology",
+    "biography",
+    "biodiversity",
+    "biologist"
+   ],
+   "level": 9
+  },
+  {
+   "id": "aff-graph-geo",
+   "cat": "词根词缀",
+   "key": "-graph / geo-",
+   "mean": "写、画；地球",
+   "detail": "-graph 表示「写、画、记录」，geo- 表示「地球」。",
+   "ex": [
+    "photograph 照片（用光画）",
+    "paragraph 段落",
+    "autograph 签名",
+    "geography 地理（描写地球）"
+   ],
+   "words": [
+    "photograph",
+    "photographer",
+    "paragraph",
+    "paragraphs",
+    "autograph",
+    "geography",
+    "biography"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-port",
+   "cat": "词根词缀",
+   "key": "port",
+   "mean": "运；拿",
+   "detail": "词根 port 表示「搬运」。",
+   "ex": [
+    "transport 运输",
+    "import 进口（运进来）",
+    "export 出口（运出去）",
+    "airport 机场",
+    "portable 便携的"
+   ],
+   "words": [
+    "transport",
+    "transportation",
+    "import",
+    "export",
+    "airport",
+    "portable",
+    "report",
+    "support"
+   ],
+   "level": 8
+  },
+  {
+   "id": "aff-spect-vis-vid",
+   "cat": "词根词缀",
+   "key": "spect / vis / vid",
+   "mean": "看",
+   "detail": "spect、vis、vid 都表示「看」。",
+   "ex": [
+    "inspect 检查",
+    "respect 尊重",
+    "visit 拜访",
+    "visible 看得见的",
+    "video 视频",
+    "vision 视力；远见"
+   ],
+   "words": [
+    "inspect",
+    "inspector",
+    "respect",
+    "expect",
+    "spectator",
+    "visible",
+    "invisible",
+    "vision",
+    "visual",
+    "video",
+    "videos"
+   ],
+   "level": 9
+  },
+  {
+   "id": "aff-dict-aud",
+   "cat": "词根词缀",
+   "key": "dict / aud",
+   "mean": "说 / 听",
+   "detail": "dict 表示「说」，aud 表示「听」。",
+   "ex": [
+    "dictionary 词典",
+    "predict 预言",
+    "dictation 听写",
+    "audience 观众；听众",
+    "audio 音频"
+   ],
+   "words": [
+    "dictionary",
+    "predict",
+    "prediction",
+    "dictation",
+    "audience",
+    "audio"
+   ],
+   "level": 9
+  },
+  {
+   "id": "con-35",
+   "cat": "构词法",
+   "key": "合成名词",
+   "mean": "两个词拼成一个名词",
+   "detail": "意思一般能从两部分推出来，读文章碰到长单词时，先试着拆成两个认识的词。",
+   "ex": [
+    "home + work → homework 家庭作业",
+    "class + room → classroom 教室",
+    "sun + shine → sunshine 阳光",
+    "book + shelf → bookshelf 书架",
+    "rain + coat → raincoat 雨衣"
+   ],
+   "words": [
+    "homework",
+    "classroom",
+    "birthday",
+    "sunshine",
+    "weekend",
+    "football",
+    "basketball",
+    "raincoat",
+    "bookshelf",
+    "bedroom",
+    "playground",
+    "headteacher",
+    "newspaper",
+    "notebook",
+    "grandparent",
+    "grandparents",
+    "toothbrush",
+    "sunglasses",
+    "snowman",
+    "firework",
+    "fireworks",
+    "teamwork",
+    "skateboard",
+    "earthquake",
+    "waterfall",
+    "lighthouse"
+   ],
+   "level": 7
+  },
+  {
+   "id": "con-36",
+   "cat": "构词法",
+   "key": "合成形容词",
+   "mean": "用连字符连起来的形容词",
+   "detail": "常见结构：副词 + 过去分词（well-known）、形容词 + 名词 + ed（kind-hearted）、数词 + 名词（five-year-old）。",
+   "ex": [
+    "well-known 著名的",
+    "hard-working 勤奋的",
+    "kind-hearted 好心的",
+    "world-famous 世界闻名的",
+    "a five-year-old boy 一个五岁的男孩"
+   ],
+   "match": "^[a-z]+-(known|working|hearted|famous|made|minded|looking|haired)$",
+   "level": 7
+  },
+  {
+   "id": "con-37",
+   "cat": "构词法",
+   "key": "词性转化",
+   "mean": "一个词不变形就换词性",
+   "detail": "名词直接当动词用，意思往往和名词有关。完形、阅读里常考。",
+   "ex": [
+    "water n. 水 → v. 浇水",
+    "hand n. 手 → v. 递",
+    "book n. 书 → v. 预订",
+    "face n. 脸 → v. 面对",
+    "head n. 头 → v. 前往"
+   ],
+   "words": [
+    "watered",
+    "watering",
+    "handed",
+    "booked",
+    "faced",
+    "headed",
+    "texted",
+    "emailed",
+    "e-mailed"
+   ],
+   "level": 8
+  },
+  {
+   "id": "con-38",
+   "cat": "构词法",
+   "key": "数词 + 名词作定语",
+   "mean": "连字符连起来作定语时名词用单数",
+   "detail": "a five-year-old boy、a two-hour walk：中间的名词不加 s；不用连字符时才说 The boy is five years old.",
+   "ex": [
+    "a ten-minute walk 十分钟的步行",
+    "a 3,000-word article 一篇三千字的文章",
+    "The walk takes ten minutes.（这里用复数）"
+   ],
+   "match": "^[a-z]+-(year|hour|minute|day|week|month|metre|meter|kilometre|kilometer|page|word)(-old|-long)?$",
+   "level": 8
+  },
+  {
+   "id": "pm-book",
+   "cat": "熟词僻义",
+   "key": "book",
+   "mean": "v. 预订",
+   "detail": "熟义：n. 书。僻义：v. 预订（book a room / a ticket / a table）。",
+   "ex": [
+    "I've booked two tickets for the concert. 我订了两张音乐会的票。"
+   ],
+   "words": [
+    "booked",
+    "booking",
+    "book a",
+    "book the",
+    "book tickets"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-fine",
+   "cat": "熟词僻义",
+   "key": "fine",
+   "mean": "n. 罚款；adj. 细的",
+   "detail": "熟义：adj. 好的。僻义：n. 罚款（pay a fine）；adj. 细的（fine sand）。",
+   "ex": [
+    "He had to pay a fine for parking there. 他因为在那儿停车被罚了款。"
+   ],
+   "words": [
+    "pay a fine",
+    "paid a fine",
+    "a fine of",
+    "get a fine",
+    "got a fine",
+    "fined",
+    "fines"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-last",
+   "cat": "熟词僻义",
+   "key": "last",
+   "mean": "v. 持续",
+   "detail": "熟义：adj. 最后的。僻义：v. 持续（多长时间）。",
+   "ex": [
+    "The meeting lasted two hours. 会议开了两个小时。"
+   ],
+   "words": [
+    "lasted",
+    "lasts",
+    "lasting",
+    "will last"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-present",
+   "cat": "熟词僻义",
+   "key": "present",
+   "mean": "adj. 出席的；v. 颁发",
+   "detail": "熟义：n. 礼物。僻义：adj. 出席的、现在的；v. 颁发、展示（重音在后）。",
+   "ex": [
+    "All the students were present at the meeting. 所有学生都出席了会议。",
+    "the present situation 目前的情况"
+   ],
+   "words": [
+    "were present",
+    "was present",
+    "presented",
+    "presenting",
+    "at present",
+    "present situation"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-content",
+   "cat": "熟词僻义",
+   "key": "content",
+   "mean": "adj. 满足的",
+   "detail": "熟义：n. 内容（重音在前）。僻义：adj. 满足的（be content with，重音在后）。",
+   "ex": [
+    "She is content with her simple life. 她满足于简单的生活。"
+   ],
+   "words": [
+    "content with",
+    "contented"
+   ],
+   "level": 9
+  },
+  {
+   "id": "pm-park",
+   "cat": "熟词僻义",
+   "key": "park",
+   "mean": "v. 停车",
+   "detail": "熟义：n. 公园。僻义：v. 停车；car park 停车场。",
+   "ex": [
+    "You can't park your bike here. 这里不能停自行车。"
+   ],
+   "words": [
+    "parked",
+    "parking",
+    "park your",
+    "park the",
+    "park his",
+    "park her"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-water",
+   "cat": "熟词僻义",
+   "key": "water",
+   "mean": "v. 浇水",
+   "detail": "熟义：n. 水。僻义：v. 浇水。",
+   "ex": [
+    "Don't forget to water the flowers. 别忘了浇花。"
+   ],
+   "words": [
+    "water the",
+    "watered",
+    "watering"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-hand",
+   "cat": "熟词僻义",
+   "key": "hand",
+   "mean": "v. 递；交",
+   "detail": "熟义：n. 手。僻义：v. 递给；hand in 上交。",
+   "ex": [
+    "Please hand me the dictionary. 请把词典递给我。"
+   ],
+   "words": [
+    "hand me",
+    "handed",
+    "hand in",
+    "hand out",
+    "handed in"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-face",
+   "cat": "熟词僻义",
+   "key": "face",
+   "mean": "v. 面对；朝向",
+   "detail": "熟义：n. 脸。僻义：v. 面对（困难）；朝向。",
+   "ex": [
+    "We should face our problems bravely. 我们应该勇敢地面对问题。"
+   ],
+   "words": [
+    "face the",
+    "faced",
+    "facing",
+    "face problems",
+    "face difficulties"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-head",
+   "cat": "熟词僻义",
+   "key": "head",
+   "mean": "v. 前往；n. 负责人",
+   "detail": "熟义：n. 头。僻义：v. 朝……走（head for）；n. 负责人（the head of）。",
+   "ex": [
+    "They headed for the station. 他们朝车站走去。"
+   ],
+   "words": [
+    "headed for",
+    "heading for",
+    "head for",
+    "headed to",
+    "heading to",
+    "headed towards",
+    "headed toward",
+    "headed home",
+    "heading home",
+    "headed back",
+    "heading back",
+    "head of the"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-run",
+   "cat": "熟词僻义",
+   "key": "run",
+   "mean": "v. 经营；（机器）运转",
+   "detail": "熟义：v. 跑。僻义：v. 经营（run a shop）；运转。",
+   "ex": [
+    "His parents run a small restaurant. 他父母开了一家小餐馆。"
+   ],
+   "words": [
+    "run a",
+    "runs a",
+    "ran a",
+    "running a"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-spring",
+   "cat": "熟词僻义",
+   "key": "spring",
+   "mean": "n. 泉；弹簧",
+   "detail": "熟义：n. 春天。僻义：n. 泉（hot spring 温泉）；弹簧。",
+   "ex": [
+    "There is a hot spring at the foot of the mountain. 山脚下有一眼温泉。"
+   ],
+   "words": [
+    "hot spring",
+    "springs"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-kid",
+   "cat": "熟词僻义",
+   "key": "kid",
+   "mean": "v. 开玩笑",
+   "detail": "熟义：n. 小孩。僻义：v. 开玩笑（I'm just kidding. / Are you kidding?）。",
+   "ex": [
+    "Don't worry. I'm just kidding. 别担心，我只是开玩笑。"
+   ],
+   "words": [
+    "kidding",
+    "kidded"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-miss",
+   "cat": "熟词僻义",
+   "key": "miss",
+   "mean": "v. 想念；错过；未击中",
+   "detail": "熟义：v. 想念 / 错过（两个都常见）。还可以表示「没打中」「没注意到」。",
+   "ex": [
+    "Hurry up, or you'll miss the bus. 快点，不然你会错过公交车。",
+    "I really miss my grandma. 我很想念我奶奶。"
+   ],
+   "words": [
+    "missed",
+    "missing",
+    "miss the",
+    "miss my"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-cover",
+   "cat": "熟词僻义",
+   "key": "cover",
+   "mean": "v. 报道；支付（费用）；走完（路程）",
+   "detail": "熟义：v. 覆盖；n. 封面。僻义：v. 报道（新闻）；够付（费用）；走完一段路程。",
+   "ex": [
+    "Many reporters covered the event. 很多记者报道了这件事。",
+    "The money will cover the cost of the trip. 这笔钱够付这次旅行的费用。",
+    "We covered 20 kilometres that day. 那天我们走了 20 公里。"
+   ],
+   "words": [
+    "covered live",
+    "cover the news",
+    "covered the news",
+    "cover the event",
+    "covered the event",
+    "cover the story",
+    "covered the story",
+    "cover the cost",
+    "covers the cost",
+    "covered the cost"
+   ],
+   "level": 9
+  },
+  {
+   "id": "pm-figure",
+   "cat": "熟词僻义",
+   "key": "figure",
+   "mean": "n. 人物；身材；数字",
+   "detail": "熟义：n. 数字。僻义：n. 人物（a great figure）；身材；figure out 弄明白。",
+   "ex": [
+    "He is a great figure in Chinese history. 他是中国历史上的伟人。"
+   ],
+   "words": [
+    "great figure",
+    "figure out",
+    "figured out",
+    "public figure",
+    "historical figure"
+   ],
+   "level": 9
+  },
+  {
+   "id": "pm-stand",
+   "cat": "熟词僻义",
+   "key": "stand",
+   "mean": "v. 忍受",
+   "detail": "熟义：v. 站立。僻义：v. 忍受（多用于否定 can't stand）。",
+   "ex": [
+    "I can't stand the noise any longer. 我再也受不了这噪音了。"
+   ],
+   "words": [
+    "can't stand",
+    "cannot stand",
+    "couldn't stand"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-close",
+   "cat": "熟词僻义",
+   "key": "close",
+   "mean": "adj. 亲密的；接近的",
+   "detail": "熟义：v. 关闭。僻义：adj. 亲密的（close friends）、近的（close to）。",
+   "ex": [
+    "They are close friends. 他们是亲密的朋友。"
+   ],
+   "words": [
+    "close friend",
+    "close friends",
+    "close to",
+    "closer",
+    "closely"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-mean",
+   "cat": "熟词僻义",
+   "key": "mean",
+   "mean": "adj. 吝啬的；刻薄的",
+   "detail": "熟义：v. 意思是。僻义：adj. 吝啬的、刻薄的（be mean to sb.）。",
+   "ex": [
+    "Don't be mean to your little brother. 别对你弟弟那么刻薄。"
+   ],
+   "words": [
+    "be mean",
+    "so mean",
+    "was mean",
+    "is mean",
+    "were mean"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-rest",
+   "cat": "熟词僻义",
+   "key": "rest",
+   "mean": "n. 其余部分",
+   "detail": "熟义：n. / v. 休息。僻义：n. 其余部分（the rest of）。",
+   "ex": [
+    "I'll finish the rest of the work tomorrow. 剩下的活我明天做完。"
+   ],
+   "words": [
+    "the rest of",
+    "the rest"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-fire",
+   "cat": "熟词僻义",
+   "key": "fire",
+   "mean": "v. 解雇",
+   "detail": "熟义：n. 火。僻义：v. 解雇；开（枪）。",
+   "ex": [
+    "He was fired for being late again and again. 他因为一再迟到被解雇了。"
+   ],
+   "words": [
+    "fired",
+    "firing",
+    "was fired"
+   ],
+   "level": 9
+  },
+  {
+   "id": "pm-star",
+   "cat": "熟词僻义",
+   "key": "star",
+   "mean": "v. 主演",
+   "detail": "熟义：n. 星星；明星。僻义：v. 主演（The film stars ...）。",
+   "ex": [
+    "The film stars a famous actor. 这部电影由一位著名演员主演。"
+   ],
+   "words": [
+    "starred",
+    "starring",
+    "stars a",
+    "stars the"
+   ],
+   "level": 9
+  },
+  {
+   "id": "pm-matter",
+   "cat": "熟词僻义",
+   "key": "matter",
+   "mean": "v. 要紧",
+   "detail": "熟义：n. 事情（What's the matter?）。僻义：v. 要紧、有关系。",
+   "ex": [
+    "It doesn't matter. 没关系。",
+    "What matters most is your health. 最重要的是你的健康。"
+   ],
+   "words": [
+    "doesn't matter",
+    "matters",
+    "matter most",
+    "what matters"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-room",
+   "cat": "熟词僻义",
+   "key": "room",
+   "mean": "n. 空间；余地",
+   "detail": "熟义：n. 房间。僻义：n. 空间（不可数）。",
+   "ex": [
+    "There is no room for another desk. 再也放不下一张桌子了。",
+    "room for improvement 改进的余地"
+   ],
+   "words": [
+    "room for",
+    "no room",
+    "make room"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-way",
+   "cat": "熟词僻义",
+   "key": "way",
+   "mean": "n. 方面",
+   "detail": "熟义：n. 路；方法。僻义：n. 方面（in some ways）。",
+   "ex": [
+    "In some ways, he is right. 在某些方面他是对的。"
+   ],
+   "words": [
+    "in some ways",
+    "in many ways",
+    "in a way"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-word",
+   "cat": "熟词僻义",
+   "key": "word",
+   "mean": "n. 消息；诺言",
+   "detail": "熟义：n. 单词。僻义：n. 消息、诺言（keep one's word 守信）。",
+   "ex": [
+    "He always keeps his word. 他总是说话算数。"
+   ],
+   "words": [
+    "keep his word",
+    "keep my word",
+    "keep your word",
+    "kept his word",
+    "word of",
+    "have my word"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-touch",
+   "cat": "熟词僻义",
+   "key": "touch",
+   "mean": "n. 联系",
+   "detail": "熟义：v. 触摸；感动。僻义：n. 联系（keep in touch / get in touch with）。",
+   "ex": [
+    "Let's keep in touch. 我们保持联系吧。"
+   ],
+   "words": [
+    "in touch",
+    "keep in touch",
+    "get in touch"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-free",
+   "cat": "熟词僻义",
+   "key": "free",
+   "mean": "adj. 空闲的；免费的；自由的",
+   "detail": "一个词三个常用意思，完形里要看上下文。",
+   "ex": [
+    "Are you free this afternoon? 你今天下午有空吗？",
+    "The tickets are free. 票是免费的。"
+   ],
+   "words": [
+    "free time",
+    "for free",
+    "free of charge",
+    "are free",
+    "is free"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-change",
+   "cat": "熟词僻义",
+   "key": "change",
+   "mean": "n. 零钱；找的钱",
+   "detail": "熟义：v. / n. 改变。僻义：n. 零钱、找零（不可数）。",
+   "ex": [
+    "Here is your change. 这是找您的零钱。"
+   ],
+   "words": [
+    "your change",
+    "keep the change",
+    "small change"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-light",
+   "cat": "熟词僻义",
+   "key": "light",
+   "mean": "v. 点燃；adj. 轻的；浅色的",
+   "detail": "熟义：n. 光；灯。僻义：v. 点燃（lit / lit）；adj. 轻的、浅色的。",
+   "ex": [
+    "She lit a candle. 她点了一根蜡烛。",
+    "a light bag 一个轻包"
+   ],
+   "words": [
+    "lit",
+    "lighted",
+    "light a",
+    "light blue",
+    "light green"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-fan",
+   "cat": "熟词僻义",
+   "key": "fan",
+   "mean": "n. 迷；扇子",
+   "detail": "fan 既是「扇子」，也是「……迷、粉丝」。",
+   "ex": [
+    "He is a big football fan. 他是个铁杆球迷。"
+   ],
+   "words": [
+    "big fan",
+    "a fan of",
+    "fans of",
+    "football fan",
+    "huge fan"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-bank",
+   "cat": "熟词僻义",
+   "key": "bank",
+   "mean": "n. 河岸",
+   "detail": "熟义：n. 银行。僻义：n. 河岸（on the bank of the river）。",
+   "ex": [
+    "They walked along the bank of the river. 他们沿着河岸走。"
+   ],
+   "words": [
+    "bank of the",
+    "river bank",
+    "riverbank",
+    "banks of"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-block",
+   "cat": "熟词僻义",
+   "key": "block",
+   "mean": "n. 街区",
+   "detail": "熟义：v. 阻塞；n. 块。僻义：n. 街区（walk two blocks）。",
+   "ex": [
+    "The library is two blocks away. 图书馆在两个街区外。"
+   ],
+   "words": [
+    "two blocks",
+    "three blocks",
+    "four blocks",
+    "five blocks",
+    "blocks away",
+    "block away",
+    "blocks from",
+    "blocks down"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-train",
+   "cat": "熟词僻义",
+   "key": "train",
+   "mean": "v. 训练",
+   "detail": "熟义：n. 火车。僻义：v. 训练、培训。",
+   "ex": [
+    "The team trains hard every day. 球队每天刻苦训练。"
+   ],
+   "words": [
+    "trained",
+    "training",
+    "trains hard",
+    "train for"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-order",
+   "cat": "熟词僻义",
+   "key": "order",
+   "mean": "v. 点（菜）；n. 顺序；命令",
+   "detail": "熟义：n. 顺序（in order）。僻义：v. 点菜、订购；n. 命令。",
+   "ex": [
+    "Can I order a pizza for you? 我给你点个比萨好吗？"
+   ],
+   "words": [
+    "ordered",
+    "order a",
+    "take your order",
+    "may i take your order"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-note",
+   "cat": "熟词僻义",
+   "key": "note",
+   "mean": "n. 纸币；便条",
+   "detail": "熟义：n. 笔记。僻义：n. 纸币（a 50-yuan note）；便条。",
+   "ex": [
+    "He paid with a 100-yuan note. 他用一张一百元的纸币付钱。"
+   ],
+   "words": [
+    "yuan note",
+    "dollar note",
+    "pound note"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-tip",
+   "cat": "熟词僻义",
+   "key": "tip",
+   "mean": "n. 小费；提示",
+   "detail": "tip 可以是「小费」也可以是「小提示、窍门」。",
+   "ex": [
+    "Here are some tips for learning English. 这里有一些学英语的小窍门。"
+   ],
+   "words": [
+    "tips",
+    "a tip"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pm-sound",
+   "cat": "熟词僻义",
+   "key": "sound",
+   "mean": "v. 听起来",
+   "detail": "熟义：n. 声音。僻义：系动词「听起来」，后面接形容词。",
+   "ex": [
+    "That sounds great! 听起来很棒！"
+   ],
+   "words": [
+    "sounds great",
+    "sounds good",
+    "sounds like",
+    "sounded"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pm-pretty",
+   "cat": "熟词僻义",
+   "key": "pretty",
+   "mean": "adv. 相当",
+   "detail": "熟义：adj. 漂亮的。僻义：adv. 相当、很（pretty good）。",
+   "ex": [
+    "The test was pretty easy. 考试相当简单。"
+   ],
+   "words": [
+    "pretty good",
+    "pretty easy",
+    "pretty hard",
+    "pretty well",
+    "pretty much"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-take-off",
+   "cat": "短语动词",
+   "key": "take off",
+   "mean": "脱下；起飞；（迅速）成功",
+   "detail": "一个短语三个意思，看宾语和上下文。",
+   "ex": [
+    "Take off your coat. 把外套脱了。",
+    "The plane took off on time. 飞机准时起飞了。"
+   ],
+   "words": [
+    "take off",
+    "took off",
+    "taking off",
+    "takes off",
+    "taken off"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-pick-up",
+   "cat": "短语动词",
+   "key": "pick up",
+   "mean": "捡起；接（人）；（不经意间）学会",
+   "ex": [
+    "She picked up the litter. 她捡起了垃圾。",
+    "I'll pick you up at six. 我六点去接你。",
+    "He picked up some French in Paris. 他在巴黎学会了一点法语。"
+   ],
+   "words": [
+    "pick up",
+    "picked up",
+    "picking up",
+    "picks up"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pv-turn-down",
+   "cat": "短语动词",
+   "key": "turn down",
+   "mean": "调低（音量）；拒绝",
+   "ex": [
+    "Please turn down the music. 请把音乐关小点。",
+    "She turned down his offer. 她拒绝了他的提议。"
+   ],
+   "words": [
+    "turn down",
+    "turned down",
+    "turning down"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-turn-up",
+   "cat": "短语动词",
+   "key": "turn up",
+   "mean": "调高（音量）；出现",
+   "ex": [
+    "Can you turn up the radio? 你能把收音机开大点吗？",
+    "He didn't turn up at the meeting. 他没来开会。"
+   ],
+   "words": [
+    "turn up",
+    "turned up",
+    "turning up"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-make-up",
+   "cat": "短语动词",
+   "key": "make up",
+   "mean": "编造；组成；化妆；（make up for）弥补",
+   "ex": [
+    "Don't make up stories. 别编故事。",
+    "The team is made up of ten students. 这个队由十个学生组成。"
+   ],
+   "words": [
+    "make up",
+    "made up",
+    "making up",
+    "makes up",
+    "make up for"
+   ],
+   "level": 9
+  },
+  {
+   "id": "pv-look-up",
+   "cat": "短语动词",
+   "key": "look up",
+   "mean": "（在词典里）查；抬头看",
+   "ex": [
+    "Look up the new words in the dictionary. 在词典里查生词。"
+   ],
+   "words": [
+    "look up",
+    "looked up",
+    "looking up",
+    "look it up",
+    "look them up"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pv-put-off",
+   "cat": "短语动词",
+   "key": "put off",
+   "mean": "推迟",
+   "detail": "后面接动词要用 -ing：put off doing。",
+   "ex": [
+    "The game was put off because of the rain. 比赛因为下雨推迟了。"
+   ],
+   "words": [
+    "put off",
+    "puts off",
+    "putting off"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-put-on",
+   "cat": "短语动词",
+   "key": "put on",
+   "mean": "穿上；上演；增加（体重）",
+   "ex": [
+    "Put on your coat. 穿上外套。",
+    "The students put on a play. 学生们演了一出戏。"
+   ],
+   "words": [
+    "put on",
+    "puts on",
+    "putting on"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pv-give-up",
+   "cat": "短语动词",
+   "key": "give up",
+   "mean": "放弃",
+   "detail": "后面接动词要用 -ing：give up doing。",
+   "ex": [
+    "Never give up your dream. 永远不要放弃梦想。"
+   ],
+   "words": [
+    "give up",
+    "gave up",
+    "giving up",
+    "gives up",
+    "given up"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pv-come-up-with",
+   "cat": "短语动词",
+   "key": "come up with",
+   "mean": "想出（主意、办法）",
+   "ex": [
+    "She came up with a good idea. 她想出了一个好主意。"
+   ],
+   "words": [
+    "come up with",
+    "came up with",
+    "coming up with"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-run-out-of",
+   "cat": "短语动词",
+   "key": "run out (of)",
+   "mean": "用完",
+   "detail": "sth. runs out（东西用完了）；sb. runs out of sth.（某人用完了某物）。",
+   "ex": [
+    "We have run out of milk. 我们的牛奶喝完了。"
+   ],
+   "words": [
+    "run out",
+    "ran out",
+    "running out",
+    "runs out"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-set-up",
+   "cat": "短语动词",
+   "key": "set up",
+   "mean": "建立；搭起",
+   "ex": [
+    "They set up a reading club. 他们成立了一个读书会。"
+   ],
+   "words": [
+    "set up",
+    "sets up",
+    "setting up"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-break-down",
+   "cat": "短语动词",
+   "key": "break down",
+   "mean": "（机器）出故障；（情绪）崩溃",
+   "ex": [
+    "Our car broke down on the way. 我们的车在路上坏了。"
+   ],
+   "words": [
+    "break down",
+    "broke down",
+    "broken down",
+    "breaks down"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-work-out",
+   "cat": "短语动词",
+   "key": "work out",
+   "mean": "解决；算出；锻炼",
+   "ex": [
+    "We worked out the problem together. 我们一起解决了这个问题。",
+    "He works out in the gym every day. 他每天在健身房锻炼。"
+   ],
+   "words": [
+    "work out",
+    "worked out",
+    "working out",
+    "works out"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-get-along-on-with",
+   "cat": "短语动词",
+   "key": "get along / on (with)",
+   "mean": "相处",
+   "detail": "get along well with sb. 和某人相处得好。",
+   "ex": [
+    "I get along well with my classmates. 我和同学相处得很好。"
+   ],
+   "words": [
+    "get along",
+    "got along",
+    "getting along",
+    "get on with",
+    "gets along"
+   ],
+   "level": 7
+  },
+  {
+   "id": "pv-hold-on",
+   "cat": "短语动词",
+   "key": "hold on",
+   "mean": "等一下（打电话时）；坚持",
+   "ex": [
+    "Hold on, please. 请稍等。",
+    "Hold on and you will succeed. 坚持下去你就会成功。"
+   ],
+   "words": [
+    "hold on",
+    "held on",
+    "holding on"
+   ],
+   "level": 8
+  },
+  {
+   "id": "pv-look-forward-to",
+   "cat": "短语动词",
+   "key": "look forward to",
+   "mean": "盼望",
+   "detail": "这里的 to 是介词，后面接名词或动词 -ing：look forward to hearing from you。",
+   "ex": [
+    "I'm looking forward to seeing you. 我盼着见到你。"
+   ],
+   "words": [
+    "look forward to",
+    "looking forward to",
+    "looked forward to"
+   ],
+   "level": 7
+  },
+  {
+   "id": "mx-borrow-lend-keep",
+   "cat": "易混词辨析",
+   "key": "borrow / lend / keep",
+   "mean": "借入 / 借出 / 保存（借多久）",
+   "detail": "borrow sth. from sb. 向别人借；lend sth. to sb. 借给别人；问「能借多久」用 keep（延续性）。",
+   "ex": [
+    "Can I borrow your pen? 我能借你的笔吗？",
+    "How long can I keep the book? 这本书我能借多久？"
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "borrow",
+     "borrowed",
+     "borrows"
+    ],
+    [
+     "lend",
+     "lent",
+     "lends"
+    ],
+    [
+     "keep",
+     "kept"
+    ]
+   ]
+  },
+  {
+   "id": "mx-spend-pay-cost-take",
+   "cat": "易混词辨析",
+   "key": "spend / pay / cost / take",
+   "mean": "花费",
+   "detail": "sb. spends time/money on sth. / (in) doing；sb. pays money for sth.；sth. costs sb. money；It takes sb. time to do sth.。",
+   "ex": [
+    "I spent two hours on my homework.",
+    "The book cost me 30 yuan.",
+    "It took me an hour to get there."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "spend",
+     "spent",
+     "spends"
+    ],
+    [
+     "pay",
+     "paid",
+     "pays"
+    ],
+    [
+     "cost",
+     "costs"
+    ],
+    [
+     "take",
+     "took",
+     "takes",
+     "taken"
+    ]
+   ]
+  },
+  {
+   "id": "mx-say-speak-talk-tell",
+   "cat": "易混词辨析",
+   "key": "say / speak / talk / tell",
+   "mean": "说",
+   "detail": "say 强调说的内容；speak 说语言或发言；talk 交谈（talk with/about）；tell 告诉、讲（故事）。",
+   "ex": [
+    "He said, 'Good morning.'",
+    "Can you speak English?",
+    "Tell me a story."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "say",
+     "said",
+     "says"
+    ],
+    [
+     "speak",
+     "spoke",
+     "spoken",
+     "speaks"
+    ],
+    [
+     "talk",
+     "talked",
+     "talks"
+    ],
+    [
+     "tell",
+     "told",
+     "tells"
+    ]
+   ]
+  },
+  {
+   "id": "mx-look-see-watch-read",
+   "cat": "易混词辨析",
+   "key": "look / see / watch / read",
+   "mean": "看",
+   "detail": "look 强调动作（look at）；see 看到结果；watch 观看（比赛、电视）；read 读（书报）。",
+   "ex": [
+    "Look at the board.",
+    "I saw a bird in the tree.",
+    "watch a football match",
+    "read a newspaper"
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "look",
+     "looked",
+     "looks"
+    ],
+    [
+     "see",
+     "saw",
+     "seen",
+     "sees"
+    ],
+    [
+     "watch",
+     "watched",
+     "watches"
+    ],
+    [
+     "read",
+     "reads"
+    ]
+   ]
+  },
+  {
+   "id": "mx-hear-listen-to",
+   "cat": "易混词辨析",
+   "key": "hear / listen to",
+   "mean": "听",
+   "detail": "listen to 强调动作（去听）；hear 强调结果（听到）。",
+   "ex": [
+    "Listen! Can you hear the birds singing?"
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "hear",
+     "heard",
+     "hears"
+    ],
+    [
+     "listen",
+     "listened",
+     "listens"
+    ]
+   ]
+  },
+  {
+   "id": "mx-bring-take-carry-fetch",
+   "cat": "易混词辨析",
+   "key": "bring / take / carry / fetch",
+   "mean": "带；拿",
+   "detail": "bring 带来（到说话人这里）；take 带走；carry 携带、搬（没有方向）；fetch 去拿回来。",
+   "ex": [
+    "Bring your homework tomorrow.",
+    "Take an umbrella with you."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "bring",
+     "brought",
+     "brings"
+    ],
+    [
+     "take",
+     "took",
+     "takes",
+     "taken"
+    ],
+    [
+     "carry",
+     "carried",
+     "carries"
+    ],
+    [
+     "fetch",
+     "fetched"
+    ]
+   ]
+  },
+  {
+   "id": "mx-arrive-reach-get-to",
+   "cat": "易混词辨析",
+   "key": "arrive / reach / get to",
+   "mean": "到达",
+   "detail": "arrive in（大地方）/ at（小地方）；reach 是及物动词，直接接地点；get to；接 home、here、there 时都不加介词。",
+   "ex": [
+    "We arrived in Beijing at night.",
+    "We reached the top of the hill."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "arrive",
+     "arrived",
+     "arrives"
+    ],
+    [
+     "reach",
+     "reached",
+     "reaches"
+    ],
+    [
+     "get",
+     "got"
+    ]
+   ]
+  },
+  {
+   "id": "mx-alone-lonely",
+   "cat": "易混词辨析",
+   "key": "alone / lonely",
+   "mean": "独自 / 孤独的",
+   "detail": "alone 指一个人（客观）；lonely 指心里孤单（主观），也可以修饰地方（a lonely island）。",
+   "ex": [
+    "He lives alone, but he never feels lonely."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "alone"
+    ],
+    [
+     "lonely"
+    ]
+   ]
+  },
+  {
+   "id": "mx-hard-hardly",
+   "cat": "易混词辨析",
+   "key": "hard / hardly",
+   "mean": "努力地 / 几乎不",
+   "detail": "hard 努力地、猛烈地；hardly 几乎不（否定意义，反意疑问句后面用肯定）。",
+   "ex": [
+    "He works hard.",
+    "I can hardly hear you."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "hard"
+    ],
+    [
+     "hardly"
+    ]
+   ]
+  },
+  {
+   "id": "mx-already-yet-still",
+   "cat": "易混词辨析",
+   "key": "already / yet / still",
+   "mean": "已经 / 还（没）/ 仍然",
+   "detail": "already 多用于肯定句；yet 用于否定、疑问句，放句末；still 表示动作还在继续。",
+   "ex": [
+    "I have already finished it.",
+    "Have you finished it yet?",
+    "It's still raining."
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "already"
+    ],
+    [
+     "yet"
+    ],
+    [
+     "still"
+    ]
+   ]
+  },
+  {
+   "id": "mx-since-for-ago",
+   "cat": "易混词辨析",
+   "key": "since / for / ago",
+   "mean": "自从 / 长达 / 以前",
+   "detail": "for + 一段时间；since + 时间点或从句（都和现在完成时连用）；ago 和一般过去时连用。",
+   "ex": [
+    "I have lived here for ten years / since 2016.",
+    "I came here ten years ago."
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "since"
+    ],
+    [
+     "for"
+    ],
+    [
+     "ago"
+    ]
+   ]
+  },
+  {
+   "id": "mx-in-after",
+   "cat": "易混词辨析",
+   "key": "in / after + 一段时间",
+   "mean": "……之后",
+   "detail": "将来时用 in + 一段时间（How soon …? 来问）；过去时用 after + 一段时间。",
+   "ex": [
+    "He will be back in two days.",
+    "He came back after two days."
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "in"
+    ],
+    [
+     "after"
+    ]
+   ]
+  },
+  {
+   "id": "mx-among-between",
+   "cat": "易混词辨析",
+   "key": "among / between",
+   "mean": "在……之间",
+   "detail": "between 两者之间（between A and B）；among 三者或以上之间。",
+   "ex": [
+    "between you and me",
+    "among the students"
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "among"
+    ],
+    [
+     "between"
+    ]
+   ]
+  },
+  {
+   "id": "mx-across-through-over",
+   "cat": "易混词辨析",
+   "key": "across / through / over",
+   "mean": "穿过",
+   "detail": "across 从表面穿过（马路、河）；through 从内部穿过（森林、窗户）；over 从上方越过。",
+   "ex": [
+    "walk across the road",
+    "walk through the forest",
+    "jump over the wall"
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "across"
+    ],
+    [
+     "through"
+    ],
+    [
+     "over"
+    ]
+   ]
+  },
+  {
+   "id": "mx-such-so",
+   "cat": "易混词辨析",
+   "key": "such / so",
+   "mean": "如此",
+   "detail": "such + (a/an +) 形容词 + 名词；so + 形容词 / 副词；so + many/much/few/little + 名词。",
+   "ex": [
+    "such a good boy",
+    "so good a boy",
+    "so many people"
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "such"
+    ],
+    [
+     "so"
+    ]
+   ]
+  },
+  {
+   "id": "mx-few-a-few-little-a-littl",
+   "cat": "易混词辨析",
+   "key": "few / a few / little / a little",
+   "mean": "少",
+   "detail": "few、a few 修饰可数名词；little、a little 修饰不可数名词；带 a 是肯定（有一些），不带 a 是否定（几乎没有）。",
+   "ex": [
+    "I have a few friends here.",
+    "There is little water left."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "few"
+    ],
+    [
+     "little"
+    ]
+   ]
+  },
+  {
+   "id": "mx-other-the-other-others-a",
+   "cat": "易混词辨析",
+   "key": "other / the other / others / another",
+   "mean": "别的；另一个",
+   "detail": "another 三者以上中的另一个；the other 两者中的另一个；others 泛指其他人；the others 其余全部。",
+   "ex": [
+    "One is red, the other is blue.",
+    "Help others."
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "other"
+    ],
+    [
+     "others"
+    ],
+    [
+     "another"
+    ]
+   ]
+  },
+  {
+   "id": "mx-raise-rise",
+   "cat": "易混词辨析",
+   "key": "raise / rise",
+   "mean": "举起 / 升起",
+   "detail": "raise 及物（raise your hand）；rise 不及物（The sun rises.）。",
+   "ex": [
+    "Raise your hand before you speak.",
+    "The sun rises in the east."
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "raise",
+     "raised",
+     "raises"
+    ],
+    [
+     "rise",
+     "rose",
+     "risen",
+     "rises"
+    ]
+   ]
+  },
+  {
+   "id": "mx-beside-besides",
+   "cat": "易混词辨析",
+   "key": "beside / besides",
+   "mean": "在旁边 / 除……之外（还）",
+   "detail": "beside 在旁边；besides 除……之外还有（包含在内），except 除……之外（不包含）。",
+   "ex": [
+    "She sat beside me.",
+    "Besides English, he can speak French."
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "beside"
+    ],
+    [
+     "besides"
+    ],
+    [
+     "except"
+    ]
+   ]
+  },
+  {
+   "id": "mx-maybe-may-be",
+   "cat": "易混词辨析",
+   "key": "maybe / may be",
+   "mean": "也许",
+   "detail": "maybe 副词，放句首；may be 情态动词 + be，放主语后面。",
+   "ex": [
+    "Maybe he is at home.",
+    "He may be at home."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "maybe"
+    ],
+    [
+     "may"
+    ]
+   ]
+  },
+  {
+   "id": "mx-everyday-every-day",
+   "cat": "易混词辨析",
+   "key": "everyday / every day",
+   "mean": "日常的 / 每天",
+   "detail": "everyday 形容词，放名词前（everyday English）；every day 副词短语，每天。",
+   "ex": [
+    "I get up early every day.",
+    "everyday life 日常生活"
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "everyday"
+    ],
+    [
+     "every"
+    ]
+   ]
+  },
+  {
+   "id": "mx-quiet-quite",
+   "cat": "易混词辨析",
+   "key": "quiet / quite",
+   "mean": "安静的 / 相当",
+   "detail": "quiet 安静的（形容词）；quite 相当（副词，quite a few 相当多）。",
+   "ex": [
+    "Please keep quiet.",
+    "It's quite hot today."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "quiet"
+    ],
+    [
+     "quite"
+    ]
+   ]
+  },
+  {
+   "id": "mx-lose-miss-loose",
+   "cat": "易混词辨析",
+   "key": "lose / miss / loose",
+   "mean": "丢失 / 错过 / 松的",
+   "detail": "lose 丢失、输；miss 错过、想念；loose 形容词，松的。",
+   "ex": [
+    "I lost my key.",
+    "I missed the bus."
+   ],
+   "level": 7,
+   "groups": [
+    [
+     "lose",
+     "lost",
+     "loses"
+    ],
+    [
+     "miss",
+     "missed",
+     "misses"
+    ],
+    [
+     "loose"
+    ]
+   ]
+  },
+  {
+   "id": "mx-win-beat",
+   "cat": "易混词辨析",
+   "key": "win / beat",
+   "mean": "赢",
+   "detail": "win 后接比赛、奖项（win the game）；beat 后接人或队（beat the other team）。",
+   "ex": [
+    "We won the match.",
+    "We beat Class 2."
+   ],
+   "level": 8,
+   "groups": [
+    [
+     "win",
+     "won",
+     "wins"
+    ],
+    [
+     "beat",
+     "beats",
+     "beaten"
+    ]
+   ]
+  },
+  {
+   "id": "ba-our-or",
+   "cat": "英美差异",
+   "key": "-our / -or",
+   "mean": "colour / color",
+   "detail": "英式拼 -our，美式拼 -or。卷子里两种都可能出现，自己写作保持统一就行。",
+   "ex": [
+    "colour / color",
+    "favourite / favorite",
+    "neighbour / neighbor",
+    "humour / humor"
+   ],
+   "words": [
+    "colour",
+    "favourite",
+    "neighbour",
+    "humour",
+    "behaviour",
+    "honour"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-re-er",
+   "cat": "英美差异",
+   "key": "-re / -er",
+   "mean": "centre / center",
+   "detail": "英式 -re，美式 -er。",
+   "ex": [
+    "centre / center",
+    "theatre / theater",
+    "metre / meter",
+    "kilometre / kilometer"
+   ],
+   "words": [
+    "centre",
+    "theatre",
+    "metre",
+    "kilometre",
+    "centimetre"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-ise-ize-l",
+   "cat": "英美差异",
+   "key": "-ise / -ize，双写 l",
+   "mean": "realise / realize；travelling / traveling",
+   "detail": "英式多用 -ise、双写 l（travelling、cancelled），美式多用 -ize、不双写。",
+   "ex": [
+    "organise / organize",
+    "travelled / traveled"
+   ],
+   "words": [
+    "realise",
+    "organise",
+    "travelling",
+    "travelled",
+    "cancelled"
+   ],
+   "level": 8
+  },
+  {
+   "id": "ba-autumn-fall",
+   "cat": "英美差异",
+   "key": "autumn / fall",
+   "mean": "秋天",
+   "detail": "英式 autumn，美式 fall（fall 也是「落下、瀑布」）。",
+   "ex": [
+    "in (the) autumn / in the fall"
+   ],
+   "words": [
+    "autumn",
+    "in the fall",
+    "in fall"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-123",
+   "cat": "英美差异",
+   "key": "楼层",
+   "mean": "ground floor / first floor",
+   "detail": "英国：ground floor 是一楼，first floor 是二楼；美国：first floor 就是一楼。",
+   "ex": [
+    "英 the first floor = 美 the second floor"
+   ],
+   "words": [
+    "ground floor",
+    "first floor",
+    "second floor"
+   ],
+   "level": 8
+  },
+  {
+   "id": "ba-124",
+   "cat": "英美差异",
+   "key": "住房和交通",
+   "mean": "flat / apartment；underground / subway；lift / elevator",
+   "detail": "前一个英式，后一个美式。",
+   "ex": [
+    "flat / apartment 公寓",
+    "underground (tube) / subway 地铁",
+    "lift / elevator 电梯",
+    "petrol / gas 汽油",
+    "car park / parking lot 停车场"
+   ],
+   "words": [
+    "apartment",
+    "apartments",
+    "underground",
+    "subway",
+    "elevator",
+    "petrol",
+    "car park",
+    "parking lot",
+    "a flat",
+    "the lift"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-125",
+   "cat": "英美差异",
+   "key": "校园和日常用词",
+   "mean": "maths / math；rubber / eraser；holiday / vacation",
+   "detail": "前一个英式，后一个美式。",
+   "ex": [
+    "maths / math",
+    "rubber / eraser 橡皮",
+    "holiday / vacation 假期",
+    "term / semester 学期",
+    "mobile phone / cell phone"
+   ],
+   "words": [
+    "maths",
+    "math",
+    "rubber",
+    "eraser",
+    "vacation",
+    "semester",
+    "mobile phone",
+    "cellphone",
+    "cell phone"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-126",
+   "cat": "英美差异",
+   "key": "吃的",
+   "mean": "biscuit / cookie；chips / French fries；sweets / candy",
+   "detail": "英式 chips 是薯条，美式 chips 是薯片（英式叫 crisps）。",
+   "ex": [
+    "biscuit / cookie 饼干",
+    "chips / French fries 薯条",
+    "crisps / chips 薯片",
+    "sweets / candy 糖果"
+   ],
+   "words": [
+    "biscuit",
+    "biscuits",
+    "cookie",
+    "cookies",
+    "chips",
+    "crisps",
+    "french fries",
+    "sweets",
+    "candy"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-football-soccer",
+   "cat": "英美差异",
+   "key": "football / soccer",
+   "mean": "足球",
+   "detail": "英式 football 就是足球；美国说 soccer，football 指美式橄榄球。",
+   "ex": [
+    "play football (英) = play soccer (美)"
+   ],
+   "words": [
+    "soccer",
+    "american football"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-film-movie-shop-store",
+   "cat": "英美差异",
+   "key": "film / movie；shop / store",
+   "mean": "电影；商店",
+   "detail": "前一个英式，后一个美式；go to the cinema / go to the movies。",
+   "ex": [
+    "film / movie",
+    "cinema / movie theater",
+    "shop / store"
+   ],
+   "words": [
+    "cinema",
+    "movie theater",
+    "go to the movies",
+    "store",
+    "stores"
+   ],
+   "level": 7
+  },
+  {
+   "id": "ba-129",
+   "cat": "英美差异",
+   "key": "日期的写法",
+   "mean": "8/10/2026 是哪天？",
+   "detail": "英式「日 / 月 / 年」（8 October 2026），美式「月 / 日 / 年」（October 8, 2026）。8/10 在英国是 10 月 8 日，在美国是 8 月 10 日。",
+   "ex": [
+    "英 8th October, 2026",
+    "美 October 8th, 2026"
+   ],
+   "words": [
+    "january",
+    "february",
+    "march",
+    "april",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december"
+   ],
+   "level": 8
+  },
+  {
+   "id": "say-you-read-my-mind",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You read my mind.",
+   "mean": "你说出了我的心里话；我正想这样",
+   "detail": "对方的提议正合自己心意时说。别和 You got me there（你把我问住了）、I see your point（我明白你的意思）弄混。",
+   "level": 7,
+   "words": [
+    "you read my mind"
+   ],
+   "ex": [
+    "—How about going to the library this afternoon? —You read my mind. Reading is my therapy."
+   ],
+   "freq": 4,
+   "src": "2022 无锡中考"
+  },
+  {
+   "id": "say-you-said-it",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You said it.",
+   "mean": "说得对；我完全同意",
+   "detail": "强烈赞同对方刚说的话。You name it（应有尽有）、You got it（你明白了）是常见干扰项。",
+   "level": 9,
+   "words": [
+    "you said it"
+   ],
+   "ex": [
+    "—All that really matters is you don’t stop trying. —You said it. I tried three times before I finally passed the driving test."
+   ],
+   "freq": 4,
+   "src": "2022 梁溪区九上期末"
+  },
+  {
+   "id": "say-you-name-it",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You name it.",
+   "mean": "凡是你说得出的都有；应有尽有",
+   "detail": "常跟在一串列举后面：Tables, sofas, cupboards, you name it.",
+   "level": 9,
+   "words": [
+    "you name it"
+   ],
+   "ex": [
+    "— I’m surprised that he can make anything you can imagine. — So am I. Tables, sofas, cupboards, you name it."
+   ],
+   "freq": 4,
+   "src": "2023 梁溪区九下中考模拟"
+  },
+  {
+   "id": "say-you-have-my-word",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You have my word.",
+   "mean": "我向你保证；我说话算数",
+   "detail": "word 在这里是「诺言」，同 keep one's word（守信）。",
+   "level": 9,
+   "words": [
+    "you have my word"
+   ],
+   "ex": [
+    "—You mean you will never be late again. Can I trust you? —You have my word, Mrs. Green. This is the last time I have come late."
+   ],
+   "freq": 3,
+   "src": "2025 锡山区九下中考模拟"
+  },
+  {
+   "id": "say-you-don-t-say",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You don't say.",
+   "mean": "真的吗？（表示惊讶）",
+   "detail": "字面像「你别说」，其实是听到意外消息时说的「是吗？真的？」；口语里也常带点讽刺，意思是「这还用你说」。",
+   "level": 9,
+   "words": [
+    "you don't say"
+   ],
+   "ex": [
+    "—Did you hear? The boss is finally giving everyone a pay raise next month! —You don’t say. I thought we’d be working for free forever."
+   ],
+   "freq": 2,
+   "src": "2025 惠山区九下中考模拟"
+  },
+  {
+   "id": "say-you-never-know",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You never know.",
+   "mean": "世事难料；说不定呢",
+   "detail": "对方太早下结论、觉得不可能时，鼓励他别放弃。",
+   "level": 9,
+   "words": [
+    "you never know"
+   ],
+   "ex": [
+    "— I honestly don’t think I am going to be accepted by the Party. — Well, you never know! You may have made a better impression than you think."
+   ],
+   "freq": 4,
+   "src": "2023 外国语学校九下中考模拟"
+  },
+  {
+   "id": "say-no-wonder",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "No wonder.",
+   "mean": "难怪；怪不得",
+   "detail": "知道原因以后恍然大悟。No wonder + 句子 = 难怪……。",
+   "level": 8,
+   "words": [
+    "no wonder"
+   ],
+   "ex": [
+    "—Chris didn’t even look at me. I did say hello to him with a big smile! — No wonder. But that is just so Chris. He’s always living in his own world."
+   ],
+   "freq": 5,
+   "src": "2025 梁溪区八下期中"
+  },
+  {
+   "id": "say-no-doubt-about-it",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "No doubt (about it).",
+   "mean": "毫无疑问；当然",
+   "detail": "完全肯定对方的话。和 No idea（不知道）、No way（不行；没门）区分。",
+   "level": 9,
+   "words": [
+    "no doubt"
+   ],
+   "ex": [
+    "—Shall we recommend Angela to lead our birdwatching project? —No doubt about it. She knows animals very well."
+   ],
+   "freq": 3,
+   "src": "2025 江阴市九下中考模拟"
+  },
+  {
+   "id": "say-not-exactly-not-really",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Not exactly. / Not really.",
+   "mean": "不完全是 / 不太是",
+   "detail": "委婉地否定。Not exactly 纠正对方说得不准确（So you mean you don't like the book? —Not exactly.）；Not really 回答「你喜欢……吗」「要帮忙吗」这类问题。",
+   "level": 8,
+   "words": [
+    "not exactly",
+    "not really"
+   ],
+   "ex": [
+    "—So you mean you don’t like the book. —Not exactly. I like the stories in the book, but I don’t like the writing style."
+   ],
+   "freq": 10,
+   "src": "2025 高新区金桥外国语学校八上期中"
+  },
+  {
+   "id": "say-that-s-a-deal",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "That's a deal.",
+   "mean": "一言为定；成交",
+   "detail": "双方谈好条件时说。",
+   "level": 7,
+   "words": [
+    "that's a deal"
+   ],
+   "ex": [
+    "—I give you nine shells, you give me two fish, OK? —That’s a deal."
+   ],
+   "freq": 3,
+   "src": "2026 藕塘中学七下期末"
+  },
+  {
+   "id": "say-out-of-the-question",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Out of the question.",
+   "mean": "不可能；办不到",
+   "detail": "注意：out of the question 是「不可能」，少了 the 的 out of question 是「毫无疑问」，意思正好相反。",
+   "level": 9,
+   "words": [
+    "out of the question"
+   ],
+   "ex": [
+    "—Are you going to visit the museum with me this afternoon? —Out of the question. I’ll be busy preparing for the paper all day long."
+   ],
+   "freq": 1,
+   "src": "2024 梁溪区九下中考模拟"
+  },
+  {
+   "id": "say-far-from-it",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Far from it.",
+   "mean": "远非如此；一点也不",
+   "detail": "强烈否定对方的看法。",
+   "level": 9,
+   "words": [
+    "far from it"
+   ],
+   "ex": [
+    "—Is Daniel the most suitable person to be our monitor? —Far from it! I’ve never met a more dishonest man."
+   ],
+   "freq": 1,
+   "src": "2024 省锡中实验学校九下中考模拟"
+  },
+  {
+   "id": "say-i-couldn-t-agree-more",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "I couldn't agree more.",
+   "mean": "我完全同意",
+   "detail": "否定词 + 比较级 = 最高程度：不可能更同意了，就是完全同意。",
+   "level": 9,
+   "words": [
+    "couldn't agree more",
+    "can't agree more"
+   ],
+   "ex": [
+    "—Many people say the temperature in Jiangyin during this national holiday was just like a roller coaster. — I couldn’t agree more. What changeable weather!"
+   ],
+   "freq": 6,
+   "src": "2022 江阴市九上期中"
+  },
+  {
+   "id": "say-couldn-t-be-better",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Couldn't be better.",
+   "mean": "再好不过了",
+   "detail": "和 I couldn't agree more 一样，否定 + 比较级表示最高程度。",
+   "level": 8,
+   "words": [
+    "couldn't be better",
+    "can't be better"
+   ],
+   "ex": [
+    "—What do you think of Jiangsu Football City League (联赛)? —Couldn’t be better. It caught the attention of the whole country."
+   ],
+   "freq": 4,
+   "src": "2025 外国语学校八上期中"
+  },
+  {
+   "id": "say-who-cares",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Who cares?",
+   "mean": "谁在乎呢？（我不在乎）",
+   "detail": "不在乎结果时说。和 Who knows?（谁知道呢）区分。",
+   "level": 9,
+   "words": [
+    "who cares"
+   ],
+   "ex": [
+    "—It looks as if we’re going to lose. —Who cares? We’ve never won a game. Not even once."
+   ],
+   "freq": 3,
+   "src": "2023 无锡中考"
+  },
+  {
+   "id": "say-you-bet",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You bet!",
+   "mean": "当然；肯定",
+   "detail": "非常肯定地回答，语气比 Sure 强。",
+   "level": 9,
+   "words": [
+    "you bet"
+   ],
+   "ex": [
+    "— Are you afraid of the snake? — You bet! It’s the last thing I want to see in the world."
+   ],
+   "freq": 3,
+   "src": "2022 惠山区九下中考模拟"
+  },
+  {
+   "id": "say-it-depends",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "It depends.",
+   "mean": "看情况；视情况而定",
+   "detail": "回答要不要做某事、喜不喜欢某物时，后面一般跟条件。近年在单选选项里出现很多次，多作干扰项。",
+   "level": 8,
+   "words": [
+    "it depends"
+   ],
+   "ex": [
+    "—Will you go hiking this weekend? —It depends. If it doesn't rain, I will."
+   ],
+   "freq": 8
+  },
+  {
+   "id": "say-i-m-with-you-on-that",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "I'm with you on that.",
+   "mean": "这一点我同意你",
+   "detail": "with sb. 在这里是「赞同某人」。",
+   "level": 9,
+   "words": [
+    "i'm with you on that"
+   ],
+   "ex": [
+    "—There are a great number of historical and cultural treasures in the Palace Museum. —I’m with you on that. I think we’d better hire an explainer so that we can learn more."
+   ],
+   "freq": 1,
+   "src": "2022 外国语学校九下中考模拟"
+  },
+  {
+   "id": "say-that-s-not-the-case",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "That's not the case.",
+   "mean": "事实并非如此",
+   "detail": "纠正对方说错的事实。case 在这里是「实情」。",
+   "level": 9,
+   "words": [
+    "that's not the case"
+   ],
+   "ex": [
+    "—Anne Frank had her diary published in 1947. —That’s not the case! It was her father."
+   ],
+   "freq": 3,
+   "src": "2024 梁溪区九上期中"
+  },
+  {
+   "id": "say-you-poor-thing",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You poor thing.",
+   "mean": "你真可怜（表示同情）",
+   "detail": "对方遭遇不顺时安慰他。不能说 You are so poor（你真穷）。",
+   "level": 9,
+   "words": [
+    "you poor thing"
+   ],
+   "ex": [
+    "— I work late every single day, but my boss still hates me. — You poor thing."
+   ],
+   "freq": 1,
+   "src": "2024 东林中学九上期末"
+  },
+  {
+   "id": "say-don-t-mention-it",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Don't mention it.",
+   "mean": "不用谢；别客气",
+   "detail": "只用来回应别人的感谢。近年 9 份卷子的选项里有它，几乎都是干扰项：对方不是在道谢就不选。",
+   "level": 7,
+   "words": [
+    "don't mention it"
+   ],
+   "ex": [
+    "—Thanks a lot for helping me with my English. —Don't mention it."
+   ],
+   "freq": 9
+  },
+  {
+   "id": "say-take-it-easy",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Take it easy.",
+   "mean": "别着急；放轻松",
+   "detail": "对方紧张、着急时安慰他。",
+   "level": 8,
+   "words": [
+    "take it easy"
+   ],
+   "ex": [
+    "—I’m going to miss the last bus if I don’t leave now! —Take it easy! I can give you a ride."
+   ],
+   "freq": 5,
+   "src": "2025 宜兴市九下中考模拟"
+  },
+  {
+   "id": "say-never-mind-it-doesn-t-ma",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Never mind. / It doesn't matter.",
+   "mean": "没关系；别在意",
+   "detail": "回应别人的道歉，或者安慰别人。近年 6 份卷子的选项里有它，多作干扰项：对方没道歉、没难过就不选。",
+   "level": 7,
+   "words": [
+    "never mind",
+    "it doesn't matter"
+   ],
+   "ex": [
+    "—Sorry, I broke your pen. —Never mind. I have another one."
+   ],
+   "freq": 7
+  },
+  {
+   "id": "say-sure-thing",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Sure thing.",
+   "mean": "当然可以；没问题",
+   "detail": "爽快地答应请求，比 Sure 更口语。",
+   "level": 9,
+   "words": [
+    "sure thing"
+   ],
+   "ex": [
+    "—Can I have a day off tomorrow, Mr. Johnson? — Sure thing. I can manage without you."
+   ],
+   "freq": 1,
+   "src": "2025 梁溪区九下中考模拟"
+  },
+  {
+   "id": "say-are-you-serious-you-re-k",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Are you serious? / You're kidding.",
+   "mean": "你是认真的吗？/ 你在开玩笑吧",
+   "detail": "听到难以相信的事时说，表示惊讶或怀疑。",
+   "level": 8,
+   "words": [
+    "are you serious",
+    "you're kidding",
+    "are you kidding"
+   ],
+   "ex": [
+    "—Madam, you are fined ¥200 for running a stop light. Please sign here. —Fined? Are you serious?"
+   ],
+   "freq": 5,
+   "src": "2025 宜兴市九下中考模拟"
+  },
+  {
+   "id": "say-why-not",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Why not?",
+   "mean": "为什么不呢；好啊",
+   "detail": "爽快地同意对方的建议。Why not do sth.? 也是提建议的句型。",
+   "level": 7,
+   "words": [
+    "why not"
+   ],
+   "ex": [
+    "—Would you like to try DeepSeek in your study, Suzy? —Why not? It can answer my different questions."
+   ],
+   "freq": 15,
+   "src": "2025 惠山区八下期末"
+  },
+  {
+   "id": "say-what-a-pity",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "What a pity!",
+   "mean": "真遗憾；太可惜了",
+   "detail": "表示惋惜。和 What a surprise!（真意外）、Shame on you!（真丢人）区分。",
+   "level": 7,
+   "words": [
+    "what a pity"
+   ],
+   "ex": [
+    "—Would you like to go to the concert with me this Friday? —Oh, I’m going to the cinema with Sam. What a pity! Why didn’t you tell me earlier?"
+   ],
+   "freq": 6,
+   "src": "2024 无锡中考"
+  },
+  {
+   "id": "say-i-don-t-buy-it",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "I don't buy it.",
+   "mean": "我不信",
+   "detail": "buy 在这里是「相信」。",
+   "level": 9,
+   "words": [
+    "i don't buy it"
+   ],
+   "ex": [
+    "—I didn’t tell anybody your secret. I’m clear. —Oh, I don’t buy it! You big mouth!"
+   ],
+   "freq": 1,
+   "src": "2024 省锡中教育集团九下中考模拟"
+  },
+  {
+   "id": "say-that-s-for-sure",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "That's for sure.",
+   "mean": "那是肯定的",
+   "detail": "完全肯定，和 No doubt 意思接近。",
+   "level": 9,
+   "words": [
+    "that's for sure"
+   ],
+   "ex": [
+    "—Are you going to take part in the English speaking competition？ —That's for sure. It's too good a chance to miss."
+   ],
+   "freq": 2,
+   "src": "2023 无锡市九上期末"
+  },
+  {
+   "id": "say-come-on",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Come on.",
+   "mean": "得了吧；别闹了（也可以是「加油」「快点」）",
+   "detail": "不相信对方的话、或者觉得对方要求过分时说；另有「加油」「快点」的意思，要看语境。",
+   "level": 8,
+   "words": [
+    "come on"
+   ],
+   "ex": [
+    "—You know what? I’ve got a ticket for the FIFA World Cup 2026. —Oh, come on. You’re kidding."
+   ],
+   "freq": 9,
+   "src": "2024 侨谊教育集团九上期末"
+  },
+  {
+   "id": "say-i-bet-you-did",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "I bet you did.",
+   "mean": "我相信你确实这么做了",
+   "detail": "bet 在这里是「敢肯定」，I bet you did = 我相信你肯定做了。2025 梁溪区八下期中 Chris 那道题里它是干扰项（原卷答案 No wonder）。",
+   "level": 8,
+   "words": [
+    "i bet you did"
+   ],
+   "ex": [
+    "—I tried my best in the final exam. —I bet you did. Don't worry about the result."
+   ],
+   "freq": 2
+  },
+  {
+   "id": "say-it-came-as-no-surprise",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "It came as no surprise.",
+   "mean": "一点也不意外",
+   "detail": "come as a surprise 是「出乎意料」，加 no 就是在意料之中。",
+   "level": 8,
+   "words": [
+    "came as no surprise",
+    "comes as no surprise"
+   ],
+   "ex": [
+    "—The team lost the game again. —Well, it came as no surprise. They never practised hard."
+   ],
+   "freq": 1,
+   "src": "2025 梅里中学八上期中"
+  },
+  {
+   "id": "say-sure-go-ahead",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Sure, go ahead.",
+   "mean": "当然，你说吧 / 请便",
+   "detail": "同意对方做某事。和 Help yourself（请随便吃）、It's a pleasure（乐意效劳）区分。",
+   "level": 9,
+   "words": [
+    "go ahead"
+   ],
+   "ex": [
+    "—Mr Smith, would you please spare me a few minutes? I still have some questions about the agreement. —Sure, go ahead."
+   ],
+   "freq": 2,
+   "src": "2024 省锡中实验学校九下中考模拟"
+  },
+  {
+   "id": "say-how-come",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "How come?",
+   "mean": "怎么会？为什么？",
+   "detail": "表示惊讶的「为什么」，后面跟陈述句语序：How come he is late?",
+   "level": 9,
+   "words": [
+    "how come"
+   ],
+   "ex": [
+    "—Miss Wang thinks Jack is not working hard these days. —How come! He is anything but lazy. I always see him working on math problems at school."
+   ],
+   "freq": 2,
+   "src": "2025 外国语学校九下中考模拟"
+  },
+  {
+   "id": "say-i-m-sorry-to-hear-that",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "I'm sorry to hear that.",
+   "mean": "听到这个我很难过",
+   "detail": "对方遇到坏事（生病、受伤、丢东西）时说。",
+   "level": 7,
+   "words": [
+    "sorry to hear that"
+   ],
+   "ex": [
+    "—Jimmy fell off the bike and hurt his leg on his way to school. —I'm sorry to hear that. I hope he gets better soon."
+   ],
+   "freq": 3,
+   "src": "2025 江阴市八上期末"
+  },
+  {
+   "id": "say-good-luck",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "Good luck!",
+   "mean": "祝你好运",
+   "detail": "对方要去考试、比赛时说。",
+   "level": 7,
+   "words": [
+    "good luck"
+   ],
+   "ex": [
+    "—I’m going to join the school chess competition (竞赛) this Friday. —Good luck! Your skills are great after practising every day."
+   ],
+   "freq": 3,
+   "src": "2025 东林集团七上期中"
+  },
+  {
+   "id": "say-i-m-afraid-not",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "I'm afraid not.",
+   "mean": "恐怕不行",
+   "detail": "委婉地拒绝。I'm afraid so. 是「恐怕是这样」（肯定）。",
+   "level": 7,
+   "words": [
+    "i'm afraid not"
+   ],
+   "ex": [
+    "—Can you go shopping with me this weekend? —I’m afraid not. I’ll go to the Helping Hands Club."
+   ],
+   "freq": 5,
+   "src": "2026 长泾第二中学七上阶段测试"
+  },
+  {
+   "id": "say-you-must-check-it-out",
+   "cat": "谚语俗语",
+   "kind": "交际",
+   "key": "You must check it out.",
+   "mean": "你一定要去看看",
+   "detail": "check out 在这里是「去看看、了解一下」，推荐东西时常用。",
+   "level": 8,
+   "words": [
+    "check it out"
+   ],
+   "ex": [
+    "—I’ve been trying to find a good science fiction. Any recommendation? —Sure! There’s one called “*Undercover Robot*”. You must check it out."
+   ],
+   "freq": 1,
+   "src": "2026 大桥实验学校八下期中"
+  },
+  {
+   "id": "say-every-dog-has-its-day",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Every dog has its day.",
+   "mean": "人人都有得意的时候",
+   "detail": "安慰、鼓励眼下不顺的人：现在不行，不代表以后不行。",
+   "level": 9,
+   "words": [
+    "every dog has its day"
+   ],
+   "ex": [
+    "—He is too short to be a basketball player. —It’s hard to say. Every dog has its day."
+   ],
+   "topics": [
+    "成长",
+    "励志",
+    "逆袭"
+   ],
+   "freq": 13,
+   "src": "2025 宜兴市九下中考模拟"
+  },
+  {
+   "id": "say-many-hands-make-light-wo",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Many hands make light work.",
+   "mean": "人多好办事；众人拾柴火焰高",
+   "detail": "大家一起干，活就轻松了。说志愿活动、团队合作时常用。",
+   "level": 9,
+   "words": [
+    "many hands make light work"
+   ],
+   "ex": [
+    "—My brother is also going to join us in helping the homeless. —Great! Many hands make light work."
+   ],
+   "topics": [
+    "合作",
+    "团队",
+    "志愿",
+    "公益",
+    "社区",
+    "马拉松"
+   ],
+   "freq": 11,
+   "src": "2024 省锡中实验学校九下中考模拟"
+  },
+  {
+   "id": "say-practice-makes-perfect",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Practice makes perfect.",
+   "mean": "熟能生巧",
+   "detail": "练得多了自然就做得好。说比赛、学习、乐器时常用。",
+   "level": 8,
+   "words": [
+    "practice makes perfect"
+   ],
+   "ex": [
+    "—Julie was playing the piano every time I saw her. —You know practice makes perfect."
+   ],
+   "topics": [
+    "学习",
+    "练习",
+    "比赛",
+    "赛事",
+    "体育",
+    "音乐",
+    "功夫",
+    "象棋"
+   ],
+   "freq": 8,
+   "src": "2022 无锡中考"
+  },
+  {
+   "id": "say-actions-speak-louder-tha",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Actions speak louder than words.",
+   "mean": "行动胜于言语",
+   "detail": "光说不做没用。近年 7 份卷子的选项里有它。",
+   "level": 8,
+   "words": [
+    "actions speak louder than words"
+   ],
+   "ex": [
+    "—I promise I'll keep my room clean from now on. —Well, actions speak louder than words."
+   ],
+   "topics": [
+    "环保",
+    "公益",
+    "志愿",
+    "文明"
+   ],
+   "freq": 7
+  },
+  {
+   "id": "say-it-never-rains-but-it-po",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "It never rains but it pours.",
+   "mean": "祸不单行",
+   "detail": "字面是「不下则已，一下倾盆」，倒霉事接二连三时说。",
+   "level": 9,
+   "words": [
+    "it never rains but"
+   ],
+   "ex": [
+    "— I was caught in the rain on my way home and I left my phone on the bus. What’s worse, I’ve got a cold now. —It never rains but it pours."
+   ],
+   "freq": 8,
+   "src": "2025 外国语学校九下中考模拟"
+  },
+  {
+   "id": "say-no-pains-no-gains",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "No pains, no gains.",
+   "mean": "不劳无获",
+   "detail": "想有收获就得付出努力。",
+   "level": 8,
+   "words": [
+    "no pains, no gains",
+    "no pain, no gain"
+   ],
+   "ex": [
+    "—I practise the piano for two hours every day. It's really tiring. —No pains, no gains."
+   ],
+   "topics": [
+    "学习",
+    "成长",
+    "运动",
+    "体育"
+   ],
+   "freq": 6
+  },
+  {
+   "id": "say-the-early-bird-catches-t",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "The early bird catches the worm.",
+   "mean": "早起的鸟儿有虫吃",
+   "detail": "做事趁早才有好结果。an early bird 也指早起的人。",
+   "level": 8,
+   "words": [
+    "early bird",
+    "early birds"
+   ],
+   "ex": [
+    "—I didn’t expect to see you studying at the library so early in the morning. —The early bird catches the worm, huh?"
+   ],
+   "topics": [
+    "习惯",
+    "作息",
+    "学习方法"
+   ],
+   "freq": 6,
+   "src": "2024 省锡中实验学校九下中考模拟"
+  },
+  {
+   "id": "say-don-t-put-all-your-eggs-",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Don't put all your eggs in one basket.",
+   "mean": "别把鸡蛋都放在一个篮子里",
+   "detail": "别孤注一掷，要留后路（plan B）。",
+   "level": 8,
+   "words": [
+    "eggs in one basket"
+   ],
+   "ex": [
+    "—Sam, I think you need to have a plan B. It’s unwise to put all your eggs in one basket. —OK. Nobody can be certain of what is going to happen in the future."
+   ],
+   "topics": [
+    "职业",
+    "招聘",
+    "选择"
+   ],
+   "freq": 8,
+   "src": "2025 惠山区八下期末"
+  },
+  {
+   "id": "say-where-there-is-a-will-th",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Where there is a will, there is a way.",
+   "mean": "有志者事竟成",
+   "detail": "只要下定决心，总能找到办法。",
+   "level": 8,
+   "words": [
+    "where there is a will",
+    "where there's a will"
+   ],
+   "ex": [
+    "—I've failed the driving test twice. —Don't give up. Where there is a will, there is a way."
+   ],
+   "topics": [
+    "梦想",
+    "理想",
+    "成长"
+   ],
+   "freq": 1
+  },
+  {
+   "id": "say-a-friend-in-need-is-a-fr",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "A friend in need is a friend indeed.",
+   "mean": "患难见真情",
+   "detail": "在你需要帮助时伸手的才是真朋友。",
+   "level": 8,
+   "words": [
+    "a friend in need"
+   ],
+   "ex": [
+    "—Tom lent me his notes when I was ill. —A friend in need is a friend indeed."
+   ],
+   "topics": [
+    "友谊",
+    "交友",
+    "朋友"
+   ],
+   "freq": 2
+  },
+  {
+   "id": "say-better-late-than-never",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Better late than never.",
+   "mean": "迟做总比不做好",
+   "detail": "现在开始还来得及。",
+   "level": 9,
+   "words": [
+    "better late than never"
+   ],
+   "ex": [
+    "—The high school entrance examination is coming, but I haven’t got anything ready. —Start now! Better late than never."
+   ],
+   "topics": [
+    "学习",
+    "阅读"
+   ],
+   "freq": 2,
+   "src": "2023 惠山区九上期中"
+  },
+  {
+   "id": "say-you-are-never-too-old-to",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "You are never too old to learn.",
+   "mean": "活到老，学到老",
+   "detail": "多大年纪都可以学新东西。",
+   "level": 9,
+   "words": [
+    "never too old to learn"
+   ],
+   "ex": [
+    "—My grandma is learning to use a smartphone at 70. —You are never too old to learn."
+   ],
+   "topics": [
+    "学习",
+    "老人",
+    "阅读"
+   ],
+   "freq": 2
+  },
+  {
+   "id": "say-two-heads-are-better-tha",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Two heads are better than one.",
+   "mean": "三个臭皮匠，顶个诸葛亮",
+   "detail": "两个人一起想办法比一个人强。",
+   "level": 9,
+   "words": [
+    "two heads are better than one"
+   ],
+   "ex": [
+    "—I have tried very hard to solve the problem, but failed. —Why not ask our monitor for help? You see, two heads are better than one."
+   ],
+   "topics": [
+    "合作",
+    "团队",
+    "友谊"
+   ],
+   "freq": 2,
+   "src": "2023 外国语学校九下中考模拟"
+  },
+  {
+   "id": "say-a-miss-is-as-good-as-a-m",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "A miss is as good as a mile.",
+   "mean": "失之毫厘，谬以千里；差一点也是没做到",
+   "detail": "只差一点也是失败，提醒人重视细节。",
+   "level": 9,
+   "words": [
+    "a miss is as good as a mile"
+   ],
+   "ex": [
+    "— John was nearly chosen as the chief designer. What a pity a small mistake cost him the great chance! — A miss is as good as a mile."
+   ],
+   "topics": [
+    "比赛",
+    "考试"
+   ],
+   "freq": 5,
+   "src": "2025 惠山区九下中考模拟"
+  },
+  {
+   "id": "say-don-t-burn-the-candle-at",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Don't burn the candle at both ends.",
+   "mean": "别蜡烛两头烧（别过度劳累）",
+   "detail": "又熬夜又早起，身体会吃不消。",
+   "level": 9,
+   "words": [
+    "burn the candle at both ends"
+   ],
+   "ex": [
+    "—Don’t stay up late to finish your report, or you may be tired out. —OK, I won’t. Just as the saying goes, “don’t burn the candle at both ends”."
+   ],
+   "topics": [
+    "健康",
+    "压力",
+    "睡眠"
+   ],
+   "freq": 5,
+   "src": "2024 新吴区九下中考模拟"
+  },
+  {
+   "id": "say-experience-is-the-mother",
+   "cat": "谚语俗语",
+   "kind": "谚语",
+   "key": "Experience is the mother of wisdom.",
+   "mean": "经验是智慧之母",
+   "detail": "多尝试、多经历才能变聪明。",
+   "level": 9,
+   "words": [
+    "experience is the mother of wisdom"
+   ],
+   "ex": [
+    "—Mum, will it really work if I follow the instructions to do the chemistry test? —Why not have a try? Experience is the mother of wisdom."
+   ],
+   "topics": [
+    "实验",
+    "经历"
+   ],
+   "freq": 1,
+   "src": "2022 外国语学校九下中考模拟"
+  },
+  {
+   "id": "idm-ask-for-the-moon",
+   "cat": "习语",
+   "key": "ask for the moon",
+   "mean": "异想天开；要求得不到的东西",
+   "detail": "字面是「要月亮」。",
+   "level": 9,
+   "words": [
+    "ask for the moon"
+   ],
+   "ex": [
+    "—Shall I have another 5-day holiday this month, mom? —Come on. Don't ask for the moon, baby."
+   ],
+   "src": "2023 外国语学校九下中考模拟",
+   "freq": 1
+  },
+  {
+   "id": "idm-a-big-mouth",
+   "cat": "习语",
+   "key": "a big mouth",
+   "mean": "大嘴巴；守不住秘密的人",
+   "level": 9,
+   "words": [
+    "big mouth"
+   ],
+   "ex": [
+    "—I didn't tell anybody your secret. I'm clear. —Oh, I don't buy it! You big mouth!"
+   ],
+   "src": "2024 省锡中教育集团九下中考模拟",
+   "freq": 2
+  },
+  {
+   "id": "idm-a-green-hand",
+   "cat": "习语",
+   "key": "a green hand",
+   "mean": "新手；没经验的人",
+   "detail": "green 在这里是「没经验的」。",
+   "level": 8,
+   "words": [
+    "green hand"
+   ],
+   "ex": [
+    "He is a green hand at cooking, so be patient with him."
+   ],
+   "freq": 3
+  },
+  {
+   "id": "idm-have-a-sweet-tooth",
+   "cat": "习语",
+   "key": "have a sweet tooth",
+   "mean": "爱吃甜食",
+   "detail": "tooth 用单数。",
+   "level": 7,
+   "words": [
+    "sweet tooth"
+   ],
+   "ex": [
+    "Sandy has great love for sugary foods, such as cakes, chocolate and coke. She has a sweet tooth."
+   ],
+   "src": "2025 宜兴市七上期末",
+   "freq": 2
+  },
+  {
+   "id": "idm-second-to-none",
+   "cat": "习语",
+   "key": "second to none",
+   "mean": "首屈一指；谁也比不上",
+   "detail": "字面是「不比任何人差」。",
+   "level": 8,
+   "words": [
+    "second to none"
+   ],
+   "ex": [
+    "—How do you like Simon’s singing skills? —He is second to none. No one in our school can do better."
+   ],
+   "src": "2026 新吴实验中学八下期中",
+   "freq": 2
+  },
+  {
+   "id": "idm-a-lucky-dog",
+   "cat": "习语",
+   "key": "a lucky dog",
+   "mean": "幸运儿",
+   "detail": "dog 在口语里可以指「家伙」，a lucky dog 不是骂人。",
+   "level": 8,
+   "words": [
+    "lucky dog"
+   ],
+   "ex": [
+    "You won the first prize again? You lucky dog!"
+   ],
+   "freq": 1
+  },
+  {
+   "id": "idm-good-for-nothing",
+   "cat": "习语",
+   "key": "good for nothing",
+   "mean": "一无是处的",
+   "level": 8,
+   "words": [
+    "good for nothing"
+   ],
+   "ex": [
+    "He is lazy and good for nothing."
+   ],
+   "freq": 1
+  },
+  {
+   "id": "idm-a-black-eye",
+   "cat": "习语",
+   "key": "a black eye",
+   "mean": "（被打得）乌青的眼圈",
+   "detail": "不是「黑眼睛」，黑眼睛是 dark eyes。",
+   "level": 8,
+   "words": [
+    "black eye"
+   ],
+   "ex": [
+    "He got a black eye in the fight."
+   ],
+   "freq": 1
+  },
+  {
+   "id": "idm-up-in-the-air",
+   "cat": "习语",
+   "key": "up in the air",
+   "mean": "悬而未决；还没定下来",
+   "level": 9,
+   "words": [
+    "up in the air"
+   ],
+   "ex": [
+    "Our holiday plans are still up in the air."
+   ],
+   "freq": 1
+  },
+  {
+   "id": "idm-have-a-bit-of-everything",
+   "cat": "习语",
+   "key": "have a bit of everything",
+   "mean": "什么都有一点；应有尽有",
+   "level": 8,
+   "words": [
+    "a bit of everything"
+   ],
+   "ex": [
+    "This town is amazing. In its market, you can find fresh fruit, hand-made crafts, delicious snacks and even local books. It truly has a bit of everything."
+   ],
+   "src": "2026 大桥实验学校八下期中",
+   "freq": 1
+  },
+  {
+   "id": "cu-194",
+   "cat": "文化常识",
+   "key": "中国传统节日的英文",
+   "mean": "Spring Festival / Dragon Boat Festival / Mid-Autumn Festival",
+   "detail": "写作、阅读常考。节日名首字母大写，前面不加 the。",
+   "ex": [
+    "Spring Festival 春节",
+    "Lantern Festival 元宵节",
+    "Qingming Festival / Tomb-sweeping Day 清明节",
+    "Dragon Boat Festival 端午节",
+    "Mid-Autumn Festival 中秋节",
+    "Double Ninth Festival 重阳节"
+   ],
+   "topics": [
+    "节日",
+    "传统文化",
+    "春节",
+    "中秋",
+    "端午",
+    "元宵"
+   ],
+   "words": [
+    "festival",
+    "mooncake",
+    "mooncakes",
+    "dumplings",
+    "zongzi",
+    "lantern"
+   ],
+   "level": 7
+  },
+  {
+   "id": "cu-195",
+   "cat": "文化常识",
+   "key": "中国传统文化的英文表达",
+   "mean": "paper-cutting / Peking Opera / calligraphy",
+   "detail": "介绍中国文化的作文常用。",
+   "ex": [
+    "paper-cutting 剪纸",
+    "Peking Opera 京剧",
+    "Chinese knot 中国结",
+    "calligraphy 书法",
+    "kung fu 功夫",
+    "porcelain / china 瓷器",
+    "chopsticks 筷子",
+    "the Silk Road 丝绸之路"
+   ],
+   "topics": [
+    "传统文化",
+    "非物质文化遗产",
+    "非遗",
+    "工艺",
+    "瓷器",
+    "书法",
+    "功夫",
+    "京剧",
+    "剪纸",
+    "筷子"
+   ],
+   "words": [
+    "paper-cutting",
+    "peking opera",
+    "calligraphy",
+    "kung fu",
+    "chinese knot",
+    "porcelain"
+   ],
+   "level": 7
+  },
+  {
+   "id": "cu-christmas",
+   "cat": "文化常识",
+   "key": "圣诞节 Christmas",
+   "mean": "12 月 25 日",
+   "detail": "西方最重要的节日：装饰圣诞树、互送礼物，孩子们相信圣诞老人（Santa Claus）晚上从烟囱进来送礼物。",
+   "ex": [
+    "Merry Christmas! 圣诞快乐！",
+    "Christmas Eve 平安夜（12 月 24 日）"
+   ],
+   "topics": [
+    "节日",
+    "圣诞",
+    "购物",
+    "礼物"
+   ],
+   "words": [
+    "christmas",
+    "santa"
+   ],
+   "level": 7
+  },
+  {
+   "id": "cu-thanksgiving",
+   "cat": "文化常识",
+   "key": "感恩节 Thanksgiving",
+   "mean": "美国：11 月第四个星期四",
+   "detail": "家人团聚吃火鸡（turkey），感谢过去一年得到的帮助。",
+   "ex": [
+    "Thanksgiving Day 感恩节",
+    "give thanks to sb. 向某人表示感谢"
+   ],
+   "topics": [
+    "节日",
+    "感恩",
+    "家庭"
+   ],
+   "words": [
+    "thanksgiving",
+    "turkey"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-halloween",
+   "cat": "文化常识",
+   "key": "万圣节 Halloween",
+   "mean": "10 月 31 日",
+   "detail": "孩子们穿上奇装异服挨家挨户要糖（trick or treat，不给糖就捣蛋），用南瓜做灯笼（jack-o'-lantern）。",
+   "ex": [
+    "Trick or treat! 不给糖就捣蛋！"
+   ],
+   "topics": [
+    "节日",
+    "万圣"
+   ],
+   "words": [
+    "halloween",
+    "pumpkin"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-199",
+   "cat": "文化常识",
+   "key": "餐桌礼仪：中西对比",
+   "mean": "刀叉、主人夹菜",
+   "detail": "西餐左手拿叉、右手拿刀，嘴里有食物时不说话；中国主人常给客人夹菜，筷子不能竖插在米饭里。",
+   "ex": [
+    "Don't talk with your mouth full. 嘴里有食物时别说话。",
+    "table manners 餐桌礼仪"
+   ],
+   "topics": [
+    "饮食",
+    "礼仪",
+    "餐桌",
+    "饮食文化",
+    "筷子"
+   ],
+   "words": [
+    "table manners",
+    "chopsticks",
+    "knife",
+    "fork"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-200",
+   "cat": "文化常识",
+   "key": "别问年龄和收入",
+   "mean": "西方的隐私话题",
+   "detail": "和西方人聊天，一般不问年龄、收入、体重、婚姻这些隐私；可以聊天气、爱好、运动。",
+   "ex": [
+    "It's impolite to ask a woman her age. 问女士年龄是不礼貌的。"
+   ],
+   "topics": [
+    "礼仪",
+    "交友",
+    "外国"
+   ],
+   "words": [
+    "privacy",
+    "impolite",
+    "rude to ask"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-201",
+   "cat": "文化常识",
+   "key": "怎么回应夸奖",
+   "mean": "说 Thank you，不说「哪里哪里」",
+   "detail": "中国人被夸常说「哪里哪里」；英语里直接说 Thank you. 才自然，说 No, no 反而会让对方尴尬。",
+   "ex": [
+    "A: Your English is very good! B: Thank you."
+   ],
+   "topics": [
+    "礼仪",
+    "交友"
+   ],
+   "words": [
+    "compliment",
+    "compliments",
+    "praise"
+   ],
+   "level": 7
+  },
+  {
+   "id": "cu-202",
+   "cat": "文化常识",
+   "key": "英文名字的顺序",
+   "mean": "名在前、姓在后",
+   "detail": "Jim Green 中 Jim 是名（first / given name），Green 是姓（last / family name）；称呼老师用 Mr. / Ms. + 姓。",
+   "ex": [
+    "Mr. Green ✓   Mr. Jim ✗"
+   ],
+   "topics": [
+    "人物",
+    "介绍",
+    "新同学",
+    "交友"
+   ],
+   "words": [
+    "first name",
+    "last name",
+    "family name",
+    "given name",
+    "surname"
+   ],
+   "level": 7
+  },
+  {
+   "id": "cu-203",
+   "cat": "文化常识",
+   "key": "颜色的含义",
+   "mean": "red / white / blue / green",
+   "detail": "红色在中国象征喜庆，白色在西方婚礼上象征纯洁；英语里 blue 可以表示忧郁（feel blue），green 可以表示没经验（a green hand）或嫉妒。",
+   "ex": [
+    "feel blue 心情低落",
+    "a green hand 新手",
+    "a white lie 善意的谎言"
+   ],
+   "topics": [
+    "颜色"
+   ],
+   "words": [
+    "feel blue",
+    "green hand",
+    "white lie",
+    "red envelope",
+    "red packet"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-204",
+   "cat": "文化常识",
+   "key": "数字的忌讳",
+   "mean": "13 / 4 / 8",
+   "detail": "西方很多人觉得 13 不吉利（有的楼没有 13 层）；中国人忌讳 4、喜欢 8。",
+   "ex": [
+    "Friday the 13th 黑色星期五"
+   ],
+   "topics": [
+    "数字"
+   ],
+   "words": [
+    "thirteen",
+    "13th",
+    "unlucky",
+    "lucky number"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-205",
+   "cat": "文化常识",
+   "key": "给小费",
+   "mean": "美国餐馆一般付 15%–20%",
+   "detail": "在美国的餐馆、出租车上，习惯给服务员小费（tip）；中国一般不用。",
+   "ex": [
+    "leave a tip 留小费"
+   ],
+   "topics": [
+    "饮食",
+    "旅游",
+    "餐馆"
+   ],
+   "words": [
+    "waiter",
+    "waitress",
+    "a tip",
+    "tip the"
+   ],
+   "level": 9
+  },
+  {
+   "id": "cu-queue",
+   "cat": "文化常识",
+   "key": "排队 queue",
+   "mean": "英国人很讲究排队",
+   "detail": "英国叫 queue，美国叫 line；插队叫 cut in line / jump the queue，非常不礼貌。",
+   "ex": [
+    "Please wait in line. 请排队。"
+   ],
+   "topics": [
+    "礼仪",
+    "社区",
+    "规则",
+    "文明"
+   ],
+   "words": [
+    "queue",
+    "in line",
+    "wait in line",
+    "cut in"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-207",
+   "cat": "文化常识",
+   "key": "生日习俗",
+   "mean": "生日蛋糕 / 长寿面",
+   "detail": "西方过生日吹蜡烛、许愿（make a wish）、唱生日歌；中国传统上吃长寿面（long noodles）、煮鸡蛋。",
+   "ex": [
+    "Make a wish and blow out the candles! 许个愿，吹蜡烛！"
+   ],
+   "topics": [
+    "生日",
+    "派对",
+    "家庭"
+   ],
+   "words": [
+    "birthday cake",
+    "make a wish",
+    "candles",
+    "long noodles"
+   ],
+   "level": 7
+  },
+  {
+   "id": "cu-208",
+   "cat": "文化常识",
+   "key": "龙在中西方",
+   "mean": "dragon",
+   "detail": "龙在中国象征吉祥和力量（中国人自称龙的传人）；在很多西方故事里，dragon 是会喷火的怪兽。",
+   "ex": [
+    "the Dragon Boat Festival 端午节"
+   ],
+   "topics": [
+    "龙",
+    "传统文化",
+    "动物"
+   ],
+   "words": [
+    "dragon",
+    "dragons"
+   ],
+   "level": 8
+  },
+  {
+   "id": "cu-209",
+   "cat": "文化常识",
+   "key": "英美的年级说法",
+   "mean": "Grade 8 / Year 9",
+   "detail": "美国用 grade（Grade 8 = 八年级，middle school 初中）；英国用 year（Year 9 大致相当于中国八年级）。",
+   "ex": [
+    "I'm in Grade 8. 我上八年级。"
+   ],
+   "topics": [
+    "校园",
+    "学校",
+    "校园生活"
+   ],
+   "words": [
+    "grade 7",
+    "grade 8",
+    "grade 9",
+    "year 7",
+    "year 8",
+    "year 9",
+    "middle school"
+   ],
+   "level": 7
+  }
+ ]
+}
