@@ -336,7 +336,7 @@ const pick = (v, opts, d) => (opts.includes(v) ? v : d);
 export function settingsLine(st, lesson) {
     if (!st || typeof st !== "object") return "（没填）";
     const usual = num(st.minutes, 40, 240, 120);
-    const lt = pick(st.lessonType, ["一对一", "小班"], "一对一"), dic = num(st.dictation, 0, 30, 0), rec = num(st.recap, 0, 30, 0), focus = num(st.focusTypes, 0, 6, 0), ext = extrasMinutes(st);
+    const lt = pick(st.lessonType === "小班" ? "一对多" : st.lessonType, ["一对一", "一对多"], "一对一"), dic = num(st.dictation, 0, 30, 0), rec = num(st.recap, 0, 30, 0), focus = num(st.focusTypes, 0, 6, 0), ext = extrasMinutes(st);
     return [
         `课型${lt}，一次课平时 ${usual} 分钟${lesson && lesson !== usual ? `（这次课 ${lesson} 分钟，以这次为准）` : ""}，每周 ${num(st.perWeek, 1, 7, 2)} 次`,
         dic || rec || ext ? `固定环节：${[dic && `开头单词默写 ${dic} 分钟`, ext && `${EXTRAS_NAME} ${ext} 分钟（内容系统已经挑好，环节名就叫「${EXTRAS_NAME}」，不练题型）`, rec && `结尾错题回顾 ${rec} 分钟`].filter(Boolean).join("、")}` : "没有固定环节",
@@ -474,7 +474,8 @@ function materials(p) {
     const st = p.student, at = attnLine(st.attention);
     return [
         `【学生】${clip(st.name, 10)}，${clip(st.gradeLabel, 30)}，${clip(st.schoolLabel, 40)}${at ? "；" + at : ""}`,
-        st.profile ? `【学生画像（老师拖光谱填的，0–100）】${clip(st.profile, 500)}` : "",
+        st.group?.length ? `【一对多】这节课 ${st.group.length} 个学生一起上：${st.group.join("、")}。【学生档案】【薄弱知识点】是他们合起来的，记忆前面写着是谁的` : "",
+        st.profile ? `【学生画像（老师拖光谱填的，0–100）】${clip(st.profile, 1500)}` : "",
         `【学生档案】\n${p.studentMems.map(memLine).join("\n") || "（空）"}`,
         p.weakKps ? `【薄弱知识点（按课次记录累计）】${clip(p.weakKps, 300)}` : "",
         `【老师档案】\n${p.teacherMems.map(memLine).join("\n") || "（空）"}`,
@@ -491,7 +492,7 @@ function materials(p) {
 
 // 第一步：排大纲（JSON），老师在页面上改完再写成教案
 export function outlineMessages(p, items) {
-    const sys = `你是无锡初中英语老师的备课助手。先给一次课（一对一）排教案大纲，老师确认、修改以后再写成完整教案。
+    const sys = `你是无锡初中英语老师的备课助手。先给一次课（${p.student?.group?.length ? "一对多" : "一对一"}）排教案大纲，老师确认、修改以后再写成完整教案。
 
 ${FOUR}
 
@@ -508,7 +509,8 @@ ${FOUR}
 - sections 按上课顺序排，分钟数加起来等于课时；各题型的分钟数大致按【本次占比】；【老师设置】里的固定环节（开头默写、课外知识补充、结尾回顾）按设置的分钟数排进去。
 - 课后作业照【老师设置】的时长上限和范围留。${p.student?.attention === "容易分心" ? `
 - 这个学生注意力容易分散：每个环节不超过 ${p.attentionMax} 分钟；讲和练交替，讲 5–8 分钟就让学生动手；每两个讲解环节之间插一个 3–5 分钟的动手小环节（圈线索词、画时间轴、抢答、配对），points 里写清楚怎么做。` : ""}
-- 每道例题至少用在一个环节里；items 只能填材料里的 E 编号。
+${p.student?.group?.length ? `- 这是一对多的课：几个人共同的薄弱点放进全组一起讲的环节；只有个别人有的问题，放进练习环节分层安排，points 里点名写清楚谁做哪道、先讲给谁；注意力按最需要照顾的那个学生安排；title 用组名。
+` : ""}- 每道例题至少用在一个环节里；items 只能填材料里的 E 编号。
 - points 要具体：这几道题考什么、这个学生容易错在哪（对照薄弱点）、照老师的讲题习惯怎么讲。
 ${CITE}
 - type 只能从这些里选：${TYPES.join("、")}，或空字符串。
@@ -624,7 +626,7 @@ ${tpl.sections.some((x) => x.kind === "basis") ? `- 「${tpl.sections.find((x) =
 ` : ""}- 教案是给老师上课用的：不要在里面复述这些写作规则（比如「不照抄」「不推测」「以大纲为准」）。
 ${extrasSec ? `- 大纲里「${extrasSec.name}」这一环节的讲解由系统直接拼进教案：流程表里照常列这一行，但不要为它写讲解小节，也不要在别处展开这些条目。
 ` : ""}${CITE}
-- 每个题型的讲解要具体：这几道题考什么、这个学生容易错在哪、照老师的讲题习惯怎么讲。
+- 每个题型的讲解要具体：这几道题考什么、这个学生容易错在哪、照老师的讲题习惯怎么讲。${p.student?.group?.length ? "\n- 这是一对多的课：写清楚哪些是全组一起讲的、哪些分给谁单独练，学生容易错在哪按人点名写。" : ""}
 ${tpl.sections.length && !tpl.free ? `- 用 Markdown，照老师选的教案模板${tpl.name ? `「${tpl.name}」` : ""}，二级标题就用下面这些、按这个顺序，不多不少：
 # 标题（用大纲的标题）
 ${templateLines(tpl)}` : `- 用 Markdown，结构不限：按大纲和这节课的需要自己组织，第一行 # 标题（用大纲的标题），每一部分用 ## 二级标题分开${tpl.sections.length ? `；可以参考这些小节，但不必照搬：${tpl.sections.map((x) => x.title).join("、")}` : ""}。`}
@@ -679,7 +681,7 @@ ${SET_OPS}
     const st = p.student, at = attnLine(st.attention);
     const lines = [
         `【学生】${clip(st.name, 10)}，${clip(st.gradeLabel, 30)}，${clip(st.schoolLabel, 40)}`,
-        st.profile ? `【学生画像（老师拖光谱填的，0–100）】${clip(st.profile, 500)}` : "",
+        st.profile ? `【学生画像（老师拖光谱填的，0–100）】${clip(st.profile, 1500)}` : "",
         `【学生档案】\n${p.studentMems.map(memLine).join("\n") || "（空）"}`,
         `【老师档案】\n${p.teacherMems.map(memLine).join("\n") || "（空）"}`,
         `【老师设置】${settingsLine(p.settings, p.minutes)}${at ? "\n【学生特点】" + at : ""}`,
@@ -714,7 +716,7 @@ export function sectionMessages(p) {
 }
 
 // 改老师设置、学生注意力的 op（记忆和聊天共用）
-const SET_OPS = `另外两种改法：老师说到课堂设置的长期变化（「以后一次课 90 分钟」「默写改成 15 分钟」「作业别超过 20 分钟」），用 {"op":"set","who":"teacher","field":"字段","value":值,"why":"30 字以内"} 改【老师设置】，不要再写成一条老师记忆。字段：lessonType（一对一 / 小班）、minutes（一次课分钟）、perWeek（每周几次）、dictation（开头默写分钟）、recap（结尾回顾分钟）、extrasMinutes（课外知识补充分钟，0 是不加）、focusTypes（一节课主攻几个题型，0 / 2 / 3 / 4，0 是不限）、fullPaper（考前最后一节做 / 不做整卷）、homeworkMinutes（作业分钟上限）、homeworkScope（只练薄弱点 / 全面练）、difficulty（不限 / 偏易 / 适中 / 偏难）。
+const SET_OPS = `另外两种改法：老师说到课堂设置的长期变化（「以后一次课 90 分钟」「默写改成 15 分钟」「作业别超过 20 分钟」），用 {"op":"set","who":"teacher","field":"字段","value":值,"why":"30 字以内"} 改【老师设置】，不要再写成一条老师记忆。字段：lessonType（一对一 / 一对多）、minutes（一次课分钟）、perWeek（每周几次）、dictation（开头默写分钟）、recap（结尾回顾分钟）、extrasMinutes（课外知识补充分钟，0 是不加）、focusTypes（一节课主攻几个题型，0 / 2 / 3 / 4，0 是不限）、fullPaper（考前最后一节做 / 不做整卷）、homeworkMinutes（作业分钟上限）、homeworkScope（只练薄弱点 / 全面练）、difficulty（不限 / 偏易 / 适中 / 偏难）。
 说到学生走神、坐不住、注意力不集中，用 {"op":"set","who":"student","field":"attention","value":"容易分心","why":""}；说到现在能坐住了、很专注，改成「一般」或「集中」。`;
 
 export function memoryMessages(p, kpByType) {
@@ -818,3 +820,16 @@ export async function hit(ip, action, perIp) {
     const GLOBAL = Number(process.env.EN_GLOBAL_DAILY ?? 400);
     return { ok: n <= perIp && total <= GLOBAL, left: Math.max(0, perIp - n), global: total > GLOBAL };
 }
+
+// ---------- 首页反馈（MAT-509）：存进同一个 Upstash Redis 的列表，不记 IP；没配 Redis 就直说存不了，不退回函数内存（会丢） ----------
+const FB_KEY = "en:feedback";
+async function redis(cmds) {
+    if (!RURL) throw new Error("没配存储");
+    const r = await fetch(`${RURL}/pipeline`, { method: "POST", headers: { Authorization: `Bearer ${RTOKEN}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(5000), body: JSON.stringify(cmds) });
+    if (!r.ok) throw new Error(`存储 ${r.status}`);
+    return (await r.json()).map((x) => x.result);
+}
+export const feedbackPush = (entry) => redis([["LPUSH", FB_KEY, JSON.stringify(entry)], ["LTRIM", FB_KEY, 0, 999]]);
+export const feedbackList = async (n = 200) => (await redis([["LRANGE", FB_KEY, 0, n - 1]]))[0].map((s) => JSON.parse(s));
+// 读反馈的口令：从服务器上的 DeepSeek key 派生（同 dataKey），不用另配；本地 demo/feedback.mjs 用 .env 里同一个 key 算出来
+export const feedbackToken = (secret = process.env.DEEPSEEK_API_KEY) => crypto.createHmac("sha256", String(secret || "")).update("en-feedback-read").digest("hex").slice(0, 32);

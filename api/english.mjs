@@ -9,23 +9,31 @@
 // POST { action: "review", ... }  → JSON { suggestions, gaps }：读最近几次课的记录，给下一次课的教案提改进建议
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
-// GET                              → 题库规模
+// POST { action: "feedback", ... }→ JSON { ok }：首页反馈表单，存进 Redis（不调模型）；GET ?feedback=口令 读最近的反馈（口令见 feedbackToken，本地用 demo/feedback.mjs）
+// GET                              → 题库规模（带 ?feedback=口令 时返回反馈）
 // 状态（学生、老师档案、大纲、教案）都在浏览器里，函数不存任何东西。页面传回来的题目只有编号和 id，题面从题库取。
 // 页面可以带自己的模型 key（byok），带了就不限次数；不带用站长的 DeepSeek，按 IP 限次。
+import crypto from "node:crypto";
 import {
     loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
-    templateMessages, cleanTemplate, intakeMessages, cleanIntake, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
+    templateMessages, cleanTemplate, intakeMessages, cleanIntake, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
 } from "./_lib/english.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
 const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8), search: env("EN_SEARCH_DAILY", 30), chat: env("EN_CHAT_DAILY", 30),
     section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10),
-    intake: env("EN_INTAKE_DAILY", 15) };
-const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述" };
+    intake: env("EN_INTAKE_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10) };
+const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", feedback: "提反馈" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
-export async function GET() {
+export async function GET(request) {
+    const fb = new URL(request.url).searchParams.get("feedback");
+    if (fb != null) {
+        const ok = fb.length === 32 && process.env.DEEPSEEK_API_KEY && crypto.timingSafeEqual(Buffer.from(fb), Buffer.from(feedbackToken()));
+        if (!ok) return Response.json({ error: "口令不对" }, { status: 403 });
+        try { return Response.json({ feedback: await feedbackList() }); } catch (e) { return Response.json({ error: String(e.message || e) }, { status: 503 }); }
+    }
     try { const db = loadDB(); return Response.json({ ready: true, units: db.units.length, built: db.meta.built }); }
     catch (e) { return Response.json({ ready: false, error: String(e.message || e) }); }
 }
@@ -45,7 +53,7 @@ export async function POST(request) {
     }
     const studentMems = cleanMems(p.studentMems), teacherMems = cleanMems(p.teacherMems);
     const student = { name: clip(p.student?.name, 10), gradeLabel: clip(p.student?.gradeLabel, 40), schoolLabel: clip(p.student?.schoolLabel, 40),
-        attention: ATTN.includes(p.student?.attention) ? p.student.attention : "", profile: clip(p.student?.profile, 500) };
+        attention: ATTN.includes(p.student?.attention) ? p.student.attention : "", profile: clip(p.student?.profile, 1500), group: strs(p.student?.members, 12, 10) };   // group：一对多时组里的学生
     const settings = p.settings && typeof p.settings === "object" ? p.settings : null;   // 老师设置，settingsLine 里逐个字段校验
     const visual = !!p.visual, weakKps = clip(p.weakKps, 300);
     const logs = cleanLogs(p.logs);
@@ -88,6 +96,15 @@ export async function POST(request) {
             const { data, usage } = await json(memoryMessages({ date: clip(p.date, 10), student, studentMems, teacherMems, settings, observations: p.observations, text }, kps), { signal: request.signal, cfg });
             return Response.json({ ops: Array.isArray(data.ops) ? data.ops.slice(0, 12) : [], log: data.log || null, usage, left });
         } catch (e) { return fail(e); }
+    }
+
+    if (action === "feedback") {
+        const text = String(p.text || "").trim().slice(0, 1000);
+        if (text.length < 2) return Response.json({ error: "写点想说的再提交" }, { status: 400 });
+        const c = p.contact && typeof p.contact === "object" ? { name: clip(p.contact.name, 20), kind: ["微信", "电话", "邮箱", "其他"].includes(p.contact.kind) ? p.contact.kind : "其他", value: clip(p.contact.value, 60) } : null;
+        const entry = { at: new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 16).replace("T", " "), text, ...(c?.value ? { contact: c } : {}), page: clip(p.page, 10) };
+        try { await feedbackPush(entry); return Response.json({ ok: true }); }
+        catch { return Response.json({ error: "反馈暂时存不进去，可以直接发邮件到 matsuriismywaifu@gmail.com" }, { status: 503 }); }
     }
 
     if (action === "intake") {

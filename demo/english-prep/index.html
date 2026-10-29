@@ -287,6 +287,10 @@
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
   .topnav .steps { display: flex; align-items: center; gap: 12px; }
   .topnav i { font-style: normal; font-size: 14px; color: #c9c7c0; }
+  /* 导航右边：正在给谁备课（一对多时是组，MAT-509），翻到哪一页都看得见 */
+  .topnav .nav-who { margin-left: auto; align-self: center; font-size: 13px; color: var(--ink-2); border: 1px solid var(--rule); border-radius: 99px; padding: 3px 12px; background: var(--surface); }
+  .topnav .nav-who b { color: var(--ink); font-weight: 600; }
+  @media (max-width: 520px) { .topnav-in { flex-wrap: wrap; row-gap: 8px; } .topnav .nav-who { margin-left: 0; font-size: 12px; padding: 2px 10px; } }
   @media (max-width: 520px) { .topnav-in { padding: 12px 16px; gap: 14px; } .topnav .steps { gap: 5px; } .topnav a { font-size: 15px; } .topnav i { font-size: 12px; } }
   .page > section.step:first-of-type { margin-top: 0; }
   .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--rule); font-size: 15px; }
@@ -364,11 +368,31 @@
   .dim-g { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 8px; align-items: baseline; margin-top: 8px; }
   .dim-g .chip { font-size: 13px; padding: 3px 11px; }
   #whoDims { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); }
-  /* 首页底部：反馈联系方式 */
-  section.contact { margin-top: 44px; }
-  .contact-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; font-size: 15px; }
-  .contact-list li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
-  .contact-list .k { width: 3em; color: var(--ink-3); font-size: 13px; }
+  /* 首页底部：反馈表单（MAT-509），下面一行是直接联系方式 */
+  section.contact { margin-top: 44px; max-width: 720px; }
+  .fb { display: grid; gap: 10px; }
+  .fb-contact { display: grid; grid-template-columns: minmax(0, 1fr) 6.5em minmax(0, 1.4fr); gap: 8px; }
+  @media (max-width: 520px) { .fb-contact { grid-template-columns: 1fr; } }
+  .fb-contact input, .fb-contact select { font-size: 14px; padding: 6px 8px; width: 100%; }
+  .contact-direct { margin-top: 12px; }
+  /* 课型切换、一对多分组（MAT-509） */
+  .lt-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
+  .lt-row .chip { font-size: 13px; padding: 3px 12px; }
+  .grp { margin-bottom: 16px; }
+  .grp-h { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .grp-h h3 { margin: 0; }
+  .grp-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+  .grp-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 10px; align-items: baseline; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 10px; background: #fff; font-size: 14px; }
+  .grp-list li.on { border-color: var(--blue); background: var(--accent-bg); }
+  .grp-list .m { color: var(--ink-2); }
+  .grp-form { display: grid; gap: 12px; margin-top: 12px; padding: 12px; border: 1px dashed #d6d4cd; border-radius: 10px; }
+  .grp-form .chip:disabled { opacity: .4; cursor: not-allowed; }
+  .grp-acts { margin-top: 12px; }
+  .gm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .gm-table th, .gm-table td { border-bottom: 1px solid var(--rule); padding: 5px 6px; text-align: left; }
+  .gm-table th { color: var(--ink-3); font-weight: 500; }
+  .assign { margin-top: 12px; font-size: 14px; }
+  .assign summary { cursor: pointer; color: var(--blue); font-size: 13.5px; }
   .draft { color: var(--green); }
   .flow-wrap { margin-top: 40px; } .flow-wrap .step-h .note { margin-left: 0; }
   .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 30px; }
@@ -398,6 +422,7 @@
 <body>
 <nav class="topnav" aria-label="页面"><div class="topnav-in">
   <a href="#/" data-page="home">首页</a><span class="steps"><a href="#/profile" data-page="profile">档案</a><i aria-hidden="true">→</i><a href="#/exam" data-page="exam">考试</a><i aria-hidden="true">→</i><a href="#/outline" data-page="outline">维度与大纲</a><i aria-hidden="true">→</i><a href="#/plan" data-page="plan">教案</a><i aria-hidden="true">→</i><a href="#/review" data-page="review">审教</a></span>
+  <a class="nav-who" id="navWho" href="#/profile" title="正在给谁备课：点一下回档案换人或换组"></a>
 </div></nav>
 <div class="wrap">
 <div class="page" data-page="home">
@@ -418,12 +443,18 @@
 </section>
 <section class="contact">
   <h2>想提反馈怎么联系我</h2>
-  <p class="note" style="margin:6px 0 0">哪里用着不顺手、想要什么功能，都欢迎告诉我。</p>
-  <ul class="contact-list">
-    <li><span class="k">微信</span><span>133 5781 1224</span><span class="note">和手机号同号，搜手机号就能加</span><button type="button" class="linkbtn" data-copy="13357811224">复制</button></li>
-    <li><span class="k">电话</span><a href="tel:13357811224">133 5781 1224</a></li>
-    <li><span class="k">邮箱</span><a href="mailto:matsuriismywaifu@gmail.com">matsuriismywaifu@gmail.com</a></li>
-  </ul>
+  <p class="note" style="margin:6px 0 10px">哪里用着不顺手、想要什么功能，写在下面直接提交。可以匿名，也可以留个联系方式，方便我回你。</p>
+  <form class="card fb" id="fbForm">
+    <textarea id="fbText" maxlength="1000" rows="4" required aria-label="想说的" placeholder="比如：建档的时候希望能直接导入家长发来的截图……"></textarea>
+    <div class="chips" id="fbMode" role="group" aria-label="署名"><button type="button" class="chip" data-m="anon" aria-pressed="true">匿名提交</button><button type="button" class="chip" data-m="named" aria-pressed="false">留个联系方式</button></div>
+    <div class="fb-contact" id="fbContact" hidden>
+      <input type="text" id="fbName" maxlength="20" placeholder="怎么称呼（可以不填）" aria-label="称呼">
+      <select id="fbKind" aria-label="联系方式"><option>微信</option><option>电话</option><option>邮箱</option><option>其他</option></select>
+      <input type="text" id="fbValue" maxlength="60" placeholder="微信号 / 手机号 / 邮箱" aria-label="联系方式">
+    </div>
+    <div class="row"><button class="btn small" id="fbBtn">提交</button><span class="note" id="fbNote"></span></div>
+  </form>
+  <p class="note contact-direct" id="contactDirect">也可以直接找我：微信、电话都是 133 5781 1224（微信同号，<button type="button" class="linkbtn" data-copy="13357811224">复制</button>）· 邮箱 <a href="mailto:matsuriismywaifu@gmail.com">matsuriismywaifu@gmail.com</a></p>
 </section>
 </div>
 
@@ -436,10 +467,22 @@
     <div class="fslot" id="histFolder"></div>
     <div class="fside">
       <p class="note">点开文件夹，点一张就切到那份档案、打开那份教案。前三份是示例档案，看明白了就给自己的学生建档；档案和教案只存在你的浏览器里。</p>
+      <div class="lt-row"><span class="lab">这节课</span><span class="chips" id="ltChips" role="group" aria-label="课型"></span></div>
       <a class="btn small" href="#/newstu">+ 新建学生档案</a>
       <details class="fold" id="allStu"><summary id="allStuSum">全部档案</summary><ul class="stulist" id="stuList"></ul></details>
     </div>
   </div>
+  <!-- 一对多（MAT-509）：几个学生编成一组，一组一份大纲；组的档案由组员档案合起来 -->
+  <section class="card grp" id="grpCard" hidden>
+    <div class="grp-h"><h3>一对多 · 分组</h3><span class="note">一起上课的几个学生编成一组，一组排一份大纲、写一份教案；组的档案由组员的档案合起来。同一组的学生年级学期要一样。</span></div>
+    <ul class="grp-list" id="grpList"></ul>
+    <form class="grp-form" id="grpForm" hidden>
+      <label class="ns-f"><span class="lab">组名</span><input type="text" id="grpName" maxlength="12" placeholder="比如：周六上午班"></label>
+      <div class="ns-f"><span class="lab">组里有谁 <span class="note" style="font-weight:400">点名字选，年级学期不一样的选不了</span></span><div class="chips" id="grpPick"></div></div>
+      <div class="row"><button class="btn small">建组</button><button type="button" class="linkbtn" id="grpCancel">取消</button></div>
+    </form>
+    <div class="row grp-acts"><button type="button" class="btn small ghost" id="grpNewBtn">+ 新建一组</button><button type="button" class="btn small" id="grpBatch">给勾上的组一起排大纲</button><span class="note" id="grpNote"></span></div>
+  </section>
   <div class="grid2">
     <div class="card">
       <div class="who" id="who"></div>
@@ -456,7 +499,8 @@
       <form class="addmem" id="addMem"><select id="amCat" aria-label="分类"></select><select id="amType" aria-label="题型"></select><input id="amText" maxlength="60" placeholder="自己加一条，比如：讲阅读先让学生划关键词"><button class="btn small ghost">加上</button></form>
       <details class="fold" id="setWrap"><summary id="setSum">课堂设置</summary><form class="setgrid" id="setForm"></form><ul class="slog" id="setLog"></ul></details>
       <details class="fold" id="profWrap"><summary id="profSum">老师画像：从你的操作里看出来的习惯</summary><div id="prof"></div></details>
-      <div class="rec">
+      <p class="note rec-grp" id="recGrp" hidden></p>
+      <div class="rec" id="recWrap">
         <h3 style="margin-bottom:2px">课后记一笔 <span class="note" style="font-weight:400">课后记录、随口交代、对教案的意见都行</span></h3>
         <div class="examples" id="recEx"></div>
         <textarea id="recText" maxlength="1000" placeholder="比如：今天完形 10 错 4，都错在转折处；动词填空全对了。"></textarea>
@@ -590,6 +634,11 @@
         <label class="field"><span class="lab">下次课观察点</span><textarea class="o-list" data-list="watch" rows="3"></textarea></label>
       </div>
       <div class="acts-row"><button class="btn" id="writeBtn">按大纲写教案</button><button class="btn small ghost" id="reOutline">重新生成大纲</button><span class="note" id="writeNote"></span><span class="note draft" data-draft></span></div>
+      <details class="assign" id="assignWrap"><summary>这份大纲也给…</summary>
+        <p class="note">年级学期一样的学生和组才能选。复制过去的是大纲、用题和考试设置，教案按各自的档案再写；对方原来的大纲会被换掉（能撤销）。</p>
+        <div class="chips" id="assignList"></div>
+        <div class="row" style="margin-top:8px"><button type="button" class="btn small" id="assignBtn">复制过去</button></div>
+      </details>
     </div>
     <div id="itemsWrap" hidden><h3 style="margin-top:22px">这份大纲用到的例题 <span class="note" style="font-weight:400">不合适的可以「换一题」，编号不变</span></h3><div class="items" id="items"></div><details class="fold trace" id="trace"></details></div>
   </div>
@@ -680,7 +729,7 @@ let S = load();
 function fresh() { const s = seed(TODAY); s.current = "chen"; s.forgotten = []; return Mem.upgradeState(s, data.kpByType); }
 function load() { try { const x = JSON.parse(localStorage.getItem(KEY)); if (x && x.version === 1) return Mem.upgradeState(x, data.kpByType); } catch {} return fresh(); }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
-const stu = () => S.students.find((x) => x.id === S.current);
+const stu = () => S.students.find((x) => x.id === S.current) || (groupOf(S.current) && groupView(groupOf(S.current)));   // 一对多时是组（MAT-509）
 const SET = () => S.teacher.settings;
 // 教案模板：内置的（rules.json）+ 老师自建的；这次课临时选的 > 学生的默认 > 老师设置里的默认
 const templates = () => [...R.planTemplates, ...S.teacher.templates];
@@ -727,7 +776,7 @@ const progText = (v, n) => (v >= n ? "全册学完" : `Unit ${Math.floor(v) + 1}
 function setProgress(st, v, n) { st.progress = v; st.unit = Math.min(n, Math.floor(v) + 1); }
 const shownDims = (st) => Mem.DIMS.filter((d) => d.core || st.dims?.[d.key] != null);
 // 发给模型的一行画像
-const profileLine = (st) => shownDims(st).map((d) => {
+const profileLine = (st) => st.members ? `一对多，${st.members.length} 个学生一起上。` + st.members.map((m) => `\n${m.name}：${profileLine(m)}`).join("") : shownDims(st).map((d) => {
     if (d.key === "progress") { const n = unitsOf(stuGt(st)); return `学习进度：${stuGt(st)} ${progText(progVal(st, n), n)}`; }
     const v = Mem.dimValue(st, d.key);
     return `${d.label}：${Mem.dimZone(d, v)}（${v}；0 ${d.lo}，100 ${d.hi}）`;
@@ -789,6 +838,9 @@ wireDims($("#whoDims"), () => stu(), (k, before) => {
 
 function renderStudents() {
     const st = stu();
+    $("#navWho").innerHTML = `正在备：<b>${esc(st.name)}</b>${st.members ? ` · 一对多 ${st.members.length} 人` : ""}`;
+    $("#recWrap").hidden = !!st.members; $("#recGrp").hidden = !st.members;
+    if (st.members) return renderGroupCard(st);
     mountDims($("#whoDims"), st);
     $("#who").innerHTML = `<div><div class="nm">${esc(st.name)}${isExample(st) ? ` <span class="tag">示例档案</span>` : ""}</div><div class="meta">${gradeLabel(st)}</div><div class="meta">${esc(schoolLabel(st))}</div></div>
       <div class="who-ctl">
@@ -797,24 +849,40 @@ function renderStudents() {
         <label title="Bionic reading：英文单词前半截加粗，把视线往后带，给注意力容易分散、有 ADHD 的学生用。学生版 Word 和页面上的题目都按它来"><input type="checkbox" id="bionicChk" ${st.bionic ? "checked" : ""}> Bionic 阅读</label></div>`;
 }
 $("#who").onchange = (e) => {
-    const st = stu();
+    const st = stu().group || stu();   // 一对多：开关存在组上
     if (e.target.id === "bionicChk") { st.bionic = e.target.checked; save(); if (U.W?.items) renderItems(); toast(`${st.name}${st.bionic ? "的题目英文开了 Bionic 阅读（词头加粗），学生版 Word 也是" : "关了 Bionic 阅读"}`); }
     if (e.target.id === "visChk") { st.visual = e.target.checked; save(); renderStudents(); toast(`${st.name}的讲义${st.visual ? "用彩色版" : "用黑白版"}，下次写教案时生效`); }
 };
-$("#who").onclick = (e) => { if (e.target.id !== "visReset") return; delete stu().visual; save(); renderStudents(); toast("讲义版式改回按老师设置和注意力"); };
+$("#who").onclick = (e) => { if (e.target.dataset.open) switchStudent(e.target.dataset.open); if (e.target.id !== "visReset") return; delete (stu().group || stu()).visual; save(); renderStudents(); toast("讲义版式改回按老师设置和注意力"); };
 // ---------- 学生档案：示例三份，老师可以自己建、删（用户 10-29） ----------
+// 一对多的组：组员、合起来的进度和注意力；画像和记忆都要回到组员自己的档案里改
+function renderGroupCard(g) {
+    const n = unitsOf(stuGt(g)), who = (pick) => g.members.filter(pick).map((x) => x.name).join("、");
+    $("#who").innerHTML = `<div><div class="nm">${esc(g.name)} <span class="tag">一对多 · ${g.members.length} 人</span></div><div class="meta">${gradeLabel(g)}</div><div class="meta">${esc(schoolLabel(g))}</div>
+        <div class="meta">组员：${g.members.map((x) => `<button type="button" class="linkbtn" data-open="${x.id}">${esc(x.name)}</button>`).join("、")}</div></div>
+      <div class="who-ctl"><label title="彩色版：题型配色、高亮线索词、步骤框。没勾过时按老师设置（${esc(SET().visual)}）"><input type="checkbox" id="visChk" ${isVisual(g) ? "checked" : ""}> 彩色讲义</label>
+        ${g.visual != null ? `<button type="button" class="linkbtn" id="visReset" title="不单独指定，按老师设置和注意力">跟设置走</button>` : ""}
+        <label title="Bionic reading：英文单词前半截加粗"><input type="checkbox" id="bionicChk" ${g.bionic ? "checked" : ""}> Bionic 阅读</label></div>`;
+    $("#whoDims").innerHTML = `<table class="gm-table"><tr><th>组员</th><th>学习进度</th><th>学习习惯</th><th>注意力</th></tr>${g.members.map((x) => `<tr><td><button type="button" class="linkbtn" data-open="${x.id}">${esc(x.name)}</button></td><td>${progText(progVal(x, n), n)}</td><td>${Mem.dimZone(Mem.DIM.habit, Mem.dimValue(x, "habit"))}</td><td>${x.attention}</td></tr>`).join("")}</table>
+      <p class="note" style="margin:8px 0 0">这组的进度按最慢的算（${progText(progVal(g, n), n)}），注意力按最需要照顾的算（${g.attention}${g.attention !== "集中" ? "：" + who((x) => x.attention === g.attention) : ""}）。下面的记忆和课次记录是组员合起来的，要改点名字回到各自的档案。</p>`;
+    $("#recGrp").innerHTML = `一对多的课，课后记录记到每个学生自己的档案里：点${g.members.map((x) => `<button type="button" class="linkbtn" data-open="${x.id}">${esc(x.name)}</button>`).join("、")}切过去记，这组的教案会跟着记进他们的课次记录。`;
+}
+$("#whoDims").addEventListener("click", (e) => { if (e.target.dataset.open) switchStudent(e.target.dataset.open); });
+$("#recGrp").onclick = (e) => { if (e.target.dataset.open) switchStudent(e.target.dataset.open); };
 const isExample = (st) => ["lin", "zhou", "chen"].includes(st.id);
 function loadStudent(id) {
     S.current = id; save(); U = {}; renderAll(); clearPlan(); restoreWork();
     $("#ops").innerHTML = ""; $("#recNote").textContent = "";   // 上一个学生的改动列表，撤销会落到新学生身上
 }
-function switchStudent(id) { if (id !== S.current && S.students.some((x) => x.id === id)) { snapWork(); loadStudent(id); } }
+function switchStudent(id) { if (id !== S.current && (S.students.some((x) => x.id === id) || groupOf(id))) { snapWork(); loadStudent(id); } }
 function deleteStudent(id) {
     if (S.students.length <= 1) { toast("至少要留一份档案"); return; }
-    const i = S.students.findIndex((x) => x.id === id), st = S.students[i], work = S.work?.[id], cur = S.current;
+    const i = S.students.findIndex((x) => x.id === id), st = S.students[i], work = S.work?.[id], cur = S.current, groups = clone(S.groups || []);
     S.students.splice(i, 1); delete S.work?.[id];
-    if (cur === id) loadStudent(S.students[0].id); else { save(); renderFolders(); }
-    toast(`删掉了「${st.name}」的档案`, { label: "撤销", fn: () => { S.students.splice(i, 0, st); if (work) (S.work ||= {})[id] = work; if (cur === id) loadStudent(id); else { save(); renderFolders(); } } });
+    for (const g of S.groups || []) g.members = g.members.filter((x) => x !== id);
+    S.groups = (S.groups || []).filter((g) => g.members.length);
+    if (cur === id || !stu()) loadStudent(S.students[0].id); else { save(); refresh(); renderStudents(); }
+    toast(`删掉了「${st.name}」的档案`, { label: "撤销", fn: () => { S.students.splice(i, 0, st); S.groups = groups; if (work) (S.work ||= {})[id] = work; if (cur === id) loadStudent(id); else { save(); renderFolders(); } } });
 }
 // 文件夹里的每一张（学生档案 / 历史教案）
 document.addEventListener("click", (e) => {
@@ -845,6 +913,98 @@ function renderFolders() {
 $("#stuList").onclick = (e) => {
     if (e.target.dataset.open) switchStudent(e.target.dataset.open);
     if (e.target.dataset.delstu) deleteStudent(e.target.dataset.delstu);
+};
+// ---------- 一对多（MAT-509）：几个学生编成一组，一组一份大纲；组当成一个「学生」走后面考试、大纲、教案、审教的流程 ----------
+// 组的档案由组员合起来：年级学期一样（建组时就限制了），学校、区不一样就留空；进度按最慢的、注意力按最需要照顾的；
+// 记忆、课次记录合在一起（记忆前面写上是谁的，编号重排），组上只读，要改回到组员自己的档案。工作区按组 id 存
+const groupOf = (id) => (S.groups || []).find((g) => g.id === id);
+const membersOf = (g) => g.members.map((id) => S.students.find((x) => x.id === id)).filter(Boolean);
+function groupView(g) {
+    const ms = membersOf(g);
+    if (!ms.length) return null;
+    const one = (k) => (new Set(ms.map((x) => x[k])).size === 1 ? ms[0][k] : "");
+    const n = unitsOf(stuGt(ms[0])), slow = ms.reduce((a, x) => (progVal(x, n) < progVal(a, n) ? x : a));
+    let k = 0;
+    return {
+        id: g.id, group: g, members: ms, name: g.name, grade: ms[0].grade, term: ms.find((x) => x.term)?.term, textbook: "新",
+        school: one("school"), schoolName: one("schoolName") || [...new Set(ms.map((x) => x.schoolName))].join("、"), district: one("district"), ownership: one("ownership") || "公办私立都有",
+        unit: slow.unit, progress: slow.progress, attention: Mem.ATTENTION.slice().reverse().find((a) => ms.some((x) => x.attention === a)),
+        dims: { attention: Math.min(...ms.map((x) => Mem.dimValue(x, "attention"))) },
+        mems: ms.flatMap((x) => x.mems.map((m) => ({ ...m, id: "S" + ++k, text: `${x.name}：${m.text}` }))),
+        logs: ms.flatMap((x) => x.logs.map((l) => ({ ...l, summary: `${x.name}：${l.summary}` }))).sort((a, b) => a.date.localeCompare(b.date)),
+        visual: g.visual, bionic: g.bionic, template: g.template,
+    };
+}
+const sameGt = (a, b) => stuGt(a) === stuGt(b);
+// 课型：一对一用当前学生；一对多显示分组。切回一对一时，正在看的组换成它的第一个组员
+function renderLt() {
+    const lt = SET().lessonType;
+    $("#ltChips").innerHTML = Mem.SETTINGS.lessonType.options.map((o) => `<button type="button" class="chip" data-lt="${o}" aria-pressed="${o === lt}">${o}</button>`).join("");
+    $("#grpCard").hidden = lt !== "一对多";
+    if (lt === "一对多") renderGroups();
+}
+$("#ltChips").onclick = (e) => {
+    const b = e.target.closest("[data-lt]"); if (!b || b.dataset.lt === SET().lessonType) return;
+    setSetting("lessonType", b.dataset.lt, "老师改的");
+    if (b.dataset.lt === "一对一" && stu().members) switchStudent(stu().members[0].id);
+    toast(b.dataset.lt === "一对多" ? "一对多：在下面把一起上课的学生编成一组，一组排一份大纲" : "一对一：用当前这个学生的档案备课");
+};
+function renderGroups() {
+    const gs = (S.groups || []).filter((g) => membersOf(g).length);
+    $("#grpList").innerHTML = gs.length ? gs.map((g) => {
+        const ms = membersOf(g), w = S.work?.[g.id]?.W;
+        return `<li${g.id === S.current ? ' class="on"' : ""}><input type="checkbox" data-batch="${g.id}" ${w?.outline ? "" : "checked"} aria-label="一起排大纲时带上${esc(g.name)}">`
+            + `<span><b>${esc(g.name)}</b> <span class="m">${esc(ms.map((x) => x.name).join("、"))}</span> <span class="note">${stuGt(ms[0]).replace(/^(.)/, "$1年级")} · ${w?.md ? "教案写好了" : w?.outline ? "有大纲" : "还没排大纲"}</span></span>`
+            + `<span>${g.id === S.current ? '<span class="note">正在备这组</span>' : `<button type="button" class="linkbtn" data-gopen="${g.id}">备这组的课</button>`} · <button type="button" class="linkbtn" data-gdel="${g.id}">删除</button></span></li>`;
+    }).join("") : `<li class="note" style="display:block">还没有组：点「+ 新建一组」，选几个一起上课的学生。</li>`;
+    $("#grpBatch").hidden = gs.length < 2;
+}
+$("#grpList").onclick = (e) => {
+    const o = e.target.dataset.gopen, d = e.target.dataset.gdel;
+    if (o) switchStudent(o);
+    if (d) {
+        const i = S.groups.findIndex((g) => g.id === d), g = S.groups[i], work = S.work?.[d], cur = S.current;
+        S.groups.splice(i, 1); delete S.work?.[d];
+        if (cur === d) loadStudent(g.members.find((id) => S.students.some((x) => x.id === id)) || S.students[0].id); else { save(); renderGroups(); }
+        toast(`删掉了「${g.name}」（组员的档案都还在）`, { label: "撤销", fn: () => { S.groups.splice(i, 0, g); if (work) S.work[d] = work; if (cur === d) loadStudent(d); else { save(); renderGroups(); } } });
+    }
+};
+// 新建一组：点名字选；先选的那个学生定下年级学期，不一样的变灰
+let grpSel = [];
+function renderGrpPick() {
+    const first = S.students.find((x) => x.id === grpSel[0]);
+    $("#grpPick").innerHTML = S.students.map((x) => `<button type="button" class="chip" data-pick="${x.id}" aria-pressed="${grpSel.includes(x.id)}" ${first && !sameGt(first, x) ? "disabled" : ""}>${esc(x.name)} <span class="note">${stuGt(x)}</span></button>`).join("");
+}
+$("#grpNewBtn").onclick = () => { grpSel = stu().members ? [] : [S.current]; $("#grpName").value = ""; $("#grpName").placeholder = `比如：组 ${(S.groups || []).length + 1}、周六上午班`; renderGrpPick(); $("#grpForm").hidden = false; };
+$("#grpCancel").onclick = () => { $("#grpForm").hidden = true; };
+$("#grpPick").onclick = (e) => {
+    const b = e.target.closest("[data-pick]"); if (!b || b.disabled) return;
+    const id = b.dataset.pick;
+    grpSel = grpSel.includes(id) ? grpSel.filter((x) => x !== id) : [...grpSel, id];
+    renderGrpPick();
+};
+$("#grpForm").onsubmit = (e) => {
+    e.preventDefault();
+    if (grpSel.length < 2) { toast("一组至少两个学生；只有一个人就用一对一"); return; }
+    const g = { id: "g" + Date.now().toString(36), name: $("#grpName").value.trim() || `组 ${(S.groups || []).length + 1}`, members: grpSel.slice() };
+    (S.groups ||= []).push(g); $("#grpForm").hidden = true;
+    switchStudent(g.id); toast(`建好了「${g.name}」，现在备的是这一组的课`);
+};
+// 一次排好几组的大纲：一组一组切过去排（和在大纲页点「生成大纲」一样），排完回到原来那份档案
+$("#grpBatch").onclick = async () => {
+    const ids = [...$("#grpList").querySelectorAll("[data-batch]:checked")].map((x) => x.dataset.batch);
+    if (!ids.length) { $("#grpNote").textContent = "先勾上要排大纲的组"; return; }
+    const back = S.current, done = [], failed = [];
+    $("#grpBatch").disabled = true;
+    for (const [i, id] of ids.entries()) {
+        $("#grpNote").textContent = `正在排第 ${i + 1} / ${ids.length} 组：${groupOf(id).name}……`;
+        switchStudent(id);
+        await makeOutline();
+        (U.W?.outline && U.W.sid === id ? done : failed).push(groupOf(id).name);
+    }
+    switchStudent(back); go("profile"); renderGroups();
+    $("#grpBatch").disabled = false;
+    $("#grpNote").textContent = `排好了：${done.join("、") || "没有"}${failed.length ? `；没排成：${failed.join("、")}（原因在大纲页，可以单独再排）` : ""}。点「备这组的课」看各组的大纲。`;
 };
 // ---------- 建档页（MAT-508）：贴一段话让 agent 填，或者直接选；区和学校双向联动，选了学校自动带出区和公办 / 私立 ----------
 const SCHOOLS = SCH.schools, DISTRICTS = SCH.districts;
@@ -947,17 +1107,17 @@ $("#nsForm").onsubmit = (e) => {
     loadStudent(st.id); go("profile"); toast(`建好了「${name}」的档案${notes.length ? `，记进了 ${notes.length} 条记忆` : ""}`);
 };
 
-function memHTML(m, who) {
+function memHTML(m, who, ro) {
     const cls = m.cat === "薄弱点" ? "weak" : m.cat === "已掌握" ? "ok" : who === "teacher" ? "t" : "";
     const eff = Mem.effStrength(m, TODAY, HALF);
     const days = M.daysBetween(m.updated || TODAY, TODAY);
     const bar = eff != null ? `<span title="原强度 ${m.strength.toFixed(2)}，${days} 天前更新，按 ${HALF} 天半衰后 ${eff.toFixed(2)}"><span class="bar"><i style="width:${eff * 100}%"></i></span> ${eff.toFixed(2)}</span>` : "";
     const sub = [m.qtype && `${m.qtype}${m.kp ? " · " + m.kp : ""}`, bar, m.evidence && `依据：${esc(m.evidence)}`, `${esc(m.source || "")} ${md5(m.updated || "")}`].filter(Boolean);
-    return `<li class="mem${flashIds.has(who + m.id) ? " flash" : ""}" data-who="${who}" data-id="${m.id}"><span class="id">${m.id}</span><span class="tx"><span class="tag ${cls}">${m.cat}</span>${esc(m.text)}</span><button class="x" title="让 agent 忘掉这条" aria-label="忘掉 ${m.id}">×</button><span class="sub">${sub.map((x) => `<span>${x}</span>`).join("")}</span></li>`;
+    return `<li class="mem${flashIds.has(who + m.id) ? " flash" : ""}" data-who="${who}" data-id="${m.id}"><span class="id">${m.id}</span><span class="tx"><span class="tag ${cls}">${m.cat}</span>${esc(m.text)}</span>${ro ? "" : `<button class="x" title="让 agent 忘掉这条" aria-label="忘掉 ${m.id}">×</button>`}<span class="sub">${sub.map((x) => `<span>${x}</span>`).join("")}</span></li>`;
 }
 function renderMemories() {
     const st = stu();
-    $("#stuMems").innerHTML = st.mems.map((m) => memHTML(m, "student")).join("");
+    $("#stuMems").innerHTML = st.mems.map((m) => memHTML(m, "student", !!st.members)).join("");
     $("#teaMems").innerHTML = S.teacher.mems.map((m) => memHTML(m, "teacher")).join("");
     const led = ledger(st);
     $("#ledgerWrap").hidden = !led.length;
@@ -991,6 +1151,7 @@ $("#addMem").onsubmit = (e) => {
 const showVal = (k, v) => (k === "template" ? tplById(v).name : Mem.showSetting(k, v));
 function renderSettings() {
     const st = SET();
+    renderLt();
     $("#setSum").textContent = `课堂设置 · ${st.lessonType} · ${st.minutes} 分钟 · 每周 ${st.perWeek} 次${st.focusTypes ? ` · 主攻 ${st.focusTypes} 个题型` : ""}`;
     $("#setForm").innerHTML = Object.entries(Mem.SETTINGS).map(([k, f]) => {
         const opts = k === "template" ? templates().map((t) => [t.id, t.name]) : f.options?.map((o) => [o, f.names?.[o] ?? o]);
@@ -1012,6 +1173,7 @@ function setSetting(k, raw, source) {
 function syncSettings(fields) {
     if (fields.includes("minutes")) U.minutes = SET().minutes;   // 只有改课时才覆盖这节课临时改的课时
     if (fields.includes("difficulty")) U.difficulty = SET().difficulty;
+    if (fields.includes("lessonType") && SET().lessonType === "一对一" && stu().members) { switchStudent(stu().members[0].id); return; }
     renderSettings(); renderStudents(); renderTplSel(); recompute();
     if (fields.some((k) => !["answerPos", "fontSize", "visual", "template"].includes(k))) clearStaleOutline();   // 这几项只影响教案和导出，和大纲无关
 }
@@ -1108,8 +1270,10 @@ $("#recBtn").onclick = async () => {
         for (const m of S.forgotten) if (!m.sid) m.sid = st.id;
         if (j.log) {
             const W = U.W?.sid === st.id && U.W.md ? U.W : null;   // 这节课的教案（MAT-482）：从课次记录能打开、重新导出
-            const lastPlan = S.lastPlan?.sid === st.id && (!st.logs.length || S.lastPlan.date >= st.logs.at(-1).date)
-                ? { mix: S.lastPlan.mix, ...(W ? { gt: U.gt, outline: W.outline, md: W.md, items: W.items.map(workRef), extras: W.extras, visual: W.visual } : {}) } : null;
+            const gw = groupOf(S.lastPlan?.sid)?.members.includes(st.id) ? S.work?.[S.lastPlan.sid] : null;   // 一对多：这节课的教案在组上（MAT-509）
+            const lastPlan = (S.lastPlan?.sid === st.id || gw) && (!st.logs.length || S.lastPlan.date >= st.logs.at(-1).date)
+                ? { mix: S.lastPlan.mix, ...(W ? { gt: U.gt, outline: W.outline, md: W.md, items: W.items.map(workRef), extras: W.extras, visual: W.visual }
+                    : gw?.W?.md ? { gt: gw.u.gt, outline: gw.W.outline, md: gw.W.md, items: gw.W.items, extras: gw.W.extras, visual: gw.W.visual } : {}) } : null;
             const errors = (j.log.errors || []).map((e) => ({ ...e, kp: Mem.alignKp(e.qtype, e.kp, data.kpByType) }));   // 考点对齐到考点表，账本才累计得起来
             st.logs.push({ date: TODAY, summary: j.log.summary || text.slice(0, 40), covered: j.log.covered || [], errors, plan: lastPlan });
         }
@@ -1392,7 +1556,7 @@ function ctxPayload() {
     const c = U.ctx, st = c.st;
     const fl = M.flows(U.rows.filter((r) => r.share >= 0.005));
     return {
-        student: { name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), school: st.school, district: st.district, textbook: st.textbook, attention: st.attention, profile: profileLine(st) },
+        student: { name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), school: st.school, district: st.district, textbook: st.textbook, attention: st.attention, profile: profileLine(st), members: st.members?.map((m) => m.name) },
         studentMems: st.mems, teacherMems: S.teacher.mems, logs: logsLite(st), guidance: U.guidance, minutes: U.minutes,
         settings: SET(), difficulty: U.difficulty, weakKps: weakKpsText(c.led), attentionMax: R.student.attentionMaxMinutes,
         visual: U.W?.md ? !!U.W.visual : isVisual(st),
@@ -1470,6 +1634,35 @@ function recordMix(st) {
 }
 $("#outlineBtn").onclick = makeOutline;
 $("#reOutline").onclick = makeOutline;
+// 这份大纲也给…（MAT-509）：复制给年级学期一样的学生或组，带上用题和考试设置，教案各自按自己的档案再写；对方原来的能撤销回来
+function assignTargets() {
+    const cur = stu();
+    return [...S.students, ...(S.groups || []).map(groupView).filter(Boolean)].filter((x) => x.id !== cur.id && sameGt(x, cur));
+}
+$("#assignWrap").ontoggle = () => {
+    if (!$("#assignWrap").open) return;
+    const ts = assignTargets();
+    $("#assignList").innerHTML = ts.length ? ts.map((x) => `<button type="button" class="chip" data-to="${x.id}" aria-pressed="false">${esc(x.name)}${x.members ? ` <span class="note">组 · ${x.members.length} 人</span>` : ""}${S.work?.[x.id]?.W?.outline ? ' <span class="note">已有大纲</span>' : ""}</button>`).join("")
+        : `<span class="note">没有年级学期一样的学生或组。</span>`;
+};
+$("#assignList").onclick = (e) => { const b = e.target.closest("[data-to]"); if (b) b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true"); };
+$("#assignBtn").onclick = () => {
+    const ids = [...$("#assignList").querySelectorAll('[aria-pressed="true"]')].map((b) => b.dataset.to);
+    if (!ids.length) { toast("先点选要给谁"); return; }
+    snapWork();
+    const src = S.work?.[S.current], cur = stu(); if (!src?.W) return;
+    const before = ids.map((id) => [id, S.work[id]]), target = (id) => S.students.find((x) => x.id === id) || groupView(groupOf(id));
+    for (const id of ids) {
+        const t = target(id), W = { ...clone(src.W), md: "", stale: [], checked: undefined, sid: id, student: t.name };
+        W.outline.title = W.outline.title.includes("·") ? W.outline.title.replace(/^[^·]*·/, `${t.name} ·`) : W.outline.title.replace(cur.name, t.name);   // 标题是「学生名 · 主题」，组的还带着组员名单
+        S.work[id] = { u: { ...clone(src.u), chat: [] }, W, at: src.at };
+    }
+    save(); $("#assignWrap").open = false; renderLt();
+    toast(`大纲复制给了${ids.map((id) => target(id).name).join("、")}，切过去就能看、能改`, { label: "撤销", fn: () => {
+        for (const [id, w] of before) { if (w) S.work[id] = w; else delete S.work[id]; }
+        save(); renderLt();
+    } });
+};
 
 // 大纲里各题型的分钟数 → 上面的占比（桑基图跟着变）
 function lockFromOutline() {
@@ -1921,7 +2114,8 @@ async function chatSend(text, auto = false) {
         const j = await post({ action: "chat", stage, message: text, history, ...ctxPayload(), outline: U.W?.outline, plan: U.W?.md, items: itemRefs() });
         const s0 = snap();
         const { changes, found } = await applyChatOps(stage, j.ops || []);
-        const memApplied = (j.memory || []).length ? Mem.applyOps(memState(st), j.memory, TODAY, "聊天") : [];
+        const memOps = (j.memory || []).filter((o) => !st.members || o.who === "teacher");   // 一对多：组的记忆是组员合起来的只读视图，只记老师档案
+        const memApplied = memOps.length ? Mem.applyOps(memState(st), memOps, TODAY, "聊天") : [];
         for (const a of memApplied) { changes.push(`${{ add: "记住了", update: "更新了", delete: "忘掉了", set: "改了" }[a.op]}：${Mem.describe(a)}`); if (a.after?.id) flashIds.add(a.who + a.after.id); }
         Object.assign(wait, { content: j.reply || "好的。", wait: false, changes, snap: changes.length ? s0 : null, memApplied });
         if (memApplied.length) { save(); renderMemories(); afterApply(memApplied); }
@@ -2190,6 +2384,7 @@ for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) 
 $("#how").innerHTML = [
     `<b>学生档案</b>：一个学生一份，记着年级学期、学校，和下面这些画像；agent 还会把课后记录里看出来的薄弱点、已经掌握的、目标一条条记进来。排占比、挑例题、写教案都按它来。建档时可以直接贴一段家长的话或聊天记录，agent 先把表填好，你核对一下就行。`,
     `<b>学生画像</b>：每一项是一条能拖的光谱，比如注意力从「容易分心」到「集中」。学习进度、学习习惯、注意力默认就有，词汇量、自信心、家长配合这些需要时点「+」加。注意力容易分心的学生，大纲每个环节不超过 ${R.student.attentionMaxMinutes} 分钟、讲练交替，讲义用彩色版。`,
+    `<b>一对一和一对多</b>：档案页上选这节课是一对一还是一对多。一对一就按当前这个学生备课；一对多把一起上课的几个学生编成一组（年级学期要一样），组的档案由组员合起来：进度按最慢的算，注意力按最需要照顾的算，几个人共同的薄弱点全组一起讲，个别人的问题放进练习里分层安排。几组的大纲可以一次排好；排好的大纲也能复制给别的学生或组。页面顶部右边一直写着现在在给谁备课。`,
     `<b>课后记一笔</b>：上完课随手写一句，比如「完形 10 错 4，都错在转折处」。agent 把它拆成几条档案改动（新增、修改、删除），每条写着原因，不对就撤销。同一个知识点跨 ${R.student.longMinLessons} 次课以上都错，算长期薄弱，排课时多给时间；做对一次只减轻，连续做好才算掌握。`,
     `<b>老师档案和课堂设置</b>：课型、一次课多长、开头默写和结尾回顾各几分钟、作业量、讲义版式这些你自己填，每份教案都照着排。你反复做的同一种调整（比如每次都把阅读调多），agent 会提议设成默认。`,
     `<b>下一场考试</b>：按今天的日期和学生的年级学期，推出下一场考试（月考、期中、期末、一模……）和大概的考试范围。出卷来源你来选：统考就从往年统考卷里挑题，不统考就从学校自己出的卷子里挑，不知道就两边各一半；系统会按这所学校往年的情况给个建议。`,
@@ -2203,7 +2398,28 @@ $("#how").innerHTML = [
     `<b>复盘建议</b>：课记得越多，agent 越能看出「讲了几次还在错」「已经稳了还在花时间」这类情况，给下次课提建议，每条都指回具体哪一次课。`,
     `<b>数据存在哪</b>：示例学生是虚构的，学校是真实学校。档案和教案只存在你自己的浏览器里，换台电脑就看不到了。agent 每人每天有免费次数，用完了可以在聊天框的设置里填自己的 DeepSeek key。`,
 ].map((x) => `<li>${x}</li>`).join("");
-document.querySelector(".contact-list").onclick = async (e) => {
+// 首页反馈表单（MAT-509）：默认匿名；选「留个联系方式」才收称呼和联系方式
+let fbNamed = false;
+$("#fbMode").onclick = (e) => {
+    const b = e.target.closest("[data-m]"); if (!b) return;
+    fbNamed = b.dataset.m === "named";
+    for (const x of $("#fbMode").children) x.setAttribute("aria-pressed", x === b);
+    $("#fbContact").hidden = !fbNamed;
+    if (fbNamed) $("#fbValue").focus();
+};
+$("#fbForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const text = $("#fbText").value.trim();
+    if (text.length < 2) { $("#fbNote").textContent = "写点想说的再提交"; return; }
+    if (fbNamed && !$("#fbValue").value.trim()) { $("#fbNote").textContent = "留个联系方式，或者改成匿名提交"; $("#fbValue").focus(); return; }
+    $("#fbBtn").disabled = true; $("#fbNote").textContent = "提交中……";
+    try {
+        await post({ action: "feedback", text, page: page(), contact: fbNamed ? { name: $("#fbName").value.trim(), kind: $("#fbKind").value, value: $("#fbValue").value.trim() } : null });
+        e.target.reset(); $("#fbNote").textContent = fbNamed ? "收到了，谢谢！我看到以后会联系你。" : "收到了，谢谢！";
+    } catch (err) { $("#fbNote").innerHTML = `<span class="err">没提交上：${esc(err.message)}</span>`; }
+    $("#fbBtn").disabled = false;
+};
+$("#contactDirect").onclick = async (e) => {
     const n = e.target.dataset.copy; if (!n) return;
     try { await navigator.clipboard.writeText(n); toast("手机号复制好了，去微信里搜就能加"); } catch { toast(`复制没成功，手动记一下：${n}`); }
 };
@@ -2333,6 +2549,7 @@ function route() {
     document.title = k === "home" ? "英语备课 Agent Demo" : `${PAGES[k]} · 英语备课 Agent`;
     if (k === "home") renderHome();
     if (k === "newstu") renderNewStu();
+    $("#navWho").hidden = k === "newstu";
     if (k === "review") renderAudit();
     renderChat();
 }
@@ -2366,6 +2583,7 @@ function renderHome() {
 function recompute() { deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); }
 function refresh() { renderMemories(); renderFolders(); deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); if (page() === "home") renderHome(); }
 function renderAll() { if (!U.gt) initExam(); renderStudents(); renderRecEx(); refresh(); renderTplSel(); }
+if (!stu()) S.current = S.students[0].id;
 renderAll(); route(); restoreWork();
 </script>
 </body>

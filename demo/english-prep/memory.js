@@ -41,7 +41,7 @@ export function setDim(st, key, v) {
 
 // 老师设置（MAT-498）：老师自己填的课堂设置和偏好。有 options 的是选项，有 min / max 的是整数
 export const SETTINGS = {
-    lessonType: { label: "课型", options: ["一对一", "小班"], def: "一对一" },
+    lessonType: { label: "课型", options: ["一对一", "一对多"], def: "一对一" },   // 一对多：几个学生编成一组一起备课（MAT-509；原来叫「小班」）
     minutes: { label: "一次课（分钟）", min: 40, max: 240, def: 120 },
     perWeek: { label: "每周几次", min: 1, max: 7, def: 2 },
     dictation: { label: "开头单词默写（分钟）", min: 0, max: 30, def: 10 },
@@ -271,6 +271,8 @@ export function upgradeState(S, kpByType) {
         for (const m of cs) { T.mems.splice(T.mems.indexOf(m), 1); (S.forgotten ||= []).push({ ...m, who: "teacher", forgotten: m.updated || "", note: "已转成课堂设置" }); }
     }
     T.settings = { ...defaultSettings(), ...T.settings, bias: { ...(T.settings.bias || {}) } };
+    if (T.settings.lessonType === "小班") T.settings.lessonType = "一对多";
+    S.groups ||= [];
     T.events ||= []; T.settingsLog ||= []; T.templates ||= [];
     for (const st of S.students) {
         if (!ATTENTION.includes(st.attention)) st.attention = "一般";
