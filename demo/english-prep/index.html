@@ -1240,20 +1240,8 @@ function nsSchoolNote() {
 $("#nsDistrict").onchange = () => nsSchoolOpts();
 $("#nsSchool").onchange = () => { const s = nsSch(); if (s && $("#nsDistrict").value !== s.district) { $("#nsDistrict").value = s.district; nsSchoolOpts(); } else nsSchoolNote(); };
 nsSchoolOpts();
-// 模型给的学校名去名录里对：全称、去掉校区的校名、包含关系依次放宽；对上几所就让老师选
-const ALIAS = { 锡外: "无锡外国语学校", 省锡中: "江苏省锡山高级中学实验学校", 一女中: "无锡市第一女子中学" };
-const sCore = (s) => s.replace(/^(江苏省|无锡市|无锡)/, "").replace(/[（）()\s]/g, "");
-const sBase = (s) => s.replace(/（[^）]*校区）$/, "");
-function matchSchool(raw, district) {
-    let q = String(raw || "").trim(); if (!q) return [];
-    for (const [a, full] of Object.entries(ALIAS)) if (q.includes(a) && !q.includes(full)) q = q.replace(a, full);
-    const qc = sCore(q);
-    let hits = SCHOOLS.filter((s) => s.name === q || sCore(s.name) === qc);
-    if (!hits.length) hits = SCHOOLS.filter((s) => sCore(sBase(s.name)) === sCore(sBase(q)));
-    if (!hits.length) hits = SCHOOLS.filter((s) => sCore(s.name).includes(qc));
-    if (hits.length > 1 && DISTRICTS.includes(district)) { const h = hits.filter((s) => s.district === district); if (h.length) hits = h; }
-    return hits;
-}
+// 模型给的学校名去名录里对（规则在 model.js matchSchool：默认总校，分校写在总校名后面）；对上几所就让老师选
+const matchSchool = (raw, district) => M.matchSchool(raw, district, SCHOOLS, DISTRICTS);
 function nsApply(p) {
     let got = 0;
     if (p.name) { $("#nsName").value = p.name; got++; }

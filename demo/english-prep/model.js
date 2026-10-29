@@ -185,3 +185,37 @@ export function typesInText(text, rules) {
 }
 
 export function reviewShare(days) { return days == null ? 0.4 : days <= 14 ? 0.7 : days <= 30 ? 0.5 : 0.3; }
+
+// ---------- 学校名对名录（MAT-508；建档时模型给的学校名 → web/schools.json） ----------
+// 用户口径（10-29）：只说学校名，默认指总校（侨谊中学 = 侨谊实验中学，天一中学 = 天一中学）；说分校会在总校名后面接上分校名（侨谊古运河、天一宛山湖）。
+// 所以从严到宽一层层对，哪层对上就停：名字本身 → 去掉「中学 / 学校」这类通用字（保留「实验」）→ 连「实验」也去掉（这一层就是默认总校）
+// → 总校名 + 分校名（先认出总校名，再拿后半截去找，天一宛山湖的正式名里没有「天一」）→ 去掉校区的校名 → 包含关系。对上几所就让老师选
+const SCHOOL_ALIAS = { 锡外: "无锡外国语学校", 省锡中: "江苏省锡山高级中学实验学校", 一女中: "无锡市第一女子中学" };
+const sCore = (s) => s.replace(/^(江苏省|无锡市|无锡)/, "").replace(/[（）()\s]/g, "");
+const sBase = (s) => s.replace(/（[^）]*校区）$/, "");
+const sKeys = (name) => {
+    const k0 = sCore(name.replace(/（(暂定名|待更名|少年部)）$/, ""));   // 括号里只是备注的不算名字
+    return { k0, k2: k0.replace(/(初级中学|中学|学校|分校|校区|初中部|初中)/g, ""), k1: k0.replace(/(初级中学|实验中学|实验学校|中学|学校|分校|校区|初中部|初中|实验)/g, "") };
+};
+export function matchSchool(raw, district, schools, districts = []) {
+    let q = String(raw || "").trim(); if (!q) return [];
+    for (const [a, full] of Object.entries(SCHOOL_ALIAS)) if (q.includes(a) && !q.includes(full)) q = q.replace(a, full);
+    const qc = sCore(q), qk = sKeys(q), K = schools.map((s) => ({ s, ...sKeys(s.name) }));
+    const by = (f) => K.filter(f).map((x) => x.s);
+    const branch = () => {   // 总校名 + 分校名：取能对上的最长总校名，剩下的两个字以上拿去找
+        const n = Math.max(0, ...K.filter((x) => x.k1.length >= 2 && x.k1 !== qk.k1 && qk.k1.startsWith(x.k1)).map((x) => x.k1.length));
+        const rest = qk.k1.slice(n);
+        return n && rest.length >= 2 ? by((x) => x.k1.includes(rest)) : [];
+    };
+    const tiers = [
+        () => schools.filter((s) => s.name === q || sCore(s.name) === qc),
+        () => by((x) => x.k0 === qk.k0), () => by((x) => x.k2 && x.k2 === qk.k2), () => by((x) => x.k1 && x.k1 === qk.k1),
+        branch,
+        () => schools.filter((s) => sCore(sBase(s.name)) === sCore(sBase(q))),
+        () => schools.filter((s) => sCore(s.name).includes(qc)),
+    ];
+    let hits = [];
+    for (const t of tiers) if ((hits = t()).length) break;
+    if (hits.length > 1 && districts.includes(district)) { const h = hits.filter((s) => s.district === district); if (h.length) hits = h; }
+    return hits;
+}
