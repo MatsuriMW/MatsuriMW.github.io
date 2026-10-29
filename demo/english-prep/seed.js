@@ -34,7 +34,7 @@ export function seed(today) {
         },
         students: [
             {
-                id: "lin", name: "林小满", grade: 7, school: "东林", schoolName: "东林中学", district: "梁溪区", ownership: "公办", textbook: "新", unit: 3, attention: "容易分心",
+                id: "lin", name: "林小满", grade: 7, school: "东林", schoolName: "东林中学", district: "梁溪区", ownership: "公办", textbook: "新", unit: 3, attention: "容易分心", dims: { habit: 35, attention: 20 },
                 mems: [
                     m("S1", "薄弱点", "名词复数、形容词变副词这类词形变化常错", { qtype: "词汇运用", kp: "词形变化", strength: 0.7, evidence: "词汇运用 10 空错 4 空，都是词形", source: "课后记录", updated: d(-9) }),
                     m("S2", "薄弱点", "一般现在时第三人称单数忘加 -s", { qtype: "动词填空", kp: "一般现在时", strength: 0.55, evidence: "动词填空 3 处漏 -s", source: "课后记录", updated: d(-2) }),
@@ -51,7 +51,7 @@ export function seed(today) {
                 ],
             },
             {
-                id: "zhou", name: "周予安", grade: 8, school: "省锡中", schoolName: "锡山高级中学实验学校", district: "惠山区", ownership: "公办", textbook: "新", unit: 4, attention: "一般",
+                id: "zhou", name: "周予安", grade: 8, school: "省锡中", schoolName: "锡山高级中学实验学校", district: "惠山区", ownership: "公办", textbook: "新", unit: 4, attention: "一般", dims: { habit: 55, attention: 50 },
                 mems: [
                     m("S1", "薄弱点", "完形只看空格前后，不看下文的转折", { qtype: "完形填空", kp: "上下文逻辑", strength: 0.75, evidence: "完形 10 错 4，3 个错在转折处", source: "课后记录", updated: d(-3) }),
                     m("S2", "薄弱点", "现在完成时和一般过去时分不清", { qtype: "动词填空", kp: "现在完成时", strength: 0.6, evidence: "since / ago 句子全错", source: "课后记录", updated: d(-10) }),
@@ -71,7 +71,7 @@ export function seed(today) {
                 ],
             },
             {
-                id: "chen", name: "陈一诺", grade: 9, school: "外国语", schoolName: "无锡外国语学校", district: "", ownership: "私立", textbook: "新", unit: 3, attention: "集中",
+                id: "chen", name: "陈一诺", grade: 9, school: "外国语", schoolName: "无锡外国语学校", district: "", ownership: "私立", textbook: "新", unit: 3, attention: "集中", dims: { habit: 85, attention: 85 },
                 mems: [
                     m("S1", "薄弱点", "推理判断题爱选原文照抄的选项", { qtype: "阅读理解", kp: "推理判断", strength: 0.7, evidence: "两次课推理题 6 错 4", source: "课后记录", updated: d(-3) }),
                     m("S2", "薄弱点", "作文不分段，结尾草草收尾", { qtype: "书面表达", kp: "篇章结构", strength: 0.55, evidence: "作文 13/20，结构扣分", source: "课后记录", updated: d(-3) }),

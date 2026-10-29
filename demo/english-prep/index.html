@@ -327,7 +327,48 @@
   .stulist li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 4px 8px; border-radius: 8px; }
   .stulist li.on { background: var(--accent-bg); }
   .tag { font-size: 11.5px; color: var(--ink-3); border: 1px solid var(--rule); border-radius: 99px; padding: 0 7px; font-weight: 400; vertical-align: 1px; }
-  .newstu { margin-bottom: 18px; }
+  /* 建档页（MAT-508）：左边贴一段话 + 基本信息，右边学生画像；窄屏叠起来 */
+  .ns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .ns { grid-template-columns: 1fr; } }
+  .ns-col { display: grid; gap: 16px; min-width: 0; }
+  .ns-form { display: grid; gap: 16px; }
+  .ns-f { display: grid; gap: 7px; }
+  .ns-f > .lab { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .ns-pair { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr); gap: 8px; }
+  @media (max-width: 520px) { .ns-pair { grid-template-columns: 1fr; } }
+  .ns-pair select, .ns-pair input { width: 100%; font-size: 14px; padding: 6px 8px; }
+  .ns-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+  .ns-notes label { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+  .ns-notes .q { font-size: 12px; color: var(--ink-3); }
+  .ns-act { margin-top: 18px; }
+  /* 学生画像的光谱（建档页和档案卡共用）：拖的时候右边的字跟着变 */
+  .dims { display: grid; gap: 12px; }
+  .dim { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) 7.5em 1.2em; gap: 0 10px; align-items: center; }
+  .dim .nm { font-weight: 600; color: var(--ink-2); font-size: 13.5px; }
+  .dim .v { font-size: 13.5px; }
+  .dim .x { border: 0; background: none; color: var(--ink-3); cursor: pointer; font-size: 15px; padding: 0; }
+  .dim .x:hover { color: var(--red); }
+  .dim .ends, .dim .q { grid-column: 2 / 3; font-size: 11.5px; color: var(--ink-3); }
+  .dim .ends { display: flex; justify-content: space-between; gap: 8px; }
+  .dim .q { color: #a8621e; }
+  @media (max-width: 520px) { .dim { grid-template-columns: minmax(0, 1fr) auto 1.2em; } .dim input { grid-column: 1 / -1; grid-row: 2; } .dim .ends, .dim .q { grid-column: 1 / -1; } }
+  .dim input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; margin: 9px 0 5px; border-radius: 5px; background: linear-gradient(90deg, #ecc4b4, #ecebe6 50%, #b5d9c1); cursor: pointer; }
+  .dim input.prog { background: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--n) - 2px), var(--surface) calc(100% / var(--n) - 2px) calc(100% / var(--n))), linear-gradient(90deg, #dbe8f8, #7fa9e0); }
+  .dim input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .dim input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .dim input[type=range]:focus { outline: none; }
+  .dim input[type=range]:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  .dim-add { margin-top: 14px; font-size: 14px; }
+  .dim-add summary { cursor: pointer; color: var(--blue); font-size: 13.5px; list-style: none; }
+  .dim-add summary::-webkit-details-marker { display: none; }
+  .dim-g { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 8px; align-items: baseline; margin-top: 8px; }
+  .dim-g .chip { font-size: 13px; padding: 3px 11px; }
+  #whoDims { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); }
+  /* 首页底部：反馈联系方式 */
+  section.contact { margin-top: 44px; }
+  .contact-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; font-size: 15px; }
+  .contact-list li { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .contact-list .k { width: 3em; color: var(--ink-3); font-size: 13px; }
   .draft { color: var(--green); }
   .flow-wrap { margin-top: 40px; } .flow-wrap .step-h .note { margin-left: 0; }
   .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 30px; }
@@ -372,8 +413,17 @@
   <div class="flow" id="flow"></div>
 </section>
 <section class="how">
-  <h2 style="margin-bottom:10px">怎么做的</h2>
+  <h2 style="margin-bottom:10px">每个功能是做什么的</h2>
   <ul id="how"></ul>
+</section>
+<section class="contact">
+  <h2>想提反馈怎么联系我</h2>
+  <p class="note" style="margin:6px 0 0">哪里用着不顺手、想要什么功能，都欢迎告诉我。</p>
+  <ul class="contact-list">
+    <li><span class="k">微信</span><span>133 5781 1224</span><span class="note">和手机号同号，搜手机号就能加</span><button type="button" class="linkbtn" data-copy="13357811224">复制</button></li>
+    <li><span class="k">电话</span><a href="tel:13357811224">133 5781 1224</a></li>
+    <li><span class="k">邮箱</span><a href="mailto:matsuriismywaifu@gmail.com">matsuriismywaifu@gmail.com</a></li>
+  </ul>
 </section>
 </div>
 
@@ -386,28 +436,14 @@
     <div class="fslot" id="histFolder"></div>
     <div class="fside">
       <p class="note">点开文件夹，点一张就切到那份档案、打开那份教案。前三份是示例档案，看明白了就给自己的学生建档；档案和教案只存在你的浏览器里。</p>
-      <button class="btn small" id="newStuBtn">+ 新建学生档案</button>
+      <a class="btn small" href="#/newstu">+ 新建学生档案</a>
       <details class="fold" id="allStu"><summary id="allStuSum">全部档案</summary><ul class="stulist" id="stuList"></ul></details>
     </div>
   </div>
-  <form class="card newstu" id="newStu" hidden>
-    <h3>新建学生档案</h3>
-    <div class="setgrid">
-      <label>名字<input id="nsName" maxlength="10" required placeholder="比如：王同学"></label>
-      <label>年级<select id="nsGrade"><option value="7">七年级</option><option value="8" selected>八年级</option><option value="9">九年级</option></select></label>
-      <label>学校<select id="nsSchool"></select></label>
-      <label id="nsOtherWrap" hidden>学校名<input id="nsOther" maxlength="20" placeholder="比如：天一中学"></label>
-      <label>所在区<select id="nsDistrict"></select></label>
-      <label>公办 / 私立<select id="nsOwn"><option>公办</option><option>私立</option></select></label>
-      <label>注意力<select id="nsAttn"><option>集中</option><option selected>一般</option><option>容易分心</option></select></label>
-      <label>现在学到<select id="nsUnit"></select></label>
-    </div>
-    <p class="note" style="margin-top:10px">新档案从空白开始：上完课记一笔，agent 会把薄弱点、学习习惯一条条记进来；排大纲时按年级和学校找题。</p>
-    <div class="row" style="margin-top:6px"><button class="btn small">建档</button><button type="button" class="linkbtn" id="nsCancel">取消</button></div>
-  </form>
   <div class="grid2">
     <div class="card">
       <div class="who" id="who"></div>
+      <div id="whoDims"></div>
       <div class="remind" id="remind"></div>
       <ul class="mems" id="stuMems"></ul>
       <details class="fold" id="ledgerWrap" open><summary id="ledgerSum">薄弱知识点</summary><div id="ledger"></div></details>
@@ -432,6 +468,42 @@
 </section>
 
 <nav class="pager"><a href="#/">← 首页</a><a class="btn" href="#/exam">下一步：考试 →</a></nav>
+</div>
+
+<div class="page" data-page="newstu" hidden>
+<!-- 建档（MAT-508）：可以先贴一段话让 agent 填，再逐项核对；画像维度多，单独一页 -->
+<section class="step">
+  <div class="step-h"><h2>新建学生档案</h2><span class="note" style="margin-left:0">可以先贴一段话让 agent 把表填好，再逐项核对；也可以直接在下面选。建好以后在档案页还能拖、能加维度。</span></div>
+  <div class="ns">
+    <div class="ns-col">
+      <div class="card">
+        <h3>从一段话开始 <span class="note" style="font-weight:400">可选</span></h3>
+        <textarea id="nsText" maxlength="3000" rows="6" placeholder="家长的话、聊天记录、你对这个学生的印象，直接贴进来。比如：王同学，东林中学初二，这学期刚学到第二单元。作业经常拖到很晚、错题不订正，上课坐不住，二十分钟就开始走神。阅读还行，作文不会用连接词，目标是期末 110 分。"></textarea>
+        <div class="row" style="margin-top:10px"><button type="button" class="btn small" id="nsParse">让 agent 填表</button><span class="note" id="nsParseNote"></span></div>
+        <div id="nsNotesWrap" hidden><h3 style="margin:14px 0 4px">这些会记进档案 <span class="note" style="font-weight:400">不要的取消勾选</span></h3><ul class="ns-notes" id="nsNotes"></ul></div>
+      </div>
+      <form class="card ns-form" id="nsForm">
+        <h3>基本信息</h3>
+        <label class="ns-f"><span class="lab">名字</span><input type="text" id="nsName" maxlength="10" required placeholder="比如：王同学"></label>
+        <div class="ns-f"><span class="lab">年级</span>
+          <div class="chips" id="nsGrade" role="group" aria-label="年级"></div>
+          <div class="chips" id="nsTerm" role="group" aria-label="学期"></div>
+          <span class="note" id="nsGtNote"></span>
+        </div>
+        <div class="ns-f"><span class="lab">学校</span>
+          <div class="ns-pair"><select id="nsDistrict" aria-label="所在区"></select><select id="nsSchool" aria-label="学校" required></select></div>
+          <div class="ns-pair" id="nsOtherWrap" hidden><input type="text" id="nsOther" maxlength="20" placeholder="学校全称"><select id="nsOwn" aria-label="公办或私立"><option>公办</option><option>私立</option></select></div>
+          <span class="note" id="nsSchoolNote"></span>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h3>学生画像 <span class="note" style="font-weight:400">拖光谱；前三项直接显示，别的点「+ 更多维度」挑着加</span></h3>
+      <div id="nsDims"></div>
+    </div>
+  </div>
+  <div class="row ns-act"><button class="btn" form="nsForm">建档</button><a href="#/profile">取消，回档案</a></div>
+</section>
 </div>
 
 <div class="page" data-page="exam" hidden>
@@ -598,6 +670,7 @@ const pct = (x) => Math.round(x * 100) + "%";
 const TODAY = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
 const md5 = (d) => d.slice(5);
 const data = await (await fetch("./data.json")).json();
+const SCH = await (await fetch("./schools.json")).json();   // 无锡全部初中（scripts/wuxi_schools.py 生成）
 const R = data.rules, HALF = R.params.decayHalfLifeDays;
 const SRC_COLOR = { 年级: "var(--s-grade)", 学校: "var(--s-school)", 学生: "var(--s-student)", 老师: "var(--s-teacher)" };
 
@@ -640,23 +713,91 @@ $("#stats").innerHTML = [[data.stats.papers, "份无锡真卷（2022–2026）"]
     .map(([n, l]) => `<span><b>${n}</b>${l}</span>`).join("");
 
 // ---------- 1 档案 ----------
-const gradeLabel = (st) => `${({ 7: "七", 8: "八", 9: "九" })[st.grade]}年级 · ${M.cohortOf(st.grade, TODAY)} 届 · 译林版新教材`;
+const gradeLabel = (st) => `${stuGt(st).replace(/^(.)/, "$1年级")} · ${M.cohortOf(st.grade, TODAY)} 届 · 译林版新教材`;
 const schoolLabel = (st) => `${st.schoolName}${st.district ? " · " + st.district : ""} · ${st.ownership}`;
+
+// ---------- 学生画像（MAT-508）：学习进度、学习习惯、注意力集中度直接显示，别的点「+」挑着加；建档页和档案卡共用 ----------
+const CNG = { 7: "七", 8: "八", 9: "九" };
+const unitsOf = (gt) => (gt === "九下" ? 4 : 8);   // 译林版每册 8 个单元；九下还是旧版，4 个
+const stuGt = (st) => CNG[st.grade] + (st.term || M.termAt(TODAY));   // 没单独选过学期的，按今天的日期算
+const STAGES = ["刚开始", "学到一半", "快学完"];
+// 进度存成「第几个单元 + 这个单元学了多少」（3.5 = Unit 4 学到一半），st.unit 是取整后的单元，考试页和检索用它
+const progVal = (st, n) => (st.progress != null && Math.min(n, Math.floor(st.progress) + 1) === st.unit ? Math.min(st.progress, n) : Math.min(st.unit || 1, n) - 0.5);
+const progText = (v, n) => (v >= n ? "全册学完" : `Unit ${Math.floor(v) + 1} ${STAGES[Math.min(2, Math.floor((v % 1) * 3))]}`);
+function setProgress(st, v, n) { st.progress = v; st.unit = Math.min(n, Math.floor(v) + 1); }
+const shownDims = (st) => Mem.DIMS.filter((d) => d.core || st.dims?.[d.key] != null);
+// 发给模型的一行画像
+const profileLine = (st) => shownDims(st).map((d) => {
+    if (d.key === "progress") { const n = unitsOf(stuGt(st)); return `学习进度：${stuGt(st)} ${progText(progVal(st, n), n)}`; }
+    const v = Mem.dimValue(st, d.key);
+    return `${d.label}：${Mem.dimZone(d, v)}（${v}；0 ${d.lo}，100 ${d.hi}）`;
+}).join("；");
+function dimsHTML(st) {
+    const n = unitsOf(stuGt(st)), why = st.dimsWhy || {}, shown = shownDims(st);
+    const rows = shown.map((d) => {
+        const prog = d.key === "progress", v = prog ? progVal(st, n) : Mem.dimValue(st, d.key);
+        const input = prog ? `<input type="range" class="prog" min="0" max="${n}" step="0.05" value="${v}" style="--n:${n}" aria-label="学习进度">`
+            : `<input type="range" min="0" max="100" step="1" value="${v}" aria-label="${d.label}">`;
+        const ends = prog ? `<span>Unit 1</span><span>Unit ${n} 学完</span>` : `<span>${d.lo}</span><span>${d.hi}</span>`;
+        return `<div class="dim" data-k="${d.key}"><span class="nm">${d.label}</span>${input}<span class="v">${prog ? progText(v, n) : Mem.dimZone(d, v)}</span>`
+            + `${d.core ? "<span></span>" : `<button type="button" class="x" data-rm="${d.key}" title="去掉这一项" aria-label="去掉${d.label}">×</button>`}<span class="ends">${ends}</span>${why[d.key] ? `<span class="q">原文：${esc(why[d.key])}</span>` : ""}</div>`;
+    });
+    const more = Mem.DIMS.filter((d) => !shown.includes(d)), groups = [...new Set(more.map((d) => d.group))];
+    return `<div class="dims">${rows.join("")}</div>${more.length ? `<details class="dim-add"><summary>+ 更多维度</summary>${groups.map((g) => `<div class="dim-g"><span class="note">${g}</span><div class="chips">${more.filter((d) => d.group === g).map((d) => `<button type="button" class="chip" data-add="${d.key}">${d.label}</button>`).join("")}</div></div>`).join("")}</details>` : ""}`;
+}
+// 重画时保住「更多维度」的展开状态和键盘焦点（方向键拖光谱每按一下就是一次 change）
+function mountDims(el, st) {
+    const open = el.querySelector(".dim-add")?.open, fk = el.contains(document.activeElement) ? document.activeElement.closest(".dim")?.dataset.k : null;
+    el.innerHTML = dimsHTML(st);
+    if (open) el.querySelector(".dim-add")?.setAttribute("open", "");
+    if (fk) el.querySelector(`.dim[data-k="${fk}"] input`)?.focus();
+}
+// 拖的时候只改右边的字，松手（change）才写进档案；onSet(key, before) 里存盘、提示
+function wireDims(el, getSt, onSet) {
+    el.oninput = (e) => {
+        const row = e.target.closest(".dim"); if (!row || e.target.type !== "range") return;
+        const k = row.dataset.k, v = +e.target.value;
+        row.querySelector(".v").textContent = k === "progress" ? progText(v, unitsOf(stuGt(getSt()))) : Mem.dimZone(Mem.DIM[k], v);
+    };
+    el.onchange = (e) => {
+        const row = e.target.closest(".dim"); if (!row || e.target.type !== "range") return;
+        const st = getSt(), k = row.dataset.k, v = +e.target.value;
+        const before = { progress: st.progress, unit: st.unit, attention: st.attention, v: st.dims?.[k], why: st.dimsWhy?.[k] };
+        if (k === "progress") setProgress(st, v, unitsOf(stuGt(st))); else Mem.setDim(st, k, v);
+        if (st.dimsWhy) delete st.dimsWhy[k];   // 老师自己拖过，就不是原文里来的了
+        mountDims(el, st); onSet(k, before);
+    };
+    el.onclick = (e) => {
+        const st = getSt(), add = e.target.dataset.add, rm = e.target.dataset.rm;
+        if (add) Mem.setDim(st, add, 50);
+        else if (rm) { delete st.dims[rm]; if (st.dimsWhy) delete st.dimsWhy[rm]; }
+        else return;
+        mountDims(el, st); onSet(add || rm, null);
+    };
+}
+wireDims($("#whoDims"), () => stu(), (k, before) => {
+    const st = stu(); save();
+    if (k === "progress" && before) { U.unit = st.unit; renderExam(); renderReview(); toast(`${st.name}的学习进度改成「${progText(st.progress, unitsOf(stuGt(st)))}」，考试页的当前单元跟着改了`); }
+    if (k === "attention" && before && before.attention !== st.attention) {
+        renderStudents(); clearStaleOutline();
+        toast(`${st.name}的注意力改成「${st.attention}」${st.attention === "容易分心" ? "：大纲每个环节不超过 " + R.student.attentionMaxMinutes + " 分钟，讲义默认用彩色版" : ""}`, { label: "撤销", fn: () => {
+            st.attention = before.attention; if (before.v == null) delete st.dims.attention; else st.dims.attention = before.v;
+            save(); renderStudents();
+        } });
+    }
+});
 
 function renderStudents() {
     const st = stu();
+    mountDims($("#whoDims"), st);
     $("#who").innerHTML = `<div><div class="nm">${esc(st.name)}${isExample(st) ? ` <span class="tag">示例档案</span>` : ""}</div><div class="meta">${gradeLabel(st)}</div><div class="meta">${esc(schoolLabel(st))}</div></div>
-      <div class="who-ctl"><label>注意力 <select id="attn">${Mem.ATTENTION.map((a) => `<option ${a === st.attention ? "selected" : ""}>${a}</option>`).join("")}</select></label>
+      <div class="who-ctl">
         <label title="彩色版：题型配色、高亮线索词、步骤框。没勾过时按老师设置（${esc(SET().visual)}）"><input type="checkbox" id="visChk" ${isVisual(st) ? "checked" : ""}> 彩色讲义</label>
         ${st.visual != null ? `<button type="button" class="linkbtn" id="visReset" title="不单独指定，按老师设置和注意力">跟设置走</button>` : ""}
         <label title="Bionic reading：英文单词前半截加粗，把视线往后带，给注意力容易分散、有 ADHD 的学生用。学生版 Word 和页面上的题目都按它来"><input type="checkbox" id="bionicChk" ${st.bionic ? "checked" : ""}> Bionic 阅读</label></div>`;
 }
 $("#who").onchange = (e) => {
     const st = stu();
-    if (e.target.id === "attn") {
-        const before = st.attention; st.attention = e.target.value; save(); renderStudents(); clearStaleOutline();
-        toast(`${st.name}的注意力改成「${st.attention}」${st.attention === "容易分心" ? "：大纲每个环节不超过 " + R.student.attentionMaxMinutes + " 分钟，讲义默认用彩色版" : ""}`, { label: "撤销", fn: () => { st.attention = before; save(); renderStudents(); } });
-    }
     if (e.target.id === "bionicChk") { st.bionic = e.target.checked; save(); if (U.W?.items) renderItems(); toast(`${st.name}${st.bionic ? "的题目英文开了 Bionic 阅读（词头加粗），学生版 Word 也是" : "关了 Bionic 阅读"}`); }
     if (e.target.id === "visChk") { st.visual = e.target.checked; save(); renderStudents(); toast(`${st.name}的讲义${st.visual ? "用彩色版" : "用黑白版"}，下次写教案时生效`); }
 };
@@ -705,25 +846,105 @@ $("#stuList").onclick = (e) => {
     if (e.target.dataset.open) switchStudent(e.target.dataset.open);
     if (e.target.dataset.delstu) deleteStudent(e.target.dataset.delstu);
 };
-const SCHOOLS = [["东林", "东林中学", "梁溪区", "公办"], ["侨谊", "侨谊实验中学", "梁溪区", "公办"], ["省锡中", "锡山高级中学实验学校", "惠山区", "公办"], ["外国语", "无锡外国语学校", "", "私立"]];
-const DISTRICTS = ["梁溪区", "滨湖区", "新吴区", "惠山区", "锡山区", "经开区", "江阴市", "宜兴市"];
-$("#nsSchool").innerHTML = SCHOOLS.map(([k, n]) => `<option value="${k}">${n}</option>`).join("") + `<option value="">其他学校（自己填）</option>`;
-$("#nsDistrict").innerHTML = `<option value="">（不分区）</option>` + DISTRICTS.map((d) => `<option>${d}</option>`).join("");
-$("#nsUnit").innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}">Unit ${i + 1}</option>`).join("");
-const fillSchool = () => { const sc = SCHOOLS.find((x) => x[0] === $("#nsSchool").value); $("#nsOtherWrap").hidden = !!sc; if (sc) { $("#nsDistrict").value = sc[2]; $("#nsOwn").value = sc[3]; } };
-$("#nsSchool").onchange = fillSchool; fillSchool();
-$("#newStuBtn").onclick = () => { $("#newStu").hidden = false; $("#nsName").focus(); };
-$("#nsCancel").onclick = () => { $("#newStu").hidden = true; };
-$("#newStu").onsubmit = (e) => {
+// ---------- 建档页（MAT-508）：贴一段话让 agent 填，或者直接选；区和学校双向联动，选了学校自动带出区和公办 / 私立 ----------
+const SCHOOLS = SCH.schools, DISTRICTS = SCH.districts;
+let NS = null;   // 建档草稿：翻到别的页再回来还在，建完清掉
+const nsFresh = () => ({ grade: 8, term: M.termAt(TODAY), progress: 0, unit: 1, attention: "一般", dims: { habit: 50, attention: 50 }, dimsWhy: {}, notes: [], schoolHint: "" });
+const nsSch = () => (/^\d+$/.test($("#nsSchool").value) ? SCHOOLS[+$("#nsSchool").value] : null);
+function renderNewStu() {
+    NS ||= nsFresh();
+    $("#nsGrade").innerHTML = [7, 8, 9].map((g) => `<button type="button" class="chip" data-g="${g}" aria-pressed="${g === NS.grade}">${CNG[g]}年级</button>`).join("");
+    $("#nsTerm").innerHTML = ["上", "下"].map((t) => `<button type="button" class="chip" data-t="${t}" aria-pressed="${t === NS.term}">${t}学期</button>`).join("");
+    const gt = stuGt(NS);
+    $("#nsGtNote").textContent = `${gt.replace(/^(.)/, "$1年级")} · ${M.cohortOf(NS.grade, TODAY)} 届 · 译林版${gt === "九下" ? "（九下还是旧版，4 个单元）" : ""}`;
+    mountDims($("#nsDims"), NS);
+    $("#nsNotesWrap").hidden = !NS.notes.length;
+    $("#nsNotes").innerHTML = NS.notes.map((n, i) => `<li><label><input type="checkbox" data-i="${i}" ${n.on ? "checked" : ""}><span><span class="tag ${n.cat === "薄弱点" ? "weak" : n.cat === "已掌握" ? "ok" : ""}">${n.cat}</span>${esc(n.text)}${n.quote ? `<div class="q">原文：${esc(n.quote)}</div>` : ""}</span></label></li>`).join("");
+    nsSchoolNote();
+}
+const nsClamp = () => { const n = unitsOf(stuGt(NS)); if (NS.progress > n) setProgress(NS, n, n); };   // 换到九下（4 个单元）时进度别超出
+$("#nsGrade").onclick = (e) => { const b = e.target.closest("[data-g]"); if (b) { NS.grade = +b.dataset.g; nsClamp(); renderNewStu(); } };
+$("#nsTerm").onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) { NS.term = b.dataset.t; nsClamp(); renderNewStu(); } };
+wireDims($("#nsDims"), () => NS, () => {});
+$("#nsNotes").onchange = (e) => { if (e.target.dataset.i != null) NS.notes[+e.target.dataset.i].on = e.target.checked; };
+// 区选了就只列这个区的学校，没选按区分组列全部；选了学校，区跟着变
+$("#nsDistrict").innerHTML = `<option value="">全部区</option>` + DISTRICTS.map((d) => `<option>${d}</option>`).join("");
+function nsSchoolOpts() {
+    const d = $("#nsDistrict").value, cur = $("#nsSchool").value;
+    const opts = (dd) => SCHOOLS.map((s, i) => [s, i]).filter(([s]) => s.district === dd).map(([s, i]) => `<option value="${i}">${esc(s.name)}</option>`).join("");
+    $("#nsSchool").innerHTML = `<option value="">选学校（${d ? SCHOOLS.filter((s) => s.district === d).length : SCHOOLS.length} 所）</option>`
+        + (d ? opts(d) : DISTRICTS.map((dd) => `<optgroup label="${dd}">${opts(dd)}</optgroup>`).join("")) + `<option value="other">列表里没有，自己填</option>`;
+    $("#nsSchool").value = [...$("#nsSchool").options].some((o) => o.value === cur) ? cur : "";
+    nsSchoolNote();
+}
+function nsSchoolNote() {
+    const v = $("#nsSchool").value, s = nsSch();
+    $("#nsOtherWrap").hidden = v !== "other";
+    $("#nsSchoolNote").innerHTML = s ? `<span class="tag">${s.district}</span><span class="tag">${s.own}</span>按无锡市 2025 年初中一览表自动带出${s.key ? "；题库里有这所学校的卷子" : ""}`
+        : v === "other" ? "区按左边选的；公办还是私立自己选。" : esc(NS?.schoolHint) || "先选区可以缩小范围；直接选学校，区会自动带出来。";
+}
+$("#nsDistrict").onchange = () => nsSchoolOpts();
+$("#nsSchool").onchange = () => { const s = nsSch(); if (s && $("#nsDistrict").value !== s.district) { $("#nsDistrict").value = s.district; nsSchoolOpts(); } else nsSchoolNote(); };
+nsSchoolOpts();
+// 模型给的学校名去名录里对：全称、去掉校区的校名、包含关系依次放宽；对上几所就让老师选
+const ALIAS = { 锡外: "无锡外国语学校", 省锡中: "江苏省锡山高级中学实验学校", 一女中: "无锡市第一女子中学" };
+const sCore = (s) => s.replace(/^(江苏省|无锡市|无锡)/, "").replace(/[（）()\s]/g, "");
+const sBase = (s) => s.replace(/（[^）]*校区）$/, "");
+function matchSchool(raw, district) {
+    let q = String(raw || "").trim(); if (!q) return [];
+    for (const [a, full] of Object.entries(ALIAS)) if (q.includes(a) && !q.includes(full)) q = q.replace(a, full);
+    const qc = sCore(q);
+    let hits = SCHOOLS.filter((s) => s.name === q || sCore(s.name) === qc);
+    if (!hits.length) hits = SCHOOLS.filter((s) => sCore(sBase(s.name)) === sCore(sBase(q)));
+    if (!hits.length) hits = SCHOOLS.filter((s) => sCore(s.name).includes(qc));
+    if (hits.length > 1 && DISTRICTS.includes(district)) { const h = hits.filter((s) => s.district === district); if (h.length) hits = h; }
+    return hits;
+}
+function nsApply(p) {
+    let got = 0;
+    if (p.name) { $("#nsName").value = p.name; got++; }
+    if (p.grade) { NS.grade = p.grade; got++; }
+    if (p.term) NS.term = p.term;
+    const hits = matchSchool(p.school, p.district), ds = [...new Set(hits.map((s) => s.district))];
+    NS.schoolHint = "";
+    if (hits.length === 1) { $("#nsDistrict").value = hits[0].district; nsSchoolOpts(); $("#nsSchool").value = String(SCHOOLS.indexOf(hits[0])); got++; }
+    else {
+        $("#nsDistrict").value = ds.length === 1 ? ds[0] : DISTRICTS.includes(p.district) ? p.district : ""; nsSchoolOpts();
+        if (hits.length) NS.schoolHint = `原文写的「${p.school}」，名录里对得上 ${hits.length} 所，选一下`;
+        else if (p.school) { $("#nsSchool").value = "other"; $("#nsOther").value = p.school; NS.schoolHint = ""; got++; }
+    }
+    nsClamp();
+    if (p.progress) { const n = unitsOf(stuGt(NS)); setProgress(NS, Math.min(n, p.progress.unit - 1 + { 刚开始: 0.15, 学到一半: 0.5, 快学完: 0.85 }[p.progress.stage]), n); got++; }
+    for (const d of p.dims) { Mem.setDim(NS, d.key, d.value); if (d.quote) NS.dimsWhy[d.key] = d.quote; got++; }
+    NS.notes = p.notes.map((n) => ({ ...n, on: true })); got += p.notes.length;
+    renderNewStu();
+    return got;
+}
+$("#nsParse").onclick = async () => {
+    const text = $("#nsText").value.trim();
+    if (text.length < 10) { $("#nsParseNote").textContent = "多写几句这个学生的情况"; return; }
+    $("#nsParse").disabled = true; $("#nsParseNote").textContent = "agent 在读这段话……";
+    try {
+        const { profile } = await post({ action: "intake", text, dims: Mem.DIMS.filter((d) => d.lo).map(({ key, label, lo, hi }) => ({ key, label, lo, hi })) });
+        const got = nsApply(profile);
+        $("#nsParseNote").textContent = `填好了 ${got} 项，标着「原文」的是从这段话里来的，核对一下再建档。${$("#nsOther").value && $("#nsSchool").value === "other" ? "名录里没找到这所学校，按原文填了，公办还是私立看一下。" : ""}${profile.missing ? "还可以补：" + profile.missing : ""}`;
+    } catch (e) { $("#nsParseNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; }
+    $("#nsParse").disabled = false;
+};
+$("#nsForm").onsubmit = (e) => {
     e.preventDefault();
-    const name = $("#nsName").value.trim(), sc = SCHOOLS.find((x) => x[0] === $("#nsSchool").value);
+    const name = $("#nsName").value.trim(), v = $("#nsSchool").value, sc = nsSch();
     if (!name) return;
-    // 不在题库常见学校里的，school 留空（检索不加「同校」分），区照填
-    const st = { id: "s" + Date.now().toString(36), name, grade: +$("#nsGrade").value, school: sc ? sc[0] : "", schoolName: sc ? sc[1] : $("#nsOther").value.trim() || "其他学校",
-        district: $("#nsDistrict").value, ownership: $("#nsOwn").value, textbook: "新", unit: +$("#nsUnit").value, attention: $("#nsAttn").value, mems: [], logs: [] };
+    if (!v) { toast("选一下学校；名录里没有就选「列表里没有，自己填」"); $("#nsSchool").focus(); return; }
+    // school 只在题库里有这所学校的卷子时才填（检索给「同校」加分）；学期和今天的日期对得上就不存，以后跟着日期走
+    const st = { id: "s" + Date.now().toString(36), name, grade: NS.grade, ...(NS.term !== M.termAt(TODAY) ? { term: NS.term } : {}),
+        school: sc?.key || "", schoolName: sc ? sc.name : $("#nsOther").value.trim() || "其他学校", district: sc ? sc.district : $("#nsDistrict").value, ownership: sc ? sc.own : $("#nsOwn").value,
+        textbook: "新", unit: NS.unit, progress: NS.progress, attention: NS.attention, dims: { ...NS.dims }, dimsWhy: { ...NS.dimsWhy }, mems: [], logs: [] };
+    const notes = NS.notes.filter((n) => n.on);
+    if (notes.length) Mem.applyOps(memState(st), notes.map((n) => ({ op: "add", who: "student", cat: n.cat, text: n.text, qtype: n.qtype, evidence: n.quote, why: "建档时老师贴的描述" })), TODAY, "建档描述");
     S.students.push(st); snapWork();
-    $("#newStu").hidden = true; e.target.reset(); fillSchool();
-    loadStudent(st.id); toast(`建好了「${name}」的档案`);
+    NS = null; e.target.reset(); $("#nsText").value = ""; $("#nsParseNote").textContent = ""; nsSchoolOpts();
+    loadStudent(st.id); go("profile"); toast(`建好了「${name}」的档案${notes.length ? `，记进了 ${notes.length} 条记忆` : ""}`);
 };
 
 function memHTML(m, who) {
@@ -913,7 +1134,7 @@ $("#recBtn").onclick = async () => {
 // ---------- 2 下一场考试 ----------
 function initExam() {
     const st = stu();
-    const ex = M.nextExam(st.grade, TODAY, R) || { kind: "期末", gt: M.gtOf(st.grade, TODAY), date: null, days: null };
+    const ex = M.nextExam(st.grade, TODAY, R, st.term && stuGt(st)) || { kind: "期末", gt: stuGt(st), date: null, days: null };   // 建档时单独选了学期的，只看那个学期的考试
     U.gt = ex.gt; U.kind = ex.kind; U.unit = st.unit || 1; U.level = null; U.reviewTouched = false;
     U.minutes = SET().minutes;   // 课时从老师设置读（固定环节见 fixedMin）
     U.difficulty = SET().difficulty; U.template = null;
@@ -958,7 +1179,7 @@ function deriveCtx() {
 function renderExam() {
     const c = U.ctx, st = c.st;
     $("#examKind").innerHTML = M.examKinds(U.gt).map((k) => `<option ${k === U.kind ? "selected" : ""}>${k}</option>`).join("").replace(/<option( selected)?>([^<]+)<\/option>/g, (m, s, k) => `<option value="${k}"${s || ""}>${U.gt}${k}</option>`);
-    $("#unit").innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}" ${i + 1 === U.unit ? "selected" : ""}>Unit ${i + 1}</option>`).join("");
+    $("#unit").innerHTML = Array.from({ length: unitsOf(U.gt) }, (_, i) => `<option value="${i + 1}" ${i + 1 === U.unit ? "selected" : ""}>Unit ${i + 1}</option>`).join("");
     $("#minutes").value = U.minutes;
     $("#days").textContent = c.days != null ? `${md5(c.date)} · 还有 ${c.days} 天` : "日历里没有这场考试的日期";
     $("#level").innerHTML = ["统考", "不统考", "不知道"].map((k) => `<button class="chip" data-lv="${k}" aria-pressed="${k === c.level}">${k}${k === c.lv.suggest ? " ·建议" : ""}</button>`).join("");
@@ -1171,7 +1392,7 @@ function ctxPayload() {
     const c = U.ctx, st = c.st;
     const fl = M.flows(U.rows.filter((r) => r.share >= 0.005));
     return {
-        student: { name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), school: st.school, district: st.district, textbook: st.textbook, attention: st.attention },
+        student: { name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), school: st.school, district: st.district, textbook: st.textbook, attention: st.attention, profile: profileLine(st) },
         studentMems: st.mems, teacherMems: S.teacher.mems, logs: logsLite(st), guidance: U.guidance, minutes: U.minutes,
         settings: SET(), difficulty: U.difficulty, weakKps: weakKpsText(c.led), attentionMax: R.student.attentionMaxMinutes,
         visual: U.W?.md ? !!U.W.visual : isVisual(st),
@@ -1965,26 +2186,27 @@ for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) 
     btn.disabled = false;
 };
 
-// ---------- 怎么做的 ----------
+// ---------- 每个功能是做什么的（首页，写给老师看：是什么、能帮你做什么，不讲技术） ----------
 $("#how").innerHTML = [
-    `<b>题库</b>：${data.stats.papers} 份 2022–2026 年无锡初中英语卷（学校卷、区统考卷、中考真题）。模型读带行号的卷子，只返回每道题的行号范围、答案、考点和话题，原文由脚本按行号切出来，72 份一分钟、不到一块钱；原卷没有答案的，答案标「模型作答」。题库存成 SQLite（卷子 / 题组 / 图片三张表）。`,
-    `<b>图片</b>：卷子里的图按原位置放回题组（题面里的 ⟦图n⟧），模型把图分类并转写图中文字（海报、通知、流程图），检索和写教案都读得到；导出 Word 时原图放回原位置。`,
-    `<b>结构模板</b>：按「年级学期 × 考试类型 × 教材版本」汇总配分；库里没有的格子借最近的一格，并写明借的是哪格。2027 届中考不考单选，九年级借旧教材卷子时去掉单选、补语法填空（推测，样本两份）。这些教研口径都在一份规则配置里，每年变了改配置、不改代码。`,
-    `<b>占比</b>：结构配分 × (1 + 学生薄弱程度) × (1 + 老师侧重)，结构配分里按老师选的出卷来源混入本校 / 本区卷，九年级再按离中考的远近混入中考结构。每个题型的份额拆成四个来源画成桑基图。`,
-    `<b>检索</b>：按题型、出卷来源（统考 / 校考）、年级学期和考试类型过滤，不够就逐级放宽，考点对口的题优先补进来；再用 BM25 + bge-m3 向量 + 考点 / 同校加分排序，bge-reranker 重排。20 条「年级 × 考试 × 题型 × 考点」查询，前 5 条考点对得上的比例 85.7%。`,
-    `<b>记忆</b>：参照 Meta Muse、Grok 的做法，老师和学生各一份档案，记忆来自老师直接说的、课后记录，以及观察到的老师调占比的习惯。模型只提议增删改，落到档案上的每条改动都显示原因、能撤销；薄弱点做对一次只降强度，连续做好才转成「已掌握」，强度按 ${HALF} 天半衰。连录 3 次课的评测 6/6 符合预期。`,
-    `<b>复盘</b>：读最近几次课的记录（当时教案怎么排、课后错在哪），找「讲了几次还在错」「已经稳了还在花时间」这类信号，给下次课提建议，每条都指回具体某次课。`,
-    `<b>先大纲、后教案</b>：检索完例题先排一份结构化大纲（四维依据、目标、环节、分钟、要点、用题、作业），老师逐项改、加题减题、从题库再找一道；大纲里各题型的分钟数实时同步到上面的占比。确认后再按大纲写成教案，环节、分钟、用题都不变。老师对大纲的改动会记成「观察」，反复出现就成了老师的偏好。`,
-    `<b>审教校验</b>：教案写好以后在「审教」页过一遍：系统先查课时对不对得上、例题是不是本年级的、每道题讲到没有、换过的题重写没有、引用的档案编号在不在；老师再按清单自己看。`,
-    `<b>跟 agent 商量</b>：聊天放在「审教」页，按进度改：有教案就改教案，只有大纲就改大纲，都还没有就改设置；设置阶段改占比和要求，大纲阶段改环节、分钟、用题，教案阶段改任意一节。agent 只能给出一组限定好的修改（改分钟、换题、重写某节……），页面校验后执行，每次都能整体撤销；要新题时它先去题库检索，拿到新题号再接着改。老师说「以后都这样」的，同时写进老师档案。不填 key 用站长在硅基流动的额度、按 IP 限次；可以填自己的 DeepSeek / 硅基流动 key，只存在你的浏览器里，经本站函数转发，不限次数。`,
-    `<b>老师画像</b>：课型、课时、固定环节、作业、讲义版式、默认模板、例题难度这些课堂设置老师自己填，排占比、写大纲和教案都按它来；每次改动留历史、能撤销，课后记录和聊天里说出来的长期变化由 agent 提议改设置。同时统计老师的操作（调了哪个题型的占比、改了大纲哪里、换掉什么样的题），同一个方向调 3 次以上就提议设成默认。`,
-    `<b>学生画像</b>：课次记录里的错误对齐到考点表，按知识点累计练了几次、错了几次、最近一次和趋势，跨 ${R.student.longMinLessons} 次课以上都错的算长期薄弱，排占比时权重更大。注意力容易分散的学生，大纲每个环节不超过 ${R.student.attentionMaxMinutes} 分钟、讲练交替，教案和 Word 用彩色版：题型配色（色盲友好）、高亮线索词、步骤框，黑白打印也分得清。`,
-    `<b>难度系数</b>：看一篇阅读理解、完形填空、语法填空里，这个学生还没学过的生词有多少。哪个词哪一册学，查译林版（苏教版）七上到九下的单词表（九下新版还没出，用旧版）；学生在哪一册，这一册以后才学的、初中不学的都算生词。动词 > 名词 > 形容词 > 其他，题目（题干加选项）里的 > 文章里的；同一篇题对不同年级的学生难度不一样，所以每篇按六册各算一档。`,
-    `<b>教案模板和两版</b>：结构不框死：可以套四维备课、机构常用格式、一对一精简版、彩色视觉版，也可以选「自由结构」，或者直接写一句「这份教案还要……」；老师可以复制模板改、上传自己的 Word 教案抽结构。导出分两版：老师版每道题下面跟答案和解析（也可以放到文档末尾），学生版按上课环节排题、题号换成「练习 N」，没有答案、解析和内部标记。题面末尾附了答案的旧卷子，建库时就把答案切掉。`,
-    `<b>课外知识补充</b>：词根词缀、构词法、熟词僻义、短语动词、易混词、英美差异、俗语谚语、习语、文化常识九类现成条目，自己写好、核对过，不让模型临场编。俗语谚语只收近年无锡卷单选（多是最后一道情景交际题）真考过的，真题对话就是使用场景。每节课按这节用到的题挑 2–3 条：词根词缀优先拆这个学生没学过的生词，易混词看同一道题的选项，熟词僻义、短语动词看原文里有没有，谚语和文化常识对文章话题。大纲里多一个环节（分钟数在课堂设置里改，也可以不加），老师能删条目、从候选里加；教案里这一节直接拼现成的讲解，学生版 Word 是一张「课外知识卡」。`,
-    `<b>手机上调比例</b>：照 iPhone「存储空间」的样子，一条分段的彩色横条加图例：拖两段之间的分界线，比例就在相邻两段之间挪；图例上的 ± 微调。占比和大纲各环节的分钟都这样调。`,
-    `<b>版权和隐私</b>：题库和图片加密后才放进公开仓库，函数里解密，页面只拿到被选中的单道题和出处，不提供整份原卷；页面回传的题目只有编号，题面一律从题库取。学生档案只存在你的浏览器里。模型默认用硅基流动上的 DeepSeek V4.1 Flash，向量和重排用硅基流动的 bge-m3 / bge-reranker-v2-m3。`,
+    `<b>学生档案</b>：一个学生一份，记着年级学期、学校，和下面这些画像；agent 还会把课后记录里看出来的薄弱点、已经掌握的、目标一条条记进来。排占比、挑例题、写教案都按它来。建档时可以直接贴一段家长的话或聊天记录，agent 先把表填好，你核对一下就行。`,
+    `<b>学生画像</b>：每一项是一条能拖的光谱，比如注意力从「容易分心」到「集中」。学习进度、学习习惯、注意力默认就有，词汇量、自信心、家长配合这些需要时点「+」加。注意力容易分心的学生，大纲每个环节不超过 ${R.student.attentionMaxMinutes} 分钟、讲练交替，讲义用彩色版。`,
+    `<b>课后记一笔</b>：上完课随手写一句，比如「完形 10 错 4，都错在转折处」。agent 把它拆成几条档案改动（新增、修改、删除），每条写着原因，不对就撤销。同一个知识点跨 ${R.student.longMinLessons} 次课以上都错，算长期薄弱，排课时多给时间；做对一次只减轻，连续做好才算掌握。`,
+    `<b>老师档案和课堂设置</b>：课型、一次课多长、开头默写和结尾回顾各几分钟、作业量、讲义版式这些你自己填，每份教案都照着排。你反复做的同一种调整（比如每次都把阅读调多），agent 会提议设成默认。`,
+    `<b>下一场考试</b>：按今天的日期和学生的年级学期，推出下一场考试（月考、期中、期末、一模……）和大概的考试范围。出卷来源你来选：统考就从往年统考卷里挑题，不统考就从学校自己出的卷子里挑，不知道就两边各一半；系统会按这所学校往年的情况给个建议。`,
+    `<b>四个维度的占比</b>：一节课里每个题型花多少时间。它由四样东西一起决定：年级（下一场考试考哪些题型、各占多少分）、学校（这场考试用谁的卷子）、学生（薄弱点）、老师（这次的侧重）。图上看得出每个题型的时间分别是哪一维给的，比例可以直接拖。`,
+    `<b>题库和例题</b>：${data.stats.papers} 份 2022–2026 年无锡初中英语真卷（学校卷、区统考卷、中考真题），拆成一道道题，带出处、答案和考点。排课时按题型、年级、考试类型和知识点自动挑例题，每道写着为什么选它；不合适可以换一道，或者说一句要求让它再找。页面上只给单道题，不提供整份原卷。`,
+    `<b>难度</b>：一篇阅读、完形或语法填空难不难，主要看里面有多少这个学生还没学过的词：按译林版单词表和学生学到哪一册算，题目和选项里的生词比文章里的影响大。所以同一篇题，初一学生和初三学生看到的难度不一样。挑例题时可以选偏易、适中或偏难。`,
+    `<b>先大纲、后教案</b>：先出一份大纲：分几个环节、各多少分钟、每个环节用哪几道题、讲什么。你改到满意，再让它写成完整教案，环节、分钟、用题都照大纲来。教案有几种模板可选，也可以不定结构、直接写一句要求，或者上传你自己的 Word 教案，让它照着学格式。`,
+    `<b>老师版和学生版</b>：导出 Word 时分两版：老师版每道题下面带答案和解析（也可以统一放到最后），学生版只有题目，按上课顺序排，没有答案。`,
+    `<b>课外知识补充</b>：每节课自动加一小段课外知识：词根词缀、熟词僻义、易混词、近年真考过的俗语谚语这类，按这节课用到的题挑两三条，都是事先写好、核对过的。时长在课堂设置里改，设成 0 就不加。`,
+    `<b>审教</b>：教案写好后在这一页过一遍：系统先自动查课时对不对、例题是不是本年级的、每道题讲到没有，再给你一份自己看的清单。哪里要改，在右边跟 agent 说，改完不满意可以整体撤销。`,
+    `<b>复盘建议</b>：课记得越多，agent 越能看出「讲了几次还在错」「已经稳了还在花时间」这类情况，给下次课提建议，每条都指回具体哪一次课。`,
+    `<b>数据存在哪</b>：示例学生是虚构的，学校是真实学校。档案和教案只存在你自己的浏览器里，换台电脑就看不到了。agent 每人每天有免费次数，用完了可以在聊天框的设置里填自己的 DeepSeek key。`,
 ].map((x) => `<li>${x}</li>`).join("");
+document.querySelector(".contact-list").onclick = async (e) => {
+    const n = e.target.dataset.copy; if (!n) return;
+    try { await navigator.clipboard.writeText(n); toast("手机号复制好了，去微信里搜就能加"); } catch { toast(`复制没成功，手动记一下：${n}`); }
+};
 $("#resetAll").onclick = () => { if (!confirm("把档案、课堂设置、自建模板都恢复成示例数据？你在这页上的改动会全部丢掉，不能撤销。")) return; S = fresh(); save(); U = {}; renderAll(); clearPlan(); toast("已恢复成示例数据"); };
 
 // ---------- 保存工作区（MAT-482）----------
@@ -2102,14 +2324,15 @@ function renderXHint() {
 // ---------- 多页面（用户 10-29）----------
 // 地址里的 #/档案 这类分页，都在这一个页面里切换：状态不用跨页面同步，正在生成的大纲、教案翻到别的页也不会断。
 // 用 pushState 换地址（不触发 hashchange），浏览器前进后退走 popstate；E 编号那种 #item-E3 锚点不当成分页
-const PAGES = { home: "首页", profile: "档案", exam: "考试", outline: "维度与大纲", plan: "教案", review: "审教" };
+const PAGES = { home: "首页", profile: "档案", exam: "考试", outline: "维度与大纲", plan: "教案", review: "审教", newstu: "新建学生档案" };
 const page = () => { const k = /^#\/(\w*)/.exec(location.hash)?.[1] || "home"; return Object.hasOwn(PAGES, k) ? k : "home"; };
 function route() {
     const k = page();
     document.querySelectorAll(".page").forEach((el) => (el.hidden = el.dataset.page !== k));
-    document.querySelectorAll(".topnav a").forEach((a) => (a.dataset.page === k ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+    document.querySelectorAll(".topnav a").forEach((a) => (a.dataset.page === (k === "newstu" ? "profile" : k) ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));   // 建档页算在「档案」下面
     document.title = k === "home" ? "英语备课 Agent Demo" : `${PAGES[k]} · 英语备课 Agent`;
     if (k === "home") renderHome();
+    if (k === "newstu") renderNewStu();
     if (k === "review") renderAudit();
     renderChat();
 }

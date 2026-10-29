@@ -12,8 +12,9 @@ export const cohortOf = (grade, today) => schoolYearEnd(today) + (9 - grade);
 export function termAt(date) { const m = +date.slice(5, 7); return m >= 8 || m === 1 ? "上" : "下"; }
 export const gtOf = (grade, date) => CN[grade] + termAt(date);
 
-export function nextExam(grade, today, rules) {
-    const ev = rules.examCalendar.events.filter((e) => e.grades.includes(grade) && e.date >= today).sort((a, b) => a.date.localeCompare(b.date))[0];
+// gt 给了就只看这个年级学期里的考试（老师建档时选了学期）
+export function nextExam(grade, today, rules, gt) {
+    const ev = rules.examCalendar.events.filter((e) => e.grades.includes(grade) && e.date >= today && (!gt || gtOf(grade, e.date) === gt)).sort((a, b) => a.date.localeCompare(b.date))[0];
     return ev ? { kind: ev.kind, date: ev.date, label: ev.label || "", gt: gtOf(grade, ev.date), days: daysBetween(today, ev.date) } : null;
 }
 export const examKinds = (gt) => (gt === "九下" ? ["单元", "月考/阶段", "中考模拟", "中考"] : ["单元", "月考/阶段", "期中", "期末"]);

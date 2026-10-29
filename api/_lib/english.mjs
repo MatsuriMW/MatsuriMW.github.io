@@ -474,6 +474,7 @@ function materials(p) {
     const st = p.student, at = attnLine(st.attention);
     return [
         `【学生】${clip(st.name, 10)}，${clip(st.gradeLabel, 30)}，${clip(st.schoolLabel, 40)}${at ? "；" + at : ""}`,
+        st.profile ? `【学生画像（老师拖光谱填的，0–100）】${clip(st.profile, 500)}` : "",
         `【学生档案】\n${p.studentMems.map(memLine).join("\n") || "（空）"}`,
         p.weakKps ? `【薄弱知识点（按课次记录累计）】${clip(p.weakKps, 300)}` : "",
         `【老师档案】\n${p.teacherMems.map(memLine).join("\n") || "（空）"}`,
@@ -678,6 +679,7 @@ ${SET_OPS}
     const st = p.student, at = attnLine(st.attention);
     const lines = [
         `【学生】${clip(st.name, 10)}，${clip(st.gradeLabel, 30)}，${clip(st.schoolLabel, 40)}`,
+        st.profile ? `【学生画像（老师拖光谱填的，0–100）】${clip(st.profile, 500)}` : "",
         `【学生档案】\n${p.studentMems.map(memLine).join("\n") || "（空）"}`,
         `【老师档案】\n${p.teacherMems.map(memLine).join("\n") || "（空）"}`,
         `【老师设置】${settingsLine(p.settings, p.minutes)}${at ? "\n【学生特点】" + at : ""}`,
@@ -753,6 +755,45 @@ export function templateMessages(text) {
 kind：教学过程、课堂流程这类按时间排环节的表格写 flow；按题型 / 环节逐个展开讲解的写 types；「设计依据」「学情分析」这类说明为什么这样设计的写 basis（最多一节）；教学目标、重难点、板书、作业、反思等其他小节一律写 text。flow、types、basis 各最多一节。
 按原教案的顺序，最多 10 节；只要结构，不要抄原教案的具体内容。教案标题本身不算一节。`;
     return [{ role: "system", content: sys }, { role: "user", content: String(text).slice(0, 4000) }];   // 不用 clip：要留着换行，模型才看得出标题和表格行
+}
+
+// 建档（MAT-508）：老师贴一大段话（家长的话、聊天记录、自己的印象），抽成档案字段、画像维度和几条初始记忆，老师核对后再建档。
+// 维度定义由页面传来（web/memory.js 的 DIMS），这里只认传来的 key；学校名原样返回，页面去全市学校表里对
+export function intakeMessages(text, dims) {
+    const sys = `老师要给一个初中学生建英语家教档案，贴了一段关于这个学生的话（家长的话、聊天记录、老师自己的印象都可能）。把能确定的字段抽出来，只输出一个 JSON 对象：
+{"name": "学生的称呼，原文没有就空字符串", "grade": 7 或 8 或 9 或 null（初一 = 七年级 = 7）, "term": "上" 或 "下" 或 null,
+ "school": "学校名，尽量写全称并带上原文提到的校区（锡外 → 无锡外国语学校，省锡中 → 江苏省锡山高级中学实验学校）；没提就空字符串",
+ "district": "所在区：梁溪区 / 锡山区 / 惠山区 / 滨湖区 / 新吴区 / 经开区 / 江阴市 / 宜兴市，没提就空字符串",
+ "progress": {"unit": 学到第几单元（整数）, "stage": "刚开始|学到一半|快学完"} 或 null,
+ "dims": [{"key": "维度 key", "value": 0 到 100 的整数, "quote": "原文依据，30 字以内"}],
+ "notes": [{"cat": "薄弱点|已掌握|学习习惯|状态|目标", "text": "一句话，30 字以内", "qtype": "题型或空字符串", "quote": "原文依据，40 字以内"}],
+ "missing": "原文没提、建档最好补上的信息，30 字以内（写了学校就不算缺所在区，区会按学校自动带出）"}
+
+维度（0 是左端，100 是右端，50 是一般）：
+${dims.map((d) => `- ${d.key}：${d.label}（0 ${d.lo} ↔ 100 ${d.hi}）`).join("\n")}
+
+规则：
+1. 只抽原文说到的：没依据的字段留空或 null，没依据的维度不给，不要猜。每个维度、每条 notes 都要有原文依据。
+2. 维度值按原文的程度给：「特别」「完全」靠两端（10 或 90 左右），「有点」「比较」给 30 或 70 左右，「还行」给 50。
+3. notes 放维度表达不了的具体信息：哪类题常错、哪类已经稳了、目标分数、性格和状态。最多 8 条；维度里已经有的不要再写一遍。
+4. qtype 只能从这些里选：${TYPES.join("、")}，或空字符串。`;
+    return [{ role: "system", content: sys }, { role: "user", content: String(text).slice(0, 3000) }];
+}
+const INTAKE_CATS = ["薄弱点", "已掌握", "学习习惯", "状态", "目标"];
+export function cleanIntake(d, keys) {
+    if (!d || typeof d !== "object") return null;
+    const int = (v, lo, hi) => (v == null || v === "" || !Number.isFinite(+v) ? null : Math.max(lo, Math.min(hi, Math.round(+v))));
+    const seen = new Set(), unit = int(d.progress?.unit, 1, 8);
+    return {
+        name: clip(d.name, 10), grade: [7, 8, 9].includes(+d.grade) ? +d.grade : null, term: ["上", "下"].includes(d.term) ? d.term : null,
+        school: clip(d.school, 30), district: clip(d.district, 6),
+        progress: unit ? { unit, stage: ["刚开始", "学到一半", "快学完"].includes(d.progress.stage) ? d.progress.stage : "学到一半" } : null,
+        dims: (Array.isArray(d.dims) ? d.dims : []).filter((x) => keys.includes(x?.key) && int(x.value, 0, 100) != null && !seen.has(x.key) && seen.add(x.key))
+            .map((x) => ({ key: x.key, value: int(x.value, 0, 100), quote: clip(x.quote, 40) })),
+        notes: (Array.isArray(d.notes) ? d.notes : []).filter((x) => INTAKE_CATS.includes(x?.cat) && clip(x.text, 60)).slice(0, 8)
+            .map((x) => ({ cat: x.cat, text: clip(x.text, 60), qtype: TYPES.includes(x.qtype) ? x.qtype : "", quote: clip(x.quote, 60) })),
+        missing: clip(d.missing, 40),
+    };
 }
 
 // ---------- 限流（同第二大脑：Upstash Redis 计数，没配就用函数内存） ----------

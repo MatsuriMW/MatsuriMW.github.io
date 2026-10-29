@@ -6,6 +6,39 @@ export const STUDENT_CATS = ["薄弱点", "已掌握", "学习习惯", "状态",
 export const TEACHER_CATS = ["讲题习惯", "课堂结构", "偏好"];
 export const ATTENTION = ["集中", "一般", "容易分心"];
 
+// 学生画像的维度（用户 10-29）：core 的三项建档就显示，其余老师点「+」挑着加。
+// 每项是一条 0–100 的光谱，左端 lo、右端 hi，中间一段算「一般」，存在 st.dims 里。
+// 学习进度例外：按这一册的单元算，存在 st.progress / st.unit（页面上画）；注意力的三段正好是 ATTENTION，st.attention 跟着变
+export const DIMS = [
+    { key: "progress", label: "学习进度", core: true },
+    { key: "habit", label: "学习习惯", lo: "拖拉马虎", hi: "自觉认真", core: true },
+    { key: "attention", label: "注意力集中度", lo: "容易分心", hi: "集中", core: true },
+    { key: "vocab", label: "词汇量", lo: "偏少", hi: "扎实", group: "英语能力" },
+    { key: "grammar", label: "语法基础", lo: "薄弱", hi: "扎实", group: "英语能力" },
+    { key: "reading", label: "阅读速度", lo: "慢", hi: "快", group: "英语能力" },
+    { key: "listening", label: "听力", lo: "听不懂", hi: "听得清", group: "英语能力" },
+    { key: "speaking", label: "口语表达", lo: "不敢开口", hi: "流利", group: "英语能力" },
+    { key: "writing", label: "书面表达", lo: "写不出", hi: "写得好", group: "英语能力" },
+    { key: "handwriting", label: "书写卷面", lo: "潦草", hi: "工整", group: "英语能力" },
+    { key: "initiative", label: "学习主动性", lo: "要人催", hi: "主动", group: "学习状态" },
+    { key: "confidence", label: "自信心", lo: "容易紧张", hi: "自信", group: "学习状态" },
+    { key: "participation", label: "课堂互动", lo: "不爱发言", hi: "积极发言", group: "学习状态" },
+    { key: "parent", label: "家长配合", lo: "很少过问", hi: "配合紧密", group: "家庭" },
+];
+export const DIM = Object.fromEntries(DIMS.map((d) => [d.key, d]));
+export const dimZone = (d, v) => (v < 34 ? d.lo : v > 66 ? d.hi : "一般");
+const ATT_MID = { 容易分心: 17, 一般: 50, 集中: 83 };
+// 光谱上的值。注意力以 st.attention 为准（agent 记一笔也会改它），两边对不上就取那一段的中间；没填过的算 50
+export function dimValue(st, key) {
+    const v = st.dims?.[key];
+    if (key === "attention") return v != null && dimZone(DIM.attention, v) === st.attention ? v : ATT_MID[st.attention];
+    return v ?? 50;
+}
+export function setDim(st, key, v) {
+    (st.dims ||= {})[key] = v;
+    if (key === "attention") st.attention = dimZone(DIM.attention, v);
+}
+
 // 老师设置（MAT-498）：老师自己填的课堂设置和偏好。有 options 的是选项，有 min / max 的是整数
 export const SETTINGS = {
     lessonType: { label: "课型", options: ["一对一", "小班"], def: "一对一" },

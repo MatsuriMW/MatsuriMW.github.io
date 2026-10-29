@@ -8,18 +8,20 @@
 // POST { action: "memory", ... }  → JSON { ops, log }：把一条课后记录变成对老师 / 学生档案的增删改
 // POST { action: "review", ... }  → JSON { suggestions, gaps }：读最近几次课的记录，给下一次课的教案提改进建议
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
+// POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
 // GET                              → 题库规模
 // 状态（学生、老师档案、大纲、教案）都在浏览器里，函数不存任何东西。页面传回来的题目只有编号和 id，题面从题库取。
 // 页面可以带自己的模型 key（byok），带了就不限次数；不带用站长的 DeepSeek，按 IP 限次。
 import {
     loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
-    templateMessages, cleanTemplate, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
+    templateMessages, cleanTemplate, intakeMessages, cleanIntake, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
 } from "./_lib/english.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
 const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8), search: env("EN_SEARCH_DAILY", 30), chat: env("EN_CHAT_DAILY", 30),
-    section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10) };
-const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板" };
+    section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10),
+    intake: env("EN_INTAKE_DAILY", 15) };
+const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
@@ -43,7 +45,7 @@ export async function POST(request) {
     }
     const studentMems = cleanMems(p.studentMems), teacherMems = cleanMems(p.teacherMems);
     const student = { name: clip(p.student?.name, 10), gradeLabel: clip(p.student?.gradeLabel, 40), schoolLabel: clip(p.student?.schoolLabel, 40),
-        attention: ATTN.includes(p.student?.attention) ? p.student.attention : "" };
+        attention: ATTN.includes(p.student?.attention) ? p.student.attention : "", profile: clip(p.student?.profile, 500) };
     const settings = p.settings && typeof p.settings === "object" ? p.settings : null;   // 老师设置，settingsLine 里逐个字段校验
     const visual = !!p.visual, weakKps = clip(p.weakKps, 300);
     const logs = cleanLogs(p.logs);
@@ -85,6 +87,19 @@ export async function POST(request) {
             const kps = Object.fromEntries(Object.entries(p.kpByType && typeof p.kpByType === "object" ? p.kpByType : {}).filter(([t]) => TYPES.includes(t)).map(([t, ks]) => [t, strs(ks, 14, 10)]));
             const { data, usage } = await json(memoryMessages({ date: clip(p.date, 10), student, studentMems, teacherMems, settings, observations: p.observations, text }, kps), { signal: request.signal, cfg });
             return Response.json({ ops: Array.isArray(data.ops) ? data.ops.slice(0, 12) : [], log: data.log || null, usage, left });
+        } catch (e) { return fail(e); }
+    }
+
+    if (action === "intake") {
+        const text = String(p.text || "").slice(0, 3000);
+        if (text.trim().length < 10) return Response.json({ error: "写得太短了，多写几句这个学生的情况" }, { status: 400 });
+        const dims = (Array.isArray(p.dims) ? p.dims : []).slice(0, 30).map((d) => ({ key: clip(d?.key, 20), label: clip(d?.label, 10), lo: clip(d?.lo, 10), hi: clip(d?.hi, 10) }))
+            .filter((d) => /^\w+$/.test(d.key) && d.label);
+        try {
+            const { data, usage } = await json(intakeMessages(text, dims), { signal: request.signal, cfg, max_tokens: 1500 });
+            const profile = cleanIntake(data, dims.map((d) => d.key));
+            if (!profile) return Response.json({ error: "没从这段话里看出学生的信息" }, { status: 422 });
+            return Response.json({ profile, usage, left });
         } catch (e) { return fail(e); }
     }
 
