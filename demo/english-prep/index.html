@@ -914,7 +914,7 @@ function nsApply(p) {
         else if (p.school) { $("#nsSchool").value = "other"; $("#nsOther").value = p.school; NS.schoolHint = ""; got++; }
     }
     nsClamp();
-    if (p.progress) { const n = unitsOf(stuGt(NS)); setProgress(NS, Math.min(n, p.progress.unit - 1 + { 刚开始: 0.15, 学到一半: 0.5, 快学完: 0.85 }[p.progress.stage]), n); got++; }
+    if (p.progress) { const n = unitsOf(stuGt(NS)); setProgress(NS, Math.min(n, p.progress.unit - 1 + { 刚开始: 0.15, 学到一半: 0.5, 快学完: 0.85, 学完: 1 }[p.progress.stage]), n); got++; }
     for (const d of p.dims) { Mem.setDim(NS, d.key, d.value); if (d.quote) NS.dimsWhy[d.key] = d.quote; got++; }
     NS.notes = p.notes.map((n) => ({ ...n, on: true })); got += p.notes.length;
     renderNewStu();

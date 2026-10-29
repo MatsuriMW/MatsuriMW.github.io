@@ -764,7 +764,7 @@ export function intakeMessages(text, dims) {
 {"name": "学生的称呼，原文没有就空字符串", "grade": 7 或 8 或 9 或 null（初一 = 七年级 = 7）, "term": "上" 或 "下" 或 null,
  "school": "学校名，尽量写全称并带上原文提到的校区（锡外 → 无锡外国语学校，省锡中 → 江苏省锡山高级中学实验学校）；没提就空字符串",
  "district": "所在区：梁溪区 / 锡山区 / 惠山区 / 滨湖区 / 新吴区 / 经开区 / 江阴市 / 宜兴市，没提就空字符串",
- "progress": {"unit": 学到第几单元（整数）, "stage": "刚开始|学到一半|快学完"} 或 null,
+ "progress": {"unit": 学到第几单元（整数）, "stage": "刚开始|学到一半|快学完|学完"} 或 null（「刚学完第四单元」是 unit 4、学完）,
  "dims": [{"key": "维度 key", "value": 0 到 100 的整数, "quote": "原文依据，30 字以内"}],
  "notes": [{"cat": "薄弱点|已掌握|学习习惯|状态|目标", "text": "一句话，30 字以内", "qtype": "题型或空字符串", "quote": "原文依据，40 字以内"}],
  "missing": "原文没提、建档最好补上的信息，30 字以内（写了学校就不算缺所在区，区会按学校自动带出）"}
@@ -787,7 +787,7 @@ export function cleanIntake(d, keys) {
     return {
         name: clip(d.name, 10), grade: [7, 8, 9].includes(+d.grade) ? +d.grade : null, term: ["上", "下"].includes(d.term) ? d.term : null,
         school: clip(d.school, 30), district: clip(d.district, 6),
-        progress: unit ? { unit, stage: ["刚开始", "学到一半", "快学完"].includes(d.progress.stage) ? d.progress.stage : "学到一半" } : null,
+        progress: unit ? { unit, stage: ["刚开始", "学到一半", "快学完", "学完"].includes(d.progress.stage) ? d.progress.stage : "学到一半" } : null,
         dims: (Array.isArray(d.dims) ? d.dims : []).filter((x) => keys.includes(x?.key) && int(x.value, 0, 100) != null && !seen.has(x.key) && seen.add(x.key))
             .map((x) => ({ key: x.key, value: int(x.value, 0, 100), quote: clip(x.quote, 40) })),
         notes: (Array.isArray(d.notes) ? d.notes : []).filter((x) => INTAKE_CATS.includes(x?.cat) && clip(x.text, 60)).slice(0, 8)
