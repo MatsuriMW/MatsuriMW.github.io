@@ -24,15 +24,15 @@
 import crypto from "node:crypto";
 import {
     loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
-    templateMessages, cleanTemplate, intakeMessages, cleanIntake, ocr, okImages, afterclassMessages, AFTER_PARTS, shortenMessages, hanCount, noPronoun, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
+    templateMessages, cleanTemplate, tidyMessages, intakeMessages, cleanIntake, ocr, okImages, afterclassMessages, AFTER_PARTS, shortenMessages, hanCount, noPronoun, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, pickLogs, pickMems, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
     itemBodies, adminToken, verifyToken, acctLogin, acctDemo, dataLoad, dataSave, itemsQuota, acctAdmin,
 } from "./_lib/english.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
 const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8), search: env("EN_SEARCH_DAILY", 30), chat: env("EN_CHAT_DAILY", 30),
     section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10),
-    intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), afterclass: env("EN_AFTERCLASS_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10) };
-const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈" };
+    intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), afterclass: env("EN_AFTERCLASS_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10), tidy: env("EN_TIDY_DAILY", 10) };
+const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈", tidy: "整理记忆" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
@@ -101,8 +101,9 @@ export async function POST(request) {
         .map((m) => ({ type: m.type, share: Math.min(1, +m.share), minutes: Math.round(+m.minutes || 0), from: clip(m.from, 60), kps: strs(m.kps, 4, 12) }));
     const minutes = Math.max(30, Math.min(240, +p.minutes || 120));
     const base = {
-        student, studentMems, teacherMems, settings, visual, weakKps, attentionMax: Math.max(8, Math.min(30, +p.attentionMax || 15)),
-        logs: logs.slice(-3), guidance: clip(p.guidance, 300), minutes, mix, unitPlan: clip(p.unitPlan, 120),
+        // 档案多了只带相关的（MAT-527）
+        student, studentMems: pickMems(studentMems, mix), teacherMems: pickMems(teacherMems, mix), settings, visual, weakKps, attentionMax: Math.max(8, Math.min(30, +p.attentionMax || 15)),
+        logs: pickLogs(logs, mix), guidance: clip(p.guidance, 300), minutes, mix, unitPlan: clip(p.unitPlan, 120),   // 最近 2 次 + 相关的 3 次（MAT-527）
         exam: { label: clip(ex.label, 80), levelLabel: clip(ex.levelLabel, 120), structure: clip(ex.structure, 400), school: clip(ex.school, 300) },
     };
     const fail = (e) => Response.json({ error: String(e.message || e).slice(0, 200) }, { status: 500 });
@@ -113,7 +114,7 @@ export async function POST(request) {
 
     if (action === "review") {
         try {
-            const { data, usage } = await json(reviewMessages({ student, studentMems, teacherMems, settings, weakKps, logs, observations: p.observations, mix: p.mix, examLabel: p.examLabel }), { signal: request.signal, cfg });
+            const { data, usage } = await json(reviewMessages({ student, studentMems, teacherMems, settings, weakKps, logs: logs.slice(-8), observations: p.observations, mix: p.mix, examLabel: p.examLabel }), { signal: request.signal, cfg });
             const sug = (Array.isArray(data.suggestions) ? data.suggestions : []).slice(0, 4).map((x) => ({
                 title: clip(x.title, 30), detail: clip(x.detail, 90), evidence: clip(x.evidence, 70), kind: clip(x.kind, 4),
                 type: TYPES.includes(x.type) ? x.type : "", delta: Math.max(-0.15, Math.min(0.15, +x.delta || 0)),
@@ -129,6 +130,13 @@ export async function POST(request) {
             const kps = Object.fromEntries(Object.entries(p.kpByType && typeof p.kpByType === "object" ? p.kpByType : {}).filter(([t]) => TYPES.includes(t)).map(([t, ks]) => [t, strs(ks, 14, 10)]));
             const { data, usage } = await json(memoryMessages({ date: clip(p.date, 10), student, studentMems, teacherMems, settings, observations: p.observations, text }, kps), { signal: request.signal, cfg });
             return Response.json({ ops: Array.isArray(data.ops) ? data.ops.slice(0, 12) : [], log: data.log || null, usage, left });
+        } catch (e) { return fail(e); }
+    }
+
+    if (action === "tidy") {   // 心跳整理（MAT-527 第 4 步）
+        try {
+            const { data, usage } = await json(tidyMessages({ date: clip(p.date, 10), student, studentMems, teacherMems, says: strs(p.says, 30, 100), observations: strs(p.observations, 12, 80) }), { signal: request.signal, cfg });
+            return Response.json({ ops: Array.isArray(data.ops) ? data.ops.slice(0, 12) : [], note: clip(data.note, 120), usage, left });
         } catch (e) { return fail(e); }
     }
 

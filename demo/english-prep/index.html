@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>英语备课 Agent Demo</title>
-<meta name="description" content="无锡初中英语备课助手：一份教案同时贴合年级、学校、学生薄弱点和老师的讲题习惯。老师和学生的档案是会自己更新的记忆，题库来自 71 份无锡真卷。">
+<meta name="description" content="无锡初中英语备课助手：一份教案同时贴合年级、学校、学生薄弱点和老师的讲题习惯。老师和学生的档案是会自己更新的记忆，题库来自 115 份无锡真卷。">
 <style>
   :root {
     color-scheme: light;
@@ -817,6 +817,7 @@
 <script type="module">
 import * as M from "./model.js";
 import * as Mem from "./memory.js";
+import * as Met from "./metrics.js";
 import { seed } from "./seed.js";
 
 const API = "/api/english";
@@ -872,7 +873,7 @@ function toast(msg, action) {
 }
 
 // ---------- 统计 ----------
-$("#stats").innerHTML = [[data.stats.papers, "份无锡真卷（2022–2026）"], [data.stats.units, "个题组"], [data.stats.questions, "道小题"], [data.stats.images, "张图按位置入库"], ["85.7%", "检索 precision@5（20 条查询，95% 区间 71%–98%）"], ["6/6", "记忆更新评测"]]
+$("#stats").innerHTML = [[data.stats.papers, "份无锡真卷（2022–2026）"], [data.stats.units, "个题组"], [data.stats.questions, "道小题"], [data.stats.images, "张图按位置入库"], ["88.1%", "检索 precision@5（20 条查询，95% 区间 76%–98%）"], ["6/6", "记忆更新评测"]]
     .map(([n, l]) => `<span><b>${n}</b>${l}</span>`).join("");
 
 // ---------- 1 档案 ----------
@@ -1466,20 +1467,50 @@ function afterApply(as) {
 }
 $("#setForm").onchange = (e) => { const k = e.target.dataset.k; if (k) setSetting(k, e.target.value, "老师改的"); };
 $("#setLog").onclick = (e) => { const b = e.target.closest("[data-undo]"); if (!b) return; const x = S.teacher.settingsLog[+b.dataset.undo]; setSetting(x.field, x.before, "撤销"); };
-let habits = [];
+let habits = [], arrHabits = [];
 const signed = (n) => `${n > 0 ? "+" : ""}${n}`;
 function renderProfile() {
     const r = Mem.teacherHabits(S.teacher.events), stats = r.stats, bias = SET().bias;
     habits = r.habits;
-    $("#profSum").textContent = `老师画像：从你的操作里看出来的习惯${habits.length ? `（${habits.length} 条建议）` : ""}`;
-    if (habits.length && !renderProfile.shown) $("#profWrap").open = renderProfile.shown = true;   // 有新建议时第一次自动展开，之后随老师开关
+    arrHabits = Mem.arrangeHabits(S.teacher.arrange, { skip: S.teacher.arrangeSkip || [] });   // 编排习惯（MAT-527）
+    $("#profSum").textContent = `老师画像：从你的操作里看出来的习惯${habits.length + arrHabits.length ? `（${habits.length + arrHabits.length} 条建议）` : ""}`;
+    if ((habits.length || arrHabits.length) && !renderProfile.shown) $("#profWrap").open = renderProfile.shown = true;   // 有新建议时第一次自动展开，之后随老师开关
     $("#prof").innerHTML = habits.map((h, i) => `<div class="habit"><div>${esc(h.text)}（${h.n} 次）</div><div class="ev">依据：${esc(h.evidence.join("；"))}</div><div class="acts" style="margin-top:6px"><button type="button" class="btn small ghost" data-bias="${i}">${bias[h.type] != null ? `在现在的默认上再${h.delta > 0 ? "加" : "减"} ${Math.abs(h.delta)}` : "设成默认"}</button></div></div>`).join("")
-        + (habits.length ? "" : `<p class="note">还没有反复出现的调整。同一个题型往同一个方向调 3 次以上，这里会提议设成默认。</p>`)
+        + arrHabits.map((h, i) => `<div class="habit"><div>${esc(h.text)}（编排）</div><div class="ev">依据：${esc(h.evidence.join("；"))}</div><div class="acts" style="margin-top:6px"><button type="button" class="btn small ghost" data-arr="${i}">记成编排习惯</button> <button type="button" class="linkbtn" data-arrno="${i}">不用</button></div></div>`).join("")
+        + (habits.length || arrHabits.length ? "" : `<p class="note">还没有反复出现的调整。同一个题型往同一个方向调 3 次以上、大纲里同一种改法出现 3 节课以上，这里会提议设成默认或记成编排习惯。</p>`)
         + Object.entries(bias).map(([t, pp]) => `<div class="habit"><div>已设成默认：建议占比里${esc(t)} ${signed(pp)} 个百分点</div><div class="acts" style="margin-top:6px"><button type="button" class="linkbtn" data-unbias="${esc(t)}">取消</button></div></div>`).join("")
-        + `<p class="note" style="margin-top:8px">生成大纲 ${stats.outlines} 次，改过 ${stats.edited} 次；改写教案 ${stats.sections} 节；在聊天里改 ${stats.chats} 次；换题 ${stats.swaps} 次${stats.swapTop ? `，换得最多的是${stats.swapTop[0]}（${stats.swapTop[1]} 次）` : ""}${stats.offGrade ? `，${stats.offGrade} 道换掉的题不是这个年级的` : ""}${stats.hard ? `，${stats.hard} 道是偏难的` : ""}。</p>`;
+        + `<p class="note" style="margin-top:8px">生成大纲 ${stats.outlines} 次，改过 ${stats.edited} 次；改写教案 ${stats.sections} 节；在聊天里改 ${stats.chats} 次；换题 ${stats.swaps} 次${stats.swapTop ? `，换得最多的是${stats.swapTop[0]}（${stats.swapTop[1]} 次）` : ""}${stats.offGrade ? `，${stats.offGrade} 道换掉的题不是这个年级的` : ""}${stats.hard ? `，${stats.hard} 道是偏难的` : ""}。</p>`
+        + `<div class="acts" style="margin-top:8px"><button type="button" class="btn small ghost" data-tidy>整理档案</button><span class="note">合并重复的记忆、前后矛盾的以新的为准、把你在大纲 / 教案里反复说的编排要求记成编排习惯；整理完能撤销</span></div>`
+        + (S.metrics?.length ? `<p class="note">用下来的数据：${esc(Met.summaryText(Met.summary(S.metrics))).replace(/\n/g, "；")}。</p>` : "");
 }
 // 设成默认：偏好累加到 bias 上，用掉的那几次调整标 used（不再提议）；取消默认时，当初用掉的调整放回来
-$("#prof").onclick = (e) => {
+$("#prof").onclick = async (e) => {
+    if (e.target.closest("[data-tidy]")) {   // 心跳整理（MAT-527 第 4 步）：老师档案 + 当前学生的档案各理一遍
+        const btn = e.target.closest("[data-tidy]"), st = stu();
+        btn.disabled = true; btn.textContent = "整理中……";
+        const says = (S.teacher.arrange || []).filter((x) => x.kind === "say" && !x.used).slice(-30);
+        const done = [];
+        try {
+            for (const who of ["teacher", ...(st.members ? [] : ["student"])]) {
+                const j = await post({ action: "tidy", date: TODAY, student: { name: st.name, gradeLabel: gradeLabel(st) }, studentMems: who === "student" ? st.mems : [], teacherMems: S.teacher.mems,
+                    says: who === "teacher" ? says.map((x) => `${x.date} ${x.student || ""}：${x.text}`) : [], observations: S.teacher.observations });
+                done.push(...Mem.applyOps(memState(), (j.ops || []).filter((o) => o.who === who), TODAY, "整理档案"));
+            }
+            if (done.some((a) => a.op === "add" && a.after?.cat === "编排习惯")) for (const x of says) x.used = true;
+            save(); renderMemories(); renderProfile();
+            toast(done.length ? `整理了 ${done.length} 处：${done.slice(0, 3).map((a) => Mem.describe(a)).join("；")}` : "档案看过了，没有要整理的", done.length ? { label: "撤销", fn: () => { for (const a of [...done].reverse()) Mem.undo(memState(), a); save(); renderMemories(); renderProfile(); } } : undefined);
+        } catch (err) { toast("没整理成：" + err.message); renderProfile(); }
+        return;
+    }
+    const ar = e.target.closest("[data-arr], [data-arrno]");
+    if (ar) {   // 编排习惯：记进老师档案（能撤销），或者不用（以后不再提这一种）
+        const h = arrHabits[+(ar.dataset.arr ?? ar.dataset.arrno)];
+        if (ar.dataset.arrno != null) { (S.teacher.arrangeSkip ||= []).push(h.key); save(); renderProfile(); return; }
+        const applied = Mem.adoptArrange(memState(), S.teacher, h, TODAY);
+        save(); renderProfile(); renderMemories();
+        toast(`记住了：${h.mem}。以后排大纲照这个排`, { label: "撤销", fn: () => { for (const a of [...applied].reverse()) Mem.undo(memState(), a); for (const x of h.events) x.used = false; save(); renderProfile(); renderMemories(); } });
+        return;
+    }
     const b = e.target.closest("[data-bias], [data-unbias]"); if (!b) return;
     const bias = SET().bias, h = b.dataset.bias != null ? habits[+b.dataset.bias] : null, t = h ? h.type : b.dataset.unbias, before = bias[t];
     const evs = h ? h.events : S.teacher.events.filter((x) => x.kind === "mix" && x.type === t && x.used);
@@ -1585,6 +1616,7 @@ function initExam() {
     U.minutes = SET().minutes;   // 课时从老师设置读（固定环节见 fixedMin）
     U.difficulty = SET().difficulty; U.template = null;
     U.guidance = "";
+    U.t0 = Date.now();   // 备课用时从这里算（PRD 的产品指标，web/metrics.js）
 }
 function deriveCtx() {
     const st = stu(), cohort = M.cohortOf(st.grade, TODAY);
@@ -2186,6 +2218,7 @@ $("#writeBtn").onclick = async () => {
         // 记下老师对大纲的改动（和模型原样比），供记忆和复盘「观察」老师的习惯
         const diff = outlineDiff(W.outline0, W.outline);
         if (diff) observe(`给${st.name}改了大纲：${diff}`, { kind: "outline_edit" });
+        if (!W.arranged) { Mem.noteArrange(S.teacher, { date: TODAY, student: st.name, o0: W.outline0, o1: W.outline }); W.arranged = true; }   // 编排情景（MAT-527），同一份大纲只记一次
         S.lastPlan = { sid: st.id, date: TODAY, mix: Object.entries(U.lock || {}).map(([t, v]) => [t, +v.toFixed(2)]) };
         save();
     } catch (e) {
@@ -2415,6 +2448,7 @@ async function chatSend(text, auto = false) {
         Object.assign(wait, { content: j.reply || "好的。", wait: false, changes, snap: changes.length ? s0 : null, memApplied });
         if (memApplied.length) { save(); renderMemories(); afterApply(memApplied); }
         if (changes.length) observe(`在聊天里让 agent：${text.slice(0, 40)}`, { kind: "chat" });
+        if (changes.length && stage !== "setup" && !auto) Mem.noteArrange(S.teacher, { date: TODAY, student: st.name, say: text });   // 改大纲 / 教案时说的编排要求，原话留着
         $("#chatQuota").textContent = byok() ? "用的是你自己的 key" : j.left != null ? `今天还能聊 ${j.left} 次 · 填自己的 key 不限次数（⚙）` : "";
         renderChat();
         // 找到新题以后再问一轮：agent 这时才知道新题号，好把旧题换掉 / 把新题写进教案
@@ -2671,6 +2705,7 @@ for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) 
     try {
         const v = btn.dataset.v;
         download(await buildDocx(v), docxName(U.W, v));
+        if (Met.notePrep(S, U.W, { via: "web", t0: U.t0, date: TODAY })) { snapWork(); save(); }   // 第一次导出：记备课用时、大纲改动、换题
     } catch (e) { toast("导出失败：" + e.message); }
     btn.disabled = false;
 };
@@ -2751,9 +2786,9 @@ function snapWork() {
     if (!st || !U.gt) return;
     const snap = {
         u: { gt: U.gt, kind: U.kind, unit: U.unit, minutes: U.minutes, level: U.level, guidance: U.guidance, overrides: U.overrides, frozen: U.frozen, unlocked: U.unlocked, difficulty: U.difficulty,
-            template: U.template, planNote: U.planNote, review: U.review, reviewTouched: U.reviewTouched, chat: (U.chat || []).filter((m) => !m.wait).map(({ snap, ...m }) => m) },
+            template: U.template, planNote: U.planNote, review: U.review, reviewTouched: U.reviewTouched, t0: U.t0, chat: (U.chat || []).filter((m) => !m.wait).map(({ snap, ...m }) => m) },
         W: W?.outline ? { items: W.items.map(workRef), alts: W.alts.map(workRef), extras: W.extras, slots: W.slots, outline: W.outline, outline0: W.outline0, md: W.md,
-            stale: [...W.stale].map(([c, set]) => [c, [...set]]), visual: W.visual, student: W.student, sid: W.sid, date: W.date, checked: W.checked } : null,
+            stale: [...W.stale].map(([c, set]) => [c, [...set]]), visual: W.visual, student: W.student, sid: W.sid, date: W.date, checked: W.checked, metric: W.metric } : null,
     };
     const json = JSON.stringify(snap);
     if (json === lastSnap) return;   // 没变就不写
@@ -3092,13 +3127,16 @@ $("#acStu").onchange = () => { $("#acOut").innerHTML = ""; renderAfter(); };
 $("#acWordChips").onclick = (e) => { const b = e.target.closest(".chip"); if (b) $("#acWords").value = b.textContent; };
 $("#acOut").oninput = (e) => {
     const box = e.target.closest(".ac-item"), st = box && S.students.find((x) => x.id === box.dataset.sid); if (!st) return;
-    st.lastAfter = { ...(st.lastAfter || {}), text: e.target.value }; save();
+    st.lastAfter = { ...(st.lastAfter || {}), text: e.target.value, edited: true }; save();
     box.querySelector(".ac-n").textContent = e.target.value ? hanN(e.target.value) + " 字" : "";
 };
 $("#acOut").onclick = async (e) => {
     const box = e.target.closest("[data-copy]")?.closest(".ac-item"); if (!box) return;
     const ta = box.querySelector("textarea"); if (!ta.value) return;
     try { await navigator.clipboard.writeText(ta.value); toast("复制好了，可以直接发给家长"); } catch { ta.select(); toast("没复制成，已经全选，按 ⌘C / Ctrl+C"); }
+    // 复制 = 拿去发给家长：每段记一次「发出去了、发之前改没改过」（反馈直接发出率）
+    const st = S.students.find((x) => x.id === box.dataset.sid), la = st?.lastAfter;
+    if (la && !la.noted) { Met.noteAc(S, { via: "web", edited: la.edited, date: TODAY }); la.noted = true; save(); }
 };
 $("#acGo").onclick = async () => {
     const { id, members: ms } = acPick(); if (!ms.length) return;

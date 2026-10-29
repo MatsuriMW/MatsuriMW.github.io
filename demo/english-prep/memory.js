@@ -3,7 +3,7 @@
 import { daysBetween } from "./model.js";
 
 export const STUDENT_CATS = ["薄弱点", "已掌握", "学习习惯", "状态", "目标"];
-export const TEACHER_CATS = ["讲题习惯", "课堂结构", "偏好"];
+export const TEACHER_CATS = ["讲题习惯", "课堂结构", "编排习惯", "偏好"];   // 编排习惯：MAT-527 第 1 步，从老师对大纲的反复改动里提出来
 export const ATTENTION = ["集中", "一般", "容易分心"];
 
 // 学生画像的维度（用户 10-29）：core 的三项建档就显示，其余老师点「+」挑着加。
@@ -266,6 +266,45 @@ export function teacherHabits(events = [], { minRepeat = 3 } = {}) {
         stats: { outlines: count("outline_gen"), edited: count("outline_edit"), sections: count("section"), chats: count("chat"), swaps: swaps.length,
             swapTop: swapTypes[0] || null, offGrade: swaps.filter((e) => e.offGrade).length, hard: swaps.filter((e) => e.tier === "偏难").length },
     };
+}
+
+// ---------- 编排记忆（MAT-527 第 1 步；用户 10-29「教案的内容如何编排是绝对的核心」）----------
+// 老师定下大纲时，对模型给的原样（o0）改了什么，拆成「编排情景」：哪个环节挪到哪个前面、加了 / 删了什么环节、哪部分加减了时间。
+// 环节按题型认，没有题型的（默写、动手小环节、回顾）按名字认，去掉「（续）」「·圈线索词」这类后缀
+const secKey = (x) => x.type || String(x.name || "").replace(/[（(].*$/, "").replace(/[·:：].*$/, "").replace(/\d+/g, "").trim();
+export function arrangeEpisodes(o0, o1) {
+    if (!o0?.sections?.length || !o1?.sections?.length) return [];
+    const A = o0.sections.map(secKey), B = o1.sections.map(secKey), out = [];
+    const common = [...new Set(B)].filter((k) => k && A.includes(k));
+    for (const a of common) for (const b of common)
+        if (a !== b && A.indexOf(a) < A.indexOf(b) && B.indexOf(b) < B.indexOf(a)) out.push({ kind: "order", key: `order:${b}<${a}`, text: `把${b}放在${a}前面`, mem: `${b}放在${a}前面` });
+    for (const k of new Set(B)) if (k && !A.includes(k)) out.push({ kind: "add", key: `add:${k}`, text: `加了「${k}」`, mem: `大纲里加一个「${k}」环节` });
+    for (const k of new Set(A)) if (k && !B.includes(k)) out.push({ kind: "del", key: `del:${k}`, text: `删了「${k}」`, mem: `大纲里不排「${k}」环节` });
+    const mins = (o) => o.sections.reduce((m, x) => ((m[secKey(x)] = (m[secKey(x)] || 0) + (+x.minutes || 0)), m), {});
+    const ma = mins(o0), mb = mins(o1);
+    // 默写、回顾、课外知识的分钟归课堂设置管，不算编排
+    for (const k of common.filter((k) => !/默写|回顾|课外知识/.test(k))) { const d = mb[k] - ma[k]; if (Math.abs(d) >= 3) out.push({ kind: "min", key: `min:${k}:${Math.sign(d)}`, text: `给${k}${d > 0 ? "加" : "减"}了时间`, mem: `${k}${d > 0 ? "多" : "少"}给些时间` }); }
+    return out;
+}
+// 写进老师的编排情景（S.teacher.arrange，最多 200 条）。say：在大纲 / 教案阶段跟 agent 说的编排要求，原话留着，等心跳整理（第 4 步）再提炼
+export function noteArrange(T, { date, student, o0, o1, say }) {
+    const xs = say ? [{ kind: "say", key: "say", text: String(say).slice(0, 80) }] : arrangeEpisodes(o0, o1);
+    T.arrange = [...(T.arrange || []), ...xs.map((e) => ({ ...e, date, student }))].slice(-200);
+    return xs;
+}
+// 同一种改法在 minRepeat 节课（按日子 + 学生算）以上出现，提议记成「编排习惯」；记过的（used）、否掉的（skip 里的 key）不再提
+export function arrangeHabits(episodes = [], { minRepeat = 3, skip = [] } = {}) {
+    const by = {};
+    for (const e of episodes) if (!e.used && e.kind !== "say" && !skip.includes(e.key)) (by[e.key] ||= []).push(e);
+    return Object.entries(by).map(([key, xs]) => ({ key, xs, n: new Set(xs.map((e) => `${e.date}|${e.student || ""}`)).size }))
+        .filter((h) => h.n >= minRepeat).sort((a, b) => b.n - a.n)
+        .map(({ key, xs, n }) => ({ key, n, text: `你最近 ${n} 节课都${xs[0].text}`, mem: xs[0].mem, evidence: [...new Set(xs.map((e) => `${e.date.slice(5)}${e.student ? " " + e.student : ""}`))].slice(-4), events: xs }));
+}
+// 记成老师档案的「编排习惯」（state 同 applyOps），用掉的情景标 used。返回 applyOps 的结果，撤销照旧
+export function adoptArrange(state, T, h, date, source = "编排习惯") {
+    const applied = applyOps(state, [{ op: "add", who: "teacher", cat: "编排习惯", text: h.mem, evidence: `最近 ${h.n} 节课都这样改：${h.evidence.join("、")}`, why: "老师反复这样改大纲" }], date, source);
+    for (const e of h.events) e.used = true;
+    return applied;
 }
 
 // 旧版本存下来的状态补上新字段（老师设置、画像事件、模板、注意力），考点对齐一遍。就地改，可以重复跑

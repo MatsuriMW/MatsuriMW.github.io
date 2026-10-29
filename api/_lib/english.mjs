@@ -334,7 +334,7 @@ export async function json(messages, { signal, max_tokens = 2000, cfg = DEFAULT_
 // ---------- 提示词 ----------
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const memLine = (m) => `${m.id}［${m.cat}${m.qtype ? "·" + m.qtype : ""}${m.kp ? "·" + m.kp : ""}${m.strength != null ? `·强度${(+m.strength).toFixed(2)}` : ""}］${clip(m.text, 60)}${m.evidence ? `（依据：${clip(m.evidence, 50)}）` : ""}`;
-export const cleanMems = (xs) => (Array.isArray(xs) ? xs : []).slice(0, 40).map((m) => ({
+export const cleanMems = (xs) => (Array.isArray(xs) ? xs : []).slice(0, 80).map((m) => ({
     id: clip(m.id, 8), cat: clip(m.cat, 8), text: clip(m.text, 80), qtype: TYPES.includes(m.qtype) ? m.qtype : "", kp: clip(m.kp, 12),
     strength: m.strength == null || m.strength === "" ? null : Math.max(0, Math.min(1, +m.strength || 0)), evidence: clip(m.evidence, 60),
 }));
@@ -435,12 +435,39 @@ export const ATTN = ["集中", "一般", "容易分心"];
 const attnLine = (a) => (a === "容易分心" ? "注意力容易分散：环节要短、讲和练交替、多给看得见的引导" : ATTN.includes(a) ? `注意力${a}` : "");
 
 // 课次记录：日期、当时教案的占比、讲了什么、错在哪
-export const cleanLogs = (xs) => (Array.isArray(xs) ? xs : []).slice(-8).map((l) => ({
-    date: clip(l.date, 10), summary: clip(l.summary, 80),
-    mix: (Array.isArray(l.plan?.mix) ? l.plan.mix : []).slice(0, 10).map(([t, v]) => [clip(t, 10), Math.round(+v * 100) || 0]),
-    errors: (Array.isArray(l.errors) ? l.errors : []).slice(0, 6).map((e) => `${clip(e.qtype, 10)}${e.kp ? "·" + clip(e.kp, 10) : ""}${e.note ? "：" + clip(e.note, 30) : ""}`),
-}));
-const logLines = (logs) => (logs || []).map((l) => `${l.date}｜${l.summary}${l.mix.length ? `｜当时教案：${l.mix.map(([t, v]) => `${t}${v}%`).join("、")}` : ""}${l.errors.length ? `｜错在：${l.errors.join("；")}` : ""}`);
+// 课次记录最多收 60 次（MAT-527 第 2 步：老的、和这节课相关的也要能挑出来）；err、covered 留给 pickLogs 打分
+export const cleanLogs = (xs) => (Array.isArray(xs) ? xs : []).slice(-60).map((l) => {
+    const es = (Array.isArray(l.errors) ? l.errors : []).slice(0, 6);
+    return {
+        date: clip(l.date, 10), summary: clip(l.summary, 80),
+        mix: (Array.isArray(l.plan?.mix) ? l.plan.mix : []).slice(0, 10).map(([t, v]) => [clip(t, 10), Math.round(+v * 100) || 0]),
+        errors: es.map((e) => `${clip(e.qtype, 10)}${e.kp ? "·" + clip(e.kp, 10) : ""}${e.note ? "：" + clip(e.note, 30) : ""}`),
+        err: es.map((e) => [clip(e?.qtype, 10), clip(e?.kp, 12)]), covered: (Array.isArray(l.covered) ? l.covered : []).slice(0, 8).map((c) => clip(c, 12)),
+    };
+});
+// 语义记忆按需注入（MAT-527 第 3 步）：档案超过 max 条时，排大纲、写教案、聊天只带和这节课相关的：
+// 不分题型的（目标、状态、学习习惯、编排习惯、课堂结构……）全带；分题型的只带这节课要练的题型（薄弱点按强度排在前面）；其余照旧留在档案里。
+// 记忆增删改（action=memory）照旧看全量，不然没法按编号改
+export function pickMems(mems, mix = [], max = 30) {
+    if (mems.length <= max) return mems;
+    const types = new Set(mix.map((m) => m.type));
+    const general = mems.filter((m) => !m.qtype), typed = mems.filter((m) => m.qtype && types.has(m.qtype)).sort((a, b) => (b.strength ?? 0) - (a.strength ?? 0));
+    return [...general, ...typed].slice(0, max);
+}
+// 情景记忆按需取（MAT-527 第 2 步）：最近 2 次 + 和这节课的题型、薄弱考点最相关的 3 次（错在这个题型 2 分、考点也对上再 2 分、讲过这个题型 1 分；60 天减半），按日期排
+export function pickLogs(logs, mix = [], today = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10)) {
+    if (logs.length <= 5) return logs;
+    const types = new Set(mix.map((m) => m.type)), kps = new Set(mix.flatMap((m) => m.kps || []));
+    const score = (l) => {
+        let s = 0;
+        for (const [q, k] of l.err || []) { if (types.has(q)) s += 2; if (k && [...kps].some((x) => x.includes(k) || k.includes(x))) s += 2; }
+        for (const c of l.covered || []) if ([...types].some((t) => c.includes(t) || t.includes(c))) s += 1;
+        return s * Math.pow(0.5, Math.max(0, (Date.parse(today) - Date.parse(l.date)) / 864e5) / 60);
+    };
+    const top = logs.slice(0, -2).map((l) => ({ l, s: score(l) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 3).map((x) => ({ ...x.l, rel: true }));
+    return [...top, ...logs.slice(-2)].sort((a, b) => a.date.localeCompare(b.date));
+}
+const logLines = (logs) => (logs || []).map((l) => `${l.date}${l.rel ? "（和这节课相关的旧课）" : ""}｜${l.summary}${l.mix.length ? `｜当时教案：${l.mix.map(([t, v]) => `${t}${v}%`).join("、")}` : ""}${l.errors.length ? `｜错在：${l.errors.join("；")}` : ""}`);
 
 // 课后反馈（用户 10-29）：上完课发给家长的那段话。按档案（画像、进度、历史得分、记忆）、最近几次课、下一场考试、这节课的教案和老师写的情况来写，字数老师定。
 // 一对多（用户 10-29）：一次给组里每个学生各写一段，共同的部分大体一样，各人的表现、薄弱点按各自的档案写，措辞也要有些变化
@@ -517,7 +544,7 @@ const FOUR = `四个依据都要用上，并且看得出来：
 1. 年级：下一场考试的结构（考哪些题型、各多少分），九年级还要看中考趋势。
 2. 学校：这场考试用谁的卷子（统考 / 校考）、本校本区的出题习惯。
 3. 学生：学生档案里的薄弱点、学习习惯、状态。
-4. 老师：老师档案里的讲题习惯、课堂结构、偏好，以及这次课的要求。
+4. 老师：老师档案里的讲题习惯、课堂结构、编排习惯、偏好，以及这次课的要求。
 优先级：这次课的要求 > 老师档案 > 学生档案 > 考试结构。几条依据冲突时按优先级取舍，并说一句怎么取舍的。`;
 const CITE = `- 关键设计后面用方括号标出依据：记忆编号如 [S2]、[T1]，考试结构标 [考]，学校标 [校]。只引用材料里有的编号，不编造学生情况。
 - 学校这一维只说材料里写了的事实（出卷来源、库里有哪些卷子），不要推测学校的出题偏好；材料里没有本校卷子就直说。
@@ -562,6 +589,7 @@ ${FOUR}
 
 规则：
 - sections 按上课顺序排，分钟数加起来等于课时；各题型的分钟数大致按【本次占比】；【老师设置】里的固定环节（开头默写、课外知识补充、结尾回顾）按设置的分钟数排进去。
+- 老师档案里的「编排习惯」（环节先后、常加的环节、哪部分多给时间、先练后讲还是先讲后练）是老师反复改出来的，排大纲照着排；和【这次课的要求】冲突时按这次的要求。
 - 课后作业照【老师设置】的时长上限和范围留。${p.student?.attention === "容易分心" ? `
 - 这个学生注意力容易分散：每个环节不超过 ${p.attentionMax} 分钟；讲和练交替，讲 5–8 分钟就让学生动手；每两个讲解环节之间插一个 3–5 分钟的动手小环节（圈线索词、画时间轴、抢答、配对），points 里写清楚怎么做。` : ""}
 ${p.student?.group?.length ? `- 这是一对多的课：几个人共同的薄弱点放进全组一起讲的环节；只有个别人有的问题，放进练习环节分层安排，points 里点名写清楚谁做哪道、先讲给谁；注意力按最需要照顾的那个学生安排；title 用组名。
@@ -682,7 +710,7 @@ ${tpl.sections.some((x) => x.kind === "basis") ? `- 「${tpl.sections.find((x) =
 ` : ""}- 教案是给老师上课用的：不要在里面复述这些写作规则（比如「不照抄」「不推测」「以大纲为准」）。
 ${extrasSec ? `- 大纲里「${extrasSec.name}」这一环节的讲解由系统直接拼进教案：课堂流程里照常列这一行，但不要为它写讲解小节，也不要在别处展开这些条目。
 ` : ""}${CITE}
-- 教案的核心是讲解各节的内容编排：每一节写清楚内容怎么排：先讲什么、例题按什么顺序用、为什么这样排、哪里让学生先做、哪里停下来讲、怎么接到下一节；再写这几道题考什么、这个学生容易错在哪、照老师的讲题习惯怎么讲。老师档案里关于课堂结构、讲题顺序的记忆，优先照着排。${p.student?.group?.length ? "\n- 这是一对多的课：写清楚哪些是全组一起讲的、哪些分给谁单独练，学生容易错在哪按人点名写。" : ""}
+- 教案的核心是讲解各节的内容编排：每一节写清楚内容怎么排：先讲什么、例题按什么顺序用、为什么这样排、哪里让学生先做、哪里停下来讲、怎么接到下一节；再写这几道题考什么、这个学生容易错在哪、照老师的讲题习惯怎么讲。老师档案里的编排习惯和关于课堂结构、讲题顺序的记忆，优先照着排。${p.student?.group?.length ? "\n- 这是一对多的课：写清楚哪些是全组一起讲的、哪些分给谁单独练，学生容易错在哪按人点名写。" : ""}
 ${tpl.sections.length && !tpl.free ? `- 用 Markdown，照老师选的教案模板${tpl.name ? `「${tpl.name}」` : ""}，二级标题就用下面这些、按这个顺序，不多不少：
 # 标题（用大纲的标题）
 ${templateLines(tpl)}` : `- 用 Markdown，结构不限：按大纲和这节课的需要自己组织，第一行 # 标题（用大纲的标题），每一部分用 ## 二级标题分开${tpl.sections.length ? `；可以参考这些小节，但不必照搬：${tpl.sections.map((x) => x.title).join("、")}` : ""}。`}
@@ -724,7 +752,7 @@ export function chatMessages(p) {
 能用的修改：
 ${CHAT_OPS[p.stage]}
 
-memory 的格式：{"op":"add|update|delete","who":"teacher|student","id":"update / delete 时填已有编号","cat":"分类","text":"30 字以内","qtype":"","kp":"","strength":null,"evidence":"依据，40 字以内","why":"30 字以内"}。分类：学生用 薄弱点 / 已掌握 / 学习习惯 / 状态 / 目标；老师用 讲题习惯 / 课堂结构 / 偏好。只有老师说了以后还用得上的话（「以后都…」「我习惯…」「这个学生其实…」）才写 memory，一次性的要求不写。
+memory 的格式：{"op":"add|update|delete","who":"teacher|student","id":"update / delete 时填已有编号","cat":"分类","text":"30 字以内","qtype":"","kp":"","strength":null,"evidence":"依据，40 字以内","why":"30 字以内"}。分类：学生用 薄弱点 / 已掌握 / 学习习惯 / 状态 / 目标；老师用 讲题习惯 / 课堂结构 / 编排习惯（一节课怎么排：环节先后、先练后讲还是先讲后练、常加什么环节）/ 偏好。只有老师说了以后还用得上的话（「以后都…」「我习惯…」「这个学生其实…」）才写 memory，一次性的要求不写。
 ${SET_OPS}
 
 规则：
@@ -775,6 +803,25 @@ export function sectionMessages(p) {
 const SET_OPS = `另外两种改法：老师说到课堂设置的长期变化（「以后一次课 90 分钟」「默写改成 15 分钟」「作业别超过 20 分钟」），用 {"op":"set","who":"teacher","field":"字段","value":值,"why":"30 字以内"} 改【老师设置】，不要再写成一条老师记忆。字段：lessonType（一对一 / 一对多）、minutes（一次课分钟）、perWeek（每周几次）、dictation（开头默写分钟）、recap（结尾回顾分钟）、extrasMinutes（课外知识补充分钟，0 是不加）、focusTypes（一节课主攻几个题型，0 / 2 / 3 / 4，0 是不限）、fullPaper（考前最后一节做 / 不做整卷）、homeworkMinutes（作业分钟上限）、homeworkScope（只练薄弱点 / 全面练）、difficulty（不限 / 偏易 / 适中 / 偏难）。
 说到学生走神、坐不住、注意力不集中，用 {"op":"set","who":"student","field":"attention","value":"容易分心","why":""}；说到现在能坐住了、很专注，改成「一般」或「集中」。`;
 
+// 心跳整理（MAT-527 第 4 步）：定期把档案理一遍，只做三件事：合并重复、以新的为准解决矛盾、把老师反复说的编排要求提炼成「编排习惯」。
+// 输出和 memoryMessages 同一种 ops，页面 / 微信端用 applyOps 落地，每条都能撤销
+export function tidyMessages(p) {
+    const sys = `你在给一位英语家教老师整理长期记忆：老师档案（编号 T 开头）${p.studentMems.length ? "和一个学生的档案（编号 S 开头）" : ""}。只做这三件事，只输出一个 JSON 对象：
+{"ops": [{"op": "update|delete|add", "who": "teacher|student", "id": "update / delete 时填已有编号", "cat": "分类", "text": "30 字以内", "qtype": "", "kp": "", "strength": null, "evidence": "40 字以内", "why": "30 字以内"}], "note": "一句话说这次整理了什么，没整理就写「没有要整理的」"}
+
+1. 意思重复的几条合并：update 留下的那条（措辞合并、依据合并），delete 其余的；why 写「和 Tx 重复，合并」
+2. 前后矛盾的以新的为准（看依据里的日期、【老师最近的调整】）：update 或 delete 旧的，why 写清楚
+3. 【老师在大纲 / 教案阶段说过的编排要求】里同一类意思出现 3 次以上（不同日子），又不在老师档案里的：add 一条老师「编排习惯」（一节课怎么排：环节先后、先练后讲还是先讲后练、常加什么环节），evidence 写哪几天说过
+不要改写本来就好好的记忆，不要新增没有依据的内容；薄弱点的强度不要动。没有要整理的，ops 给空数组。`;
+    const lines = [
+        `【今天】${clip(p.date, 10)}`,
+        p.studentMems.length ? `【学生】${clip(p.student?.name, 10)}\n【学生档案】\n${p.studentMems.map(memLine).join("\n")}` : "",
+        `【老师档案】\n${p.teacherMems.map(memLine).join("\n") || "（空）"}`,
+        `【老师最近的调整】${(p.observations || []).join("；") || "（没有）"}`,
+        `【老师在大纲 / 教案阶段说过的编排要求】\n${(p.says || []).join("\n") || "（没有）"}`,
+    ].filter(Boolean);
+    return [{ role: "system", content: sys }, { role: "user", content: lines.join("\n") }];
+}
 export function memoryMessages(p, kpByType) {
     const sys = `你是一位英语家教老师的 personal agent，替老师维护两份长期记忆：老师档案（编号 T 开头）和当前学生的档案（编号 S 开头）。
 老师刚交给你一条记录（课后记录、随口交代、对教案的反馈）。把它变成对记忆的增删改，只输出一个 JSON 对象：
@@ -784,7 +831,7 @@ export function memoryMessages(p, kpByType) {
   "strength": 0 到 1 的数或 null, "evidence": "从记录里摘的依据，40 字以内", "why": "为什么这样改，30 字以内"}],
  "log": {"summary": "这条记录一句话总结", "covered": ["讲了什么"], "errors": [{"qtype": "", "kp": "", "note": ""}]}}
 
-分类：学生用 薄弱点 / 已掌握 / 学习习惯 / 状态 / 目标；老师用 讲题习惯 / 课堂结构 / 偏好。
+分类：学生用 薄弱点 / 已掌握 / 学习习惯 / 状态 / 目标；老师用 讲题习惯 / 课堂结构 / 编排习惯（一节课怎么排：环节先后、先练后讲还是先讲后练、常加什么环节）/ 偏好。
 
 规则：
 1. 只把以后还用得上的写进记忆：学生稳定的弱项、习惯、目标；老师明确说「以后都…」「我习惯…」「别再…」的做法，或者【最近的调整】里反复出现的同一方向。一次性的事只写进 log。
@@ -984,11 +1031,16 @@ export async function itemsQuota(ip, n) {
     const [used] = await redis([["INCRBY", k, n], ["EXPIRE", k, 86400]]);
     return used <= Number(process.env.EN_ITEMS_DAILY ?? 400);
 }
-// 站长管理账号（demo/account.mjs 调）：add / passwd / del / list
+// 站长管理账号（demo/account.mjs 调）：add / passwd / del / list；metrics：各账号工作区里记的产品指标事件（demo/metrics.mjs 汇总，PRD 第 6 节）
 export async function acctAdmin({ op, user, pw, name }) {
     if (op === "list") {
         const keys = await redis([["KEYS", "en:acct:*"]]);
         return { users: keys[0].map((k) => k.slice(8)).sort() };
+    }
+    if (op === "metrics") {
+        const keys = (await redis([["KEYS", "en:data:*"]]))[0].slice(0, 300);
+        const raws = keys.length ? await redis(keys.map((k) => ["GET", k])) : [];
+        return { accounts: keys.map((k, i) => ({ uid: k.slice(8), metrics: (raws[i] ? unpack(raws[i]).data?.metrics : null) || [] })).filter((x) => x.metrics.length) };
     }
     user = String(user || "").trim().toLowerCase();
     if (!USER_RE.test(user)) return { error: "用户名只能用小写字母、数字和 _ . -，2–24 个字", status: 400 };
