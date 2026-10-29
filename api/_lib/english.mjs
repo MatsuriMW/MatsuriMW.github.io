@@ -442,6 +442,44 @@ export const cleanLogs = (xs) => (Array.isArray(xs) ? xs : []).slice(-8).map((l)
 }));
 const logLines = (logs) => (logs || []).map((l) => `${l.date}｜${l.summary}${l.mix.length ? `｜当时教案：${l.mix.map(([t, v]) => `${t}${v}%`).join("、")}` : ""}${l.errors.length ? `｜错在：${l.errors.join("；")}` : ""}`);
 
+// 课后反馈（用户 10-29）：上完课发给家长的那段话。按档案（画像、进度、历史得分、记忆）、最近几次课、下一场考试、这节课的教案和老师写的情况来写，字数老师定。
+// 一对多（用户 10-29）：一次给组里每个学生各写一段，共同的部分大体一样，各人的表现、薄弱点按各自的档案写，措辞也要有些变化
+export function afterclassMessages(p) {
+    const many = p.students.length > 1;
+    const sys = `你是一位初中英语家教老师，上完课要给学生家长发课后反馈，在微信里直接发。按下面的资料写，只输出一个 JSON 对象：${many
+        ? `{"items": [{"name": "学生名字", "text": "给这个学生家长的反馈全文"}]}，按资料里学生的顺序，每个学生一段`
+        : `{"text": "反馈全文"}`}
+
+要求：
+1. ${many ? "每段" : "全文"}长度约 ${p.words} 字（不算空格换行），最多不超过 ${Math.round(p.words * 1.15)} 字，宁短勿长；字数少就少写几项，不要每项都塞。
+2. 老师对家长的口吻：客气、具体、实在，不夸大、不制造焦虑；不用 Markdown、不加标题和表情，分 2–4 段。开头写「（学生的名字，两个字以上的名字去掉姓）家长您好」，正文提到学生用名字或「孩子」；性别不知道，不要用「他」「她」。
+3. 内容按这个顺序挑着写，字数少就只写最要紧的：这节课讲了什么 → 课堂表现（好的和问题都说，具体到题型、知识点）→ 薄弱点和接下来怎么跟进 → 课后作业或家长能配合的事 → 离下一场考试还有多久、怎么准备。
+4. 只写资料里有的。这节课讲了什么、表现怎么样，只能来自【这节课】${many ? "和各人的【个别情况】" : ""}；学生画像和记忆是平时的情况，要提就写成「平时……」，不能写成这节课的表现。没有作业信息的，不要编作业内容。分数、日期照资料写，不要自己算排名或提分预期。${many ? `
+5. 这是一对多的课，${p.students.length} 个学生一起上：这节课讲的内容、作业、考试安排这些共同的部分大体一样；称呼、表现、薄弱点、跟进建议按各人的资料写，几段的措辞和句式要有些变化，不要只换个名字。一段里只写这一个学生，不提别的学生。` : ""}`;
+    const one = (x, i) => [
+        `【学生${many ? ` ${i + 1}` : ""}】${x.name}，${x.gradeLabel}，${x.schoolLabel}`,
+        x.profile && `【平时的情况（学生画像，不是这节课的表现）】${x.profile}`,
+        x.mems.length && `【档案里的记忆】\n${x.mems.map(memLine).join("\n")}`,
+        x.logs.length && `【最近几次课】\n${x.logs.map((l) => `${l.date}：${l.summary}${l.errors.length ? `；错在 ${l.errors.join("、")}` : ""}`).join("\n")}`,
+        many && x.note && `【个别情况】${x.note}`,
+    ].filter(Boolean).join("\n");
+    const user = [
+        ...p.students.map(one),
+        p.exam && `【下一场考试】${p.exam}`,
+        // 这节课的情况说清楚缺什么：只在规则里说「不要编」，模型照样会按进度编出一节课来
+        `【这节课${many ? "（全组）" : ""}】${p.lesson ? `老师写的：${p.lesson}${p.plan ? `\n教案大纲：${p.plan}` : ""}`
+            : p.plan ? `按教案大纲讲了：${p.plan}\n老师没写课堂表现：不要写这节课表现怎么样。`
+            : "老师没写这节课讲了什么、表现怎么样，也没有这节课的教案：不要写这节课的内容和表现，从近况（进度、最近几次课、薄弱点）和接下来的安排写起。"}`,
+    ].filter(Boolean).join("\n\n");
+    return [{ role: "system", content: sys }, { role: "user", content: user }];
+}
+
+// 模型常写超：超了两成就让它压一次（目标定低一成，它数字数总是偏多）
+export const hanCount = (t) => String(t).replace(/\s/g, "").length;
+// 性别不知道：提示里说了不用他 / 她，模型偶尔还是会用，兜底换成「孩子」（其他、他们、她们这类不动）
+export const noPronoun = (t) => String(t).replace(/(?<![其吉])[他她](?![们人])/g, "孩子");
+export const shortenMessages = (text, words) => [{ role: "system", content: `下面这段给家长的课后反馈有 ${hanCount(text)} 字，太长了，要删到 ${Math.round(words * 0.9)} 字以内（不算空格换行）：删掉次要的句子、重复的意思和客套话，保留这节课讲了什么、表现、薄弱点、作业、考试安排里最要紧的，口吻和分段不变，不加新内容。只输出一个 JSON 对象：{"text": "删好的全文"}` }, { role: "user", content: text }];
+
 export function reviewMessages(p) {
     const sys = `你是一位英语家教老师的 personal agent。根据这个学生最近几次课的记录（每次课的教案占比、讲了什么、错在哪）和档案，给下一次课的教案提改进建议。只输出一个 JSON 对象：
 

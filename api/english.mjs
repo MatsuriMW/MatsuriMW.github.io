@@ -9,6 +9,8 @@
 // POST { action: "review", ... }  → JSON { suggestions, gaps }：读最近几次课的记录，给下一次课的教案提改进建议
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
+// POST { action: "afterclass", words, lesson, plan, examLabel, student, studentMems, logs | members: [{name, gradeLabel, schoolLabel, profile, mems, logs, note}] }
+//   → JSON { items: [{name, text}] }：发给家长的课后反馈，一对多一人一段
 // POST { action: "ocr", images: [dataURL] }  → JSON { text }：建档时传的截图、照片 → 图里的字（最多 3 张）
 // POST { action: "feedback", ... }→ JSON { ok }：首页反馈表单，存进 Redis（不调模型）；GET ?feedback=口令 读最近的反馈（口令见 feedbackToken，本地用 demo/feedback.mjs）
 // POST { action: "login" | "demo" } → JSON { token, user }：账号登录 / 演示账号一键登录（MAT-510）
@@ -21,15 +23,15 @@
 import crypto from "node:crypto";
 import {
     loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
-    templateMessages, cleanTemplate, intakeMessages, cleanIntake, ocr, okImages, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
+    templateMessages, cleanTemplate, intakeMessages, cleanIntake, ocr, okImages, afterclassMessages, shortenMessages, hanCount, noPronoun, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
     itemBodies, adminToken, verifyToken, acctLogin, acctDemo, dataLoad, dataSave, itemsQuota, acctAdmin,
 } from "./_lib/english.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
 const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8), search: env("EN_SEARCH_DAILY", 30), chat: env("EN_CHAT_DAILY", 30),
     section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10),
-    intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), feedback: env("EN_FEEDBACK_DAILY", 10) };
-const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", feedback: "提反馈" };
+    intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), afterclass: env("EN_AFTERCLASS_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10) };
+const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
@@ -136,6 +138,31 @@ export async function POST(request) {
         const entry = { at: new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 16).replace("T", " "), text, ...(c?.value ? { contact: c } : {}), page: clip(p.page, 10) };
         try { await feedbackPush(entry); return Response.json({ ok: true }); }
         catch { return Response.json({ error: "反馈暂时存不进去，可以直接发邮件到 matsuriismywaifu@gmail.com" }, { status: 503 }); }
+    }
+
+    if (action === "afterclass") {
+        // 一个学生走 student / studentMems / logs；一对多传 members（每人一份档案 + 个别情况），一次写出每人一段
+        const words = Math.max(50, Math.min(800, Math.round(+p.words || 200)));
+        const students = Array.isArray(p.members) && p.members.length
+            ? p.members.slice(0, 8).map((m) => ({ name: clip(m?.name, 10) || "这个学生", gradeLabel: clip(m?.gradeLabel, 40), schoolLabel: clip(m?.schoolLabel, 40), profile: clip(m?.profile, 1500),
+                mems: cleanMems(m?.mems), logs: cleanLogs(m?.logs).slice(-3), note: clip(m?.note, 300) }))
+            : [{ name: student.name || "这个学生", gradeLabel: student.gradeLabel, schoolLabel: student.schoolLabel, profile: student.profile, mems: studentMems, logs: logs.slice(-3) }];
+        const tok = Math.min(8000, students.length * words * 2 + 300);
+        const fit = async (text) => {   // 写超了两成：压一次（不另计次），压坏了就用原来的
+            if (hanCount(text) <= words * 1.2) return text;
+            const r = await json(shortenMessages(text, words), { signal: request.signal, cfg, max_tokens: Math.min(2500, words * 2 + 300) }).catch(() => null);
+            const t2 = String(r?.data?.text || "").trim().slice(0, 2000);
+            return t2 && hanCount(t2) < hanCount(text) ? noPronoun(t2) : text;
+        };
+        try {
+            const { data, usage } = await json(afterclassMessages({ students, exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: clip(p.lesson, 600), words }), { signal: request.signal, cfg, max_tokens: tok });
+            const raw = students.length > 1 ? (Array.isArray(data.items) ? data.items : []) : [{ text: data.text }];
+            // 按顺序对上学生；模型给的名字只作核对，对不上就按位置
+            const items = students.map((x, i) => ({ name: x.name, text: noPronoun(String((raw.find((r) => clip(r?.name, 10) === x.name) || raw[i])?.text || "").trim().slice(0, 2000)) }));
+            if (!items.some((x) => x.text)) return Response.json({ error: "没写出来，再试一次" }, { status: 502 });
+            await Promise.all(items.map(async (x) => { if (x.text) x.text = await fit(x.text); }));
+            return Response.json({ items, text: items[0].text, usage, left });
+        } catch (e) { return fail(e); }
     }
 
     if (action === "ocr") {

@@ -375,6 +375,13 @@
   .scores .x:hover { color: var(--red); }
   .scores .q { grid-column: 1 / -1; font-size: 12px; color: #a8621e; }
   @media (max-width: 520px) { .scores li { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 3.4em 1.2em; } .scores input[data-f="name"] { grid-column: 1 / -1; } }
+  .ac-form { display: grid; gap: 14px; align-content: start; }
+  .ac-form textarea, .ac-form select { width: 100%; }
+  .ac-members { display: grid; gap: 6px; }
+  .ac-members label { display: grid; grid-template-columns: 5em minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13.5px; }
+  .ac-members input { width: 100%; font-size: 14px; padding: 5px 8px; }
+  .ac-out { display: grid; gap: 14px; }
+  .ac-item textarea { width: 100%; margin-top: 6px; }
   .ns-weak { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
   .ns-weak li { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr) 1.2em; gap: 4px 8px; align-items: center; }
   .ns-weak select, .ns-weak input { width: 100%; font-size: 14px; padding: 6px 8px; }
@@ -468,7 +475,7 @@
 </head>
 <body>
 <nav class="topnav" aria-label="页面"><div class="topnav-in">
-  <a class="nav-back" href="/portfolio/english-prep/" title="回到这个项目在作品集里的展示页">← 项目页</a><a href="#/" data-page="home">首页</a><span class="steps"><a href="#/profile" data-page="profile">档案</a><i aria-hidden="true">→</i><a href="#/exam" data-page="exam">考试</a><i aria-hidden="true">→</i><a href="#/outline" data-page="outline">维度与大纲</a><i aria-hidden="true">→</i><a href="#/plan" data-page="plan">教案</a><i aria-hidden="true">→</i><a href="#/review" data-page="review">审教</a></span>
+  <a class="nav-back" href="/portfolio/english-prep/" title="回到这个项目在作品集里的展示页">← 项目页</a><a href="#/" data-page="home">首页</a><span class="steps"><a href="#/profile" data-page="profile">档案</a><i aria-hidden="true">→</i><a href="#/exam" data-page="exam">考试</a><i aria-hidden="true">→</i><a href="#/outline" data-page="outline">维度与大纲</a><i aria-hidden="true">→</i><a href="#/plan" data-page="plan">教案</a><i aria-hidden="true">→</i><a href="#/review" data-page="review">审教</a><i aria-hidden="true">→</i><a href="#/afterclass" data-page="afterclass">课后反馈</a></span>
   <button type="button" class="nav-who" id="navWho" aria-haspopup="true" aria-expanded="false" title="正在给谁备课：点一下换人或换组"></button>
   <button type="button" class="nav-acct" id="acctBtn" aria-haspopup="true" aria-expanded="false">登录</button>
 </div></nav>
@@ -483,7 +490,7 @@
   <div class="stats" id="stats"></div>
 </header>
 <section class="flow-wrap">
-  <div class="step-h"><h2>备课流程</h2><span class="note">五步按顺序走：看档案 → 定下一场考试 → 调四个维度的占比、排大纲 → 写成教案 → 审教校验（自动检查 + 老师自己看，要改的跟 agent 说）。哪一步都能回头改，改动自动保存（登录了就存进账号）。</span></div>
+  <div class="step-h"><h2>备课流程</h2><span class="note">五步按顺序走：看档案 → 定下一场考试 → 调四个维度的占比、排大纲 → 写成教案 → 审教校验（自动检查 + 老师自己看，要改的跟 agent 说）。哪一步都能回头改，改动自动保存（登录了就存进账号）。上完课要给家长发反馈，直接去<a href="#/afterclass">课后反馈</a>，不用走前面几步。</span></div>
   <div class="flow" id="flow"></div>
 </section>
 <section class="how">
@@ -750,7 +757,26 @@
     </div>
   </div>
 </section>
-<nav class="pager"><a href="#/plan">← 教案</a><a href="#/profile">上完课去档案记一笔 →</a></nav>
+<nav class="pager"><a href="#/plan">← 教案</a><a class="btn" href="#/afterclass">下一步：课后反馈 →</a></nav>
+</div>
+
+<div class="page" data-page="afterclass" hidden>
+<!-- 6 课后反馈（用户 10-29）：上完课发给家长的那段话；不绑前面几步，直接进来选学生就能写 -->
+<section class="step">
+  <div class="step-h"><span class="n">6</span><h2>课后反馈</h2><span class="note">上完课发给家长的那段话。按学生档案（画像、进度、历史得分、薄弱点）、最近几次课和下一场考试来写，字数自己定；前面几步没走也能直接用，排过教案的话一起参考。选一对多的组，一次给每个学生各写一段。</span></div>
+  <div class="grid2">
+    <div class="card ac-form">
+      <label class="field"><span class="lab">给谁写</span><select id="acStu" aria-label="给谁写"></select></label>
+      <p class="note" id="acInfo" style="margin:0"></p>
+      <label class="field"><span class="lab">这节课的情况 <span class="note" style="font-weight:400">可选，写了更具体</span></span><textarea id="acLesson" rows="5" maxlength="600" placeholder="比如：今天讲了完形的转折线索，10 题错 3 题，比上次好；作文开头还是太长。作业是练习册 P23–24。"></textarea></label>
+      <div class="field" id="acMembersWrap" hidden><span class="lab">每个学生的个别情况 <span class="note" style="font-weight:400">可选</span></span><div class="ac-members" id="acMembers"></div></div>
+      <div class="field"><span class="lab">字数</span><div class="row"><input type="number" id="acWords" min="50" max="800" step="10" value="200" aria-label="字数" style="width:6.5em"><span class="chips" id="acWordChips"><button type="button" class="chip">100</button><button type="button" class="chip">200</button><button type="button" class="chip">300</button><button type="button" class="chip">500</button></span></div></div>
+      <div class="row"><button type="button" class="btn" id="acGo">生成课后反馈</button><span class="note" id="acNote"></span></div>
+    </div>
+    <div class="card"><h3 style="margin:0 0 4px">反馈</h3><div class="ac-out" id="acOut"></div></div>
+  </div>
+</section>
+<nav class="pager"><a href="#/review">← 审教</a><a href="#/profile">上完课去档案记一笔 →</a></nav>
 </div>
 
 <footer><button class="linkbtn" id="resetAll">把这页恢复成示例数据</button></footer>
@@ -1558,7 +1584,20 @@ function deriveCtx() {
     for (const r of U.rows) r.base = r.share;   // 老师动手之前看到的占比（带上默认偏好），画像按它算老师调了多少
     const addRow = (t) => { if (!U.rows.find((r) => r.type === t)) U.rows.push({ type: t, share: 0, suggested: 0, c: { 年级: 0, 学校: 0, 学生: 0, 老师: 0 } }); };   // 这次建议里没有的题型补一行
     for (const t of Object.keys(U.overrides || {})) addRow(t);
-    M.setShares(U.rows, U.overrides || {});   // 老师手动调过的占比（滑块、横条、采纳复盘建议）重算后一起套回去
+    // 老师动过占比以后（用户 10-29：老师的调整优先级最高，系统不能自己替他改），所有题型都定在老师上次看到的样子（frozen）：
+    // 改要求、记了课后记录、换考试、刷新、过几天薄弱点衰减，建议变了也不动它，只在说明里提一句；老师自己拖、让 agent 改、点「恢复建议」才变
+    const alt = U.rows.map((r) => ({ ...r }));
+    M.setShares(alt, U.overrides || {});   // 不定住的话，系统现在会给的占比
+    if (U.frozen) {   // 顺序也按定住时的排，滑块不跟着新建议换位置
+        const order = Object.keys(U.frozen);
+        for (const t of order) addRow(t);
+        for (const r of U.rows) r.share = U.frozen[r.type] ?? 0;
+        U.rows.sort((a, b) => ((order.indexOf(a.type) + 1) || 99) - ((order.indexOf(b.type) + 1) || 99));
+    }
+    M.setShares(U.rows, U.overrides || {});   // 老师手动调过的占比（滑块、横条、采纳复盘建议）套回去，没调过的按定住的比例分剩下的
+    const touched = Object.keys(U.overrides || {}).length > 0;
+    U.frozen = touched ? Object.fromEntries(U.rows.map((r) => [r.type, r.share])) : null;
+    U.suggChanged = touched && U.rows.some((r) => Math.abs(r.share - (alt.find((a) => a.type === r.type)?.share || 0)) > 0.02);
     if (U.lock) {   // 排好大纲以后，占比按大纲里各题型的分钟数来
         for (const t in U.lock) addRow(t);
         for (const r of U.rows) r.share = U.lock[r.type] || 0;
@@ -1645,7 +1684,7 @@ $("#sliders").oninput = (e) => {
     deriveCtx();   // 和下一次重算用同一套（所有手动值一起套回），拖完的显示不会再跳
     renderSliders(false); renderMixBar(); drawSankey(); mixNote();
 };
-$("#resetMix").onclick = () => { U.overrides = {}; recompute(); };
+$("#resetMix").onclick = () => { U.overrides = {}; U.frozen = null; recompute(); };
 function mixNote() {
     const c = U.ctx;
     const changed = Object.keys(U.overrides || {});
@@ -1654,7 +1693,7 @@ function mixNote() {
         (SET().focusTypes ? `老师设置一节课最多主攻 ${SET().focusTypes} 个题型。` : "") +
         (U.biased?.length ? `按老师画像里设的默认偏好：${U.biased.join("、")}。` : "") +
         (Object.keys(c.gTypes).length ? `从「这次课的要求」里认出：${Object.keys(c.gTypes).join("、")}。` : "") +
-        (changed.length ? `老师手动调了 ${changed.join("、")}。` : "");
+        (changed.length ? `老师手动调了 ${changed.join("、")}；占比按你调的定住，系统不会自己改${U.suggChanged ? "。按现在的情况算，系统的建议已经不一样了，想用系统的点「恢复建议」" : ""}。` : "");
 }
 function renderReview() {
     $("#review").value = U.review;
@@ -2320,10 +2359,10 @@ $("#chatLog").onclick = (e) => {
 // 改之前拍个快照，撤销时整体还原
 function snap() {
     return { outline: U.W?.outline ? clone(U.W.outline) : null, md: U.W?.md ?? null, items: U.W ? [...U.W.items] : null, alts: U.W ? [...U.W.alts] : null,
-        lock: U.lock ? { ...U.lock } : null, overrides: { ...(U.overrides || {}) }, guidance: U.guidance, level: U.level, kind: U.kind };
+        lock: U.lock ? { ...U.lock } : null, overrides: { ...(U.overrides || {}) }, frozen: U.frozen ? { ...U.frozen } : null, guidance: U.guidance, level: U.level, kind: U.kind };
 }
 function restoreSnap(s) {
-    Object.assign(U, { lock: s.lock, overrides: s.overrides, guidance: s.guidance, level: s.level, kind: s.kind });
+    Object.assign(U, { lock: s.lock, overrides: s.overrides, frozen: s.frozen, guidance: s.guidance, level: s.level, kind: s.kind });
     if (U.W) { if (s.outline) U.W.outline = s.outline; if (s.md != null) U.W.md = s.md; if (s.items) U.W.items = s.items; if (s.alts) U.W.alts = s.alts; }
     if (U.W?.items) renderItems(); if (U.W?.outline) renderOutline(); if (U.W?.md) renderPlan(false);
 }
@@ -2680,7 +2719,7 @@ function snapWork() {
     const st = stu(), W = U.W;
     if (!st || !U.gt) return;
     const snap = {
-        u: { gt: U.gt, kind: U.kind, unit: U.unit, minutes: U.minutes, level: U.level, guidance: U.guidance, overrides: U.overrides, difficulty: U.difficulty,
+        u: { gt: U.gt, kind: U.kind, unit: U.unit, minutes: U.minutes, level: U.level, guidance: U.guidance, overrides: U.overrides, frozen: U.frozen, difficulty: U.difficulty,
             template: U.template, planNote: U.planNote, review: U.review, reviewTouched: U.reviewTouched, chat: (U.chat || []).filter((m) => !m.wait).map(({ snap, ...m }) => m) },
         W: W?.outline ? { items: W.items.map(workRef), alts: W.alts.map(workRef), extras: W.extras, slots: W.slots, outline: W.outline, outline0: W.outline0, md: W.md,
             stale: [...W.stale].map(([c, set]) => [c, [...set]]), visual: W.visual, student: W.student, sid: W.sid, date: W.date, checked: W.checked } : null,
@@ -2891,7 +2930,7 @@ document.addEventListener("visibilitychange", () => { if (!AUTH) return; documen
 // ---------- 多页面（用户 10-29）----------
 // 地址里的 #/档案 这类分页，都在这一个页面里切换：状态不用跨页面同步，正在生成的大纲、教案翻到别的页也不会断。
 // 用 pushState 换地址（不触发 hashchange），浏览器前进后退走 popstate；E 编号那种 #item-E3 锚点不当成分页
-const PAGES = { home: "首页", profile: "档案", exam: "考试", outline: "维度与大纲", plan: "教案", review: "审教", newstu: "新建学生档案" };
+const PAGES = { home: "首页", profile: "档案", exam: "考试", outline: "维度与大纲", plan: "教案", review: "审教", afterclass: "课后反馈", newstu: "新建学生档案" };
 const page = () => { const k = /^#\/(\w*)/.exec(location.hash)?.[1] || "home"; return Object.hasOwn(PAGES, k) ? k : "home"; };
 function route() {
     const k = page();
@@ -2902,6 +2941,7 @@ function route() {
     if (k === "newstu") renderNewStu();
     $("#navWho").hidden = k === "newstu";
     if (k === "review") renderAudit();
+    if (k === "afterclass") renderAfter();
     renderChat();
 }
 function go(k) {
@@ -2929,6 +2969,66 @@ function renderHome() {
     ];
     $("#flow").innerHTML = cards.map(([k, now, sub, cta], i) => `<a class="fcard" href="#/${k}"><span class="n">${i + 1}</span><b>${PAGES[k]}</b><span class="now">${esc(now)}</span><span class="note">${esc(sub)}</span><span class="go">${cta} →</span></a>`).join("");
 }
+
+// ---------- 6 课后反馈（用户 10-29）：上完课发给家长的那段话。不绑前面的流程：选学生、定字数就能写；这个学生正好排过教案就一起参考 ----------
+// 一对多（用户 10-29）：选组就一次给每个组员各写一段，共同的部分大体一样、各人按自己的档案；每人可以另写一句个别情况。写好的存在各人的 lastAfter
+const acPick = () => { const id = $("#acStu").value, g = groupOf(id); return g ? { id, group: g, members: membersOf(g) } : { id, members: S.students.filter((x) => x.id === id) }; };
+// 下一场考试：选的就是正在备的学生或组，用考试页定的那场；别的按考试日历推
+function acExam(id, st) {
+    if (id === stu().id && U.ctx) return examLabel();
+    const e = M.nextExam(st.grade, TODAY, R, stuGt(st));
+    return e ? `${e.gt}${e.kind}（${e.date}，还有 ${e.days} 天）` : "";
+}
+const acPlan = (id) => (U.W?.sid === id && U.W.outline ? `${U.W.outline.title || ""}：${U.W.outline.sections.map((x) => `${x.name}${x.type ? "（" + x.type + "）" : ""} ${x.minutes} 分钟`).join("；")}` : "");
+const hanN = (t) => t.replace(/\s/g, "").length;
+function renderAcOut(ms) {
+    $("#acOut").innerHTML = ms.map((x) => `<div class="ac-item" data-sid="${x.id}"><div class="row" style="justify-content:space-between">${ms.length > 1 ? `<b>${esc(x.name)}的家长</b>` : "<span></span>"}<span class="row"><span class="note ac-n">${x.lastAfter?.text ? hanN(x.lastAfter.text) + " 字" : ""}</span><button type="button" class="btn small ghost" data-copy>复制</button></span></div>`
+        + `<textarea rows="${ms.length > 1 ? 8 : 14}" placeholder="生成以后在这里，可以直接改；改的也会存下来">${esc(x.lastAfter?.text || "")}</textarea></div>`).join("");
+}
+function renderAfter() {
+    const cur = stu(), keep = $("#acStu").value, gs = (S.groups || []).filter((g) => membersOf(g).length);
+    const ok = (id) => S.students.some((x) => x.id === id) || gs.some((g) => g.id === id);
+    const id = ok(keep) ? keep : cur.id;
+    $("#acStu").innerHTML = `<optgroup label="一对一">${S.students.map((x) => `<option value="${x.id}">${esc(x.name)} · ${esc(stuGt(x))} · ${esc(x.schoolName || "")}</option>`).join("")}</optgroup>`
+        + (gs.length ? `<optgroup label="一对多（每人各写一段）">${gs.map((g) => `<option value="${g.id}">${esc(g.name)} · ${membersOf(g).map((x) => esc(x.name)).join("、")}</option>`).join("")}</optgroup>` : "");
+    $("#acStu").value = id;
+    const { members: ms } = acPick(), st = ms[0], n = unitsOf(stuGt(st)), ex = acExam(id, st), plan = acPlan(id);
+    $("#acInfo").textContent = ms.length > 1
+        ? `${ms.length} 个学生，各按自己的画像、进度、历史得分、薄弱点、课次记录写${ex ? ` · 下一场 ${ex}` : ""}${plan ? " · 这节课的大纲" : ""}`
+        : `会参考：学生画像（进度 ${progText(progVal(st, n), n)}）· 历史得分 ${(st.scores || []).filter((x) => x.score != null).length} 次 · 薄弱点 ${st.mems.filter((m) => m.cat === "薄弱点").length} 条 · 课次记录 ${st.logs.length} 次${ex ? ` · 下一场 ${ex}` : ""}${plan ? " · 这节课的大纲" : ""}`;
+    $("#acMembersWrap").hidden = ms.length < 2;
+    if (keep !== id || !$("#acMembers").children.length) $("#acMembers").innerHTML = ms.length > 1 ? ms.map((x) => `<label><span>${esc(x.name)}</span><input data-sid="${x.id}" maxlength="100" placeholder="比如：这次完形只错 1 题"></label>`).join("") : "";
+    if (keep !== id || !$("#acOut").children.length) renderAcOut(ms);
+}
+$("#acStu").onchange = () => { $("#acMembers").innerHTML = $("#acOut").innerHTML = ""; renderAfter(); };
+$("#acWordChips").onclick = (e) => { const b = e.target.closest(".chip"); if (b) $("#acWords").value = b.textContent; };
+$("#acOut").oninput = (e) => {
+    const box = e.target.closest(".ac-item"), st = box && S.students.find((x) => x.id === box.dataset.sid); if (!st) return;
+    st.lastAfter = { ...(st.lastAfter || {}), text: e.target.value }; save();
+    box.querySelector(".ac-n").textContent = e.target.value ? hanN(e.target.value) + " 字" : "";
+};
+$("#acOut").onclick = async (e) => {
+    const box = e.target.closest("[data-copy]")?.closest(".ac-item"); if (!box) return;
+    const ta = box.querySelector("textarea"); if (!ta.value) return;
+    try { await navigator.clipboard.writeText(ta.value); toast("复制好了，可以直接发给家长"); } catch { ta.select(); toast("没复制成，已经全选，按 ⌘C / Ctrl+C"); }
+};
+$("#acGo").onclick = async () => {
+    const { id, members: ms } = acPick(); if (!ms.length) return;
+    const words = Math.max(50, Math.min(800, Math.round(+$("#acWords").value || 200)));
+    const one = (st) => ({ name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), profile: profileLine(st) });
+    $("#acWords").value = words; $("#acGo").disabled = true; $("#acNote").textContent = ms.length > 1 ? `在给 ${ms.length} 个学生写……` : "在写……";
+    try {
+        const base = { action: "afterclass", words, lesson: $("#acLesson").value.trim(), examLabel: acExam(id, ms[0]), plan: acPlan(id) };
+        const { items, left } = await post(ms.length > 1
+            ? { ...base, members: ms.map((st) => ({ ...one(st), mems: st.mems, logs: logsLite(st), note: $(`#acMembers input[data-sid="${st.id}"]`)?.value.trim() || "" })) }
+            : { ...base, student: one(ms[0]), studentMems: ms[0].mems, logs: logsLite(ms[0]) });
+        ms.forEach((st, i) => { if (items[i]?.text) st.lastAfter = { date: TODAY, words, text: items[i].text }; });
+        save(); renderAcOut(ms);
+        const miss = ms.filter((_, i) => !items[i]?.text).map((x) => x.name);
+        $("#acNote").textContent = `写好了，可以直接改${miss.length ? `；${miss.join("、")}的没写出来，再点一次` : ""}${left != null ? `；今天还能写 ${left} 次` : ""}`;
+    } catch (e) { $("#acNote").innerHTML = `<span class="err">没写成：${esc(e.message)}</span>`; }
+    $("#acGo").disabled = false;
+};
 
 // ---------- 刷新 ----------
 function recompute() { deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); }
