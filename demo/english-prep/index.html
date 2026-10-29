@@ -102,6 +102,9 @@
   .addmem { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .addmem input { flex: 1 1 12em; font-size: 14px; padding: 5px 8px; }
   .addmem select { font-size: 13px; padding: 4px 6px; }
+  .mem-ed { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .mem-ed input { flex: 1 1 12em; font-size: 14px; padding: 4px 8px; }
+  .mem-ed select { font-size: 13px; padding: 3px 6px; }
   .rec { margin-top: 16px; }
   .examples { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
   .examples button { font: inherit; font-size: 12.5px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2); cursor: pointer; text-align: left; }
@@ -370,6 +373,7 @@
   .scores .pct { font-size: 12.5px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
   .scores .x { border: 0; background: none; color: var(--ink-3); cursor: pointer; font-size: 15px; padding: 0; }
   .scores .x:hover { color: var(--red); }
+  .scores .q { grid-column: 1 / -1; font-size: 12px; color: #a8621e; }
   @media (max-width: 520px) { .scores li { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) 3.4em 1.2em; } .scores input[data-f="name"] { grid-column: 1 / -1; } }
   .ns-weak { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
   .ns-weak li { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr) 1.2em; gap: 4px 8px; align-items: center; }
@@ -535,6 +539,7 @@
       <div id="whoScoresWrap"><div class="sc-h">历史得分 <span class="note">按时间先后填，最下面是最近一次；满分按那张卷子填</span></div><div id="whoScores"></div></div>
       <div class="remind" id="remind"></div>
       <ul class="mems" id="stuMems"></ul>
+      <form class="addmem" id="addWeak"><select id="awType" aria-label="题型"></select><input id="awText" maxlength="60" placeholder="加一个薄弱点；说不清就写「暂时未知」"><button class="btn small ghost">加上</button></form>
       <details class="fold" id="ledgerWrap" open><summary id="ledgerSum">薄弱知识点</summary><div id="ledger"></div></details>
       <details class="fold"><summary id="logsSum">课次记录</summary><ol class="logs" id="logs"></ol></details>
       <details class="fold" id="forgotWrap" hidden><summary>已忘记</summary><ul class="mems" id="forgot"></ul></details>
@@ -567,9 +572,9 @@
   <div class="ns">
     <div class="ns-col">
       <div class="card">
-        <h3>从一段话开始 <span class="note" style="font-weight:400">可选</span></h3>
+        <h3>从一段话或几张图开始 <span class="note" style="font-weight:400">可选</span></h3>
         <textarea id="nsText" maxlength="3000" rows="6" placeholder="家长的话、聊天记录、你对这个学生的印象，直接贴进来。比如：王同学，东林中学初二，这学期刚学到第二单元。作业经常拖到很晚、错题不订正，上课坐不住，二十分钟就开始走神。阅读还行，作文不会用连接词，目标是期末 110 分。"></textarea>
-        <div class="row" style="margin-top:10px"><button type="button" class="btn small" id="nsParse">让 agent 填表</button><span class="note" id="nsParseNote"></span></div>
+        <div class="row" style="margin-top:10px"><button type="button" class="btn small" id="nsParse">让 agent 填表</button><button type="button" class="btn small ghost" id="nsImgBtn" title="聊天截图、成绩单、家长发来的照片，一次最多 3 张；认出来的字接在上面这段话后面">上传图片</button><input type="file" id="nsImg" accept="image/*" multiple hidden><span class="note" id="nsParseNote"></span></div>
         <div id="nsNotesWrap" hidden><h3 style="margin:14px 0 4px">这些会记进档案 <span class="note" style="font-weight:400">不要的取消勾选</span></h3><ul class="ns-notes" id="nsNotes"></ul></div>
       </div>
       <form class="card ns-form" id="nsForm">
@@ -892,7 +897,7 @@ function mountScores(el, st) {
     el.innerHTML = (xs.length ? `<ul class="scores">${xs.map((x, i) => `<li data-i="${i}"><input type="text" data-f="name" list="examHints" maxlength="16" value="${esc(x.name)}" placeholder="哪次考试，比如：上学期期末" aria-label="哪次考试">`
         + `<input type="number" data-f="score" min="0" step="0.5" value="${x.score ?? ""}" placeholder="得分" aria-label="得分"><span class="slash">/</span>`
         + `<input type="number" data-f="full" min="1" step="1" list="fullHints" value="${x.full ?? ""}" placeholder="满分" aria-label="满分"><span class="pct">${pctText(x)}</span>`
-        + `<button type="button" class="x" data-rm title="删掉这一次" aria-label="删掉这一次">×</button></li>`).join("")}</ul>` : "")
+        + `<button type="button" class="x" data-rm title="删掉这一次" aria-label="删掉这一次">×</button>${x.quote ? `<div class="q">原文：${esc(x.quote)}</div>` : ""}</li>`).join("")}</ul>` : "")
         + `<div class="row"><button type="button" class="btn small ghost" data-add>+ 加一次考试</button><span class="note sc-sum">${scoresSum(st)}</span></div>`;
 }
 // 打字时只改这一行的得分率和下面那句判断，不重画（不丢焦点）；改完（change）、加、删才存
@@ -1177,9 +1182,9 @@ wireScores($("#nsScores"), () => NS, () => {});
 $("#nsNotes").onchange = (e) => { if (e.target.dataset.i != null) NS.notes[+e.target.dataset.i].on = e.target.checked; };
 // 薄弱知识点（用户 10-29）：老师自己加、改描述、删；描述说不清就写或留空，记成「暂时未知」，一条都不加也行。
 // agent 从那段话里抽的薄弱点也放这里（ai: true），重新让 agent 填表只换掉这些，老师自己加的留着
+const qtypeOpts = (cur) => `<option value="">题型不确定</option>` + [...new Set([...Object.keys(data.stats.byType), cur].filter(Boolean))].map((t) => `<option ${t === cur ? "selected" : ""}>${esc(t)}</option>`).join("");
 function renderNsWeak() {
-    const types = Object.keys(data.stats.byType);
-    $("#nsWeak").innerHTML = (NS.weak.length ? `<ul class="ns-weak">${NS.weak.map((w, i) => `<li data-i="${i}"><select data-f="qtype" aria-label="题型"><option value="">题型不确定</option>${[...new Set([...types, w.qtype].filter(Boolean))].map((t) => `<option ${t === w.qtype ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`
+    $("#nsWeak").innerHTML = (NS.weak.length ? `<ul class="ns-weak">${NS.weak.map((w, i) => `<li data-i="${i}"><select data-f="qtype" aria-label="题型">${qtypeOpts(w.qtype)}</select>`
         + `<input type="text" data-f="text" maxlength="60" value="${esc(w.text)}" placeholder="哪里弱；说不清就写「暂时未知」" aria-label="薄弱点描述">`
         + `<button type="button" class="x" data-rm title="删掉这一条" aria-label="删掉这一条">×</button>${w.quote ? `<div class="q">原文：${esc(w.quote)}</div>` : ""}</li>`).join("")}</ul>`
         : `<p class="note" style="margin:0 0 8px">还没加。暂时不清楚也没关系，上几次课、记下错题以后会自己累计。</p>`)
@@ -1241,6 +1246,7 @@ function nsApply(p) {
     for (const d of p.dims) { Mem.setDim(NS, d.key, d.value); if (d.quote) NS.dimsWhy[d.key] = d.quote; got++; }
     NS.notes = p.notes.filter((n) => n.cat !== "薄弱点").map((n) => ({ ...n, on: true })); got += p.notes.length;
     NS.weak = [...NS.weak.filter((w) => !w.ai), ...p.notes.filter((n) => n.cat === "薄弱点").map((n) => ({ qtype: n.qtype || "", text: n.text, quote: n.quote, ai: true }))];
+    NS.scores = [...NS.scores.filter((x) => !x.ai), ...(p.scores || []).map((x) => ({ name: x.name || "某次考试", score: x.score, full: x.full, quote: x.quote, ai: true }))]; got += p.scores?.length || 0;
     renderNewStu();
     return got;
 }
@@ -1251,9 +1257,34 @@ $("#nsParse").onclick = async () => {
     try {
         const { profile } = await post({ action: "intake", text, dims: Mem.DIMS.filter((d) => d.lo).map(({ key, label, lo, hi }) => ({ key, label, lo, hi })) });
         const got = nsApply(profile);
-        $("#nsParseNote").textContent = `填好了 ${got} 项，标着「原文」的是从这段话里来的，核对一下再建档。${$("#nsOther").value && $("#nsSchool").value === "other" ? "名录里没找到这所学校，按原文填了，公办还是私立看一下。" : ""}${profile.missing ? "还可以补：" + profile.missing : ""}`;
+        $("#nsParseNote").textContent = `填好了 ${got} 项，标着「原文」的是从这段话里来的，核对一下再建档。${$("#nsOther").value && $("#nsSchool").value === "other" ? "名录里没找到这所学校，按原文填了，公办还是私立看一下。" : ""}${profile.scores?.some((x) => x.full == null) ? "有的成绩原文没说满分，在历史得分里补一下。" : ""}${profile.missing ? "还可以补：" + profile.missing : ""}`;
     } catch (e) { $("#nsParseNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; }
     $("#nsParse").disabled = false;
+};
+// 传图（用户 10-29）：先缩到最长边 1600px、转 JPEG（铺白底），模型把图里的字转写出来，接在那段话后面，直接让 agent 填表
+const shrinkImg = (file) => new Promise((ok, no) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+        const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement("canvas"), g = c.getContext("2d");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); ok(c.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); no(new Error(`「${file.name}」打不开，换成 JPG 或 PNG 再试`)); };
+    img.src = url;
+});
+$("#nsImgBtn").onclick = () => $("#nsImg").click();
+$("#nsImg").onchange = async () => {
+    const files = [...$("#nsImg").files]; $("#nsImg").value = "";
+    if (!files.length) return;
+    $("#nsImgBtn").disabled = $("#nsParse").disabled = true;
+    $("#nsParseNote").textContent = `在认图里的字（${Math.min(3, files.length)} 张${files.length > 3 ? "，一次最多 3 张，后面的没传" : ""}）……`;
+    try {
+        const { text } = await post({ action: "ocr", images: await Promise.all(files.slice(0, 3).map(shrinkImg)) });
+        $("#nsText").value = [$("#nsText").value.trim(), text].filter(Boolean).join("\n\n");
+        await $("#nsParse").onclick();
+    } catch (e) { $("#nsParseNote").innerHTML = `<span class="err">没认出来：${esc(e.message)}</span>`; }
+    $("#nsImgBtn").disabled = $("#nsParse").disabled = false;
 };
 $("#nsForm").onsubmit = (e) => {
     e.preventDefault();
@@ -1264,7 +1295,7 @@ $("#nsForm").onsubmit = (e) => {
     const st = { id: "s" + Date.now().toString(36), name, grade: NS.grade, ...(NS.term !== M.termAt(TODAY) ? { term: NS.term } : {}),
         school: sc?.key || "", schoolName: sc ? sc.name : $("#nsOther").value.trim() || "其他学校", district: sc ? sc.district : $("#nsDistrict").value, ownership: sc ? sc.own : $("#nsOwn").value,
         textbook: "新", unit: NS.unit, progress: NS.progress, attention: NS.attention, dims: { ...NS.dims }, dimsWhy: { ...NS.dimsWhy }, mems: [], logs: [],
-        scores: NS.scores.filter((x) => scorePct(x) != null).map((x) => ({ ...x, name: x.name.trim() || "某次考试" })) };
+        scores: NS.scores.filter((x) => x.score != null).map(({ ai, ...x }) => ({ ...x, name: x.name.trim() || "某次考试" })) };
     const weak = NS.weak.filter((w) => w.qtype || w.text.trim()).map((w) => ({ cat: "薄弱点", qtype: w.qtype, text: w.text.trim() || "暂时未知", quote: w.quote }));
     const notes = [...weak, ...NS.notes.filter((n) => n.on)];
     if (notes.length) Mem.applyOps(memState(st), notes.map((n) => ({ op: "add", who: "student", cat: n.cat, text: n.text, qtype: n.qtype, evidence: n.quote, why: "建档时老师贴的描述" })), TODAY, "建档描述");
@@ -1279,11 +1310,13 @@ function memHTML(m, who, ro) {
     const days = M.daysBetween(m.updated || TODAY, TODAY);
     const bar = eff != null ? `<span title="原强度 ${m.strength.toFixed(2)}，${days} 天前更新，按 ${HALF} 天半衰后 ${eff.toFixed(2)}"><span class="bar"><i style="width:${eff * 100}%"></i></span> ${eff.toFixed(2)}</span>` : "";
     const sub = [m.qtype && `${m.qtype}${m.kp ? " · " + m.kp : ""}`, bar, m.evidence && `依据：${esc(m.evidence)}`, `${esc(m.source || "")} ${md5(m.updated || "")}`].filter(Boolean);
+    if (who === "student" && m.cat === "薄弱点" && !ro) sub.push(`<button type="button" class="linkbtn" data-edit>改</button>`);
     return `<li class="mem${flashIds.has(who + m.id) ? " flash" : ""}" data-who="${who}" data-id="${m.id}"><span class="id">${m.id}</span><span class="tx"><span class="tag ${cls}">${m.cat}</span>${esc(m.text)}</span>${ro ? "" : `<button class="x" title="让 agent 忘掉这条" aria-label="忘掉 ${m.id}">×</button>`}<span class="sub">${sub.map((x) => `<span>${x}</span>`).join("")}</span></li>`;
 }
 function renderMemories() {
     const st = stu();
     $("#stuMems").innerHTML = st.mems.map((m) => memHTML(m, "student", !!st.members)).join("");
+    $("#addWeak").hidden = !!st.members;
     $("#teaMems").innerHTML = S.teacher.mems.map((m) => memHTML(m, "teacher")).join("");
     const led = ledger(st);
     $("#ledgerWrap").hidden = !led.length;
@@ -1305,6 +1338,32 @@ function memState(st = stu()) {
 
 // ---------- 老师自己加一条记忆、课堂设置、画像（MAT-498） ----------
 $("#amCat").innerHTML = Mem.TEACHER_CATS.map((c) => `<option>${c}</option>`).join("");
+// 学生的薄弱点（用户 10-29）：档案页上也能自己加、改题型和描述，× 照旧是忘掉（能恢复）；描述说不清写「暂时未知」，留空也记成这个
+$("#awType").innerHTML = qtypeOpts("");
+const weakText = (v) => v.trim() || "暂时未知";
+$("#addWeak").onsubmit = (e) => {
+    e.preventDefault();
+    const st = stu(), [a] = Mem.applyOps(memState(st), [{ op: "add", who: "student", cat: "薄弱点", text: weakText($("#awText").value), qtype: $("#awType").value }], TODAY, "老师填的");
+    if (!a) return;
+    flashIds.add("student" + a.after.id); $("#awText").value = ""; save(); refresh();
+    toast(`加上了 ${a.after.id}`, { label: "撤销", fn: () => { Mem.undo(memState(st), a); save(); refresh(); } });
+};
+$("#stuMems").addEventListener("click", (e) => {
+    if (e.target.closest("[data-cancel]")) return renderMemories();
+    const li = e.target.closest("[data-edit]")?.closest(".mem"); if (!li) return;
+    const m = stu().mems.find((x) => x.id === li.dataset.id);
+    li.querySelector(".tx").innerHTML = `<form class="mem-ed"><select aria-label="题型">${qtypeOpts(m.qtype)}</select><input maxlength="60" value="${esc(m.text)}" placeholder="说不清写「暂时未知」" aria-label="薄弱点描述"><button class="btn small">保存</button><button type="button" class="linkbtn" data-cancel>取消</button></form>`;
+    li.querySelector(".mem-ed input").focus();
+});
+$("#stuMems").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const st = stu(), f = e.target, m = st.mems.find((x) => x.id === f.closest(".mem").dataset.id), qtype = f.querySelector("select").value;
+    const [a] = Mem.applyOps(memState(st), [{ op: "update", who: "student", id: m.id, text: weakText(f.querySelector("input").value), qtype }], TODAY, "老师改的");
+    if (!a) return;
+    if (qtype !== a.before.qtype) { m.qtype = qtype; m.kp = ""; }   // update 不认空题型、也不清考点：换了题型，原来的考点就对不上了
+    flashIds.add("student" + m.id); save(); refresh();
+    toast(`改好了 ${m.id}`, { label: "撤销", fn: () => { Mem.undo(memState(st), a); save(); refresh(); } });
+});
 $("#amType").innerHTML = `<option value="">不限题型</option>` + Object.keys(data.stats.byType).map((t) => `<option>${esc(t)}</option>`).join("");
 $("#addMem").onsubmit = (e) => {
     e.preventDefault();

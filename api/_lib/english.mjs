@@ -779,6 +779,7 @@ export function intakeMessages(text, dims) {
  "progress": {"unit": 学到第几单元（整数）, "stage": "刚开始|学到一半|快学完|学完"} 或 null（「刚学完第四单元」是 unit 4、学完）,
  "dims": [{"key": "维度 key", "value": 0 到 100 的整数, "quote": "原文依据，30 字以内"}],
  "notes": [{"cat": "薄弱点|已掌握|学习习惯|状态|目标", "text": "一句话，30 字以内", "qtype": "题型或空字符串", "quote": "原文依据，40 字以内"}],
+ "scores": [{"name": "哪次考试，用原文的说法，12 字以内（上学期期末、九月月考、Unit 3 单元测……）", "score": 得分（数字）, "full": 满分（数字，原文没说就 null）, "quote": "原文依据，30 字以内"}],
  "missing": "原文没提、建档最好补上的信息，30 字以内（写了学校就不算缺所在区，区会按学校自动带出）"}
 
 维度（0 是左端，100 是右端，50 是一般）：
@@ -788,8 +789,27 @@ ${dims.map((d) => `- ${d.key}：${d.label}（0 ${d.lo} ↔ 100 ${d.hi}）`).join
 1. 只抽原文说到的：没依据的字段留空或 null，没依据的维度不给，不要猜。每个维度、每条 notes 都要有原文依据。
 2. 维度值按原文的程度给：「特别」「完全」靠两端（10 或 90 左右），「有点」「比较」给 30 或 70 左右，「还行」给 50。
 3. notes 放维度表达不了的具体信息：哪类题常错、哪类已经稳了、目标分数、性格和状态。最多 8 条；维度里已经有的不要再写一遍。
-4. qtype 只能从这些里选：${TYPES.join("、")}，或空字符串。`;
+4. qtype 只能从这些里选：${TYPES.join("、")}，或空字符串。
+5. scores 只放已经考过的英语成绩，按时间先后排（早的在前），最多 6 次；目标分数不是成绩，放 notes 的「目标」。满分原文没说就写 null，不要猜。`;
     return [{ role: "system", content: sys }, { role: "user", content: String(text).slice(0, 3000) }];
+}
+// 建档传图（用户 10-29）：聊天截图、成绩单、家长发来的照片，先把图里的字原样转写出来，页面接在那段话后面再走 intake。
+// 看图用 DeepSeek 官方的 deepseek-flash（建库转写卷子图片也是它，scripts/images.py）；老师自带的 key 不一定能看图，所以一律用站长的 key
+const OCR_PROMPT = `这些图是老师为了给一个初中学生建英语家教档案上传的：聊天截图、成绩单、家长发来的话、作业或试卷照片都有可能。把图里和这个学生有关的文字原样转写出来：
+- 聊天记录一行一条，写成「谁：说了什么」，认不出是谁就只写内容；
+- 成绩单、试卷照片只写考试名称、科目、得分、满分、排名和老师的批注，不要转写题目；
+- 和学生无关的（状态栏、广告、表情、按钮文字）不要；认不出的字用 □。
+几张图之间空一行。只输出转写出来的文字，不要解释，不要加标题。`;
+export const okImages = (xs) => (Array.isArray(xs) ? xs : []).slice(0, 3).filter((u) => typeof u === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u) && u.length < 2.5e6);
+export async function ocr(images, { signal } = {}) {
+    const r = await fetchRetry("https://api.deepseek.com/chat/completions", {
+        method: "POST", signal, headers: { Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "deepseek-flash", max_tokens: 2000, temperature: 0.1, thinking: { type: "disabled" },
+            messages: [{ role: "user", content: [{ type: "text", text: OCR_PROMPT }, ...images.map((url) => ({ type: "image_url", image_url: { url } }))] }] }),
+    });
+    if (!r.ok) throw new Error(`看图接口 ${r.status} ${(await r.text()).slice(0, 160)}`);
+    const d = await r.json();
+    return { text: String(d.choices?.[0]?.message?.content || "").trim().slice(0, 2500), usage: d.usage };
 }
 const INTAKE_CATS = ["薄弱点", "已掌握", "学习习惯", "状态", "目标"];
 export function cleanIntake(d, keys) {
@@ -804,6 +824,9 @@ export function cleanIntake(d, keys) {
             .map((x) => ({ key: x.key, value: int(x.value, 0, 100), quote: clip(x.quote, 40) })),
         notes: (Array.isArray(d.notes) ? d.notes : []).filter((x) => INTAKE_CATS.includes(x?.cat) && clip(x.text, 60)).slice(0, 8)
             .map((x) => ({ cat: x.cat, text: clip(x.text, 60), qtype: TYPES.includes(x.qtype) ? x.qtype : "", quote: clip(x.quote, 60) })),
+        // 历史得分（用户 10-29）：得分按半分取整；满分 1–200，比得分还小说明抽错了，留空让老师填
+        scores: (Array.isArray(d.scores) ? d.scores : []).filter((x) => x && x.score !== "" && x.score != null && Number.isFinite(+x.score) && +x.score >= 0).slice(0, 6)
+            .map((x) => { const score = Math.round(+x.score * 2) / 2, full = int(x.full, 1, 200); return { name: clip(x.name, 16), score, full: full != null && full >= score ? full : null, quote: clip(x.quote, 40) }; }),
         missing: clip(d.missing, 40),
     };
 }

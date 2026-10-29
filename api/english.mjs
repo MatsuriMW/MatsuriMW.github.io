@@ -9,6 +9,7 @@
 // POST { action: "review", ... }  → JSON { suggestions, gaps }：读最近几次课的记录，给下一次课的教案提改进建议
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
+// POST { action: "ocr", images: [dataURL] }  → JSON { text }：建档时传的截图、照片 → 图里的字（最多 3 张）
 // POST { action: "feedback", ... }→ JSON { ok }：首页反馈表单，存进 Redis（不调模型）；GET ?feedback=口令 读最近的反馈（口令见 feedbackToken，本地用 demo/feedback.mjs）
 // POST { action: "login" | "demo" } → JSON { token, user }：账号登录 / 演示账号一键登录（MAT-510）
 // POST { action: "load" | "save" }  → 带 Authorization: Bearer 令牌，读写账号里的整个工作区；save 带 base（上次同步的版本），账号里更新就回 409 和账号里的版本
@@ -20,15 +21,15 @@
 import crypto from "node:crypto";
 import {
     loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
-    templateMessages, cleanTemplate, intakeMessages, cleanIntake, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
+    templateMessages, cleanTemplate, intakeMessages, cleanIntake, ocr, okImages, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
     itemBodies, adminToken, verifyToken, acctLogin, acctDemo, dataLoad, dataSave, itemsQuota, acctAdmin,
 } from "./_lib/english.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
 const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8), search: env("EN_SEARCH_DAILY", 30), chat: env("EN_CHAT_DAILY", 30),
     section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10),
-    intake: env("EN_INTAKE_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10) };
-const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", feedback: "提反馈" };
+    intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), feedback: env("EN_FEEDBACK_DAILY", 10) };
+const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", feedback: "提反馈" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
@@ -74,7 +75,7 @@ export async function POST(request) {
     const action = Object.hasOwn(PER_IP, p.action) || p.action === "extras" ? p.action : "outline";
     const cfg = llmConfig(p.byok);
     let left = null;
-    if (!cfg.own && action !== "extras") {   // extras 不调模型，不占次数
+    if ((!cfg.own || action === "ocr") && action !== "extras") {   // extras 不调模型，不占次数；看图总用站长的 key，自带 key 也计次
         // 正式账号按账号计次、额度放宽到 5 倍（一个老师自己备课够用）；演示账号和没登录的照旧按 IP
         const uid = verifyToken(authOf(request)), real = !!uid?.startsWith("u:"), per = PER_IP[action] * (real ? 5 : 1);
         const lim = await hit(real ? uid : ipOf(request), action, per);
@@ -135,6 +136,16 @@ export async function POST(request) {
         const entry = { at: new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 16).replace("T", " "), text, ...(c?.value ? { contact: c } : {}), page: clip(p.page, 10) };
         try { await feedbackPush(entry); return Response.json({ ok: true }); }
         catch { return Response.json({ error: "反馈暂时存不进去，可以直接发邮件到 matsuriismywaifu@gmail.com" }, { status: 503 }); }
+    }
+
+    if (action === "ocr") {
+        const images = okImages(p.images);
+        if (!images.length) return Response.json({ error: "没收到能认的图片（JPG / PNG / WebP，一次最多 3 张）" }, { status: 400 });
+        try {
+            const { text, usage } = await ocr(images, { signal: request.signal });
+            if (!text) return Response.json({ error: "图里没认出和学生有关的字" }, { status: 422 });
+            return Response.json({ text, usage, left });
+        } catch (e) { return fail(e); }
     }
 
     if (action === "intake") {

@@ -161,5 +161,4 @@
 .gf-desk.bare::before { display: none; }
 @media (max-width: 860px) { .gf-desk.bare { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .gf-desk.bare { grid-template-columns: 1fr; } }
-.gf-hint { margin-top: 14px; text-align: center; font: 11px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .18em; color: var(--ink-3, #8a8984); }
 .gf-all { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; font-size: 13.5px; }
