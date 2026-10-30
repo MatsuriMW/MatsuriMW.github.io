@@ -874,7 +874,8 @@ export function memoryMessages(p, kpByType) {
 4. qtype 只能从这些里选：${TYPES.join("、")}，或空字符串。kp（ops 和 log.errors 里都一样）必须从这个题型的考点表里选，表里都不合适才写新的：${Object.entries(kpByType).map(([t, ks]) => `${t}：${ks.join("、")}`).join("；")}。
 5. 对这一份教案的一次性意见（比如「这次阅读太多了」）只进 log；但如果和【最近的调整】方向一致、已经出现两次以上，就当作老师的偏好写进老师档案。
 6. 记录里没提到的不要编；没有要改的，ops 给空数组。
-7. ${SET_OPS}`;
+7. ${SET_OPS}
+8. 记录里有从截图、照片认出来的作业或试卷（MAT-545）：每道「【错】」的题写进 log.errors（题型、考点、note 写错在哪）；同一题型同一考点错了两道以上，或者和已有薄弱点对得上，就 add / update 学生的薄弱点；「【对】」的整道大题可以给对应的薄弱点往下调；得分写进 log.summary。只有分数、没有错题的，不要凭分数编薄弱点。`;
     const lines = [
         `【今天】${clip(p.date, 10)}`,
         `【学生】${clip(p.student?.name, 10)}，${clip(p.student?.gradeLabel, 30)}${ATTN.includes(p.student?.attention) ? `；注意力：${p.student.attention}` : ""}`,
@@ -882,7 +883,7 @@ export function memoryMessages(p, kpByType) {
         `【老师档案】\n${p.teacherMems.map(memLine).join("\n") || "（空）"}`,
         `【老师设置】${settingsLine(p.settings)}`,
         `【最近的调整】${(Array.isArray(p.observations) ? p.observations : []).slice(-6).map((o) => clip(o, 80)).join("；") || "（无）"}`,
-        `【这条记录】${clip(p.text, 1000)}`,
+        `【这条记录】${clip(p.text, 2000)}`,
     ];
     return [{ role: "system", content: sys }, { role: "user", content: lines.join("\n") }];
 }
@@ -1053,6 +1054,16 @@ ${p.lib?.length ? LIB_RULE + "\n" : ""}- type 只能从这些里选：${TYPES.jo
 
 // 建档（MAT-508）：老师贴一大段话（家长的话、聊天记录、自己的印象），抽成档案字段、画像维度和几条初始记忆，老师核对后再建档。
 // 维度定义由页面传来（web/memory.js 的 DIMS），这里只认传来的 key；学校名原样返回，页面去全市学校表里对
+// 每种题型库里最常见的考点（建档时让模型从这里挑，薄弱点才能和课次记录、检索对上）
+let KPS = null;
+function kpTable() {
+    if (KPS) return KPS;
+    const c = {};
+    for (const u of loadDB().units) for (const k of u.kp) ((c[u.type] ||= {})[k] = (c[u.type][k] || 0) + 1);
+    KPS = Object.fromEntries(Object.entries(c).filter(([, m]) => Object.values(m).reduce((a, b) => a + b, 0) >= 30).map(([t, m]) => [t, Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k]) => k)]));
+    return KPS;
+}
+export const LEVEL_STRENGTH = { 偶尔: 0.4, 常错: 0.6, 一直错: 0.8 };
 export function intakeMessages(text, dims) {
     const sys = `老师要给一个初中学生建英语家教档案，贴了一段关于这个学生的话（家长的话、聊天记录、老师自己的印象都可能）。把能确定的字段抽出来，只输出一个 JSON 对象：
 {"name": "学生的称呼，原文没有就空字符串", "grade": 7 或 8 或 9 或 null（初一 = 七年级 = 7）, "term": "上" 或 "下" 或 null,
@@ -1060,7 +1071,7 @@ export function intakeMessages(text, dims) {
  "district": "所在区：梁溪区 / 锡山区 / 惠山区 / 滨湖区 / 新吴区 / 经开区 / 江阴市 / 宜兴市，没提就空字符串",
  "progress": {"unit": 学到第几单元（整数）, "stage": "刚开始|学到一半|快学完|学完"} 或 null（「刚学完第四单元」是 unit 4、学完）,
  "dims": [{"key": "维度 key", "value": 0 到 100 的整数, "quote": "原文依据，30 字以内"}],
- "notes": [{"cat": "薄弱点|已掌握|学习习惯|状态|目标", "text": "一句话，30 字以内", "qtype": "题型或空字符串", "quote": "原文依据，40 字以内"}],
+ "notes": [{"cat": "薄弱点|已掌握|学习习惯|状态|目标", "text": "一句话，30 字以内", "qtype": "题型或空字符串", "kp": "考点（只给薄弱点、已掌握填）或空字符串", "level": "偶尔|常错|一直错（只给薄弱点填）", "how": "原话|推断", "quote": "原文依据，40 字以内"}],
  "scores": [{"name": "哪次考试，用原文的说法，12 字以内（上学期期末、九月月考、Unit 3 单元测……）", "score": 得分（数字）, "full": 满分（数字，原文没说就 null）, "quote": "原文依据，30 字以内"}],
  "missing": "原文没提、建档最好补上的信息，30 字以内（写了学校就不算缺所在区，区会按学校自动带出）"}
 
@@ -1070,16 +1081,22 @@ ${dims.map((d) => `- ${d.key}：${d.label}（0 ${d.lo} ↔ 100 ${d.hi}）`).join
 规则：
 1. 只抽原文说到的：没依据的字段留空或 null，没依据的维度不给，不要猜。每个维度、每条 notes 都要有原文依据。
 2. 维度值按原文的程度给：「特别」「完全」靠两端（10 或 90 左右），「有点」「比较」给 30 或 70 左右，「还行」给 50。
-3. notes 放维度表达不了的具体信息：哪类题常错、哪类已经稳了、目标分数、性格和状态。最多 8 条；维度里已经有的不要再写一遍。
-4. qtype 只能从这些里选：${TYPES.join("、")}，或空字符串。
-5. scores 只放已经考过的英语成绩，按时间先后排（早的在前），最多 6 次；目标分数不是成绩，放 notes 的「目标」。满分原文没说就写 null，不要猜。`;
+3. notes 放维度表达不了的具体信息：哪类题常错、哪类已经稳了、目标分数、性格和状态。最多 10 条；维度里已经有的不要再写一遍。
+4. qtype 只能从这些里选：${TYPES.join("、")}，或空字符串。kp 先从【考点表】里这个题型下面挑最贴的一个，都不贴就照原文写一个短的（6 字以内），原文说不清考点就空字符串。
+5. scores 只放已经考过的英语成绩，按时间先后排（早的在前），最多 6 次；目标分数不是成绩，放 notes 的「目标」。满分原文没说就写 null，不要猜。
+6. 薄弱点是这份档案最要紧的，要把模糊的说法落到「题型 + 考点」：「语法不好」「时态老错」多半是动词填空（考点按原文，如一般现在时、现在完成时）；「阅读看不懂」「阅读老扣分」是阅读理解；「单词记不住」「拼写差」是词汇运用；「作文写不长」「没话写」是书面表达；「完形全靠蒙」是完形填空。只说「英语不好」「基础差」这种落不到题型的，写一条题型为空的，不要硬猜。
+7. 转写的截图、照片里有「【错】」的错题、扣分多的大题，按错题推断薄弱点：how 写「推断」，同一题型同一考点合成一条，quote 写依据（「完形错 4 题，3 题在转折处」）；只有原话、没有错题的 how 写「原话」；错题和原话说的是同一处的，how 写「推断」、quote 写错题（错题是硬证据）。level：只错一两道写「偶尔」，一道大题错一半以上、或原文说「老是」「每次」写「常错」，原文说「一直」「从来没对过」写「一直错」。薄弱点最多 6 条；「【对】」的大题可以记成已掌握。
+
+【考点表】
+${Object.entries(kpTable()).map(([t, ks]) => `${t}：${ks.join("、")}`).join("\n")}`;
     return [{ role: "system", content: sys }, { role: "user", content: String(text).slice(0, 3000) }];
 }
 // 建档传图（用户 10-29）：聊天截图、成绩单、家长发来的照片，先把图里的字原样转写出来，页面接在那段话后面再走 intake。
 // 看图用 DeepSeek 官方的 deepseek-flash（建库转写卷子图片也是它，scripts/images.py）；老师自带的 key 不一定能看图，所以一律用站长的 key
-const OCR_PROMPT = `这些图是老师为了给一个初中学生建英语家教档案上传的：聊天截图、成绩单、家长发来的话、作业或试卷照片都有可能。把图里和这个学生有关的文字原样转写出来：
+const OCR_PROMPT = `这些图是老师为了给一个初中学生建英语家教档案、或者记这个学生的学习情况上传的：聊天截图、成绩单、家长发来的话、作业或试卷照片都有可能。把图里和这个学生有关的内容转写出来：
 - 聊天记录一行一条，写成「谁：说了什么」，认不出是谁就只写内容；
-- 成绩单、试卷照片只写考试名称、科目、得分、满分、排名和老师的批注，不要转写题目；
+- 成绩单：考试名称、科目、得分、满分、排名，有各大题得分的照写；
+- 作业、试卷照片：先写是哪份卷子、得分；再按大题写哪些题被批错（打叉、圈出来、扣分、红笔订正都算），一行一题，写成「【错】大题名 第几题：题目里的关键词（15 个字以内）；学生答：…；正确：…」，看不出来的部分不写；整道大题全对的写「【对】大题名」；老师的批注、评语照抄；不要整题转写；
 - 和学生无关的（状态栏、广告、表情、按钮文字）不要；认不出的字用 □。
 几张图之间空一行。只输出转写出来的文字，不要解释，不要加标题。`;
 export const okImages = (xs) => (Array.isArray(xs) ? xs : []).slice(0, 3).filter((u) => typeof u === "string" && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(u) && u.length < 2.5e6);
@@ -1091,7 +1108,7 @@ export async function ocr(images, { signal } = {}) {
     });
     if (!r.ok) throw new Error(`看图接口 ${r.status} ${(await r.text()).slice(0, 160)}`);
     const d = await r.json();
-    return { text: String(d.choices?.[0]?.message?.content || "").trim().slice(0, 2500), usage: d.usage };
+    return { text: String(d.choices?.[0]?.message?.content || "").trim().slice(0, 3000), usage: d.usage };
 }
 const INTAKE_CATS = ["薄弱点", "已掌握", "学习习惯", "状态", "目标"];
 export function cleanIntake(d, keys) {
@@ -1104,8 +1121,10 @@ export function cleanIntake(d, keys) {
         progress: unit ? { unit, stage: ["刚开始", "学到一半", "快学完", "学完"].includes(d.progress.stage) ? d.progress.stage : "学到一半" } : null,
         dims: (Array.isArray(d.dims) ? d.dims : []).filter((x) => keys.includes(x?.key) && int(x.value, 0, 100) != null && !seen.has(x.key) && seen.add(x.key))
             .map((x) => ({ key: x.key, value: int(x.value, 0, 100), quote: clip(x.quote, 40) })),
-        notes: (Array.isArray(d.notes) ? d.notes : []).filter((x) => INTAKE_CATS.includes(x?.cat) && clip(x.text, 60)).slice(0, 8)
-            .map((x) => ({ cat: x.cat, text: clip(x.text, 60), qtype: TYPES.includes(x.qtype) ? x.qtype : "", quote: clip(x.quote, 60) })),
+        // 薄弱点带考点、程度（偶尔 / 常错 / 一直错 → 强度）、是原话还是从错题推断的（用户 10-30：模糊说法和截图照片 → 结构化档案）
+        notes: (Array.isArray(d.notes) ? d.notes : []).filter((x) => INTAKE_CATS.includes(x?.cat) && clip(x.text, 60)).slice(0, 10)
+            .map((x) => ({ cat: x.cat, text: clip(x.text, 60), qtype: TYPES.includes(x.qtype) ? x.qtype : "", kp: ["薄弱点", "已掌握"].includes(x.cat) ? clip(x.kp, 12) : "", quote: clip(x.quote, 60),
+                ...(x.cat === "薄弱点" ? { strength: Object.hasOwn(LEVEL_STRENGTH, x.level) ? LEVEL_STRENGTH[x.level] : 0.5, level: Object.hasOwn(LEVEL_STRENGTH, x.level) ? x.level : "", how: x.how === "推断" ? "推断" : "原话" } : {}) })),
         // 历史得分（用户 10-29）：得分按半分取整；满分 1–200，比得分还小说明抽错了，留空让老师填
         scores: (Array.isArray(d.scores) ? d.scores : []).filter((x) => x && x.score !== "" && x.score != null && Number.isFinite(+x.score) && +x.score >= 0).slice(0, 6)
             .map((x) => { const score = Math.round(+x.score * 2) / 2, full = int(x.full, 1, 200); return { name: clip(x.name, 16), score, full: full != null && full >= score ? full : null, quote: clip(x.quote, 40) }; }),
@@ -1169,6 +1188,7 @@ intent 三选一：
 字段：
 - student：说到的学生，只从【学生名单】里选、写全名；说「这个学生」「他」「她」用【正在备】；没说留空
 - generic：老师说「通用」「不针对学生」「不用按学生」时 true，别的 false
+- direct：组卷时老师说了要直接给一份（「直接给一份卷子」「直接组」「直接出卷」「不用选」「来一套就行」）时 true；只说「组一份……卷」的 false（先给方向让老师挑）
 - gt：年级学期，${GTS.join(" / ")}；「初二上」「八年级上」= 八上；只说年级没说学期按【今天】算（8 月到次年 1 月是上学期）；没说留空
 - kind：考试类型，${EXAM_KINDS.join(" / ")}；「一模」「二模」= 中考模拟，「月考」「阶段测试」「10 月考」= 月考/阶段，「单元卷」「周测」= 单元；没说留空
 - school：说到的学校，对得上【库里的学校】就写那个名字（「锡外」「无锡外国语」= 外国语，「锡山高级中学实验学校」= 省锡中）；没说留空
@@ -1184,7 +1204,7 @@ intent 三选一：
 - instruction：plan、paper 时老师的要求原话（去掉学生名字），没有留空
 - query：qa 时去掉学校、年级、考试这些筛选词后剩下的问题核心，用来检索题库（「完形 话题」「推理判断题 怎么考」）；别的留空
 接着【上一问】追问的（「那东林呢」「换成期末」「再来一份」），没说到的字段照上一问填。
-输出格式（intent 一定要有）：{"intent":"paper","student":"","generic":false,"date":"","gt":"","kind":"","school":"","district":"","level":"不知道","types":[],"kps":[],"topic":"","difficulty":"","minutes":null,"answers":"","instruction":"","query":""}`;
+输出格式（intent 一定要有）：{"intent":"paper","student":"","generic":false,"direct":false,"date":"","gt":"","kind":"","school":"","district":"","level":"不知道","types":[],"kps":[],"topic":"","difficulty":"","minutes":null,"answers":"","instruction":"","query":""}`;
     const user = [
         `【今天】${today()}`,
         `【学生名单】${students.map((s) => `${s.name}（${s.gt}，${s.schoolName || s.school || "学校没填"}）`).join("；") || "（空）"}`,
@@ -1201,7 +1221,7 @@ export function cleanAsk(d) {
         .map((t) => ({ type: t.type, n: Number.isFinite(+t.n) && +t.n > 0 ? Math.min(30, Math.round(+t.n)) : null }));
     return {
         intent: ["qa", "paper", "plan"].includes(d?.intent) ? d.intent : "qa",
-        student: s(d?.student, 10), generic: d?.generic === true, date: /^20\d\d-\d\d-\d\d$/.test(d?.date || "") ? d.date : "", gt: GTS.includes(d?.gt) ? d.gt : "", kind: EXAM_KINDS.includes(d?.kind) ? d.kind : "",
+        student: s(d?.student, 10), generic: d?.generic === true, direct: d?.direct === true, date: /^20\d\d-\d\d-\d\d$/.test(d?.date || "") ? d.date : "", gt: GTS.includes(d?.gt) ? d.gt : "", kind: EXAM_KINDS.includes(d?.kind) ? d.kind : "",
         school: s(d?.school, 20), district: DISTRICTS.includes(d?.district) ? d.district : "", level: ["统考", "不统考", "不知道"].includes(d?.level) ? d.level : "不知道",
         types: [...new Map(types.map((t) => [t.type, t])).values()], kps: (Array.isArray(d?.kps) ? d.kps : []).map((k) => s(k, 12)).filter(Boolean).slice(0, 4),
         topic: s(d?.topic, 12), difficulty: Object.hasOwn(TIER, d?.difficulty ?? "") ? d.difficulty : "",
@@ -1264,8 +1284,10 @@ export function paperPlan(spec) {
     const score = (p) => (schoolHit(p, spec.school) ? 8 : 0) + (spec.district && p.district === spec.district ? (UNIFIED.has(p.level) ? 4 : 2) : 0)
         + (spec.level === "统考" ? (UNIFIED.has(p.level) ? 3 : 0) : spec.level === "不统考" ? (p.level === "校考" ? 3 : 0) : 0)
         + (spec.textbook !== "旧" && p.textbook === "新" ? 2 : 0) + (p.year - 2022) * 0.5 + Math.min(p.sections.length, 7) * 0.4;
-    let ref = null, note = "没找到能参照的卷子";
-    for (const [f, n] of tiers) { const xs = ps.filter(f); if (xs.length) { ref = xs.sort((a, b) => score(b) - score(a))[0]; note = n; break; } }
+    let ref = null, note = "没找到能参照的卷子", top = [];
+    for (const [f, n] of tiers) { const xs = ps.filter(f); if (xs.length) { top = xs.sort((a, b) => score(b) - score(a)).slice(0, 3); ref = top[0]; note = n; break; } }
+    const forced = spec.ref && ps.find((p) => p.id === spec.ref);   // 老师在首页的方向里挑了参照哪一份（MAT-545）
+    if (forced) ref = forced;
     const want = spec.school || spec.district;
     if (ref && want && !(spec.school ? schoolHit(ref, spec.school) : ref.district === spec.district))
         note = [note, `库里没有${want}${spec.gt}${spec.kind}的卷子，结构参照的是别处的同类卷`].filter(Boolean).join("；");
@@ -1277,7 +1299,8 @@ export function paperPlan(spec) {
         const per = s.q && s.n ? s.q / s.n : avgQ(type);
         return { ...s, n: Math.max(1, Math.min(PASSAGE.has(type) ? 6 : 20, Math.round(n / per))), q: n, points: s.points && s.q ? (s.points / s.q) * n : null };
     });
-    return { ref: ref && { id: ref.id, label: paperLabel(ref), title: ref.title, struct: structLine(ref) }, note, secs: secs.filter((s) => TYPES.includes(s.type) && s.n > 0) };
+    const view = (p) => ({ id: p.id, label: paperLabel(p), title: p.title, struct: structLine(p), secs: p.sections.map(({ type, q }) => ({ type, q })) });
+    return { ref: ref && view(ref), refs: top.map(view), note, secs: secs.filter((s) => TYPES.includes(s.type) && s.n > 0) };
 }
 // 组卷第二步：每道大题按题型检索（年级学期、出卷来源、同校同区、难度、考点照排大纲时的检索），拼成卷子。
 // 认了学生的（页面算好传来）：weak 每个题型的薄弱考点、exclude 这个学生用过的题、maxUnit + scope 只挑学到的单元、extra 卷子后面附的薄弱点加练

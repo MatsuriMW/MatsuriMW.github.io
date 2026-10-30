@@ -12,6 +12,7 @@
 // POST { action: "adapt", sources: [{name, text, items?}], instruction, ... } → text/event-stream：stage → sources（编号统一后的原教案）→ items → extras → outline → done。在原教案上改写（1 份）或几份融合（2–4 份）成这节课的大纲（MAT-542）
 // POST { action: "ask", q, history, students, current, exams } → text/event-stream：首页搜索框（MAT-545）。stage(parse) → intent（分拣成什么、参数）→
 //   问答：stage(search) → sources（卷子 + 题目，编号从 1 起）→ stage(answer) → delta… → done；组卷、出教案：只到 intent → done，页面带上学生的画像接着调 paper / 排大纲、写教案
+// POST { action: "paper", spec, preview: true } → JSON { refs, note }：同类真卷里排前 3 的参照卷（不检索、不计次数），首页拿它给老师几个能组合的方向
 // POST { action: "paper", spec } → text/event-stream：ref（参照卷和大题）→ stage(retrieve) → paper（大题、加练、每组出处）→ done。spec 是 ask 分拣出的参数，页面认了学生的再加上
 //   maxUnit（按日期推的进度）、scope（各考试的默认范围）、weak（各题型薄弱考点）、exclude（用过的题）、extra（薄弱点加练）
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
@@ -86,7 +87,7 @@ export async function POST(request) {
     const action = Object.hasOwn(PER_IP, p.action) || p.action === "extras" ? p.action : "outline";
     const cfg = llmConfig(p.byok);
     let left = null;
-    if ((!cfg.own || action === "ocr") && action !== "extras") {   // extras 不调模型，不占次数；看图总用站长的 key，自带 key 也计次
+    if ((!cfg.own || action === "ocr") && action !== "extras" && !(action === "paper" && p.preview)) {   // extras、组卷的方向预览不调模型，不占次数；看图总用站长的 key，自带 key 也计次
         // 正式账号按账号计次、额度放宽到 5 倍（一个老师自己备课够用）；演示账号和没登录的照旧按 IP
         const uid = verifyToken(authOf(request)), real = !!uid?.startsWith("u:"), per = PER_IP[action] * (real ? 5 : 1);
         const lim = await hit(real ? uid : ipOf(request), action, per);
@@ -134,7 +135,7 @@ export async function POST(request) {
     }
 
     if (action === "memory") {
-        const text = clip(p.text, 1000);
+        const text = clip(p.text, 2000);   // 带上截图、照片认出来的字（MAT-545）
         if (text.length < 4) return Response.json({ error: "记录太短" }, { status: 400 });
         try {
             const kps = Object.fromEntries(Object.entries(p.kpByType && typeof p.kpByType === "object" ? p.kpByType : {}).filter(([t]) => TYPES.includes(t)).map(([t, ks]) => [t, strs(ks, 14, 10)]));
@@ -311,9 +312,11 @@ export async function POST(request) {
         const s = p.spec && typeof p.spec === "object" ? p.spec : {}, GT = ["七上", "七下", "八上", "八下", "九上", "九下"];
         const scope = Object.fromEntries(["上", "下"].map((t) => [t, Object.fromEntries(Object.entries(s.scope?.[t] || {}).filter(([k]) => EXAM_KINDS.includes(k)).map(([k, v]) => [k, clip(v, 12)]))]));
         const spec = { ...cleanAsk(s), gt: GT.includes(s.gt) ? s.gt : "九上", kind: EXAM_KINDS.includes(s.kind) ? s.kind : "期末", textbook: s.textbook === "旧" ? "旧" : "新",
-            maxUnit: Number.isInteger(s.maxUnit) && s.maxUnit >= 1 && s.maxUnit <= 8 ? s.maxUnit : 0, scope, exclude: strs(s.exclude, 400, 60),
+            maxUnit: Number.isInteger(s.maxUnit) && s.maxUnit >= 1 && s.maxUnit <= 8 ? s.maxUnit : 0, scope, exclude: strs(s.exclude, 400, 60), ref: /^[0-9a-f]{10}$/.test(s.ref || "") ? s.ref : "",
             weak: Object.fromEntries(Object.entries(s.weak && typeof s.weak === "object" ? s.weak : {}).filter(([t]) => TYPES.includes(t)).slice(0, 14).map(([t, ks]) => [t, strs(ks, 3, 12)])),
             extra: (Array.isArray(s.extra) ? s.extra : []).filter((x) => TYPES.includes(x?.type)).slice(0, 2).map((x) => ({ type: x.type, kps: strs(x.kps, 3, 12), n: Math.max(1, Math.min(10, Math.round(+x.n || 1))) })) };
+        // preview：只挑参照卷、不检索，首页先给老师几个能组合的方向（用户 10-30：默认不直接给一份卷子）
+        if (p.preview) { const { refs, note } = paperPlan(spec); return Response.json({ refs, note }); }
         return sse(async (send) => {
             const t0 = Date.now(), plan = paperPlan(spec);
             if (!plan.secs.length) throw new Error(plan.note);
