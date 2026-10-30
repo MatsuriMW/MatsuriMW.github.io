@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>英语备课 Agent Demo</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="icon-180.png">
 <meta name="description" content="无锡初中英语备课助手：一份教案同时贴合年级、学校、学生薄弱点和老师的讲题习惯。老师和学生的档案是会自己更新的记忆，题库来自 115 份无锡真卷。">
 <style>
   :root {
@@ -480,6 +481,9 @@
   .wx-say { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
   .wx-say li { padding-left: 12px; border-left: 2px solid #b7e4c7; }
   .wx-say b { display: block; color: var(--ink); font-weight: 600; }
+  .wx-more { margin-top: 14px; }
+  .wx-more dl { margin: 10px 0 0; display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+  .wx-more dt { font-weight: 600; color: var(--ink); } .wx-more dd { margin: 0; }
   .wx-fig { margin: 0; display: grid; gap: 8px; justify-items: center; }
   .wx-phone { width: 270px; border: 7px solid #1f1f1d; border-radius: 28px; background: #ededed; overflow: hidden; font-size: 12px; line-height: 1.5; color: #1f1f1d; box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .5); }
   .wx-bar { text-align: center; font-weight: 600; font-size: 13px; padding: 12px 0 8px; border-bottom: 1px solid #dcdcdc; }
@@ -537,6 +541,8 @@
   .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; }
   .home-docx { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 16px; padding: 12px 18px; border-left: 4px solid var(--green); }
   .home-docx b { margin-right: 8px; } .home-docx .sp, .plan-top .sp { flex: 1; }
+  select.fmt { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); color: var(--ink); }
+  h1 .h-icon { width: 1.15em; height: 1.15em; vertical-align: -0.17em; margin-right: .32em; border-radius: 24%; box-shadow: 0 8px 20px -12px rgba(28, 76, 152, .6); }
   .plan-top { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--rule); }
   .flow.solo { margin-top: 16px; } .flow.solo .fcard::before, .flow.solo .fcard::after { display: none; }   /* 独立的三页不连箭头 */
   .flow .fcard { position: relative; }
@@ -563,6 +569,12 @@
   .how-t tr.sub th { font-size: 13px; font-weight: 500; color: var(--ink-3); background: var(--page); padding: 8px 14px; }
   .how-t .more th[scope] { font-weight: 500; }
   .how-t tbody:last-child tr:last-child > * { border-bottom: 0; }
+  .how-t .more:has(.more-btn[aria-expanded="false"]) tr:not(.sub) { display: none; }
+  .how-t .more:has(.more-btn[aria-expanded="false"]) tr.sub > * { border-bottom: 0; }
+  .more-btn, details.more > summary { font: inherit; font-size: 13.5px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; list-style: none; }
+  details.more > summary::-webkit-details-marker { display: none; }
+  .more-btn span, details.more > summary span { display: inline-block; margin-left: 4px; transition: transform .2s var(--ease); }
+  .more-btn[aria-expanded="true"] span, details.more[open] > summary span { transform: rotate(180deg); }
   @media (max-width: 600px) { .how-t .at { display: none; } .how-t th, .how-t td { padding: 9px 10px; } .how-t tbody th { white-space: normal; min-width: 5em; } }
   footer { margin-top: 64px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; }
   .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: #fff; font-size: 14px; padding: 9px 16px; border-radius: 10px; display: flex; gap: 14px; align-items: center; z-index: 9; animation: rise .3s var(--ease); max-width: calc(100% - 32px); }
@@ -581,7 +593,7 @@
 <div class="page" data-page="home">
 <header>
   <div class="eyebrow">ENGLISH PREP AGENT · 马自立</div>
-  <h1>英语备课 Agent</h1>
+  <h1><img class="h-icon" src="icon.svg" alt="">英语备课 Agent</h1>
   <p class="lede">给无锡初中英语老师用的备课助手。一份教案同时贴合四样东西：<b style="color:var(--s-grade)">年级</b>（下一场考试考什么）、<b style="color:var(--s-school)">学校</b>（这场考试用谁的卷子）、<b style="color:var(--s-student)">学生</b>（薄弱点）、<b style="color:var(--s-teacher)">老师</b>（讲题习惯和这次的要求）。老师和学生的档案是会自己更新的记忆：课后随手记一笔，agent 把它拆成增删改，每条都能撤销；课记得越多，它给的教案改进建议越具体。教案不一步到位：先出大纲，老师改环节、分钟、用题，确认后再写成教案；写好以后在「审教」页过一遍，要改的地方跟 agent 商量着改。每节课还会自动加一段<b style="color:var(--green)">课外知识补充</b>：按这节课用到的题，挑词根词缀、熟词僻义、真考过的俗语谚语这类现成讲解。</p>
   <p class="note">学生是虚构的，学校是真实学校。没登录时，改动只存在这个浏览器里；登录后存进账号，换台电脑接着用。<button type="button" class="linkbtn" id="homeLogin">一键登录演示账号</button></p>
   <div class="stats" id="stats"></div>
@@ -605,10 +617,18 @@
       <li><b>发语音说这节课的情况</b>写好给家长的反馈，长按就能转发</li>
       <li><b>「每周三晚 7 点给小满上课」</b>课前提醒你备课，课后提醒写反馈</li>
     </ul>
+    <details class="more wx-more"><summary>还有更多<span aria-hidden="true">▾</span></summary>
+      <dl>
+        <dt>怎么接上</dt><dd>加我微信 133 5781 1224，我发你一个二维码，用你的微信扫一下就绑好了。机器人只装在你自己的微信里，家长接触不到它。</dd>
+        <dt>还能做的</dt><dd>说一句需求直接出教案（「给小满出一份现在完成时专题，90 分钟」）；几个学生一起上一节课；把自己的 Word 教案发给它，存进你的教案库，以后照着改写、几份融合；教案能转成 PDF；没建档也能按年级出（「给初二学生出一份……」）。</dd>
+        <dt>会主动提醒的</dt><dd>课前 3 小时提醒备课、下课后提醒写反馈、考前倒计时、薄弱点很久没练、周日周报；几点以后别发、哪类不要，跟它说一句就改。</dd>
+        <dt>有哪些限制</dt><dd>微信规定：你 24 小时内跟它说过话，它才发得出去；一次最多回十条左右。给家长的反馈由你长按转发。微信端和网页端的数据暂时还没打通。</dd>
+      </dl>
+    </details>
   </div>
   <figure class="wx-fig">
     <div class="wx-phone" role="img" aria-label="微信对话示意：老师说给林小满出一份完形专题教案，机器人回大纲表格和两份 Word；老师发语音说这节课的情况，机器人写好给家长的反馈">
-      <div class="wx-bar">备课助手</div>
+      <div class="wx-bar">备课 Agent</div>
       <div class="wx-msgs">
         <div class="wx-m me"><span class="wx-av">我</span><div class="wx-b">给林小满出一份完形专题教案，90 分钟</div></div>
         <div class="wx-m"><span class="wx-av">备</span><div class="wx-b"><b>教案写好了</b> · 41 秒<table><tr><th>环节</th><th>分钟</th></tr><tr><td>1 默写</td><td>10</td></tr><tr><td>2 完形：转折和上下文</td><td>35</td></tr><tr><td>3 变式练习</td><td>22</td></tr><tr><td>4 课外知识</td><td>8</td></tr><tr><td>5 回顾和作业</td><td>15</td></tr></table><span class="wx-q">自动检查 4 项都没问题</span></div></div>
@@ -862,11 +882,11 @@
 <section class="step" id="step5" hidden>
   <div class="step-h"><span class="n">3</span><h2>教案</h2><span class="note">按大纲写成的完整教案。每一节都能单独改，也能直接改文字，或者到「审教」页跟 agent 说；导出 Word 时例题原文和图片放在附录。</span></div>
   <div class="card plan">
-    <div class="plan-top" id="planTop" hidden><b>导出 Word</b><span class="note">老师版每道题下面带答案和解析，学生版只有题</span><span class="sp"></span><button class="btn small" id="docxTop" data-v="teacher">导出老师版</button><button class="btn small" id="docxTopS" data-v="student">导出学生版</button></div>
+    <div class="plan-top" id="planTop" hidden><b>导出 Word</b><span class="note">老师版每道题下面带答案和解析，学生版只有题</span><span class="sp"></span><select class="fmt" aria-label="导出格式"><option value="docx">Word</option><option value="pdf">PDF</option></select><button class="btn small" id="docxTop" data-v="teacher">导出老师版</button><button class="btn small" id="docxTopS" data-v="student">导出学生版</button></div>
     <div class="md" id="plan"></div>
     <textarea id="editor" hidden spellcheck="false"></textarea>
     <div class="acts-row" id="planActs" hidden>
-      <button class="btn small" id="docxBtn" data-v="teacher">导出老师版</button>
+      <select class="fmt" aria-label="导出格式"><option value="docx">Word</option><option value="pdf">PDF</option></select><button class="btn small" id="docxBtn" data-v="teacher">导出老师版</button>
       <button class="btn small" id="docxStu" data-v="student">导出学生版</button>
       <button class="btn small ghost" id="editBtn">直接改文字</button>
       <button class="btn small ghost" id="copyBtn">复制 Markdown</button>
@@ -888,7 +908,7 @@
     <div class="rv-main">
       <div class="card"><h3>自动检查</h3><ul class="checks" id="rvChecks"></ul></div>
       <div class="card" id="rvManualWrap"><div class="row" style="justify-content:space-between"><h3 style="margin:0">老师自己看</h3><span class="note" id="rvManualN"></span></div><div class="mcheck" id="rvManual"></div></div>
-      <div class="card plan" id="rvPlanWrap"><div class="row" style="justify-content:space-between"><h3 style="margin:0">教案</h3><span class="row"><button class="btn small" id="rvDocxT" data-v="teacher">导出老师版</button><button class="btn small" id="rvDocxS" data-v="student">导出学生版</button></span></div><div class="md" id="rvPlan"></div></div>
+      <div class="card plan" id="rvPlanWrap"><div class="row" style="justify-content:space-between"><h3 style="margin:0">教案</h3><span class="row"><select class="fmt" aria-label="导出格式"><option value="docx">Word</option><option value="pdf">PDF</option></select><button class="btn small" id="rvDocxT" data-v="teacher">导出老师版</button><button class="btn small" id="rvDocxS" data-v="student">导出学生版</button></span></div><div class="md" id="rvPlan"></div></div>
     </div>
     <div class="chat" id="chat" role="region" aria-label="和备课 agent 讨论修改">
       <div class="chat-h"><div><b>备课 agent</b><div class="note" id="chatStage"></div></div><button class="ico" id="chatGear" title="模型和 key">⚙</button></div>
@@ -950,7 +970,7 @@
     <p class="note">登录后档案、大纲、教案存进账号，换台电脑登录接着用。正式账号找站长开通，联系方式在首页底部。</p>
   </div></form></dialog>
 <dialog class="hist login" id="swDlg" aria-labelledby="swTitle"><div class="hist-h"><b id="swTitle">档案建好了</b></div><div class="login-b"><p id="swText" style="margin:0"></p><button type="button" class="btn" id="swYes"></button><button type="button" class="btn ghost" id="swNo"></button></div></dialog>
-<dialog class="hist" id="histDlg" aria-labelledby="histTitle"><div class="hist-h"><b id="histTitle"></b><span class="sp"></span><button class="btn small" data-v="teacher">导出老师版</button><button class="btn small" data-v="student">导出学生版</button><button class="ico" id="histClose" title="关上" aria-label="关上">×</button></div><p class="note" id="histNote"></p><div class="md" id="histBody"></div></dialog>
+<dialog class="hist" id="histDlg" aria-labelledby="histTitle"><div class="hist-h"><b id="histTitle"></b><span class="sp"></span><select class="fmt" aria-label="导出格式"><option value="docx">Word</option><option value="pdf">PDF</option></select><button class="btn small" data-v="teacher">导出老师版</button><button class="btn small" data-v="student">导出学生版</button><button class="ico" id="histClose" title="关上" aria-label="关上">×</button></div><p class="note" id="histNote"></p><div class="md" id="histBody"></div></dialog>
 
 
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
@@ -2956,6 +2976,39 @@ async function buildDocx(version = "teacher", W = U.W) {
 }
 window.__buildDocx = buildDocx;
 const docxName = (W, v) => `${W.student}-${v === "student" ? "学生版" : "教案老师版"}-${W.date}.docx`;
+// 导出格式（用户 10-30「默认是 Word 文档，另一个选择框是 PDF」）：几个选择框同步，记在这个浏览器里
+let FMT = localStorage.getItem("en-export-fmt") === "pdf" ? "pdf" : "docx";
+const fmtSel = () => `<select class="fmt" aria-label="导出格式"><option value="docx">Word</option><option value="pdf"${FMT === "pdf" ? " selected" : ""}>PDF</option></select>`;
+const syncFmt = () => document.querySelectorAll("select.fmt").forEach((x) => (x.value = FMT));
+document.addEventListener("change", (e) => { if (!e.target.matches?.("select.fmt")) return; FMT = e.target.value; localStorage.setItem("en-export-fmt", FMT); syncFmt(); });
+syncFmt();
+async function saveDoc(blob, name) {
+    if (FMT !== "pdf") return download(blob, name);
+    toast("打印窗口里「目标打印机」选「存储为 PDF」就存下来了");
+    await printPdf(blob, name);
+}
+// PDF：同一份 Word 用 docx-preview 在隐藏的 iframe 里排出来，走浏览器的「存储为 PDF」（文字能选、图片清楚；不用另装东西）
+let PREVIEW = null;
+async function printPdf(blob, name) {
+    if (!PREVIEW) {
+        await loadScript("https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js", "JSZip");
+        const keep = window.docx;   // docx-preview 的全局名也叫 docx：加载完把导出 Word 用的那个放回去
+        await new Promise((ok, bad) => { const x = document.createElement("script"); x.src = "https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js"; x.onload = ok; x.onerror = () => bad(new Error("PDF 组件没加载上")); document.head.append(x); });
+        PREVIEW = window.docx; window.docx = keep;
+    }
+    document.querySelector("iframe.pdf-print")?.remove();
+    const f = document.createElement("iframe");
+    f.className = "pdf-print"; f.setAttribute("aria-hidden", "true");
+    f.style.cssText = "position:fixed;left:-10000px;top:0;width:820px;height:1100px;border:0";
+    document.body.append(f);
+    const d = f.contentDocument;
+    d.open(); d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(name.replace(/\.docx$/, ""))}</title><style>@page { size: A4; margin: 0 } body { margin: 0 } .docx-wrapper { background: none !important; padding: 0 !important; } section.docx { box-shadow: none !important; margin: 0 !important; min-height: auto !important; }</style></head><body></body></html>`); d.close();
+    await PREVIEW.renderAsync(blob, d.body, d.head, { inWrapper: false, breakPages: true, ignoreLastRenderedPageBreak: true });
+    await Promise.all([...d.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
+    const t = document.title; document.title = name.replace(/\.docx$/, "");   // 存 PDF 时默认文件名用页面标题
+    f.contentWindow.focus(); f.contentWindow.print();
+    document.title = t;
+}
 function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 // 两个导出按钮共用：data-v 是 teacher / student
 for (const btn of [$("#docxBtn"), $("#docxStu"), $("#docxTop"), $("#docxTopS"), $("#rvDocxT"), $("#rvDocxS")]) btn.onclick = () => exportDocx(btn);
@@ -2963,7 +3016,7 @@ async function exportDocx(btn) {   // 首页一键出教案的两个导出按钮
     btn.disabled = true;
     try {
         const v = btn.dataset.v;
-        download(await buildDocx(v), docxName(U.W, v));
+        await saveDoc(await buildDocx(v), docxName(U.W, v));
         if (Met.notePrep(S, U.W, { via: "web", t0: U.t0, date: TODAY })) { snapWork(); save(); }   // 第一次导出：记备课用时、大纲改动、换题
     } catch (e) { toast("导出失败：" + e.message); }
     btn.disabled = false;
@@ -3153,7 +3206,7 @@ function renderPaper(T, box = T.$(".t-body")) {
     const grp = (it) => `<div class="p-grp"><div class="p-src">${grpRange(it)} · ${esc(it.school)} ${it.year} ${it.gt}${it.kind}（${esc(it.level)}）${it.kp.length ? ` · 考点：${esc([...new Set(it.kp)].join("、"))}` : ""}</div>
         <div class="p-q">${pqHTML(it.r.text, it.imgs)}</div><div class="p-ans">答案：${esc(grpAns(it))}${it.r.explain.trim() ? "\n" + esc(it.r.explain.trim()) : ""}</div></div>`;
     box.innerHTML = `${T.who ? `<p class="note" style="margin:0">${T.who}</p>` : ""}<p class="note" style="margin:0">共 ${P.sections.length} 道大题、${st.q} 小题${st.points != null ? `、满分 ${st.points} 分` : ""}${P.extra.length ? `，另附薄弱点加练 ${P.extra.reduce((a, x) => a + x.q, 0)} 小题` : ""}，题目来自题库里的 ${st.papers} 份卷子。卷面结构参照：${esc(P.ref?.label || "—")}${P.note ? `；${esc(P.note)}` : ""}。听力没有收进题库，这张卷子不含听力。</p>
-      <div class="t-acts"><button type="button" class="btn small ghost" data-pans aria-pressed="false">显示答案和解析</button><button type="button" class="btn small" data-pdoc="student">下载学生版 Word</button><button type="button" class="btn small ghost" data-pdoc="teacher">下载老师版 Word（带答案解析和出处）</button><button type="button" class="btn small ghost" data-p2o title="卷子当原教案，按这个学生的档案和占比排成这节课的大纲，到「维度与大纲」接着调，再写教案">用这份卷子备课：去维度与大纲 →</button></div>
+      <div class="t-acts"><button type="button" class="btn small ghost" data-pans aria-pressed="false">显示答案和解析</button>${fmtSel()}<button type="button" class="btn small" data-pdoc="student">下载学生版</button><button type="button" class="btn small ghost" data-pdoc="teacher">下载老师版（带答案解析和出处）</button><button type="button" class="btn small ghost" data-p2o title="卷子当原教案，按这个学生的档案和占比排成这节课的大纲，到「维度与大纲」接着调，再写教案">用这份卷子备课：去维度与大纲 →</button></div>
       <div class="paper"><h3>${esc(P.title)}</h3>${P.sections.map((s, i) => `<h4>${esc(secHead(s, i))}</h4>${s.items.map(grp).join("")}`).join("")}${P.extra.map((x) => `<h4>${esc(extraHead(x))}</h4>${x.items.map(grp).join("")}`).join("")}</div>`;
 }
 // 组卷的 Word：学生版只有题；老师版每组上面写出处，下面带答案和解析
@@ -3225,9 +3278,9 @@ async function askPlan(T, spec) {
     ].map((t) => `<li>${esc(t)}</li>`).join("");
     T.$(".t-sum").hidden = false;
     const stuFirst = spec.answers === "不带";   // 说了不带答案解析的，学生版放前面
-    const bT = `<button type="button" class="btn small${stuFirst ? " ghost" : ""}" data-v="teacher" data-pdocx>老师版 Word</button>`, bS = `<button type="button" class="btn small${stuFirst ? "" : " ghost"}" data-v="student" data-pdocx>学生版 Word（不带答案）</button>`;
+    const bT = `<button type="button" class="btn small${stuFirst ? " ghost" : ""}" data-v="teacher" data-pdocx>老师版</button>`, bS = `<button type="button" class="btn small${stuFirst ? "" : " ghost"}" data-v="student" data-pdocx>学生版（不带答案）</button>`;
     const acts = T.$(".t-acts"); acts.hidden = false;
-    acts.innerHTML = (stuFirst ? bS + bT : bT + bS) + `<a class="btn small ghost" href="#/outline" title="大纲已经排好，调完环节、分钟、用题和占比，点「按大纲写教案」重新生成">去维度与大纲调整 →</a><a class="btn small ghost" href="#/plan">去教案页细改</a><a class="btn small ghost" href="#/review">去审教</a>`;
+    acts.innerHTML = fmtSel() + (stuFirst ? bS + bT : bT + bS) + `<a class="btn small ghost" href="#/outline" title="大纲已经排好，调完环节、分钟、用题和占比，点「按大纲写教案」重新生成">去维度与大纲调整 →</a><a class="btn small ghost" href="#/plan">去教案页细改</a><a class="btn small ghost" href="#/review">去审教</a>`;
     if (prev) toast(`${target.name}原来那份没写完的大纲 / 教案被这份替换了`, { label: "换回原来的", fn: () => { S.work[target.id] = prev; save(); loadStudent(target.id); } });
 }
 // 首页组的卷子接着备课（用户 10-30「把已有的这份试卷按照维度与大纲进行修改，然后再走到下一步重新生成教案」）：
@@ -3274,7 +3327,7 @@ $("#askThread").addEventListener("click", async (e) => {
     else if (b.matches("[data-pans]")) { const on = el.querySelector(".paper").classList.toggle("show-ans"); b.setAttribute("aria-pressed", on); b.textContent = on ? "收起答案和解析" : "显示答案和解析"; }
     else if (b.matches("[data-pdoc]")) {
         b.disabled = true;
-        try { download(await paperDocx(T.paper, b.dataset.pdoc), `${T.paper.title.replace(/[\\/:*?"<>|\s]+/g, "")}-${b.dataset.pdoc === "student" ? "学生版" : "老师版"}-${TODAY}.docx`); }
+        try { await saveDoc(await paperDocx(T.paper, b.dataset.pdoc), `${T.paper.title.replace(/[\\/:*?"<>|\s]+/g, "")}-${b.dataset.pdoc === "student" ? "学生版" : "老师版"}-${TODAY}.docx`); }
         catch (err) { toast("导出失败：" + err.message); }
         b.disabled = false;
     } else if (b.matches("[data-pdocx]")) {
@@ -3310,7 +3363,8 @@ const HOW_MORE = [
 ];
 const howRows = (xs) => xs.map(([k, d, at, href]) => `<tr><th scope="row">${k}</th><td>${d}</td><td class="at">${href ? `<a href="${href}">${at}</a>` : at}</td></tr>`).join("");
 $("#how").innerHTML = `<thead><tr><th>功能</th><th>做什么</th><th class="at">在哪</th></tr></thead><tbody>${howRows(HOW_MAIN)}</tbody>`
-    + `<tbody class="more"><tr class="sub"><th colspan="3">还有这些</th></tr>${howRows(HOW_MORE)}</tbody>`;
+    + `<tbody class="more"><tr class="sub"><th colspan="3"><button type="button" class="more-btn" aria-expanded="false">还有 ${HOW_MORE.length} 个细节功能<span aria-hidden="true">▾</span></button></th></tr>${howRows(HOW_MORE)}</tbody>`;
+$("#how").onclick = (e) => { const b = e.target.closest(".more-btn"); if (!b) return; const on = b.getAttribute("aria-expanded") !== "true"; b.setAttribute("aria-expanded", on); b.firstChild.textContent = on ? "收起细节功能" : `还有 ${HOW_MORE.length} 个细节功能`; };
 // 首页反馈表单（MAT-509）：默认匿名；选「留个联系方式」才收称呼和联系方式
 let fbNamed = false;
 $("#fbMode").onclick = (e) => {
@@ -3419,7 +3473,7 @@ $("#histDlg").onclick = async (e) => {
     if (e.target.id === "histClose" || e.target === e.currentTarget) { e.currentTarget.close(); return; }
     const btn = e.target.closest("[data-v]"); if (!btn) return;
     btn.disabled = true;
-    try { download(await buildDocx(btn.dataset.v, histW), docxName(histW, btn.dataset.v)); } catch (err) { toast("导出失败：" + err.message); }
+    try { await saveDoc(await buildDocx(btn.dataset.v, histW), docxName(histW, btn.dataset.v)); } catch (err) { toast("导出失败：" + err.message); }
     btn.disabled = false;
 };
 
@@ -3621,7 +3675,7 @@ function renderHome() {
     ];
     $("#flow").innerHTML = cards.map(([k, now, sub, cta], i) => `<a class="fcard" href="#/${k}"><span class="n">${i + 2}</span><b>${PAGES[k]}</b><span class="now">${esc(now)}</span><span class="note">${esc(sub)}</span><span class="go">${cta} →</span></a>`).join("");
     $("#homeDocx").hidden = !W?.md;
-    if (W?.md) $("#homeDocx").innerHTML = `<span><b>${esc(W.student)}的教案写好了</b>${o?.title ? `<span class="note">${esc(o.title)}</span>` : ""}</span><span class="sp"></span><button type="button" class="btn small" data-v="teacher">导出老师版</button><button type="button" class="btn small" data-v="student">导出学生版</button>`;
+    if (W?.md) $("#homeDocx").innerHTML = `<span><b>${esc(W.student)}的教案写好了</b>${o?.title ? `<span class="note">${esc(o.title)}</span>` : ""}</span><span class="sp"></span>${fmtSel()}<button type="button" class="btn small" data-v="teacher">导出老师版</button><button type="button" class="btn small" data-v="student">导出学生版</button>`;
     $("#flowSolo").innerHTML = solo.map(([k, now, sub, cta]) => `<a class="fcard" href="#/${k}"><b>${PAGES[k]}</b><span class="now">${esc(now)}</span><span class="note">${esc(sub)}</span><span class="go">${cta} →</span></a>`).join("");
 }
 

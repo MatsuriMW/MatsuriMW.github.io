@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 备课 Agent 图标（MAT-550）：打开的教案，右页四行是四个维度（年级 蓝、学校 青、学生 橙、老师 紫），右上角的星芒是 Agent -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3584e4"/>
+      <stop offset="1" stop-color="#1c4c98"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <path d="M256 186C214 158 152 150 100 160V362C152 352 214 360 256 388Z" fill="#fff"/>
+  <path d="M256 186C298 158 360 150 412 160V362C360 352 298 360 256 388Z" fill="#eaf2fd"/>
+  <g stroke-linecap="round" stroke-width="17" fill="none">
+    <path d="M136 214C170 208 202 212 228 222M136 256C170 250 202 254 228 264M136 298C170 292 202 296 228 306" stroke="#c6d6ee"/>
+    <path d="M284 222C310 212 342 208 376 214" stroke="#2a78d6"/>
+    <path d="M284 264C310 254 342 250 376 256" stroke="#1f9e89"/>
+    <path d="M284 306C310 296 342 292 376 298" stroke="#d9822b"/>
+    <path d="M284 348C306 340 330 336 356 337" stroke="#7c56b8"/>
+  </g>
+  <path d="M400 62Q407 110 452 118Q407 126 400 174Q393 126 348 118Q393 110 400 62Z" fill="#ffc542"/>
+</svg>
