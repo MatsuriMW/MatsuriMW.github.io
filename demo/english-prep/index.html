@@ -932,7 +932,7 @@
 <div class="page" data-page="afterclass" hidden>
 <!-- 6 课后反馈（用户 10-29）：上完课发给家长的那段话；不绑前面几步，直接进来选学生就能写 -->
 <section class="step">
-  <div class="step-h"><h2>课后反馈</h2><span class="note">上完课发给家长的那段话。左边不用打字：点选这节课讲了什么、表现、作业，调好各部分写多少、表扬和指问题的比例；再按学生档案（画像、进度、历史得分、薄弱点）、最近几次课和下一场考试来写，字数自己定；前面几步没走也能直接用，排过教案的话一起参考。选一对多的组，一次给每个学生各写一段。</span></div>
+  <div class="step-h"><h2>课后反馈</h2><span class="note">上完课发给家长的那段话。左边不用打字：点选这节课讲了什么、表现、作业，调好各部分写多少、表扬和指问题的比例；再按学生档案（画像、进度、历史得分、薄弱点）、最近几次课和下一场考试来写，字数自己定；前面几步没走也能直接用，排过教案的话一起参考。选一对多的组（小班、大班），给每位家长各写一份，抬头和措辞按各自的孩子来。只发家长，不发学生。</span></div>
   <div class="grid2">
     <div class="card ac-form">
       <label class="field"><span class="lab">给谁写</span><select id="acStu" aria-label="给谁写"></select></label>
@@ -941,8 +941,14 @@
       <div class="field"><span class="lab">这节课讲了 <span class="note" style="font-weight:400">排过大纲的已经勾好了</span></span><div class="chips ac-chips" id="acTopics" role="group" aria-label="这节课讲了哪些题型"></div></div>
       <div class="field"><span class="lab">课堂表现 <span class="note" style="font-weight:400">没选的那项反馈里不提</span></span><div class="ac-perf" id="acPerf"></div></div>
       <div class="field"><span class="lab">作业</span><div class="chips ac-chips" id="acHw" role="group" aria-label="作业"></div></div>
-      <div class="field"><span class="lab">反馈里各部分写多少 <span class="note" style="font-weight:400">拖分界线或点 ±；调到 0 的那部分不写</span></span><div id="acMix"></div></div>
+      <div class="field"><span class="lab">反馈里各部分写多少 <span class="note" style="font-weight:400">拖分界线或点 ±；调到 0 的那部分不写（讲了什么、课堂表现一定写）；设了反馈模板就照模板的分段</span></span><div id="acMix"></div></div>
       <div class="field"><span class="lab">表扬和指出问题</span><div class="ac-tone"><span class="note">多表扬</span><input type="range" id="acPraise" min="0" max="100" step="10" aria-label="表扬占多少"><span class="note">多指问题</span><span class="v" id="acPraiseV"></span></div></div>
+      <!-- 老师自己的反馈模板（用户 10-30「允许老师自己上传一份课后反馈，作为他个人的模板」）：存 S.teacher.acSample，和微信端同一个字段 -->
+      <details class="field ac-sample"><summary class="lab">我的反馈模板 <span class="note" id="acSampleNote" style="font-weight:400"></span></summary>
+        <p class="note" style="margin:4px 0">贴一段你平时发给家长的反馈，或者选一份 Word / txt：抬头、分段、口吻照它来，内容换成每个孩子这节课的（讲了什么、课堂表现、作业），模板里别的孩子的名字、分数不会搬过去。</p>
+        <textarea id="acSample" rows="6" aria-label="反馈模板" placeholder="【10月28日 英语课堂反馈】&#10;小满妈妈您好！&#10;一、今日内容：……&#10;二、课堂表现：……&#10;三、课后作业：……"></textarea>
+        <div class="row"><button type="button" class="btn small" id="acSampleSave">存成模板</button><label class="btn small ghost">选文件<input type="file" id="acSampleFile" accept=".txt,.md,.docx" hidden></label><button type="button" class="linkbtn" id="acSampleDel">不用模板</button></div>
+      </details>
       <div class="field"><span class="lab">字数</span><div class="row"><input type="number" id="acWords" min="50" max="800" step="10" value="200" aria-label="字数" style="width:6.5em"><span class="chips" id="acWordChips"><button type="button" class="chip">100</button><button type="button" class="chip">200</button><button type="button" class="chip">300</button><button type="button" class="chip">500</button></span></div></div>
       <div class="row"><button type="button" class="btn" id="acGo">生成课后反馈</button><span class="note" id="acNote"></span></div>
     </div>
@@ -1063,10 +1069,12 @@ const progText = (v, n) => (progDone(v) ? (Math.round(v) >= n ? "全册学完" :
 function setProgress(st, v, n) { if (progDone(v)) v = Math.round(v); st.progress = v; st.unit = progUnit(v, n); }
 const shownDims = (st) => Mem.DIMS.filter((d) => d.core || st.dims?.[d.key] != null);
 // 发给模型的一行画像
-const profileLine = (st) => st.members ? `一对多，${st.members.length} 个学生一起上。` + st.members.map((m) => `\n${m.name}：${profileLine(m)}`).join("") : shownDims(st).map((d) => {
+// 这一项老师说过、调过没有（注意力还看 st.attention：课后记录改的是它）
+const rated = (st, k) => st.dims?.[k] != null || (k === "attention" && !!st.attention && st.attention !== "一般");
+const profileLine = (st, assessed = false) => st.members ? `一对多，${st.members.length} 个学生一起上。` + st.members.map((m) => `\n${m.name}：${profileLine(m, assessed)}`).join("") : shownDims(st).filter((d) => !assessed || d.key === "progress" || rated(st, d.key)).map((d) => {
     if (d.key === "progress") { const n = unitsOf(stuGt(st)); return `学习进度：${stuGt(st)} ${progText(progVal(st, n), n)}`; }
     const i = Mem.dimLevel(Mem.dimValue(st, d.key));
-    return `${d.label}：${d.levels[i].join("，")}（5 级里的第 ${i + 1} 级）`;
+    return `${d.label}：${d.levels[i].join("，")}（5 级里的第 ${i + 1} 级${rated(st, d.key) ? "" : "；老师还没评估过，先按中间档估的"}）`;   // 没评估过的别当成事实写给家长（10-30 走查：三位家长都收到「订正要人提醒」）
 }).concat(scoresLine(st) || []).join("；");
 function dimsHTML(st) {
     const n = unitsOf(stuGt(st)), why = st.dimsWhy || {}, shown = shownDims(st);
@@ -3750,7 +3758,25 @@ function renderAcOut(ms) {
     $("#acOut").innerHTML = ms.map((x) => `<div class="ac-item" data-sid="${x.id}"><div class="row" style="justify-content:space-between">${ms.length > 1 ? `<b>${esc(x.name)}的家长</b>` : "<span></span>"}<span class="row"><span class="note ac-n">${x.lastAfter?.text ? hanN(x.lastAfter.text) + " 字" : ""}</span><button type="button" class="btn small ghost" data-copy>复制</button></span></div>`
         + `<textarea rows="${ms.length > 1 ? 8 : 14}" placeholder="生成以后在这里，可以直接改；改的也会存下来">${esc(x.lastAfter?.text || "")}</textarea></div>`).join("");
 }
+function renderAcSample() {
+    const t = S.teacher.acSample;
+    $("#acSample").value = t?.text || "";
+    $("#acSampleNote").textContent = t ? `${t.at.slice(5)} 存的，抬头和分段照它写` : "没设：按下面的比例写";
+}
+$("#acSampleSave").onclick = () => {
+    const t = $("#acSample").value.trim().slice(0, 1500);
+    if (t.replace(/\s/g, "").length < 30) return toast("贴一整段你平时发给家长的反馈（抬头、正文都要）");
+    S.teacher.acSample = { text: t, name: "", at: TODAY }; save(); renderAcSample(); toast("存好了：以后写反馈照这个格式");
+};
+$("#acSampleDel").onclick = () => { S.teacher.acSample = null; save(); renderAcSample(); toast("不用模板了，按比例写"); };
+$("#acSampleFile").onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { $("#acSample").value = (/\.docx$/i.test(f.name) ? await docxText(f) : await f.text()).trim().slice(0, 1500); $("#acSampleSave").click(); }
+    catch (err) { toast(`没读出来：${err.message}`); }
+    e.target.value = "";
+};
 function renderAfter() {
+    renderAcSample();
     const cur = stu(), keep = $("#acStu").value, gs = (S.groups || []).filter((g) => membersOf(g).length);
     const ok = (id) => S.students.some((x) => x.id === id) || gs.some((g) => g.id === id);
     const id = ok(keep) ? keep : cur.id;
@@ -3784,13 +3810,16 @@ $("#acOut").onclick = async (e) => {
 $("#acGo").onclick = async () => {
     const { id, members: ms } = acPick(); if (!ms.length) return;
     const words = Math.max(50, Math.min(800, Math.round(+$("#acWords").value || 200)));
-    const one = (st) => ({ name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), profile: profileLine(st) });
+    const one = (st) => ({ name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), profile: profileLine(st, true) });
     $("#acWords").value = words; $("#acGo").disabled = true; $("#acNote").textContent = ms.length > 1 ? `在给 ${ms.length} 个学生写……` : "在写……";
     try {
-        const base = { action: "afterclass", words, lesson: { topics: AC.topics, hw: AC.hw }, mix: acPrefs().mix, praise: acPrefs().praise, examLabel: acExam(id, ms[0]), plan: acPlan(id) };
-        const { items, left } = await post(ms.length > 1
-            ? { ...base, members: ms.map((st) => ({ ...one(st), mems: st.mems, logs: logsLite(st), perf: acPerfOf(st) })) }
-            : { ...base, student: one(ms[0]), studentMems: ms[0].mems, logs: logsLite(ms[0]), perf: acPerfOf(ms[0]) });
+        const base = { action: "afterclass", words, lesson: { topics: AC.topics, hw: AC.hw }, mix: acPrefs().mix, praise: acPrefs().praise, examLabel: acExam(id, ms[0]), plan: acPlan(id), sample: S.teacher.acSample?.text || "" };
+        // 大班：模型一次写 6 个，几批并排写（同微信端 AC_BATCH）
+        const batches = Array.from({ length: Math.ceil(ms.length / 6) }, (_, i) => ms.slice(i * 6, i * 6 + 6));
+        const rs = await Promise.all(batches.map((g) => post(g.length > 1
+            ? { ...base, members: g.map((st) => ({ ...one(st), mems: st.mems, logs: logsLite(st), perf: acPerfOf(st) })) }
+            : { ...base, student: one(g[0]), studentMems: g[0].mems, logs: logsLite(g[0]), perf: acPerfOf(g[0]) })));
+        const items = rs.flatMap((r) => r.items), left = rs.at(-1).left;
         ms.forEach((st, i) => { if (items[i]?.text) st.lastAfter = { date: TODAY, words, text: items[i].text }; });
         save(); renderAcOut(ms);
         const miss = ms.filter((_, i) => !items[i]?.text).map((x) => x.name);

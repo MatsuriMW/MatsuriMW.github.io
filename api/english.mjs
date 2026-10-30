@@ -43,6 +43,7 @@ const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8)
     ingest: env("EN_INGEST_DAILY", 20), adapt: env("EN_PLAN_DAILY", 8), ask: env("EN_ASK_DAILY", 20), paper: env("EN_PAPER_DAILY", 10) };
 const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈", tidy: "整理记忆", ingest: "存教案库", adapt: "改写教案", ask: "首页提问", paper: "组卷" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+const keepLines = (s, n) => String(s ?? "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, n);   // 老师的反馈模板：换行是格式的一部分，不能压成一行
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
 export async function GET(request) {
@@ -164,11 +165,11 @@ export async function POST(request) {
         // 一个学生走 student / studentMems / logs；一对多传 members（每人一份档案 + 个别情况），一次写出每人一段
         const words = Math.max(50, Math.min(800, Math.round(+p.words || 200)));
         const strs = (a, n = 16) => (Array.isArray(a) ? a : []).slice(0, n).map((t) => clip(t, 16)).filter(Boolean);
-        const perf = (x) => ({ items: (Array.isArray(x?.items) ? x.items : []).slice(0, 6).map((r) => [clip(r?.[0], 6), clip(r?.[1], 10)]).filter(([a, b]) => a && b), good: strs(x?.good), weak: strs(x?.weak) });
+        const perf = (x) => ({ items: (Array.isArray(x?.items) ? x.items : []).slice(0, 6).map((r) => [clip(r?.[0], 6), clip(r?.[1], 10)]).filter(([a, b]) => a && b), good: strs(x?.good), weak: strs(x?.weak), said: clip(x?.said, 160) });   // said：老师说这个孩子的原话（10-30）
         const students = Array.isArray(p.members) && p.members.length
-            ? p.members.slice(0, 8).map((m) => ({ name: clip(m?.name, 10) || "这个学生", gradeLabel: clip(m?.gradeLabel, 40), schoolLabel: clip(m?.schoolLabel, 40), profile: clip(m?.profile, 1500),
+            ? p.members.slice(0, 8).map((m) => ({ name: clip(m?.name, 10) || "这个学生", parent: clip(m?.parent, 12), gradeLabel: clip(m?.gradeLabel, 40), schoolLabel: clip(m?.schoolLabel, 40), profile: clip(m?.profile, 1500),
                 mems: cleanMems(m?.mems), logs: cleanLogs(m?.logs).slice(-3), perf: perf(m?.perf) }))
-            : [{ name: student.name || "这个学生", gradeLabel: student.gradeLabel, schoolLabel: student.schoolLabel, profile: student.profile, mems: studentMems, logs: logs.slice(-3), perf: perf(p.perf) }];
+            : [{ name: student.name || "这个学生", parent: clip(p.student?.parent, 12), gradeLabel: student.gradeLabel, schoolLabel: student.schoolLabel, profile: student.profile, mems: studentMems, logs: logs.slice(-3), perf: perf(p.perf) }];
         // 各部分占比：全是 0 或没传就按默认；表扬占比 0–100，默认 60
         let mix = AFTER_PARTS.map(([k, n]) => [n, Math.max(0, Math.min(100, Math.round(+p.mix?.[k] || 0)))]);
         if (!mix.some(([, v]) => v)) mix = AFTER_PARTS.map(([, n], i) => [n, [25, 30, 20, 15, 10][i]]);
@@ -181,7 +182,7 @@ export async function POST(request) {
             return t2 && hanCount(t2) < hanCount(text) ? noPronoun(t2) : text;
         };
         try {
-            const { data, usage } = await json(afterclassMessages({ students, exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: { topics: strs(p.lesson?.topics), hw: strs(p.lesson?.hw, 8) }, mix, praise, words }), { signal: request.signal, cfg, max_tokens: tok });
+            const { data, usage } = await json(afterclassMessages({ students, exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: { topics: strs(p.lesson?.topics), hw: strs(p.lesson?.hw, 8) }, mix, praise, words, sample: keepLines(p.sample, 1500) }), { signal: request.signal, cfg, max_tokens: tok });
             const raw = students.length > 1 ? (Array.isArray(data.items) ? data.items : []) : [{ text: data.text }];
             // 按顺序对上学生；模型给的名字只作核对，对不上就按位置
             // 按名字对上；模型给了名字但对不上的才按位置（漏写的学生不能被别人那段顶上）
@@ -190,7 +191,7 @@ export async function POST(request) {
             // 一对多还是漏了谁：给漏掉的人各单独写一次（同一节课的资料，不另计次）
             if (students.length > 1) await Promise.all(items.map(async (x, i) => {
                 if (x.text) return;
-                const r = await json(afterclassMessages({ students: [students[i]], exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: { topics: strs(p.lesson?.topics), hw: strs(p.lesson?.hw, 8) }, mix, praise, words }),
+                const r = await json(afterclassMessages({ students: [students[i]], exam: clip(p.examLabel, 80), plan: clip(p.plan, 800), lesson: { topics: strs(p.lesson?.topics), hw: strs(p.lesson?.hw, 8) }, mix, praise, words, sample: keepLines(p.sample, 1500) }),
                     { signal: request.signal, cfg, max_tokens: Math.min(2500, words * 2 + 300) }).catch(() => null);
                 x.text = noPronoun(String(r?.data?.text || "").trim().slice(0, 2000));
             }));
