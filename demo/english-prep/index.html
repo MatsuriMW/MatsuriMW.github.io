@@ -289,7 +289,7 @@
   .topnav a:hover { color: var(--ink-2); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
   .topnav .steps { display: flex; align-items: center; gap: 12px; }
-  .topnav .solo { display: flex; align-items: center; gap: 24px; padding-left: 28px; border-left: 1px solid var(--rule); }   /* 考试、档案、课后反馈：各自独立，不连进流程 */
+  .topnav .solo { display: flex; align-items: center; gap: 24px; padding-left: 28px; border-left: 1px solid var(--rule); }   /* 档案、考试、课后反馈：各自独立，不连进流程 */
   .topnav i { font-style: normal; font-size: 14px; color: #c9c7c0; }
   /* 导航右边：正在给谁备课（一对多时是组，MAT-509），翻到哪一页都看得见 */
   .topnav .nav-who { margin-left: auto; align-self: center; font-size: 13px; color: var(--ink-2); border: 1px solid var(--rule); border-radius: 99px; padding: 3px 12px; background: var(--surface); }
@@ -435,6 +435,16 @@
   .askbox { display: flex; gap: 8px; align-items: center; background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 6px 6px 6px 16px; transition: border-color .2s, box-shadow .2s; }
   .askbox:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
   .askbox input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 16px; background: transparent; padding: 6px 0; }
+  /* 提示词自己画（placeholder 做不了动效）：换一句时旧的往上滑走、新的从下面滑上来；输入框有字就藏起来 */
+  .ask-in { position: relative; flex: 1; min-width: 0; display: flex; }
+  .ask-ph { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: var(--ink-3); font-size: 16px; }
+  .ask-ph span { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ask-ph .in { animation: ph-in .5s var(--ease) both; }
+  .ask-ph .out { animation: ph-out .5s var(--ease) both; }
+  @keyframes ph-in { from { opacity: 0; transform: translateY(60%); } to { opacity: 1; transform: translateY(-50%); } }
+  @keyframes ph-out { from { opacity: 1; transform: translateY(-50%); } to { opacity: 0; transform: translateY(-160%); } }
+  @media (prefers-reduced-motion: reduce) { .ask-ph .out { display: none; } }
+  #askQ:not(:placeholder-shown) + .ask-ph { display: none; }
   .turn { margin-top: 14px; animation: rise .4s var(--ease) backwards; }
   .turn .q-echo { display: flex; gap: 10px; align-items: baseline; font-weight: 600; }
   .turn .q-echo .qk { flex: none; font-size: 12px; font-weight: 500; color: var(--ink-3); }
@@ -465,7 +475,31 @@
   .po b { font-size: 13.5px; font-weight: 600; } .po span { font-size: 12px; color: var(--ink-3); }
   .po[aria-pressed="true"] { border-color: var(--blue); background: var(--accent-bg); box-shadow: inset 0 0 0 1px var(--blue); }
   .po[hidden], .po-out:empty { display: none; }
-  .wx-entry { margin-top: 18px; max-width: 900px; padding: 14px 18px; border-left: 4px solid #07c160; }
+  .wx-entry { margin-top: 18px; max-width: 900px; padding: 18px 22px; border-left: 4px solid #07c160; display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 28px; align-items: center; }
+  @media (max-width: 720px) { .wx-entry { grid-template-columns: 1fr; } }
+  .wx-say { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+  .wx-say li { padding-left: 12px; border-left: 2px solid #b7e4c7; }
+  .wx-say b { display: block; color: var(--ink); font-weight: 600; }
+  .wx-fig { margin: 0; display: grid; gap: 8px; justify-items: center; }
+  .wx-phone { width: 270px; border: 7px solid #1f1f1d; border-radius: 28px; background: #ededed; overflow: hidden; font-size: 12px; line-height: 1.5; color: #1f1f1d; box-shadow: 0 18px 40px -24px rgba(0, 0, 0, .5); }
+  .wx-bar { text-align: center; font-weight: 600; font-size: 13px; padding: 12px 0 8px; border-bottom: 1px solid #dcdcdc; }
+  .wx-msgs { display: grid; gap: 9px; padding: 11px 9px 14px; }
+  .wx-m { display: flex; gap: 6px; align-items: flex-start; }
+  .wx-m.me { flex-direction: row-reverse; }
+  .wx-av { width: 26px; height: 26px; border-radius: 5px; flex: none; display: grid; place-items: center; background: var(--blue); color: #fff; font-size: 11px; }
+  .wx-m.me .wx-av { background: var(--s-student); }
+  .wx-b { max-width: 190px; background: #fff; border-radius: 5px; padding: 6px 9px; }
+  .wx-m.me .wx-b { background: #95ec69; }
+  .wx-b table { border-collapse: collapse; width: 100%; margin: 5px 0 4px; font-size: 11.5px; }
+  .wx-b th, .wx-b td { border: 1px solid #e4e4e4; padding: 1px 5px; text-align: left; font-weight: 400; }
+  .wx-b th { background: #f6f6f6; color: #666; }
+  .wx-b td:last-child, .wx-b th:last-child { text-align: right; }
+  .wx-q { display: block; border-left: 3px solid #dcdcdc; padding-left: 6px; color: #777; }
+  .wx-voice { width: 84px; text-align: right; }
+  .wx-file { display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 190px; background: #fff; border-radius: 5px; padding: 8px 9px; }
+  .wx-file b { display: block; font-weight: 500; font-size: 11.5px; overflow-wrap: anywhere; }
+  .wx-file small { color: #999; font-size: 10.5px; }
+  .wx-file i { flex: none; width: 26px; height: 32px; display: grid; place-items: center; border-radius: 3px; background: #2b579a; color: #fff; font: 700 13px/1 -apple-system, sans-serif; }
   .wx-entry h3 { color: var(--ink); margin-bottom: 4px; }
   /* 首页底部：反馈表单（MAT-509），下面一行是直接联系方式 */
   section.contact { margin-top: 44px; max-width: 720px; }
@@ -501,6 +535,9 @@
   .draft { color: var(--green); }
   .flow-wrap { margin-top: 40px; } .flow-wrap .step-h .note { margin-left: 0; }
   .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; }
+  .home-docx { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 16px; padding: 12px 18px; border-left: 4px solid var(--green); }
+  .home-docx b { margin-right: 8px; } .home-docx .sp, .plan-top .sp { flex: 1; }
+  .plan-top { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--rule); }
   .flow.solo { margin-top: 16px; } .flow.solo .fcard::before, .flow.solo .fcard::after { display: none; }   /* 独立的三页不连箭头 */
   .flow .fcard { position: relative; }
   /* 步骤之间的箭头连接线：宽屏横着连，窄屏竖着连 */
@@ -517,8 +554,16 @@
   .fcard b { font-size: 17px; }
   .fcard .now { font-size: 14.5px; color: var(--ink); }
   .fcard .go { font-size: 13px; color: var(--blue); margin-top: 6px; }
-  section.how ul { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 15px; }
-  section.how li { margin-bottom: 8px; }
+  .how-t { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+  .how-t th, .how-t td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+  .how-t thead th { font-size: 13px; font-weight: 500; color: var(--ink-3); background: var(--page); }
+  .how-t tbody th { font-weight: 600; white-space: nowrap; color: var(--ink); }
+  .how-t td { color: var(--ink-2); }
+  .how-t .at { white-space: nowrap; font-size: 13.5px; }
+  .how-t tr.sub th { font-size: 13px; font-weight: 500; color: var(--ink-3); background: var(--page); padding: 8px 14px; }
+  .how-t .more th[scope] { font-weight: 500; }
+  .how-t tbody:last-child tr:last-child > * { border-bottom: 0; }
+  @media (max-width: 600px) { .how-t .at { display: none; } .how-t th, .how-t td { padding: 9px 10px; } .how-t tbody th { white-space: normal; min-width: 5em; } }
   footer { margin-top: 64px; font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 16px; }
   .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: #fff; font-size: 14px; padding: 9px 16px; border-radius: 10px; display: flex; gap: 14px; align-items: center; z-index: 9; animation: rise .3s var(--ease); max-width: calc(100% - 32px); }
   .toast button { background: none; border: 0; color: #9cc3f5; font: inherit; cursor: pointer; }
@@ -527,7 +572,7 @@
 </head>
 <body>
 <nav class="topnav" aria-label="页面"><div class="topnav-in">
-  <a class="nav-back" href="/portfolio/english-prep/" title="回到这个项目在作品集里的展示页">← 项目页</a><span class="steps"><a href="#/" data-page="home">首页</a><i aria-hidden="true">→</i><a href="#/outline" data-page="outline">维度与大纲</a><i aria-hidden="true">→</i><a href="#/plan" data-page="plan">教案</a><i aria-hidden="true">→</i><a href="#/review" data-page="review">审教</a></span><span class="solo"><a href="#/exam" data-page="exam">考试</a><a href="#/profile" data-page="profile">档案</a><a href="#/afterclass" data-page="afterclass">课后反馈</a></span>
+  <a class="nav-back" href="/portfolio/english-prep/" title="回到这个项目在作品集里的展示页">← 项目页</a><span class="steps"><a href="#/" data-page="home">首页</a><i aria-hidden="true">→</i><a href="#/outline" data-page="outline">维度与大纲</a><i aria-hidden="true">→</i><a href="#/plan" data-page="plan">教案</a><i aria-hidden="true">→</i><a href="#/review" data-page="review">审教</a></span><span class="solo"><a href="#/profile" data-page="profile">档案</a><a href="#/exam" data-page="exam">考试</a><a href="#/afterclass" data-page="afterclass">课后反馈</a></span>
   <button type="button" class="nav-who" id="navWho" aria-haspopup="true" aria-expanded="false" title="正在给谁备课：点一下换人或换组"></button>
   <button type="button" class="nav-acct" id="acctBtn" aria-haspopup="true" aria-expanded="false">登录</button>
 </div></nav>
@@ -545,23 +590,46 @@
 <section class="ask-sec" aria-labelledby="askH">
   <h2 id="askH">一句话问、组卷、出教案</h2>
   <p class="note" style="margin:4px 0 10px">问题库里的事，它带着出处回答；说「组一份……卷」，照同类真卷的结构从题库拼一张卷子；说「给某某出一份……教案」，直接出教案，不停下来让你确认大纲。出来的先大概看一眼，要细改再进下面的流程。</p>
-  <form class="askbox" id="askForm"><input id="askQ" maxlength="300" autocomplete="off" aria-label="问题库、组卷、出教案，一句话说"><button class="btn" id="askGo">发送</button></form>
+  <form class="askbox" id="askForm"><span class="ask-in"><input id="askQ" maxlength="300" autocomplete="off" placeholder=" " aria-label="问题库、组卷、出教案，一句话说"><span class="ask-ph" id="askPh" aria-hidden="true"></span></span><button class="btn" id="askGo">发送</button></form>
   <div class="examples" id="askEx"></div>
   <div id="askThread"></div>
 </section>
 <!-- 微信机器人入口（用户 10-30）：同一个 agent 的微信端，接入要站长帮着扫码绑定，一位老师一个 -->
 <section class="card wx-entry" id="wechat">
-  <h3>微信里也能用</h3>
-  <p class="note" style="margin:0">同一个备课 Agent 的微信机器人：发一段话或截图建档，说「给小满备下节课」出教案、发 Word，上完课一句话写好给家长的反馈，按课表提醒备课；打字、发语音都行。想试用加我微信 133 5781 1224（<button type="button" class="linkbtn" id="wxCopy">复制</button>），我帮你接上，一位老师一个机器人。</p>
+  <div>
+    <h3>微信里也能用</h3>
+    <p class="note" style="margin:0">同一个备课 Agent 的微信机器人：发一段话或截图建档，说「给小满备下节课」出教案、发 Word，上完课一句话写好给家长的反馈，按课表提醒备课；打字、发语音都行。想试用加我微信 133 5781 1224（<button type="button" class="linkbtn" id="wxCopy">复制</button>），我帮你接上，一位老师一个机器人。</p>
+    <ul class="wx-say">
+      <li><b>贴一段家长的话、发张截图</b>建好学生档案</li>
+      <li><b>「给小满备下节课」</b>先回大纲，再发老师版、学生版两份 Word</li>
+      <li><b>发语音说这节课的情况</b>写好给家长的反馈，长按就能转发</li>
+      <li><b>「每周三晚 7 点给小满上课」</b>课前提醒你备课，课后提醒写反馈</li>
+    </ul>
+  </div>
+  <figure class="wx-fig">
+    <div class="wx-phone" role="img" aria-label="微信对话示意：老师说给林小满出一份完形专题教案，机器人回大纲表格和两份 Word；老师发语音说这节课的情况，机器人写好给家长的反馈">
+      <div class="wx-bar">备课助手</div>
+      <div class="wx-msgs">
+        <div class="wx-m me"><span class="wx-av">我</span><div class="wx-b">给林小满出一份完形专题教案，90 分钟</div></div>
+        <div class="wx-m"><span class="wx-av">备</span><div class="wx-b"><b>教案写好了</b> · 41 秒<table><tr><th>环节</th><th>分钟</th></tr><tr><td>1 默写</td><td>10</td></tr><tr><td>2 完形：转折和上下文</td><td>35</td></tr><tr><td>3 变式练习</td><td>22</td></tr><tr><td>4 课外知识</td><td>8</td></tr><tr><td>5 回顾和作业</td><td>15</td></tr></table><span class="wx-q">自动检查 4 项都没问题</span></div></div>
+        <div class="wx-m"><span class="wx-av">备</span><div class="wx-file"><span><b>林小满-<wbr>教案老师版-<wbr>2026-10-30.docx</b><small>46 KB</small></span><i>W</i></div></div>
+        <div class="wx-m"><span class="wx-av">备</span><div class="wx-file"><span><b>林小满-<wbr>学生版-<wbr>2026-10-30.docx</b><small>31 KB</small></span><i>W</i></div></div>
+        <div class="wx-m me"><span class="wx-av">我</span><div class="wx-b wx-voice">8″ <span aria-hidden="true">))</span></div></div>
+        <div class="wx-m"><span class="wx-av">备</span><div class="wx-b"><b>写好了 1 位家长的课后反馈</b><br>下面一条是正文，长按转发给家长</div></div>
+      </div>
+    </div>
+    <figcaption class="note">示意图：示例学生林小满，排版照机器人真实的回复</figcaption>
+  </figure>
 </section>
 <section class="flow-wrap">
-  <div class="step-h"><h2>备课流程</h2><span class="note">从首页一句话或直接排大纲开始：调四个维度的占比、排大纲 → 写成教案 → 审教校验。考试、档案、课后反馈各自独立，随时去改。改动自动保存（登录了就存进账号）。</span></div>
+  <div class="step-h"><h2>备课流程</h2><span class="note">从首页一句话或直接排大纲开始：调四个维度的占比、排大纲 → 写成教案 → 审教校验。档案、考试、课后反馈各自独立，随时去改。改动自动保存（登录了就存进账号）。</span></div>
   <div class="flow" id="flow"></div>
+  <div class="card home-docx" id="homeDocx" hidden></div>
   <div class="flow solo" id="flowSolo"></div>
 </section>
 <section class="how">
   <h2 style="margin-bottom:10px">每个功能是做什么的</h2>
-  <ul id="how"></ul>
+  <table class="how-t" id="how"></table>
 </section>
 <section class="contact">
   <h2>想提反馈怎么联系我</h2>
@@ -794,6 +862,7 @@
 <section class="step" id="step5" hidden>
   <div class="step-h"><span class="n">3</span><h2>教案</h2><span class="note">按大纲写成的完整教案。每一节都能单独改，也能直接改文字，或者到「审教」页跟 agent 说；导出 Word 时例题原文和图片放在附录。</span></div>
   <div class="card plan">
+    <div class="plan-top" id="planTop" hidden><b>导出 Word</b><span class="note">老师版每道题下面带答案和解析，学生版只有题</span><span class="sp"></span><button class="btn small" id="docxTop" data-v="teacher">导出老师版</button><button class="btn small" id="docxTopS" data-v="student">导出学生版</button></div>
     <div class="md" id="plan"></div>
     <textarea id="editor" hidden spellcheck="false"></textarea>
     <div class="acts-row" id="planActs" hidden>
@@ -880,6 +949,7 @@
     <p class="note err" id="loginErr" role="alert" hidden></p>
     <p class="note">登录后档案、大纲、教案存进账号，换台电脑登录接着用。正式账号找站长开通，联系方式在首页底部。</p>
   </div></form></dialog>
+<dialog class="hist login" id="swDlg" aria-labelledby="swTitle"><div class="hist-h"><b id="swTitle">档案建好了</b></div><div class="login-b"><p id="swText" style="margin:0"></p><button type="button" class="btn" id="swYes"></button><button type="button" class="btn ghost" id="swNo"></button></div></dialog>
 <dialog class="hist" id="histDlg" aria-labelledby="histTitle"><div class="hist-h"><b id="histTitle"></b><span class="sp"></span><button class="btn small" data-v="teacher">导出老师版</button><button class="btn small" data-v="student">导出学生版</button><button class="ico" id="histClose" title="关上" aria-label="关上">×</button></div><p class="note" id="histNote"></p><div class="md" id="histBody"></div></dialog>
 
 
@@ -1449,8 +1519,17 @@ $("#nsForm").onsubmit = (e) => {
     if (NS.draftId) S.nsDrafts = (S.nsDrafts || []).filter((x) => x.id !== NS.draftId);
     S.students.push(st); snapWork();
     NS = null; e.target.reset(); $("#nsText").value = ""; $("#nsParseNote").textContent = ""; nsSchoolOpts();
-    loadStudent(st.id); go("profile"); toast(`建好了「${name}」的档案${notes.length ? `，记进了 ${notes.length} 条记忆` : ""}`);
+    save(); renderFolders(); go("profile"); askSwitch(st, notes.length);
 };
+// 建完档问一句要不要切过去（用户 10-30）：切了就是正在备这个学生，原来那个学生没写完的大纲、教案照旧留着
+function askSwitch(st, n) {
+    const cur = stu();
+    $("#swText").innerHTML = `建好了「${esc(st.name)}」的档案${n ? `，记进了 ${n} 条记忆` : ""}。现在正在备的是${esc(cur.name)}，要切到${esc(st.name)}、给 TA 备课吗？`;
+    $("#swYes").textContent = `切到${st.name}`; $("#swNo").textContent = `先不切，接着备${cur.name}`;
+    $("#swYes").onclick = () => { $("#swDlg").close(); switchStudent(st.id); toast(`现在正在备：${st.name}`); };
+    $("#swDlg").showModal();
+}
+$("#swNo").onclick = () => $("#swDlg").close();
 
 function memHTML(m, who, ro) {
     const cls = m.cat === "薄弱点" ? "weak" : m.cat === "已掌握" ? "ok" : who === "teacher" ? "t" : "";
@@ -2299,7 +2378,7 @@ async function writePlan(quick = false, onDelta = null) {
     if (!quick && tot !== U.minutes && !confirm(`大纲合计 ${tot} 分钟，课时是 ${U.minutes} 分钟，还是按大纲写吗？`)) return false;
     ctrl?.abort(); ctrl = new AbortController();
     $("#writeBtn").disabled = true; $("#writeNote").textContent = "正在按大纲写……";
-    $("#step5").hidden = false; $("#planActs").hidden = true; $("#editor").hidden = true; $("#plan").hidden = false;
+    $("#step5").hidden = false; $("#planActs").hidden = $("#planTop").hidden = true; $("#editor").hidden = true; $("#plan").hidden = false;
     W.md = ""; W.stale = new Map();
     if (!quick) go("plan");
     const t0 = Date.now();
@@ -2312,7 +2391,7 @@ async function writePlan(quick = false, onDelta = null) {
         }, ctrl.signal);
         W.md = spliceExtras(W.md);
         cancelAnimationFrame(raf); renderPlan(false);
-        $("#planActs").hidden = false; $("#writeNote").textContent = "";
+        $("#planActs").hidden = $("#planTop").hidden = false; $("#writeNote").textContent = "";
         renderChat();   // 聊天从「改大纲」换成「改教案」
         snapWork();
         if (page() === "home") renderHome();
@@ -2879,7 +2958,7 @@ window.__buildDocx = buildDocx;
 const docxName = (W, v) => `${W.student}-${v === "student" ? "学生版" : "教案老师版"}-${W.date}.docx`;
 function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 // 两个导出按钮共用：data-v 是 teacher / student
-for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) btn.onclick = () => exportDocx(btn);
+for (const btn of [$("#docxBtn"), $("#docxStu"), $("#docxTop"), $("#docxTopS"), $("#rvDocxT"), $("#rvDocxS")]) btn.onclick = () => exportDocx(btn);
 async function exportDocx(btn) {   // 首页一键出教案的两个导出按钮也走这里（MAT-545）
     btn.disabled = true;
     try {
@@ -2899,7 +2978,12 @@ let askBusy = false, hintAt = 0;
 $("#askEx").innerHTML = ASK_EX.map((t) => `<button type="button">${esc(t)}</button>`).join("");
 $("#askEx").onclick = (e) => { const b = e.target.closest("button"); if (b) askSend(b.textContent); };
 $("#askForm").onsubmit = (e) => { e.preventDefault(); const q = $("#askQ").value.trim(); if (q) askSend(q); };
-const askHint = () => { $("#askQ").placeholder = `比如：${ASK_HINTS[hintAt]}`; };
+function askHint() {
+    const ph = $("#askPh"), old = ph.querySelector("span:not(.out)"), n = document.createElement("span");
+    n.textContent = `比如：${ASK_HINTS[hintAt]}`;
+    if (old) { old.className = "out"; setTimeout(() => old.remove(), 500); n.className = "in"; }
+    ph.append(n);
+}
 askHint();
 setInterval(() => { if (document.hidden || $("#askQ").value || document.activeElement === $("#askQ") || page() !== "home") return; hintAt = (hintAt + 1) % ASK_HINTS.length; askHint(); }, 4000);
 // 分拣要的：学生名单（认「给小满……」）、正在备的、各年级学期的下一场考试（组卷没说考试类型时用）
@@ -3199,27 +3283,34 @@ $("#askThread").addEventListener("click", async (e) => {
     }
 });
 
+$("#homeDocx").onclick = (e) => { const b = e.target.closest("button[data-v]"); if (b && U.W?.md) exportDocx(b); };
 $("#wxCopy").onclick = async () => { try { await navigator.clipboard.writeText("13357811224"); toast("微信号复制好了"); } catch { toast("没复制成，微信号是 133 5781 1224"); } };
 
-// ---------- 每个功能是做什么的（首页，写给老师看：是什么、能帮你做什么，不讲技术） ----------
-$("#how").innerHTML = [
-    `<b>首页一句话</b>：问题库里的事，带出处回答；说「组一份……卷」，照同类真卷的结构从题库组一张卷子，学生版、老师版 Word 都能下；说「给某某出一份……教案」直接出教案。正在备哪个学生，组卷就按 TA 的进度出（说了哪天就推到那天），只出学过的单元，薄弱点优先、后面附加练，难度按最近的成绩定。`,
-    `<b>学生档案</b>：一个学生一份，记着年级学期、学校，和下面这些画像；agent 还会把课后记录里看出来的薄弱点、已经掌握的、目标一条条记进来。排占比、挑例题、写教案都按它来。建档时可以直接贴一段家长的话或聊天记录，agent 先把表填好，你核对一下就行。`,
-    `<b>学生画像</b>：每一项是一条能拖的光谱，比如注意力从「容易分心」到「集中」。学习进度、学习习惯、注意力默认就有，词汇量、自信心、家长配合这些需要时点「+」加。注意力容易分心的学生，大纲每个环节不超过 ${R.student.attentionMaxMinutes} 分钟、讲练交替，讲义用彩色版。`,
-    `<b>一对一和一对多</b>：档案页上选这节课是一对一还是一对多。一对一就按当前这个学生备课；一对多把一起上课的几个学生编成一组（年级学期要一样），组的档案由组员合起来：进度按最慢的算，注意力按最需要照顾的算，几个人共同的薄弱点全组一起讲，个别人的问题放进练习里分层安排。几组的大纲可以一次排好；排好的大纲也能复制给别的学生或组。页面顶部右边一直写着现在在给谁备课。`,
-    `<b>课后记一笔</b>：上完课随手写一句，比如「完形 10 错 4，都错在转折处」。agent 把它拆成几条档案改动（新增、修改、删除），每条写着原因，不对就撤销。同一个知识点跨 ${R.student.longMinLessons} 次课以上都错，算长期薄弱，排课时多给时间；做对一次只减轻，连续做好才算掌握。`,
-    `<b>老师档案和课堂设置</b>：课型、一次课多长、开头默写和结尾回顾各几分钟、作业量、讲义版式这些你自己填，每份教案都照着排。你反复做的同一种调整（比如每次都把阅读调多），agent 会提议设成默认。`,
-    `<b>下一场考试</b>：按今天的日期和学生的年级学期，推出下一场考试（月考、期中、期末、一模……）和大概的考试范围。出卷来源你来选：统考就从往年统考卷里挑题，不统考就从学校自己出的卷子里挑，不知道就两边各一半；系统会按这所学校往年的情况给个建议。`,
-    `<b>四个维度的占比</b>：一节课里每个题型花多少时间。它由四样东西一起决定：年级（下一场考试考哪些题型、各占多少分）、学校（这场考试用谁的卷子）、学生（薄弱点）、老师（这次的侧重）。图上看得出每个题型的时间分别是哪一维给的，比例可以直接拖。`,
-    `<b>题库和例题</b>：${data.stats.papers} 份 2022–2026 年无锡初中英语真卷（学校卷、区统考卷、中考真题），拆成一道道题，带出处、答案和考点。排课时按题型、年级、考试类型和知识点自动挑例题，每道写着为什么选它；不合适可以换一道，或者说一句要求让它再找。页面上只给单道题，不提供整份原卷。`,
-    `<b>难度</b>：一篇阅读、完形或语法填空难不难，主要看里面有多少这个学生还没学过的词：按译林版单词表和学生学到哪一册算，题目和选项里的生词比文章里的影响大。所以同一篇题，初一学生和初三学生看到的难度不一样。挑例题时可以选偏易、适中或偏难。`,
-    `<b>先大纲、后教案</b>：先出一份大纲：分几个环节、各多少分钟、每个环节用哪几道题、讲什么。你改到满意，再让它写成完整教案，环节、分钟、用题都照大纲来。教案有几种模板可选，也可以不定结构、直接写一句要求，或者上传你自己的 Word 教案，让它照着学格式。`,
-    `<b>老师版和学生版</b>：导出 Word 时分两版：老师版每道题下面带答案和解析（也可以统一放到最后），学生版只有题目，按上课顺序排，没有答案。`,
-    `<b>课外知识补充</b>：每节课自动加一小段课外知识：词根词缀、熟词僻义、易混词、近年真考过的俗语谚语这类，按这节课用到的题挑两三条，都是事先写好、核对过的。时长在课堂设置里改，设成 0 就不加。`,
-    `<b>审教</b>：教案写好后在这一页过一遍：系统先自动查课时对不对、例题是不是本年级的、每道题讲到没有，再给你一份自己看的清单。哪里要改，在右边跟 agent 说，改完不满意可以整体撤销。`,
-    `<b>复盘建议</b>：课记得越多，agent 越能看出「讲了几次还在错」「已经稳了还在花时间」这类情况，给下次课提建议，每条都指回具体哪一次课。`,
-    `<b>数据存在哪</b>：示例学生是虚构的，学校是真实学校。没登录时，档案和教案只存在这个浏览器里；登录后存进账号，换台电脑登录接着用（演示账号一键就能登，数据存 7 天；正式账号找站长开通）。agent 每人每天有免费次数，用完了可以在聊天框的设置里填自己的 DeepSeek key。`,
-].map((x) => `<li>${x}</li>`).join("");
+// ---------- 每个功能是做什么的（首页，写给老师看：一句话说清干嘛用，不讲技术；主功能在上面，用户 10-30 要表格）----------
+const HOW_MAIN = [
+    ["一句话出教案", "说「给林小满出一份完形专题教案」，直接出教案；说「组一份八上期中卷」，照真卷结构组一张卷子", "首页搜索框", "#/"],
+    ["学生档案", "记每个学生的年级、学校、薄弱点、注意力，教案照着它排；贴一段家长的话就能建档", "档案", "#/profile"],
+    ["先大纲、后教案", "先排环节、分钟、用哪几道题，改到满意再写成完整教案", "维度与大纲", "#/outline"],
+    ["导出 Word", "老师版带答案和解析，学生版只有题，能直接打印", "教案", "#/plan"],
+    ["课后记一笔", "上完课写一句这节课的情况，档案自己更新，不对能撤销", "档案", "#/profile"],
+    ["课后反馈", "点几下讲了什么、表现怎样，写好发给家长的那段话", "课后反馈", "#/afterclass"],
+    ["微信里用", "上面这些在微信里也能做，打字、发语音都行", "首页上面", "#wechat"],
+];
+const HOW_MORE = [
+    ["下一场考试", "按今天的日期推出下一场考什么、用谁的卷子；统考不统考你来选", "考试", "#/exam"],
+    ["四个维度的占比", "每个题型花多少分钟，按年级、学校、学生、老师一起算，比例能直接拖", "维度与大纲", "#/outline"],
+    ["题库和例题", `${data.stats.papers} 份 2022–2026 年无锡真卷拆成单题，自动挑例题，不合适就换一道`, "维度与大纲", "#/outline"],
+    ["审教", "教案写好后自动查一遍课时、用题，要改的跟 agent 说", "审教", "#/review"],
+    ["一对一、一对多", "几个学生编成一组，一组备一份教案", "档案", "#/profile"],
+    ["难度", "按学生还没学过的生词算题目难不难，例题能选偏易、偏难", "维度与大纲", "#/outline"],
+    ["课外知识补充", "每节课加几分钟词根词缀、熟词僻义、真考过的俗语", "教案", "#/plan"],
+    ["复盘建议", "课记得多了，提醒哪里讲了几次还在错、哪里已经稳了", "档案", "#/profile"],
+    ["课堂设置", "课时、默写几分钟、作业多少设一次，每份教案都照着排", "档案", "#/profile"],
+    ["数据存在哪", "没登录只存在这个浏览器里；登录后存进账号，换台电脑接着用", "右上角登录", ""],
+];
+const howRows = (xs) => xs.map(([k, d, at, href]) => `<tr><th scope="row">${k}</th><td>${d}</td><td class="at">${href ? `<a href="${href}">${at}</a>` : at}</td></tr>`).join("");
+$("#how").innerHTML = `<thead><tr><th>功能</th><th>做什么</th><th class="at">在哪</th></tr></thead><tbody>${howRows(HOW_MAIN)}</tbody>`
+    + `<tbody class="more"><tr class="sub"><th colspan="3">还有这些</th></tr>${howRows(HOW_MORE)}</tbody>`;
 // 首页反馈表单（MAT-509）：默认匿名；选「留个联系方式」才收称呼和联系方式
 let fbNamed = false;
 $("#fbMode").onclick = (e) => {
@@ -3305,7 +3396,7 @@ async function restoreWork() {
     if (items.some((x) => !x)) { toast("上次的题面没存下来（浏览器数据清过），大纲要重新生成"); return; }
     U.W = { ...w.W, items, alts: alts.filter(Boolean), stale: new Map(w.W.stale.map(([c, set]) => [c, new Set(set)])) };
     renderItems(); if (U.unlocked) $("#writeNote").textContent = "占比改过了，和大纲对不上：可以「重新生成大纲」，或者到「审教」页让 agent 按新占比调大纲。"; else lockFromOutline(); renderOutline();   // 排完大纲又调过占比的，刷新后不按大纲锁回去（用户 10-29）
-    if (U.W.md) { $("#step5").hidden = false; renderPlan(false); $("#planActs").hidden = false; }
+    if (U.W.md) { $("#step5").hidden = false; renderPlan(false); $("#planActs").hidden = $("#planTop").hidden = false; }
     renderChat(); renderDraft(); if (page() === "home") renderHome();
 }
 addEventListener("pagehide", snapWork);
@@ -3518,17 +3609,19 @@ function renderHome() {
     const st = stu(), c = U.ctx, W = U.W, o = W?.outline;
     const top = U.rows.filter((r) => r.share > 0.005).sort((a, b) => b.share - a.share).slice(0, 3).map((r) => `${r.type} ${pct(r.share)}`).join("、");
     const solo = [
-        ["exam", examLabel(), `出卷：${c.level}（系统建议${c.lv.suggest}）· 这节课 ${U.minutes} 分钟`, "改考试和要求"],
         ["profile", `${st.name} · ${schoolLabel(st)}`, `学生记忆 ${st.mems.length} 条、课次记录 ${st.logs.length} 次；老师记忆 ${S.teacher.mems.length} 条`, "看档案、记一笔"],
+        ["exam", examLabel(), `出卷：${c.level}（系统建议${c.lv.suggest}）· 这节课 ${U.minutes} 分钟`, "改考试和要求"],
         ["afterclass", "上完课给家长发的反馈", "点选讲了什么、表现、作业，按档案写", "写课后反馈"],
     ];
     const cards = [
         ["outline", o ? `大纲 ${o.sections.length} 个环节，合计 ${outlineMin(o)} 分钟` : "还没排大纲", `占比最多的：${top || "—"}${SET().extrasMinutes ? `；含课外知识补充 ${SET().extrasMinutes} 分钟` : ""}`, o ? "改大纲" : "调占比、排大纲"],
-        ["plan", W?.md ? `${W.student}的教案写好了` : "还没写", W?.md ? "可以导出老师版、学生版 Word" : "大纲确认以后写", W?.md ? "看教案" : "去看看"],
+        ["plan", W?.md ? `${W.student}的教案写好了` : "还没写", W?.md ? "下面就能导出老师版、学生版 Word" : "大纲确认以后写", W?.md ? "看教案" : "去看看"],
         ["review", ...(W?.md ? ((c, n = c.filter(([k]) => k === "warn").length) => [`自动检查 ${c.length} 项，${n ? `${n} 项要看` : "都没问题"}`, `老师自己看了 ${(W.checked || []).filter(Boolean).length} / ${MANUAL.length} 项；要改的跟 agent 说`, "去审教"])(auditChecks())
             : ["教案写好以后审", "自动检查 + 老师自己看，要改的跟 agent 说", "去看看"])],
     ];
     $("#flow").innerHTML = cards.map(([k, now, sub, cta], i) => `<a class="fcard" href="#/${k}"><span class="n">${i + 2}</span><b>${PAGES[k]}</b><span class="now">${esc(now)}</span><span class="note">${esc(sub)}</span><span class="go">${cta} →</span></a>`).join("");
+    $("#homeDocx").hidden = !W?.md;
+    if (W?.md) $("#homeDocx").innerHTML = `<span><b>${esc(W.student)}的教案写好了</b>${o?.title ? `<span class="note">${esc(o.title)}</span>` : ""}</span><span class="sp"></span><button type="button" class="btn small" data-v="teacher">导出老师版</button><button type="button" class="btn small" data-v="student">导出学生版</button>`;
     $("#flowSolo").innerHTML = solo.map(([k, now, sub, cta]) => `<a class="fcard" href="#/${k}"><b>${PAGES[k]}</b><span class="now">${esc(now)}</span><span class="note">${esc(sub)}</span><span class="go">${cta} →</span></a>`).join("");
 }
 
