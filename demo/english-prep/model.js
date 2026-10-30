@@ -224,3 +224,16 @@ export function matchSchool(raw, district, schools, districts = []) {
     if (hits.length > 1 && tier !== branch && hits.every((s) => s.founded)) { const y = Math.min(...hits.map((s) => s.founded)), h = hits.filter((s) => s.founded === y); if (h.length === 1) hits = h; }
     return hits;
 }
+
+// 首页组卷（MAT-545）：题组里的原题号换成新卷子的连续题号。只换题号所在的位置：行首的「6.」（也认「29,」「( ) 30.」）、横线里的「__15__」、括号里的「(15)」，
+// 解析里的「【15题详解】」；别的数字不动。hit 是换上了几个题号，比小题数少的，页面另标「第 a–b 题」
+export function renumber(it, start) {
+    const map = new Map(it.q.map((n, i) => [+n, start + i])), seen = new Set();
+    const swap = (m, a, n, b) => { const v = map.get(+n); if (v == null) return m; seen.add(+n); return `${a}${v}${b}`; };
+    const text = it.text
+        .replace(/^(\s*(?:[(（]\s*[)）]\s*)?)(\d{1,3})(\s*[.．、,，](?!\d))/gm, swap)
+        .replace(/(_{2,}\s*)(\d{1,3})(\s*_{2,})/g, swap)
+        .replace(/([(（]\s*)(\d{1,3})(\s*[)）])/g, swap);
+    const explain = String(it.explain || "").replace(/【答案】[^\n]*\n?/, "").replace(/(【)(\d{1,3})(题详解】)/g, (m, a, n, b) => (map.has(+n) ? `${a}${map.get(+n)}${b}` : m));
+    return { text, explain, nums: it.q.map((_, i) => start + i), hit: seen.size };
+}

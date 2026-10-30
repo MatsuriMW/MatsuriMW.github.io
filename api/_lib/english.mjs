@@ -162,7 +162,8 @@ function pool(db, slot, ctx) {
         ...(stretch ? [["全库", () => true]] : []),
     ];
     const need = Math.max(slot.n * 3, 6);
-    const base = db.units.map((u, i) => i).filter((i) => db.units[i].type === slot.type && !ctx.exclude?.has(db.units[i].id));
+    const learned = (u) => !ctx.maxUnit || semGap(u.gt, ctx.gt) < 0 || (u.gt === ctx.gt && unitEnd(u, ctx.scope) <= ctx.maxUnit);   // 首页组卷按学生进度（MAT-545）
+    const base = db.units.map((u, i) => i).filter((i) => db.units[i].type === slot.type && !ctx.exclude?.has(db.units[i].id) && learned(db.units[i]));
     for (const [ti, [label, f]] of tiers.entries()) {
         for (const levelOk of [true, false]) {
             const ids = base.filter((i) => f(db.units[i]) && (!levelOk || lv(db.units[i])));
@@ -186,8 +187,15 @@ function pool(db, slot, ctx) {
     return { ids: [], relax: "无", extra: 0, levelRelaxed: false };
 }
 
+// 一份卷子考到第几单元：标题里写了 Unit 几按标题（「Unit+1单元练习」「Unit3-4测试卷」），没写按考试类型的默认范围（页面传来 rules.json 的 examCalendar.scope）；全册、初中全部算 99
+export function unitEnd(u, scope) {
+    const m = [...String(u.title).matchAll(/Unit\s*\+?\s*(\d)(?:\s*[-–~～至到]\s*(?:Unit\s*)?(\d))?/gi)].pop();
+    if (m) return +(m[2] || m[1]);
+    const r = String(scope?.[u.gt[1]]?.[u.kind] || "").match(/(\d)\s*[–-]\s*(\d)/);
+    return r ? +r[2] : 99;
+}
 // slots: [{ type, share, kps: [薄弱考点], query?（自定义查询）, n?（要几道）}]
-// ctx: { gt, kind, level, school, district, textbook, guidance, difficulty?（偏易 / 适中 / 偏难）, exclude?（不要的题目 id，Set）}
+// ctx: { gt, kind, level, school, district, textbook, guidance, difficulty?（偏易 / 适中 / 偏难）, exclude?（不要的题目 id，Set）, maxUnit?、scope?（组卷按学生进度）}
 // 难度：题目的难度档（demo/build.mjs 算好）和目标对上的加分，差两档的减分
 export const TIER = { 偏易: 0, 适中: 1, 偏难: 2 };
 const DIFF_BONUS = 0.35;
@@ -228,13 +236,16 @@ export async function retrieve(slots, ctx, { signal, onStage } = {}) {
         for (const r of rr) cand[r.index].rr = r.score;
         for (const c of cand) c.final = c.rr + (c.hit.length ? 0.5 : 0) + (c.topic ? 0.5 : 0) + (c.sameSchool ? 0.12 : 0) + (c.sameDistrict ? 0.06 : 0) + diffBonus(db.units[c.i], ctx) - gapCost(db.units[c.i], ctx.gt) / 2;
         cand.sort((a, b) => b.final - a.final);
-        // 挑题：同一份卷子短文类最多 1 篇、单题最多 2 道；「不知道统不统考」两边轮流挑
-        const perPaper = {}, pick = [];
+        // 挑题：同一份卷子短文类最多 1 篇、单题最多 2 道（组卷时用 s.cap 放宽）；「不知道统不统考」两边轮流挑。
+        // 组卷时给了 s.q 就按小题数凑满（一个题组可能有几道小题），短文类可以多出 2 道，凑不上的第一组照样要
+        const perPaper = {}, pick = [], cap = s.cap ?? (PASSAGE.has(s.type) ? 1 : 2), slack = PASSAGE.has(s.type) ? 2 : 0;
+        let got = 0;
+        const full = () => (s.q ? got >= s.q : pick.length >= s.n), fits = (c) => !s.q || !pick.length || got + db.units[c.i].q.length <= s.q + slack;
         const lanes = ctx.level === "不知道" ? [cand.filter((c) => UNIFIED.has(db.units[c.i].level)), cand.filter((c) => !UNIFIED.has(db.units[c.i].level))] : [cand];
-        for (let round = 0; pick.length < s.n && round < cand.length; round++) {
+        for (let round = 0; !full() && round < cand.length; round++) {
             for (const lane of lanes) {
-                const c = lane.find((c) => !pick.includes(c) && (perPaper[db.units[c.i].paper] || 0) < (PASSAGE.has(s.type) ? 1 : 2));
-                if (c && pick.length < s.n) { pick.push(c); perPaper[db.units[c.i].paper] = (perPaper[db.units[c.i].paper] || 0) + 1; }
+                const c = lane.find((c) => !pick.includes(c) && (perPaper[db.units[c.i].paper] || 0) < cap && fits(c));
+                if (c && !full()) { pick.push(c); got += db.units[c.i].q.length; perPaper[db.units[c.i].paper] = (perPaper[db.units[c.i].paper] || 0) + 1; }
             }
         }
         // 备选：老师在页面上「换一题」时用，同样守每份卷子的上限
@@ -1100,6 +1111,200 @@ export function cleanIntake(d, keys) {
             .map((x) => { const score = Math.round(+x.score * 2) / 2, full = int(x.full, 1, 200); return { name: clip(x.name, 16), score, full: full != null && full >= score ? full : null, quote: clip(x.quote, 40) }; }),
         missing: clip(d.missing, 40),
     };
+}
+
+// ---------- 首页搜索框（MAT-545）：一句话 → 问答 / 组卷 / 出教案 ----------
+// 问答：按问题里的年级、考试、学校筛卷子和题，编好号交给模型，回答每句标出处（同第二大脑 demo）。
+// 组卷：挑一份同类真卷当参照（同校 > 同区统考 > 别的，新教材、近年的优先），照它的大题顺序、题组数和分值，每道大题从题库检索同题型的题拼成一张卷子。
+// 出教案：这里只分拣、抽参数，页面接着排大纲、写教案（和微信端 /出教案 一样，MAT-543）
+export const EXAM_KINDS = ["单元", "月考/阶段", "期中", "期末", "中考模拟", "中考"];
+const DISTRICTS = ["梁溪区", "新吴区", "锡山区", "惠山区", "滨湖区", "经开区", "江阴市", "宜兴市"];
+const NEAR_KIND = { 期中: ["期末", "月考/阶段"], 期末: ["期中", "月考/阶段"], "月考/阶段": ["单元", "期中"], 单元: ["月考/阶段", "期中"], 中考模拟: ["中考"], 中考: ["中考模拟"] };
+
+// 每份卷子的大题：按原卷顺序，题型、几个题组、几道小题、分值。题组 id 是「卷子-第几道大题-第几组」
+let PIDX = null;
+export function paperIndex() {
+    if (PIDX) return PIDX;
+    const by = new Map();
+    for (const u of loadDB().units) {
+        if (!by.has(u.paper)) by.set(u.paper, { id: u.paper, title: u.title, school: u.school, name: u.name, district: u.district, level: u.level, gt: u.gt, kind: u.kind, year: u.year, textbook: u.textbook, secs: new Map() });
+        const p = by.get(u.paper), at = +u.id.split("-")[1], k = `${at}|${u.type}`;
+        if (!p.secs.has(k)) p.secs.set(k, { type: u.type, n: 0, q: 0, points: u.sp ?? null, at });
+        const s = p.secs.get(k); s.n++; s.q += u.q.length;
+    }
+    PIDX = [...by.values()].map(({ secs, ...p }) => {
+        const xs = [...secs.values()].sort((a, b) => a.at - b.at);
+        for (const s of xs) if (xs.filter((x) => x.at === s.at).length > 1) s.points = null;   // 一道大题拆出了两种题型，分值分不开
+        return { ...p, place: p.name || p.district || p.school, sections: xs.map(({ at, ...s }) => s) };
+    });
+    return PIDX;
+}
+const paperLabel = (p) => `${p.place} ${p.year} ${p.gt}${p.kind}（${p.level}）`;
+const structLine = (p) => p.sections.map((s) => `${s.type} ${s.q} 题${s.points ? ` ${s.points} 分` : ""}`).join("、");
+// 学校的说法对上卷子 / 题组：「侨谊」「江南中学」「无锡外国语学校」都认；区级卷没有校名，不算
+const core = (s) => String(s || "").replace(/^(江苏省?)?(无锡市?)?/, "").replace(/(实验)?(中学|学校|初级中学|初中|教育集团|集团)$/, "");
+export function schoolHit(p, school) {
+    const c = core(school);
+    if (c.length < 2) return false;
+    if (["东林", "侨谊", "外国语", "省锡中"].includes(c)) return p.school === c;   // 归过档的四所学校按档名认（「外国语」别认成金桥外国语）
+    return !!p.name && [p.name, p.school !== "其他学校" ? p.school : ""].some((x) => x && (x.includes(c) || (core(x).length >= 2 && c.includes(core(x)))));
+}
+let AVGQ = null;   // 每种题型一个题组平均几道小题：老师说「来 10 道阅读」时换算成几篇
+function avgQ(type) {
+    if (!AVGQ) {
+        const n = {}; AVGQ = {};
+        for (const u of loadDB().units) { n[u.type] = (n[u.type] || 0) + 1; AVGQ[u.type] = (AVGQ[u.type] || 0) + u.q.length; }
+        for (const t in AVGQ) AVGQ[t] /= n[t];
+    }
+    return AVGQ[type] || 1;
+}
+
+export function askMessages({ q, history, students, current }) {
+    const places = [...new Set(paperIndex().filter((p) => p.name).map((p) => (p.school !== "其他学校" ? p.school : p.name)))];
+    const sys = `你在无锡初中英语备课助手的首页搜索框后面：把老师说的一句话分拣成要做的事，抽出参数。只输出一个 JSON 对象，字段见下。
+intent 三选一：
+- paper：要一份题拿去做、打印：组卷、出一份卷子 / 模拟卷 / 练习卷 / 专项练习、来几道某题型的题（「组一份八上期中卷」「出 10 道现在完成时的动词填空」「完形和阅读各来两篇，偏难」）
+- plan：要备课、出教案 / 讲义（「给林小满出一份现在完成时专题教案，90 分钟」「下节课给予安练完形，带答案解析」）
+- qa：问题库里有什么、考试怎么考（「侨谊八上期中考哪些题型、各多少分」「近两年九上期末的完形都是什么话题」「题库里有天一的卷子吗」），以及别的闲聊
+字段：
+- student：说到的学生，只从【学生名单】里选、写全名；说「这个学生」「他」「她」用【正在备】；没说留空
+- generic：老师说「通用」「不针对学生」「不用按学生」时 true，别的 false
+- gt：年级学期，${GTS.join(" / ")}；「初二上」「八年级上」= 八上；只说年级没说学期按【今天】算（8 月到次年 1 月是上学期）；没说留空
+- kind：考试类型，${EXAM_KINDS.join(" / ")}；「一模」「二模」= 中考模拟，「月考」「阶段测试」「10 月考」= 月考/阶段，「单元卷」「周测」= 单元；没说留空
+- school：说到的学校，对得上【库里的学校】就写那个名字（「锡外」「无锡外国语」= 外国语，「锡山高级中学实验学校」= 省锡中）；没说留空
+- district：说到的区，只能是 ${DISTRICTS.join("、")}；「梁溪区统考卷」district = 梁溪区、level = 统考
+- level：统考 / 不统考 / 不知道。「统考」「区统考」「联考」= 统考，「学校自己出的」「校考」= 不统考，没说 = 不知道
+- types：说到的题型 [{"type":"题型","n":小题数或 null}]，题型只能用：${TYPES.join("、")}。「阅读」= 阅读理解，「完形」= 完形填空，「作文」= 书面表达，「首字母填空」「单词拼写」= 词汇运用，「7 选 5」= 七选五/信息还原，「单选」= 单项选择。要整套卷子、没点题型的留空数组
+- kps：说到的考点（现在完成时、宾语从句、推理判断、词义辨析……），没说留空数组
+- topic：说到的话题（环保、人物故事……），没说留空
+- difficulty：偏易 / 适中 / 偏难，没说留空
+- date：说到的时间节点换成日期 YYYY-MM-DD，按【今天】算（「下周三」「11 月 10 号」「期中前一周」按考试大概在 11 月中旬算）；没说留空
+- minutes：一节课多少分钟（plan 用），没说 null
+- answers：带 / 不带（要不要答案解析），没说留空
+- instruction：plan、paper 时老师的要求原话（去掉学生名字），没有留空
+- query：qa 时去掉学校、年级、考试这些筛选词后剩下的问题核心，用来检索题库（「完形 话题」「推理判断题 怎么考」）；别的留空
+接着【上一问】追问的（「那东林呢」「换成期末」「再来一份」），没说到的字段照上一问填。
+输出格式（intent 一定要有）：{"intent":"paper","student":"","generic":false,"date":"","gt":"","kind":"","school":"","district":"","level":"不知道","types":[],"kps":[],"topic":"","difficulty":"","minutes":null,"answers":"","instruction":"","query":""}`;
+    const user = [
+        `【今天】${today()}`,
+        `【学生名单】${students.map((s) => `${s.name}（${s.gt}，${s.schoolName || s.school || "学校没填"}）`).join("；") || "（空）"}`,
+        `【正在备】${current?.name || "（没有）"}`,
+        `【库里的学校】${places.join("、")}；区统考卷：${DISTRICTS.join("、")}`,
+        ...history.map((h) => `【上一问】${h.q}${h.said ? `（理解成：${h.said}）` : ""}`),
+        `【老师说】${q}`,
+    ].join("\n");
+    return [{ role: "system", content: sys }, { role: "user", content: user }];
+}
+export function cleanAsk(d) {
+    const s = (v, n) => clip(v, n);
+    const types = (Array.isArray(d?.types) ? d.types : []).map((t) => (typeof t === "string" ? { type: t } : t)).filter((t) => TYPES.includes(t?.type)).slice(0, 6)
+        .map((t) => ({ type: t.type, n: Number.isFinite(+t.n) && +t.n > 0 ? Math.min(30, Math.round(+t.n)) : null }));
+    return {
+        intent: ["qa", "paper", "plan"].includes(d?.intent) ? d.intent : "qa",
+        student: s(d?.student, 10), generic: d?.generic === true, date: /^20\d\d-\d\d-\d\d$/.test(d?.date || "") ? d.date : "", gt: GTS.includes(d?.gt) ? d.gt : "", kind: EXAM_KINDS.includes(d?.kind) ? d.kind : "",
+        school: s(d?.school, 20), district: DISTRICTS.includes(d?.district) ? d.district : "", level: ["统考", "不统考", "不知道"].includes(d?.level) ? d.level : "不知道",
+        types: [...new Map(types.map((t) => [t.type, t])).values()], kps: (Array.isArray(d?.kps) ? d.kps : []).map((k) => s(k, 12)).filter(Boolean).slice(0, 4),
+        topic: s(d?.topic, 12), difficulty: Object.hasOwn(TIER, d?.difficulty ?? "") ? d.difficulty : "",
+        minutes: Number.isFinite(+d?.minutes) && +d.minutes >= 30 ? Math.min(240, Math.round(+d.minutes)) : null,
+        answers: ["带", "不带"].includes(d?.answers) ? d.answers : "", instruction: s(d?.instruction, 200), query: s(d?.query, 80),
+    };
+}
+
+// 问答的材料：对得上的卷子（带结构）+ 检索出的题。筛不出东西就逐级放宽，放宽了什么写进 relax
+const RELAX = [["", (f) => f], ["考试类型", (f) => ({ ...f, kind: "" })], ["学校和区", (f) => ({ ...f, kind: "", school: "", district: "" })], ["年级", (f) => ({ ...f, gt: "", kind: "", school: "", district: "" })]];
+const placeOk = (f) => (x) => (!f.gt || x.gt === f.gt) && (!f.kind || x.kind === f.kind) && (!f.school || schoolHit(x, f.school)) && (!f.district || x.district === f.district);
+export async function askSources(spec, query, { signal, k = 6 } = {}) {
+    const db = loadDB(), types = spec.types.map((t) => t.type);
+    const first = (xs, ok) => { for (const [label, g] of RELAX) { const got = xs.filter(ok(g(spec))); if (got.length) return [got, label]; } return [[], ""]; };
+    const [ps, pRelax] = first(paperIndex(), placeOk);
+    const papers = ps.sort((a, b) => b.year - a.year || b.sections.length - a.sections.length).slice(0, k);
+    const [us, uRelax] = first(db.units.map((u, i) => ({ u, i })).filter(({ u }) => !types.length || types.includes(u.type)), (f) => ({ u }) => placeOk(f)(u));
+    let items = [];
+    if (us.length) {
+        const [qv] = await embed([query], { signal }), qt = tokenize(query);
+        const zc = z(us.map(({ i }) => cosine(db, qv, i))), zb = z(us.map(({ i }) => bm25(db, qt, i)));
+        const cand = us.map(({ u, i }, j) => ({ u, f: zc[j] + 0.3 * zb[j] + (kpHit(u, spec.kps).length ? 0.5 : 0) + (spec.topic && u.topic.includes(spec.topic) ? 0.5 : 0) }))
+            .sort((a, b) => b.f - a.f).slice(0, 30);
+        const rr = await rerank(query, cand.map(({ u }) => `${u.type}｜${u.gt}${u.kind}｜${u.kp.join("、")}｜${u.topic}\n${u.text.slice(0, 600)}`), { signal });
+        for (const r of rr) cand[r.index].rr = r.score;
+        const per = {};   // 同一份卷子最多 2 个题组，免得一问全是一张卷子
+        items = cand.sort((a, b) => b.rr - a.rr).filter(({ u }) => (per[u.paper] = (per[u.paper] || 0) + 1) <= 2).slice(0, k).map(({ u, rr }) => ({ ...itemView(u, spec.gt || u.gt), rr: +rr.toFixed(3) }));
+    }
+    return { papers: papers.map((p) => ({ id: p.id, label: paperLabel(p), title: p.title, struct: structLine(p), sections: p.sections })), items, relax: { papers: pRelax, items: uRelax } };
+}
+export function qaMessages(q, spec, src) {
+    const db = loadDB(), P = paperIndex();
+    const sys = `你是无锡初中英语备课助手，回答老师在首页搜索框里问的、关于题库和考试的问题。题库是 ${P.length} 份 2022–2026 年无锡初中英语真卷（学校卷、区统考卷、中考真题）拆成的 ${db.units.length} 个题组，不含听力。
+- 只根据下面【卷子】【题目】里的材料回答；材料里没有的就直说库里没有，不要编数字、学校和题目。
+- 每句话后面用 [n] 标出处（n 是材料编号，可以连写 [1][3]）：说卷子结构引用卷子，说题目内容引用题目。
+- 先给结论，再分点；简体中文，80–250 字；英文原文最多引一句。
+- 卷子的年份说「2024 年的卷子」，不要说「2024 届」（届是学生毕业那年，和卷子年份不是一回事）。
+- 材料开头写了放宽过筛选的，要说清楚这是放宽以后的结果。
+- 老师其实是想要一份卷子或教案的，最后一句提示可以直接在搜索框里说「组一份……」或「给某某出一份……教案」。`;
+    const f = [spec.gt && `年级 ${spec.gt}`, spec.kind && `考试 ${spec.kind}`, spec.school && `学校 ${spec.school}`, spec.district && `区 ${spec.district}`, spec.types.length && `题型 ${spec.types.map((t) => t.type).join("、")}`].filter(Boolean).join("，");
+    let n = 0;
+    const lines = [
+        `【老师问】${q}`,
+        `【筛选】${f || "没有"}${src.relax.papers ? `；卷子放宽了${src.relax.papers}` : ""}${src.relax.items ? `；题目放宽了${src.relax.items}` : ""}`,
+        `【卷子】${src.papers.length ? "" : "没有对得上的"}`, ...src.papers.map((p) => `[${++n}] ${p.label}｜${p.title}｜大题：${p.struct}`),
+        `【题目】${src.items.length ? "" : "没有对得上的"}`, ...src.items.map((it) => `[${++n}] ${it.type}｜${it.school} ${it.year} ${it.gt}${it.kind}（${it.level}）｜考点：${it.kp.join("、")}${it.topic ? "｜话题：" + it.topic : ""}｜答案：${it.ans.filter(Boolean).join(" ")}\n${clip(withImageText(it), 500)}`),
+    ];
+    return [{ role: "system", content: sys }, { role: "user", content: lines.join("\n") }];
+}
+
+// 组卷第一步：挑参照卷、定每道大题要几个题组。spec: { gt, kind, level, school, district, textbook, types: [{type, n}] }
+export function paperPlan(spec) {
+    const ps = paperIndex().filter((p) => p.sections.length), near = NEAR_KIND[spec.kind] || [];
+    const tiers = [
+        [(p) => p.gt === spec.gt && p.kind === spec.kind, ""],
+        [(p) => p.gt === spec.gt && near.includes(p.kind), `库里没有${spec.gt}${spec.kind}的卷子，参照${spec.gt}相近的考试`],
+        [(p) => p.gt[0] === spec.gt[0] && p.kind === spec.kind, `库里没有${spec.gt}${spec.kind}的卷子，参照同年级另一学期的${spec.kind}`],
+        [(p) => p.gt === spec.gt, `库里没有${spec.gt}${spec.kind}这类的卷子，参照${spec.gt}别的考试`],
+    ];
+    const score = (p) => (schoolHit(p, spec.school) ? 8 : 0) + (spec.district && p.district === spec.district ? (UNIFIED.has(p.level) ? 4 : 2) : 0)
+        + (spec.level === "统考" ? (UNIFIED.has(p.level) ? 3 : 0) : spec.level === "不统考" ? (p.level === "校考" ? 3 : 0) : 0)
+        + (spec.textbook !== "旧" && p.textbook === "新" ? 2 : 0) + (p.year - 2022) * 0.5 + Math.min(p.sections.length, 7) * 0.4;
+    let ref = null, note = "没找到能参照的卷子";
+    for (const [f, n] of tiers) { const xs = ps.filter(f); if (xs.length) { ref = xs.sort((a, b) => score(b) - score(a))[0]; note = n; break; } }
+    const want = spec.school || spec.district;
+    if (ref && want && !(spec.school ? schoolHit(ref, spec.school) : ref.district === spec.district))
+        note = [note, `库里没有${want}${spec.gt}${spec.kind}的卷子，结构参照的是别处的同类卷`].filter(Boolean).join("；");
+    let secs = ref ? ref.sections.map((s) => ({ ...s })) : [];
+    // 点了题型的只组这几道大题；参照卷里没有的题型，短文类两篇、一句一题的十道
+    if (spec.types.length) secs = spec.types.map(({ type, n }) => {
+        const s = secs.find((x) => x.type === type) || { type, n: PASSAGE.has(type) ? 2 : 10, q: 0, points: null };
+        if (!n) return s;
+        const per = s.q && s.n ? s.q / s.n : avgQ(type);
+        return { ...s, n: Math.max(1, Math.min(PASSAGE.has(type) ? 6 : 20, Math.round(n / per))), q: n, points: s.points && s.q ? (s.points / s.q) * n : null };
+    });
+    return { ref: ref && { id: ref.id, label: paperLabel(ref), title: ref.title, struct: structLine(ref) }, note, secs: secs.filter((s) => TYPES.includes(s.type) && s.n > 0) };
+}
+// 组卷第二步：每道大题按题型检索（年级学期、出卷来源、同校同区、难度、考点照排大纲时的检索），拼成卷子。
+// 认了学生的（页面算好传来）：weak 每个题型的薄弱考点、exclude 这个学生用过的题、maxUnit + scope 只挑学到的单元、extra 卷子后面附的薄弱点加练
+export async function fillPaper(spec, plan, { signal } = {}) {
+    const db = loadDB();
+    // 检索的「同校」加分只认归过档的学校（东林 / 侨谊 / 外国语 / 省锡中），「其他学校」是一个档，加了等于没加
+    const key = paperIndex().find((p) => p.name && p.school !== "其他学校" && schoolHit(p, spec.school))?.school || "";
+    // 考点只给这个题型里真有的（「现在完成时」不往完形的查询里塞）
+    const kpsFor = (type) => [...new Set([...spec.kps, ...(spec.weak?.[type] || [])])].filter((k) => db.units.some((u) => u.type === type && kpHit(u, [k]).length)).slice(0, 4);
+    const ctx = { gt: spec.gt, kind: spec.kind, level: spec.level, school: key, district: spec.district, textbook: spec.textbook, guidance: spec.instruction, difficulty: spec.difficulty,
+        exclude: new Set(spec.exclude || []), maxUnit: spec.maxUnit || 0, scope: spec.scope };
+    // 按参照卷的小题数凑；一道大题十几道单题时每份卷子多给几道，同类卷子少的格子才凑得满
+    const R = await retrieve(plan.secs.map((s) => ({ type: s.type, share: 0.1, n: s.n, q: s.q || undefined, cap: Math.max(PASSAGE.has(s.type) ? 1 : 2, Math.ceil(s.n / 3)), kps: kpsFor(s.type), query: spec.topic ? `${s.type}：${spec.topic}${spec.instruction ? "。" + spec.instruction : ""}` : undefined })), ctx, { signal });
+    const sections = plan.secs.map((s, i) => {
+        const items = R[i]?.items || [], q = items.reduce((a, it) => a + it.q.length, 0), per = s.points && s.q ? s.points / s.q : null;
+        return { type: s.type, items, q, points: per ? Math.round(per * q * 2) / 2 : null, relax: R[i]?.relax || "", levelRelaxed: !!R[i]?.levelRelaxed };
+    }).filter((s) => s.items.length);
+    // 加练：卷子里用过的题不再出
+    const used = new Set([...ctx.exclude, ...R.flatMap((r) => r.items.map((it) => it.id))]), xs = spec.extra || [];
+    const X = xs.length ? await retrieve(xs.map((x) => ({ type: x.type, share: 0.1, n: x.n, kps: kpsFor(x.type).length ? kpsFor(x.type) : x.kps })), { ...ctx, exclude: used }, { signal }) : [];
+    // 加练只留考点真对得上的题（学到的范围里对得上的被正卷用完了，就少出或者不出这一节，不拿别的考点凑）
+    const extra = xs.map((x, i) => { const items = (X[i]?.items || []).filter((it) => !x.kps.length || kpHit(it, x.kps).length); return { type: x.type, kps: x.kps, items, q: items.reduce((a, it) => a + it.q.length, 0), points: null, relax: X[i]?.relax || "" }; }).filter((x) => x.items.length);
+    const types = spec.types.map((t) => t.type), where = spec.school || (spec.district ? spec.district + (spec.level === "统考" ? "统考" : "") : "");
+    const title = types.length ? `${spec.gt} ${types.join("、")}专项练习` : `${where ? where + " · " : ""}${spec.gt}${spec.kind}模拟卷`;
+    const all = sections.flatMap((s) => s.items);
+    return { title, ref: plan.ref, note: plan.note, sections, extra,
+        stats: { groups: all.length, q: all.reduce((a, it) => a + it.q.length, 0), points: sections.every((s) => s.points != null) ? sections.reduce((a, s) => a + s.points, 0) : null, papers: new Set(all.map((it) => it.title)).size } };
 }
 
 // ---------- 限流（同第二大脑：Upstash Redis 计数，没配就用函数内存） ----------

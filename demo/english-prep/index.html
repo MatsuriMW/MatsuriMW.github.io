@@ -429,6 +429,36 @@
   .dim-g { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 8px; align-items: baseline; margin-top: 8px; }
   .dim-g .chip { font-size: 13px; padding: 3px 11px; }
   #whoDims { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); }
+  /* 首页搜索框（MAT-545）：一问一张卡片，新的在上面 */
+  .ask-sec { margin-top: 34px; max-width: 900px; }
+  .askbox { display: flex; gap: 8px; align-items: center; background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 6px 6px 6px 16px; transition: border-color .2s, box-shadow .2s; }
+  .askbox:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+  .askbox input { flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 16px; background: transparent; padding: 6px 0; }
+  .turn { margin-top: 14px; animation: rise .4s var(--ease) backwards; }
+  .turn .q-echo { display: flex; gap: 10px; align-items: baseline; font-weight: 600; }
+  .turn .q-echo .qk { flex: none; font-size: 12px; font-weight: 500; color: var(--ink-3); }
+  .turn .q-echo .sp { flex: 1; }
+  .turn .said { margin: 6px 0 0; color: var(--ink-2); }
+  .turn .stages { margin: 10px 0 4px; }
+  .t-body > * + * { margin-top: 12px; }
+  .t-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .qref { font: 600 11px/1 ui-monospace, Menlo, monospace; padding: 2px 5px; border-radius: 5px; background: var(--blue-soft); color: #1f5ea8; vertical-align: 1px; margin: 0 1px; }
+  .srcs { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
+  .srcs .it.hl { outline: 2px solid var(--blue); }
+  .srcs .st { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
+  .paper { max-height: 72vh; overflow: auto; background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 18px 22px; }
+  .paper h3 { font-size: 18px; color: var(--ink); text-align: center; margin: 0 0 4px; }
+  .paper h4 { font-size: 15px; margin: 20px 0 6px; }
+  .p-grp { margin: 8px 0 16px; }
+  .p-src { font-size: 12px; color: var(--ink-3); }
+  .p-q { white-space: pre-wrap; font-size: 14px; line-height: 1.75; overflow-wrap: anywhere; }
+  .p-q img { max-width: min(100%, 460px); display: block; margin: 6px 0; border-radius: 6px; border: 1px solid var(--rule); }
+  .p-ans { font-size: 12.5px; color: var(--ink-2); background: var(--accent-bg); border-radius: 8px; padding: 6px 10px; margin-top: 6px; white-space: pre-wrap; }
+  .paper:not(.show-ans) .p-ans { display: none; }
+  .t-plan { max-height: 60vh; overflow: auto; background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 20px; }
+  .t-sum { font-size: 13.5px; color: var(--ink-2); margin: 0; padding-left: 18px; }
+  .wx-entry { margin-top: 18px; max-width: 900px; padding: 14px 18px; border-left: 4px solid #07c160; }
+  .wx-entry h3 { color: var(--ink); margin-bottom: 4px; }
   /* 首页底部：反馈表单（MAT-509），下面一行是直接联系方式 */
   section.contact { margin-top: 44px; max-width: 720px; }
   .fb { display: grid; gap: 10px; }
@@ -502,6 +532,19 @@
   <p class="note">学生是虚构的，学校是真实学校。没登录时，改动只存在这个浏览器里；登录后存进账号，换台电脑接着用。<button type="button" class="linkbtn" id="homeLogin">一键登录演示账号</button></p>
   <div class="stats" id="stats"></div>
 </header>
+<!-- 首页搜索框（MAT-545）：一句话问题库、组卷、出教案，不用走下面五步 -->
+<section class="ask-sec" aria-labelledby="askH">
+  <h2 id="askH">一句话问、组卷、出教案</h2>
+  <p class="note" style="margin:4px 0 10px">问题库里的事，它带着出处回答；说「组一份……卷」，照同类真卷的结构从题库拼一张卷子；说「给某某出一份……教案」，直接出教案，不停下来让你确认大纲。出来的先大概看一眼，要细改再进下面的流程。</p>
+  <form class="askbox" id="askForm"><input id="askQ" maxlength="300" autocomplete="off" aria-label="问题库、组卷、出教案，一句话说"><button class="btn" id="askGo">发送</button></form>
+  <div class="examples" id="askEx"></div>
+  <div id="askThread"></div>
+</section>
+<!-- 微信机器人入口（用户 10-30）：同一个 agent 的微信端，接入要站长帮着扫码绑定，一位老师一个 -->
+<section class="card wx-entry" id="wechat">
+  <h3>微信里也能用</h3>
+  <p class="note" style="margin:0">同一个备课 Agent 的微信机器人：发一段话或截图建档，说「给小满备下节课」出教案、发 Word，上完课一句话写好给家长的反馈，按课表提醒备课；打字、发语音都行。想试用加我微信 133 5781 1224（<button type="button" class="linkbtn" id="wxCopy">复制</button>），我帮你接上，一位老师一个机器人。</p>
+</section>
 <section class="flow-wrap">
   <div class="step-h"><h2>备课流程</h2><span class="note">五步按顺序走：看档案 → 定下一场考试 → 调四个维度的占比、排大纲 → 写成教案 → 审教校验（自动检查 + 老师自己看，要改的跟 agent 说）。哪一步都能回头改，改动自动保存（登录了就存进账号）。上完课要给家长发反馈，直接去<a href="#/afterclass">课后反馈</a>，不用走前面几步。</span></div>
   <div class="flow" id="flow"></div>
@@ -1938,7 +1981,7 @@ function setStage(k) {
 // picks：改写、融合时的原教案（MAT-542，[{name, text, items?}]），没有就是按占比从题库排；按占比排时老师的教案库一起检索
 const STAGES_OUTLINE = `<span data-k="retrieve">检索例题和教案库</span><span data-k="outline">排大纲</span><span data-k="done">完成</span>`;
 const STAGES_ADAPT = `<span data-k="adapt">读原教案、排大纲</span><span data-k="retrieve">从题库补题</span><span data-k="done">完成</span>`;
-async function makeOutline(picks = null) {
+async function makeOutline(picks = null, onStage = null) {   // onStage：首页一键出教案跟着显示进度（MAT-545）
     const st = stu(), instruction = picks ? $("#adaptNote").value.trim() : "";
     ctrl?.abort(); ctrl = new AbortController();
     $("#outlineBtn").disabled = true; $("#reOutline").disabled = true; $("#adaptBtn").disabled = true; $("#outlineNote").textContent = "";
@@ -1950,7 +1993,7 @@ async function makeOutline(picks = null) {
     const t0 = Date.now(), ctx = ctxPayload();
     try {
         await sse(picks ? { action: "adapt", ...ctx, sources: picks, instruction } : { action: "outline", ...ctx, lib: Lib.libChunks(S, ctx.mix.map((m) => m.type)) }, (ev, d) => {
-            if (ev === "stage" && ["outline", "retrieve"].includes(d.k)) setStage(d.k);
+            if (ev === "stage" && ["outline", "retrieve"].includes(d.k)) { setStage(d.k); onStage?.(d.k); }
             else if (ev === "sources") W.base.sources = d;
             else if (ev === "lib") W.lib = d;
             else if (ev === "items") { W.items = d.items; W.alts = d.alts || []; W.slots = d.slots; renderItems(); }
@@ -2220,21 +2263,22 @@ $("#items").onclick = (e) => {
 };
 
 // ---------- 5 按大纲写教案 ----------
-$("#writeBtn").onclick = async () => {
+// quick：首页一键出教案（MAT-545），不问分钟对不对得上、不跳到教案页，onDelta 让首页跟着显示；写成了返回 true
+async function writePlan(quick = false, onDelta = null) {
     const W = U.W, st = stu();
     const tot = outlineMin(W.outline);
-    if (tot !== U.minutes && !confirm(`大纲合计 ${tot} 分钟，课时是 ${U.minutes} 分钟，还是按大纲写吗？`)) return;
+    if (!quick && tot !== U.minutes && !confirm(`大纲合计 ${tot} 分钟，课时是 ${U.minutes} 分钟，还是按大纲写吗？`)) return false;
     ctrl?.abort(); ctrl = new AbortController();
     $("#writeBtn").disabled = true; $("#writeNote").textContent = "正在按大纲写……";
     $("#step5").hidden = false; $("#planActs").hidden = true; $("#editor").hidden = true; $("#plan").hidden = false;
     W.md = ""; W.stale = new Map();
-    go("plan");
+    if (!quick) go("plan");
     const t0 = Date.now();
-    let raf = 0;
+    let raf = 0, ok = false;
     try {
         const tpl = curTemplate(); W.visual = isVisual(st, tpl);
         await sse({ action: "plan", ...ctxPayload(), visual: W.visual, template: tpl, planNote: U.planNote || "", outline: W.outline, items: itemRefs(), sources: W.base?.sources || [], lib: W.lib || [] }, (ev, d) => {
-            if (ev === "delta") { W.md += d.t; if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderPlan(true); }); }
+            if (ev === "delta") { W.md += d.t; if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderPlan(true); onDelta?.(); }); }
             else if (ev === "done") $("#usage").textContent = `用时 ${((Date.now() - t0) / 1000).toFixed(1)} 秒 · ${d.usage?.total_tokens ?? "?"} tokens${d.left != null ? ` · 今天还能写 ${d.left} 次` : ""}`;
         }, ctrl.signal);
         W.md = spliceExtras(W.md);
@@ -2249,12 +2293,14 @@ $("#writeBtn").onclick = async () => {
         if (!W.arranged) { Mem.noteArrange(S.teacher, { date: TODAY, student: st.name, o0: W.outline0, o1: W.outline }); W.arranged = true; }   // 编排情景（MAT-527），同一份大纲只记一次
         S.lastPlan = { sid: st.id, date: TODAY, mix: Object.entries(U.lock || {}).map(([t, v]) => [t, +v.toFixed(2)]) };
         Mem.markUsed(st.members || [st], W.items, TODAY);   // 以后给这个学生检索不再出这些题（MAT-487）
-        save();
+        save(); ok = true;
     } catch (e) {
         if (e.name !== "AbortError") $("#writeNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`;
     }
     $("#writeBtn").disabled = false;
-};
+    return ok;
+}
+$("#writeBtn").onclick = () => writePlan();
 // 课外知识补充这一节不让模型写，用现成条目拼：替换模型自己写的同名一节，没有就放在「课后作业」前面，再没有就放最后
 function extrasMd(x) {
     return `## ${x.name}（${x.minutes} 分钟）\n\n` + extrasOf(x).map((e) => [
@@ -2804,7 +2850,8 @@ window.__buildDocx = buildDocx;
 const docxName = (W, v) => `${W.student}-${v === "student" ? "学生版" : "教案老师版"}-${W.date}.docx`;
 function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
 // 两个导出按钮共用：data-v 是 teacher / student
-for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) btn.onclick = async () => {
+for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) btn.onclick = () => exportDocx(btn);
+async function exportDocx(btn) {   // 首页一键出教案的两个导出按钮也走这里（MAT-545）
     btn.disabled = true;
     try {
         const v = btn.dataset.v;
@@ -2812,10 +2859,239 @@ for (const btn of [$("#docxBtn"), $("#docxStu"), $("#rvDocxT"), $("#rvDocxS")]) 
         if (Met.notePrep(S, U.W, { via: "web", t0: U.t0, date: TODAY })) { snapWork(); save(); }   // 第一次导出：记备课用时、大纲改动、换题
     } catch (e) { toast("导出失败：" + e.message); }
     btn.disabled = false;
-};
+}
+
+// ---------- 首页搜索框（MAT-545）：一句话 → 问答（带出处）/ 组卷 / 一键出教案 ----------
+// 服务端先分拣（action=ask）：问答和组卷在服务端做完推回来；出教案只回参数，这里接着排大纲、写教案，中间不停（和微信端 /出教案 一样，MAT-543）
+const ASK_EX = ["侨谊八上期中考哪些题型、各多少分？", "组一份八上期中模拟卷", "给林小满出一份现在完成时专题教案，90 分钟，偏难", "近两年九上期末的完形都考什么话题？", "出 10 道现在完成时的动词填空"];
+const ASK_HINTS = [...ASK_EX, "梁溪区九上期末统考卷，组一份", "七上完形和阅读各来两篇，偏难"];
+const ASK = [], TURNS = new WeakMap();   // ASK：这一页问过的，追问时带最近 3 条给分拣（「那东林呢」）
+let askBusy = false, hintAt = 0;
+$("#askEx").innerHTML = ASK_EX.map((t) => `<button type="button">${esc(t)}</button>`).join("");
+$("#askEx").onclick = (e) => { const b = e.target.closest("button"); if (b) askSend(b.textContent); };
+$("#askForm").onsubmit = (e) => { e.preventDefault(); const q = $("#askQ").value.trim(); if (q) askSend(q); };
+const askHint = () => { $("#askQ").placeholder = `比如：${ASK_HINTS[hintAt]}`; };
+askHint();
+setInterval(() => { if (document.hidden || $("#askQ").value || document.activeElement === $("#askQ") || page() !== "home") return; hintAt = (hintAt + 1) % ASK_HINTS.length; askHint(); }, 4000);
+// 分拣要的：学生名单（认「给小满……」）、正在备的、各年级学期的下一场考试（组卷没说考试类型时用）
+function askCtx() {
+    const exams = {};
+    for (const g of [7, 8, 9]) { const e = M.nextExam(g, TODAY, R); if (e) exams[e.gt] = e.kind; }
+    return { students: S.students.map((x) => ({ name: x.name, gt: stuGt(x), school: x.school, schoolName: x.schoolName, district: x.district, textbook: x.textbook })),
+        current: S.students.find((x) => x.id === S.current)?.name || "", exams };
+}
+function saidText(s) {
+    const types = s.types.map((t) => t.type + (t.n ? ` ${t.n} 题` : "")).join("、");
+    const xs = s.intent === "qa" ? ["问题库", s.gt + s.kind, s.school, s.district, types]
+        : s.intent === "paper" ? ["组卷", s.school || s.district, s.gt + s.kind, s.level === "统考" ? "统考卷优先" : s.level === "不统考" ? "校考卷优先" : "", types && `只组${types}`, s.kps.join("、"), s.topic && `话题：${s.topic}`, s.difficulty]
+        : ["出教案", s.student, s.minutes && `${s.minutes} 分钟`, s.difficulty && `例题${s.difficulty}`, s.answers && `${s.answers}答案解析`, s.instruction && `要求：${s.instruction}`];
+    return xs.filter(Boolean).join(" · ");
+}
+const ASK_STAGES = { "": [["parse", "理解要求"]], qa: [["parse", "理解要求"], ["search", "检索题库"], ["answer", "写回答"]],
+    paper: [["parse", "理解要求"], ["ref", "挑参照卷"], ["retrieve", "按大题检索"], ["done", "拼好了"]],
+    plan: [["parse", "理解要求"], ["retrieve", "检索例题和教案库"], ["outline", "排大纲"], ["write", "写教案"], ["done", "出好了"]] };
+function askStage(T, k) {
+    const xs = ASK_STAGES[T.intent], j = xs.findIndex(([x]) => x === k);
+    T.$(".stages").innerHTML = xs.map(([x, lb], i) => `<span class="${i < j || k === "done" ? "done" : i === j ? "on" : ""}">${lb}</span>`).join("");
+}
+const pqHTML = (text, imgs) => esc(text).replace(/⟦图(\d+)⟧/g, (m, n) => { const im = imgs.find((x) => x.n === +n); return im ? `<img src="${im.src}" alt="${esc(im.desc)}" loading="lazy">` : ""; });
+async function askSend(q) {
+    if (askBusy) { toast("上一句还没做完，等它出来再问"); return; }
+    askBusy = true; $("#askGo").disabled = true; $("#askQ").value = "";
+    const el = document.createElement("article");
+    el.className = "turn card";
+    el.innerHTML = `<div class="q-echo"><span class="qk">问</span><span>${esc(q)}</span><span class="sp"></span><button type="button" class="linkbtn" data-x title="删掉这一问">×</button></div><p class="said note" hidden></p><div class="stages"></div><div class="t-body"></div><p class="note t-foot" style="margin:10px 0 0"></p>`;
+    $("#askThread").prepend(el);
+    const T = { q, el, intent: "", md: "", $: (s) => el.querySelector(s) }, turn = { q, said: "" }, t0 = Date.now();
+    TURNS.set(el, T); ASK.push(turn); askStage(T, "parse");
+    let spec = null, left = null;
+    try {
+        await sse({ action: "ask", q, history: ASK.slice(-4, -1), ...askCtx() }, (ev, d) => {
+            if (ev === "stage") askStage(T, d.k);
+            else if (ev === "intent") {
+                spec = d; T.intent = d.intent; turn.said = saidText(d); askStage(T, "parse");
+                const s = T.$(".said"); s.hidden = false; s.textContent = `理解成：${turn.said}`;
+            } else if (ev === "sources") { T.src = d; T.$(".t-body").innerHTML = `<div class="md t-ans"></div><div class="srcs">${srcsHTML(d)}</div>`; }
+            else if (ev === "delta") { T.md += d.t; renderAnswer(T, true); }
+            else if (ev === "done") left = d.left;
+        });
+        if (spec?.intent === "qa") renderAnswer(T, false);
+        if (spec?.intent === "paper") left = await askPaper(T, spec) ?? left;
+        if (spec?.intent === "plan") await askPlan(T, spec);
+        askStage(T, "done");
+        T.$(".t-foot").textContent = `用时 ${((Date.now() - t0) / 1000).toFixed(1)} 秒${left != null ? ` · 今天还能${spec?.intent === "paper" ? "组卷" : "在这里问"} ${left} 次` : ""}`;
+    } catch (e) {
+        T.$(".stages").hidden = true;
+        T.$(".t-foot").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`;
+    }
+    askBusy = false; $("#askGo").disabled = false;
+}
+// 问答：回答里的 [n] 链到下面的出处；出处先列卷子（带大题结构），再列题
+const srcsHTML = (src) => `<div class="note">出处：${src.papers.length} 份卷子、${src.items.length} 道题${src.relax.papers || src.relax.items ? `；按原来的条件筛不出来，放宽了${[...new Set([src.relax.papers, src.relax.items].filter(Boolean))].join("、")}` : ""}</div>`
+    + src.papers.map((p, i) => `<div class="it" data-n="${i + 1}"><div class="hd"><span class="code">[${i + 1}]</span><b>卷子</b><span class="src">${esc(p.label)}</span></div><div class="st">${esc(p.struct)}</div></div>`).join("")
+    + src.items.map((it, j) => { const n = src.papers.length + j + 1; return `<div class="it" data-n="${n}"><div class="hd"><span class="code">[${n}]</span><b>${esc(it.type)}</b><span class="src">${esc(it.school)} ${it.year} ${it.gt}${it.kind} · ${esc(it.level)}</span></div>
+        <div class="ws">${it.kp.map((k) => `<span>${esc(k)}</span>`).join("")}${it.topic ? `<span>话题：${esc(it.topic)}</span>` : ""}</div><div class="qt">${pqHTML(it.text, it.imgs)}</div>
+        <div class="ans"><button class="linkbtn" data-open>展开</button> · <button class="linkbtn" data-ans>看答案</button><span hidden> 答案：${esc(it.ans.filter(Boolean).join(" "))}</span></div></div>`; }).join("");
+function renderAnswer(T, streaming) {
+    const box = T.$(".t-ans"); if (!box) return;
+    const all = T.src.papers.length + T.src.items.length;
+    box.innerHTML = marked.parse(T.md).replace(/\[(\d{1,2})\]/g, (m, n) => (+n >= 1 && +n <= all ? `<a class="qref" href="#" data-ref="${n}" title="看出处 ${n}">${n}</a>` : m));
+    box.classList.toggle("caret", streaming);
+}
+// 认了学生的组卷、出教案（用户 10-30）：按老师说的时间节点往后推进度，带上薄弱考点、成绩档、近期档案变动、用过的题。口径在 rules.json 的 student
+function stuAdjust(st, spec) {
+    const P = R.student, gt = stuGt(st), n = unitsOf(gt), date = spec.date > TODAY ? spec.date : TODAY;
+    const p0 = progVal(st, n), p = Math.min(n, p0 + M.daysBetween(TODAY, date) / P.paceDays);
+    const { w, kps } = Mem.weakness(st.mems, TODAY, HALF, ledger(st), P), lv = scoreLevel(st);
+    const recent = st.mems.flatMap((m) => (m.history || (m.updated ? [{ date: m.updated, op: "更新" }] : [])).filter((h) => h.date && M.daysBetween(h.date, TODAY) <= P.recentDays)   // 示例档案和早先的记忆没有 history，按 updated 算
+        .map((h) => ({ date: h.date, text: `${h.op}${m.cat}：${m.qtype ? m.qtype + (m.kp ? "·" + m.kp : "") : m.text.slice(0, 16)}` }))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
+    const top = Object.entries(w).filter(([, v]) => v >= P.extraMinWeight).sort((a, b) => b[1] - a[1]).slice(0, P.extraTypes).map(([t]) => t);
+    return { gt, n, date, p0, p, maxUnit: p >= n - 0.5 ? 0 : Math.max(1, Math.floor(p + 0.5)), kps, top, lv, recent, used: Mem.usedIds([st], TODAY) };
+}
+const recentText = (A) => A.recent.map((r) => `${md5(r.date)} ${r.text}`).join("；");
+async function askPaper(T, spec) {
+    const st = !spec.generic && S.students.find((x) => x.name === spec.student), P = R.student;
+    let s2 = { ...spec, scope: R.examCalendar.scope }, who = "";
+    if (st && stuGt(st) === spec.gt) {
+        const A = stuAdjust(st, spec), e = A.date > TODAY && !spec.kindAsked ? M.nextExam(st.grade, A.date, R, A.gt) : null;
+        const difficulty = spec.difficulty || (A.lv && P.bandDifficulty[A.lv.band]) || "";
+        s2 = { ...s2, kind: e?.gt === A.gt ? e.kind : spec.kind, difficulty, maxUnit: A.maxUnit, exclude: A.used,
+            weak: Object.fromEntries(Object.entries(A.kps).map(([t, ks]) => [t, ks.slice(0, 2)])),
+            extra: A.top.map((t) => ({ type: t, kps: (A.kps[t] || []).slice(0, 2), n: R.passageTypes.includes(t) ? 1 : P.extraItems })) };
+        const weakTxt = A.top.map((t) => `${t}${A.kps[t]?.length ? "·" + A.kps[t].slice(0, 2).join("、") : ""}`).join("；");
+        who = `按${esc(st.name)}的档案调整${spec.student === S.students.find((x) => x.id === S.current)?.name && !spec.asked ? "（正在备的学生；不想按学生组，说「通用」）" : ""}：`
+            + [`${A.gt} ${progText(A.p0, A.n)}${A.date > TODAY ? `，按 ${md5(A.date)} 推到 ${progText(A.p, A.n)}` : ""}，${A.maxUnit ? `题目只挑 Unit ${A.maxUnit} 以内的` : "全册的题都能用"}`,
+                weakTxt && `薄弱点优先：${esc(weakTxt)}，卷子后面附加练`, A.lv && `${scoreLvText(A.lv)}${!spec.difficulty && difficulty ? ` → 例题${difficulty}` : ""}`,
+                A.used.length && `用过的 ${A.used.length} 道题不再出`, A.recent.length && `近期档案变动：${esc(recentText(A))}`].filter(Boolean).join(" · ");
+    }
+    askStage(T, "ref");
+    let left = null;
+    await sse({ action: "paper", spec: s2 }, (ev, d) => {
+        if (ev === "ref") { askStage(T, "ref"); T.$(".t-body").innerHTML = `${who ? `<p class="note" style="margin:0">${who}</p>` : ""}<p class="note">卷面结构参照：${esc(d.ref?.label || "—")}（${esc(d.ref?.struct || "")}）${d.note ? `。${esc(d.note)}` : ""}</p>`; }
+        else if (ev === "stage") askStage(T, d.k);
+        else if (ev === "paper") {
+            T.paper = d; T.who = who;
+            let no = 1; for (const s of [...d.sections, ...d.extra]) for (const it of s.items) { it.r = M.renumber(it, no); no += it.q.length; }
+            renderPaper(T);
+        } else if (ev === "done") left = d.left;
+    });
+    return left;
+}
+// 组卷：大题标题按参照卷的分值折算；每组上面写第几题和出处，答案和解析默认收起
+const CN_NO = "一二三四五六七八九十".split("");
+const secHead = (s, i) => `${CN_NO[i] || i + 1}、${s.type}（共 ${s.q} 小题${s.points != null ? `，${s.points} 分` : ""}）`;
+const extraHead = (x) => `附加 · 薄弱点加练：${x.type}${x.kps.length ? `（${x.kps.join("、")}）` : ""}，共 ${x.q} 小题，不计分`;
+const grpRange = (it) => (it.r.nums.length > 1 ? `第 ${it.r.nums[0]}–${it.r.nums.at(-1)} 题` : `第 ${it.r.nums[0]} 题`);
+const grpAns = (it) => it.r.nums.map((n, i) => `${n}. ${it.ans[i] ?? "—"}`).join("　") + (it.ans_src === "模型作答" ? "（原卷没有答案，这是模型作答，未核对）" : "");
+function renderPaper(T) {
+    const P = T.paper, st = P.stats;
+    const grp = (it) => `<div class="p-grp"><div class="p-src">${grpRange(it)} · ${esc(it.school)} ${it.year} ${it.gt}${it.kind}（${esc(it.level)}）${it.kp.length ? ` · 考点：${esc([...new Set(it.kp)].join("、"))}` : ""}</div>
+        <div class="p-q">${pqHTML(it.r.text, it.imgs)}</div><div class="p-ans">答案：${esc(grpAns(it))}${it.r.explain.trim() ? "\n" + esc(it.r.explain.trim()) : ""}</div></div>`;
+    T.$(".t-body").innerHTML = `${T.who ? `<p class="note" style="margin:0">${T.who}</p>` : ""}<p class="note" style="margin:0">共 ${P.sections.length} 道大题、${st.q} 小题${st.points != null ? `、满分 ${st.points} 分` : ""}${P.extra.length ? `，另附薄弱点加练 ${P.extra.reduce((a, x) => a + x.q, 0)} 小题` : ""}，题目来自题库里的 ${st.papers} 份卷子。卷面结构参照：${esc(P.ref?.label || "—")}${P.note ? `；${esc(P.note)}` : ""}。听力没有收进题库，这张卷子不含听力。</p>
+      <div class="t-acts"><button type="button" class="btn small ghost" data-pans aria-pressed="false">显示答案和解析</button><button type="button" class="btn small" data-pdoc="student">下载学生版 Word</button><button type="button" class="btn small ghost" data-pdoc="teacher">下载老师版 Word（带答案解析和出处）</button></div>
+      <div class="paper"><h3>${esc(P.title)}</h3>${P.sections.map((s, i) => `<h4>${esc(secHead(s, i))}</h4>${s.items.map(grp).join("")}`).join("")}${P.extra.map((x) => `<h4>${esc(extraHead(x))}</h4>${x.items.map(grp).join("")}`).join("")}</div>`;
+}
+// 组卷的 Word：学生版只有题；老师版每组上面写出处，下面带答案和解析
+async function paperDocx(P, version) {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, AlignmentType } = await loadDocx();
+    const T = version === "teacher", bytes = (src) => Uint8Array.from(atob(src.split(",")[1]), (c) => c.charCodeAt(0));
+    const gray = (t) => new Paragraph({ children: [new TextRun({ text: t, color: "888888", size: 18 })], spacing: { before: 120 } });
+    const lines = (text, imgs) => text.split("\n").flatMap((line) => {
+        const m = line.match(/^⟦图(\d+)⟧$/), im = m && imgs.find((x) => x.n === +m[1]);
+        if (im) { const k = Math.min(1, 460 / im.w); return [new Paragraph({ children: [new ImageRun({ type: "jpg", data: bytes(im.src), transformation: { width: Math.round(im.w * k), height: Math.round(im.h * k) } })] })]; }
+        return line.trim() ? [new Paragraph({ children: [new TextRun(line.replace(/⟦图\d+⟧/g, ""))], spacing: { before: /^\s*\d+\s*[.．]/.test(line) ? 160 : 0, after: 40 } })] : [];
+    });
+    const body = [new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, children: [new TextRun(P.title)] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `共 ${P.stats.q} 小题${P.stats.points != null ? `　满分 ${P.stats.points} 分` : ""}`, size: 20 })] })];
+    if (T) body.push(gray(`卷面结构参照：${P.ref?.label || "—"}${P.note ? "；" + P.note : ""}；题目来自题库里的 ${P.stats.papers} 份卷子`));
+    [...P.sections, ...P.extra].forEach((s, i) => {
+        body.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun(i < P.sections.length ? secHead(s, i) : extraHead(s))], spacing: { before: 240 } }));
+        for (const it of s.items) {
+            if (T) body.push(gray(`${grpRange(it)} · 出处：${it.school} ${it.year} ${it.gt}${it.kind}（${it.level}）${it.kp.length ? " · 考点：" + [...new Set(it.kp)].join("、") : ""}`));
+            else if (it.r.hit < it.q.length) body.push(gray(grpRange(it)));   // 原题号没换全的，学生也要知道这组是第几题
+            body.push(...lines(it.r.text, it.imgs));
+            if (T) body.push(new Paragraph({ children: [new TextRun({ text: "答案：", bold: true }), new TextRun(grpAns(it))], spacing: { before: 80 } }),
+                ...it.r.explain.split("\n").filter((l) => l.trim()).map((l) => new Paragraph({ children: [new TextRun({ text: l.trim(), color: "555555", size: 20 })], spacing: { after: 30 } })));
+            body.push(new Paragraph({ children: [], spacing: { after: 200 } }));
+        }
+    });
+    const doc = new Document({ creator: "英语备课 Agent Demo", title: P.title, styles: { default: { document: { run: { font: { ascii: "Times New Roman", hAnsi: "Times New Roman", eastAsia: "宋体" }, size: 22 } } } },
+        sections: [{ properties: { page: { margin: { top: 1000, bottom: 1000, left: 1100, right: 1100 } } }, children: body }] });
+    return Packer.toBlob(doc);
+}
+// 一键出教案：切到说到的学生（没说就是正在备的），按 TA 的档案和下一场考试，老师这句话当这节课的要求，排大纲、写教案一口气做完
+const planPreview = (md) => marked.parse(md).replace(/==([^=\n]{1,40})==/g, "<mark>$1</mark>").replace(/\[((?:[ST]\d{1,2}|考|校)(?:[、,，\s]*(?:[ST]\d{1,2}|考|校))*)\]/g, (m, ks) => ks.split(/[、,，\s]+/).filter(Boolean).map((k) => `<span class="cite ${/^[ST]/.test(k) ? k[0] : k}">${k}</span>`).join(""));
+async function askPlan(T, spec) {
+    const target = S.students.find((x) => x.name === spec.student) || stu();
+    if (target.id !== S.current) switchStudent(target.id);
+    const prev = S.work?.[target.id]?.W?.outline ? clone(S.work[target.id]) : null;   // 这个学生原来没写完的那份，被替换了能换回来
+    U = {}; initExam(); clearPlan();
+    const A = target.members ? null : stuAdjust(target, spec);   // 一对多的组不推进度，档案照组员合起来的用
+    if (A && A.date > TODAY) {   // 「下周三的课」：按那天推进度和下一场考试
+        const e = M.nextExam(target.grade, A.date, R, A.gt);
+        if (e?.gt === U.gt && !spec.kindAsked) U.kind = e.kind;
+        U.unit = progUnit(A.p, A.n);
+    }
+    if (spec.kindAsked && M.examKinds(U.gt).includes(spec.kindAsked)) U.kind = spec.kindAsked;
+    U.guidance = [(spec.instruction || T.q), A?.recent.length && `近期档案变动：${recentText(A)}`].filter(Boolean).join("；").slice(0, 200);
+    if (spec.minutes) U.minutes = spec.minutes;
+    if (spec.difficulty) U.difficulty = spec.difficulty;
+    refresh(); renderTplSel(); renderChat();
+    const miss = spec.asked && spec.asked !== target.name ? `名单里没有「${esc(spec.asked)}」，先按${esc(target.name)}的档案出；给新学生备课先去<a href="#/newstu">建档</a>。` : "";
+    const prog = A ? `${A.gt} ${progText(A.p0, A.n)}${A.date > TODAY ? `，按 ${md5(A.date)} 推到 Unit ${U.unit}` : ""}` : "";
+    T.$(".t-body").innerHTML = `<p class="note" style="margin:0">${miss}按${esc(target.name)}的档案（${[prog, A?.lv && scoreLvText(A.lv), A?.recent.length && `近期变动：${esc(recentText(A))}`].filter(Boolean).join(" · ") || "画像、薄弱点、课次记录"}）、下一场考试（${esc(examLabel())}）出，${U.minutes} 分钟${U.difficulty && U.difficulty !== "不限" ? `，例题${esc(U.difficulty)}` : ""}；这句话当这节课的要求。</p><div class="md t-plan" hidden></div><ul class="t-sum" hidden></ul><div class="t-acts" hidden></div>`;
+    const t0 = Date.now();
+    askStage(T, "retrieve");
+    await makeOutline(null, (k) => askStage(T, k));
+    if (!U.W?.outline) throw new Error($("#outlineNote").textContent.replace(/^没成功：/, "") || "大纲没排出来");
+    askStage(T, "write");
+    const box = T.$(".t-plan"); box.hidden = false;
+    const ok = await writePlan(true, () => { box.innerHTML = marked.parse(U.W.md); box.classList.add("caret"); });
+    box.classList.remove("caret");
+    if (!ok) throw new Error($("#writeNote").textContent.replace(/^没成功：/, "") || "教案没写成");
+    const W = U.W, hw = W.items.filter((x) => x.hw).length;
+    T.sid = W.sid; box.innerHTML = planPreview(W.md);
+    T.$(".t-sum").innerHTML = [
+        `出好了（${((Date.now() - t0) / 1000).toFixed(0)} 秒）：${W.outline.title || "这节课"}`,
+        `查到：题库 ${W.items.length - hw} 道例题${hw ? `、${hw} 道作业用题` : ""}${W.lib?.length ? `；你的教案库 ${W.lib.length} 节` : ""}`,
+        `大纲：${W.outline.sections.map((x) => `${x.name} ${x.minutes}′`).join(" → ")}`,
+        `用题出处：${W.items.slice(0, 6).map((it) => `${it.code} ${it.school} ${it.year} ${it.gt}${it.kind}`).join("；")}${W.items.length > 6 ? "……（教案页能看全部）" : ""}`,
+        `自动检查：${auditChecks().filter(([k]) => k === "warn").map(([, t]) => t).join("；") || "都没问题"}`,
+    ].map((t) => `<li>${esc(t)}</li>`).join("");
+    T.$(".t-sum").hidden = false;
+    const stuFirst = spec.answers === "不带";   // 说了不带答案解析的，学生版放前面
+    const bT = `<button type="button" class="btn small${stuFirst ? " ghost" : ""}" data-v="teacher" data-pdocx>老师版 Word</button>`, bS = `<button type="button" class="btn small${stuFirst ? "" : " ghost"}" data-v="student" data-pdocx>学生版 Word（不带答案）</button>`;
+    const acts = T.$(".t-acts"); acts.hidden = false;
+    acts.innerHTML = (stuFirst ? bS + bT : bT + bS) + `<a class="btn small ghost" href="#/plan">去教案页细改</a><a class="btn small ghost" href="#/review">去审教</a>`;
+    if (prev) toast(`${target.name}原来那份没写完的大纲 / 教案被这份替换了`, { label: "换回原来的", fn: () => { S.work[target.id] = prev; save(); loadStudent(target.id); } });
+}
+$("#askThread").addEventListener("click", async (e) => {
+    const el = e.target.closest(".turn"), T = el && TURNS.get(el); if (!T) return;
+    const b = e.target.closest("button, a[data-ref]"); if (!b) return;
+    if (b.matches("[data-x]")) { el.remove(); return; }
+    if (b.matches("[data-ref]")) {
+        e.preventDefault();
+        const it = el.querySelector(`.srcs [data-n="${b.dataset.ref}"]`); if (!it) return;
+        it.scrollIntoView({ behavior: "smooth", block: "center" }); it.classList.add("hl"); setTimeout(() => it.classList.remove("hl"), 1600);
+    } else if (b.matches("[data-open]")) { const q = b.closest(".it").querySelector(".qt"); q.classList.toggle("open"); b.textContent = q.classList.contains("open") ? "收起" : "展开"; }
+    else if (b.matches("[data-ans]")) { const s = b.parentElement.querySelector("span"); s.hidden = !s.hidden; }
+    else if (b.matches("[data-pans]")) { const on = el.querySelector(".paper").classList.toggle("show-ans"); b.setAttribute("aria-pressed", on); b.textContent = on ? "收起答案和解析" : "显示答案和解析"; }
+    else if (b.matches("[data-pdoc]")) {
+        b.disabled = true;
+        try { download(await paperDocx(T.paper, b.dataset.pdoc), `${T.paper.title.replace(/[\\/:*?"<>|\s]+/g, "")}-${b.dataset.pdoc === "student" ? "学生版" : "老师版"}-${TODAY}.docx`); }
+        catch (err) { toast("导出失败：" + err.message); }
+        b.disabled = false;
+    } else if (b.matches("[data-pdocx]")) {
+        if (U.W?.sid !== T.sid || !U.W?.md) { toast("正在备的已经不是这份了：去档案页的历史教案里导出"); return; }
+        exportDocx(b);
+    }
+});
+
+$("#wxCopy").onclick = async () => { try { await navigator.clipboard.writeText("13357811224"); toast("微信号复制好了"); } catch { toast("没复制成，微信号是 133 5781 1224"); } };
 
 // ---------- 每个功能是做什么的（首页，写给老师看：是什么、能帮你做什么，不讲技术） ----------
 $("#how").innerHTML = [
+    `<b>首页一句话</b>：问题库里的事，带出处回答；说「组一份……卷」，照同类真卷的结构从题库组一张卷子，学生版、老师版 Word 都能下；说「给某某出一份……教案」直接出教案。正在备哪个学生，组卷就按 TA 的进度出（说了哪天就推到那天），只出学过的单元，薄弱点优先、后面附加练，难度按最近的成绩定。`,
     `<b>学生档案</b>：一个学生一份，记着年级学期、学校，和下面这些画像；agent 还会把课后记录里看出来的薄弱点、已经掌握的、目标一条条记进来。排占比、挑例题、写教案都按它来。建档时可以直接贴一段家长的话或聊天记录，agent 先把表填好，你核对一下就行。`,
     `<b>学生画像</b>：每一项是一条能拖的光谱，比如注意力从「容易分心」到「集中」。学习进度、学习习惯、注意力默认就有，词汇量、自信心、家长配合这些需要时点「+」加。注意力容易分心的学生，大纲每个环节不超过 ${R.student.attentionMaxMinutes} 分钟、讲练交替，讲义用彩色版。`,
     `<b>一对一和一对多</b>：档案页上选这节课是一对一还是一对多。一对一就按当前这个学生备课；一对多把一起上课的几个学生编成一组（年级学期要一样），组的档案由组员合起来：进度按最慢的算，注意力按最需要照顾的算，几个人共同的薄弱点全组一起讲，个别人的问题放进练习里分层安排。几组的大纲可以一次排好；排好的大纲也能复制给别的学生或组。页面顶部右边一直写着现在在给谁备课。`,

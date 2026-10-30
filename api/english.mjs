@@ -10,6 +10,10 @@
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
 // POST { action: "ingest", name, text } → JSON { doc }：老师上传的教案切块、标题型、算向量，存进老师自己的教案库（MAT-542）；outline 带上 lib（教案库的块）就和题库一起检索
 // POST { action: "adapt", sources: [{name, text, items?}], instruction, ... } → text/event-stream：stage → sources（编号统一后的原教案）→ items → extras → outline → done。在原教案上改写（1 份）或几份融合（2–4 份）成这节课的大纲（MAT-542）
+// POST { action: "ask", q, history, students, current, exams } → text/event-stream：首页搜索框（MAT-545）。stage(parse) → intent（分拣成什么、参数）→
+//   问答：stage(search) → sources（卷子 + 题目，编号从 1 起）→ stage(answer) → delta… → done；组卷、出教案：只到 intent → done，页面带上学生的画像接着调 paper / 排大纲、写教案
+// POST { action: "paper", spec } → text/event-stream：ref（参照卷和大题）→ stage(retrieve) → paper（大题、加练、每组出处）→ done。spec 是 ask 分拣出的参数，页面认了学生的再加上
+//   maxUnit（按日期推的进度）、scope（各考试的默认范围）、weak（各题型薄弱考点）、exclude（用过的题）、extra（薄弱点加练）
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
 // POST { action: "afterclass", words, lesson: {topics, hw}, mix: {lesson, perf, weak, hw, exam}, praise, plan, examLabel, student, studentMems, logs, perf | members: [{name, gradeLabel, schoolLabel, profile, mems, logs, perf}] }
 //   perf = { items: [["专注", "很专注"]], good: [题型], weak: [题型] }
@@ -26,6 +30,7 @@
 import crypto from "node:crypto";
 import {
     loadDB, retrieve, slotSize, itemsByIds, homeworkSlots, ingest, cleanLib, cleanLibPicked, libRetrieve, cleanSources, adaptMessages, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
+    askMessages, cleanAsk, askSources, qaMessages, paperPlan, fillPaper, EXAM_KINDS,
     templateMessages, cleanTemplate, tidyMessages, intakeMessages, cleanIntake, ocr, okImages, afterclassMessages, AFTER_PARTS, shortenMessages, hanCount, noPronoun, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, pickLogs, pickMems, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
     itemBodies, adminToken, verifyToken, acctLogin, acctDemo, dataLoad, dataSave, itemsQuota, acctAdmin,
 } from "./_lib/english.mjs";
@@ -34,8 +39,8 @@ const env = (k, d) => Number(process.env[k] ?? d);
 const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8), search: env("EN_SEARCH_DAILY", 30), chat: env("EN_CHAT_DAILY", 30),
     section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10),
     intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), afterclass: env("EN_AFTERCLASS_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10), tidy: env("EN_TIDY_DAILY", 10),
-    ingest: env("EN_INGEST_DAILY", 20), adapt: env("EN_PLAN_DAILY", 8) };
-const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈", tidy: "整理记忆", ingest: "存教案库", adapt: "改写教案" };
+    ingest: env("EN_INGEST_DAILY", 20), adapt: env("EN_PLAN_DAILY", 8), ask: env("EN_ASK_DAILY", 20), paper: env("EN_PAPER_DAILY", 10) };
+const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈", tidy: "整理记忆", ingest: "存教案库", adapt: "改写教案", ask: "首页提问", paper: "组卷" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
@@ -267,6 +272,55 @@ export async function POST(request) {
             if (total !== minutes) o.lessonMinutes = total;
             send("outline", student.attention === "容易分心" ? splitLong(o, base.attentionMax) : o);
             send("done", { ms: Date.now() - t0, usage, left });
+        });
+    }
+
+    // 首页搜索框（MAT-545）：先分拣，问答和组卷在这里做完；出教案只把参数交回页面
+    if (action === "ask") {
+        const q = clip(p.q, 300);
+        if (!q) return Response.json({ error: "说点什么" }, { status: 400 });
+        const GT = ["七上", "七下", "八上", "八下", "九上", "九下"];
+        const students = (Array.isArray(p.students) ? p.students : []).slice(0, 40).map((s) => ({ name: clip(s?.name, 10), gt: GT.includes(s?.gt) ? s.gt : "",
+            school: clip(s?.school, 10), schoolName: clip(s?.schoolName, 30), district: clip(s?.district, 6), textbook: s?.textbook === "旧" ? "旧" : "新" })).filter((s) => s.name);
+        const current = students.find((s) => s.name === clip(p.current, 10)) || null;
+        const exams = Object.fromEntries(Object.entries(p.exams && typeof p.exams === "object" ? p.exams : {}).filter(([g, k]) => GT.includes(g) && EXAM_KINDS.includes(k)));   // 各年级学期的下一场考试，页面按考试日历算
+        const history = (Array.isArray(p.history) ? p.history : []).slice(-3).map((h) => ({ q: clip(h?.q, 200), said: clip(h?.said, 200) })).filter((h) => h.q);
+        return sse(async (send) => {
+            const t0 = Date.now();
+            send("stage", { k: "parse" });
+            const d = cleanAsk((await json(askMessages({ q, history, students, current }), { signal: request.signal, cfg, max_tokens: 600 })).data);
+            // 说到的学生；组卷、出教案没点名的，年级对得上（或没说年级）就按正在备的学生（用户 10-30：认现在登录的是哪份档案），说「通用」的不按学生。
+            // 学校、区跟着这个学生走，老师自己说了学校或区的就不带
+            const st = d.student ? students.find((s) => s.name === d.student) || students.find((s) => s.name.includes(d.student) || d.student.includes(s.name)) : null;
+            const from = st || (d.intent !== "qa" && !d.generic && (!d.gt || d.gt === current?.gt) ? current : null);
+            const gt = d.gt || from?.gt || (d.intent === "paper" ? "九上" : "");
+            const spec = { ...d, asked: d.student, kindAsked: d.kind, gt, kind: d.kind || (d.intent !== "qa" && gt ? exams[gt] || "期末" : ""), student: (st || (d.intent === "plan" ? current : from))?.name || "",
+                school: d.school || (from && !d.district ? from.school || from.schoolName : ""), district: d.district || (from && !d.school ? from.district : ""), textbook: from?.textbook || "新" };
+            send("intent", spec);
+            if (d.intent === "qa") {
+                send("stage", { k: "search" });
+                const src = await askSources(spec, d.query || q, { signal: request.signal });
+                send("sources", src);
+                send("stage", { k: "answer" });
+                for await (const x of stream(qaMessages(q, spec, src), { signal: request.signal, max_tokens: 900, cfg })) if (typeof x === "string") send("delta", { t: x });
+            }
+            send("done", { ms: Date.now() - t0, left });
+        });
+    }
+    if (action === "paper") {
+        const s = p.spec && typeof p.spec === "object" ? p.spec : {}, GT = ["七上", "七下", "八上", "八下", "九上", "九下"];
+        const scope = Object.fromEntries(["上", "下"].map((t) => [t, Object.fromEntries(Object.entries(s.scope?.[t] || {}).filter(([k]) => EXAM_KINDS.includes(k)).map(([k, v]) => [k, clip(v, 12)]))]));
+        const spec = { ...cleanAsk(s), gt: GT.includes(s.gt) ? s.gt : "九上", kind: EXAM_KINDS.includes(s.kind) ? s.kind : "期末", textbook: s.textbook === "旧" ? "旧" : "新",
+            maxUnit: Number.isInteger(s.maxUnit) && s.maxUnit >= 1 && s.maxUnit <= 8 ? s.maxUnit : 0, scope, exclude: strs(s.exclude, 400, 60),
+            weak: Object.fromEntries(Object.entries(s.weak && typeof s.weak === "object" ? s.weak : {}).filter(([t]) => TYPES.includes(t)).slice(0, 14).map(([t, ks]) => [t, strs(ks, 3, 12)])),
+            extra: (Array.isArray(s.extra) ? s.extra : []).filter((x) => TYPES.includes(x?.type)).slice(0, 2).map((x) => ({ type: x.type, kps: strs(x.kps, 3, 12), n: Math.max(1, Math.min(10, Math.round(+x.n || 1))) })) };
+        return sse(async (send) => {
+            const t0 = Date.now(), plan = paperPlan(spec);
+            if (!plan.secs.length) throw new Error(plan.note);
+            send("ref", plan);
+            send("stage", { k: "retrieve" });
+            send("paper", await fillPaper(spec, plan, { signal: request.signal }));
+            send("done", { ms: Date.now() - t0, left });
         });
     }
 
