@@ -336,3 +336,12 @@ export function upgradeState(S, kpByType) {
     }
     return S;
 }
+
+// 用过的题（MAT-487）：写完教案时记下这节课课上和作业用的题，以后给这个学生检索不再出（课次记录里存着教案的也算）；
+// 当天的不算，同一节课重排大纲照样能用。st.used：[[题目 id, 日期]]，最多 300 道
+export function markUsed(sts, items, date) {
+    const ids = new Set(items.map((x) => x.id));
+    for (const st of sts) st.used = [...(st.used || []).filter(([id]) => !ids.has(id)), ...[...ids].map((id) => [id, date])].slice(-300);
+}
+export const usedIds = (sts, date) => [...new Set(sts.flatMap((st) => [...(st.used || []).filter(([, d]) => d < date).map(([id]) => id),
+    ...(st.logs || []).filter((l) => l.date < date).flatMap((l) => (l.plan?.items || []).map((x) => x.id))]))].slice(-400);

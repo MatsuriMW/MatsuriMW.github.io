@@ -114,6 +114,12 @@ export async function rerank(query, docs, { signal } = {}) {
     return (await r.json()).results.map((x) => ({ index: x.index, score: x.relevance_score }));
 }
 
+// 课后作业用题（MAT-487，实测作业全是课上刚讲完答案的题）：按这节课的薄弱考点另找同考点的新题。
+// 老师设置「只练薄弱点」（默认）看有薄弱考点的题型，没有就看占比最大的；「全面练」看占比最大的两个。短文类一篇、一句一题的三道
+export function homeworkSlots(mix, settings) {
+    const weak = mix.filter((m) => m.kps?.length), pool = settings?.homeworkScope !== "全面练" && weak.length ? weak : mix;
+    return [...pool].sort((a, b) => b.share - a.share).slice(0, 2).map((m) => ({ type: m.type, share: 0.1, kps: m.kps || [], n: PASSAGE.has(m.type) ? 1 : 3 }));
+}
 // 每个题型要几道：短文类按篇（1–2 篇），一句一题的按题（3–6 道）
 export function slotSize(type, share) {
     if (PASSAGE.has(type)) return share >= 0.22 ? 2 : 1;
@@ -135,34 +141,44 @@ const GRADE_OF = { 七: 7, 八: 8, 九: 9 };
 const queryTerms = (q, type) => [...new Set(tokenize(q).filter((t) => CJK.test(t) && t.length === 2 && !type.includes(t) && !"题型考点一篇一道找题话题".includes(t)))];
 const topicHit = (u, terms) => terms.some((t) => (u.topic + u.kp.join("")).includes(t));
 
-// 一个题型的候选池：出卷来源过滤 + 年级学期 / 考试类型逐级放宽，返回 { ids, relax }
+// 学期远近（MAT-483）：年级对口比统考 / 校考对口、比同校都要紧（用户 10-28：八上学生拿到一堆九下中考模拟题）
+const SEM = { 七上: 1, 七下: 2, 八上: 3, 八下: 4, 九上: 5, 九下: 6 };
+const semGap = (gt, ref) => (SEM[gt] && SEM[ref] ? SEM[gt] - SEM[ref] : 0);
+// 检索打分里的扣分：同学期不扣，同年级另一学期小扣，相邻学期跨年级（八上用七下）大扣，再远的更多
+const gapCost = (u, ref) => { const d = Math.abs(semGap(u.gt, ref)); return !d ? 0 : d === 1 && u.gt[0] === ref[0] ? 0.15 : [0, 0.3, 0.6][d] ?? 1; };
+// 借了别的学期的题：例题卡和教案里写明（「借自九下中考模拟，高 3 个学期，可能偏难」）
+export const borrowNote = (u, ref) => { const d = semGap(u.gt, ref); return d ? `借自${u.gt}${u.kind}，${d > 0 ? `高 ${d} 个学期，可能偏难` : `低 ${-d} 个学期`}` : ""; };
+// 一个题型的候选池：年级学期 / 考试类型逐级放宽，每一级先按出卷来源（统考 / 校考）找、不够再不管出卷来源（先放宽出卷来源，再放宽年级）。
+// 最远只到相邻学期再隔一个（八上最远用到七上、九上）；老师说要拔高、或者例题选「偏难」才放开到全库。返回 { ids, relax }
 function pool(db, slot, ctx) {
     const lv = ctx.level === "统考" ? (u) => UNIFIED.has(u.level) : ctx.level === "不统考" ? (u) => u.level === "校考" : () => true;
-    const grade = GRADE_OF[ctx.gt[0]];
+    const gap = (u) => Math.abs(semGap(u.gt, ctx.gt));
+    const stretch = ctx.difficulty === "偏难" || /拔高|难一点|中考真?题/.test(ctx.guidance || "");
     const tiers = [
         ["同年级学期、同类考试", (u) => u.gt === ctx.gt && u.kind === ctx.kind],
         ["同年级学期", (u) => u.gt === ctx.gt],
-        ["同年级", (u) => u.grade === grade],
-        ["相邻年级", (u) => Math.abs(u.grade - grade) <= 1],
-        ["全库", () => true],
+        ["相邻学期", (u) => gap(u) <= 1],
+        ["隔一个学期以内", (u) => gap(u) <= 2],
+        ...(stretch ? [["全库", () => true]] : []),
     ];
     const need = Math.max(slot.n * 3, 6);
     const base = db.units.map((u, i) => i).filter((i) => db.units[i].type === slot.type && !ctx.exclude?.has(db.units[i].id));
-    for (const levelOk of [true, false]) {
-        for (const [ti, [label, f]] of tiers.entries()) {
+    for (const [ti, [label, f]] of tiers.entries()) {
+        for (const levelOk of [true, false]) {
             const ids = base.filter((i) => f(db.units[i]) && (!levelOk || lv(db.units[i])));
-            if (!(ids.length >= need || (label === "全库" && ids.length))) continue;
-            // 范围里对得上考点的题不够：只把对得上的从更宽的范围补进来（先同年级，再相邻年级）
+            const last = ti === tiers.length - 1 && !levelOk;
+            if (!(ids.length >= need || (last && ids.length))) continue;
+            // 范围里对得上考点的题不够：只把对得上的从更宽的范围补进来，最远到相邻学期
             let extra = 0;
             if (slot.kps.length) {
-                for (const [, g] of tiers.slice(ti + 1, 4)) {
+                for (const [, g] of tiers.slice(ti + 1, 3)) {
                     if (ids.filter((i) => kpHit(db.units[i], slot.kps).length).length >= slot.n) break;
                     for (const i of base) if (!ids.includes(i) && g(db.units[i]) && (!levelOk || lv(db.units[i])) && kpHit(db.units[i], slot.kps).length) { ids.push(i); extra++; }
                 }
             }
-            // 自定义找题时提到了话题（「环保」）而范围里没有对得上的：话题对得上的从相邻年级、其他出卷来源补进来
+            // 自定义找题时提到了话题（「环保」）而范围里没有对得上的：话题对得上的从相邻学期、其他出卷来源补进来（以前放到相邻年级，七上会拿到八下的题）
             if (slot.terms?.length && ids.filter((i) => topicHit(db.units[i], slot.terms)).length < slot.n) {
-                for (const i of base) if (!ids.includes(i) && Math.abs(db.units[i].grade - grade) <= 1 && topicHit(db.units[i], slot.terms)) { ids.push(i); extra++; }
+                for (const i of base) if (!ids.includes(i) && (stretch || gap(db.units[i]) <= 1) && topicHit(db.units[i], slot.terms)) { ids.push(i); extra++; }
             }
             return { ids, relax: label, extra, levelRelaxed: !levelOk && ctx.level !== "不知道" };
         }
@@ -204,13 +220,13 @@ export async function retrieve(slots, ctx, { signal, onStage } = {}) {
             const hit = kpHit(u, s.kps), topic = topicHit(u, s.terms);
             const sameSchool = ctx.school && u.school === ctx.school, sameDistrict = ctx.district && u.district === ctx.district;
             const f = zc[k] + 0.3 * zb[k] + (hit.length ? 0.8 : 0) + (topic ? 1 : 0) + (sameSchool ? 0.5 : 0) + (sameDistrict ? 0.25 : 0)
-                + (ctx.textbook === "新" && TEXTBOOK_BOUND.has(s.type) && u.textbook === "新" ? 0.4 : 0) + (u.year >= 2025 ? 0.15 : 0) + 2 * diffBonus(u, ctx);
+                + (ctx.textbook === "新" && TEXTBOOK_BOUND.has(s.type) && u.textbook === "新" ? 0.4 : 0) + (u.year >= 2025 ? 0.15 : 0) + 2 * diffBonus(u, ctx) - gapCost(u, ctx.gt);
             return { i, f, cos: cos[k], bm: bm[k], hit, topic, sameSchool, sameDistrict };
         }).sort((a, b) => b.f - a.f).slice(0, Math.max(12, s.n * 4));
         // 重排：题型 + 考点 + 老师要求 对题面打分
         const rr = await rerank(queries[si], cand.map((c) => { const u = db.units[c.i]; return `${u.kp.join("、")}｜${u.text.slice(0, 700)}`; }), { signal });
         for (const r of rr) cand[r.index].rr = r.score;
-        for (const c of cand) c.final = c.rr + (c.hit.length ? 0.5 : 0) + (c.topic ? 0.5 : 0) + (c.sameSchool ? 0.12 : 0) + (c.sameDistrict ? 0.06 : 0) + diffBonus(db.units[c.i], ctx);
+        for (const c of cand) c.final = c.rr + (c.hit.length ? 0.5 : 0) + (c.topic ? 0.5 : 0) + (c.sameSchool ? 0.12 : 0) + (c.sameDistrict ? 0.06 : 0) + diffBonus(db.units[c.i], ctx) - gapCost(db.units[c.i], ctx.gt) / 2;
         cand.sort((a, b) => b.final - a.final);
         // 挑题：同一份卷子短文类最多 1 篇、单题最多 2 道；「不知道统不统考」两边轮流挑
         const perPaper = {}, pick = [];
@@ -236,7 +252,8 @@ export async function retrieve(slots, ctx, { signal, onStage } = {}) {
             if (c.sameSchool) why.push("同校的卷子");
             else if (c.sameDistrict) why.push("同区的卷子");
             why.push(u.level);
-            if (u.gt !== ctx.gt || u.kind !== ctx.kind) why.push(`来自${u.gt}${u.kind}`);
+            if (u.gt !== ctx.gt) why.push(borrowNote(u, ctx.gt));
+            else if (u.kind !== ctx.kind) why.push(`来自${u.gt}${u.kind}`);
             return { ...itemView(u, ctx.gt), why, score: { rr: +c.rr.toFixed(3), cos: +c.cos.toFixed(3) } };
         };
         return {
@@ -270,8 +287,8 @@ export function itemsByIds(list, gt) {
     return (Array.isArray(list) ? list : []).slice(0, 30).map((x) => {
         const i = db.byId.get(String(x?.id || "")); if (i == null) return null;
         const u = db.units[i];
-        return { code: String(x.code || "").replace(/[^E0-9]/g, "").slice(0, 4), type: u.type, gt: u.gt, kind: u.kind, year: u.year, level: u.level,
-            school: u.name || u.district || u.school, kp: u.kp, topic: u.topic, ans: u.ans, text: u.text, imgs: u.imgs || [], explain: u.explain, diff: diffView(u, gt) };
+        return { code: String(x.code || "").replace(/[^E0-9]/g, "").slice(0, 4), hw: !!x.hw, type: u.type, gt: u.gt, kind: u.kind, year: u.year, level: u.level,
+            school: u.name || u.district || u.school, kp: u.kp, topic: u.topic, ans: u.ans, text: u.text, imgs: u.imgs || [], explain: u.explain, diff: diffView(u, gt), borrow: borrowNote(u, gt) };
     }).filter(Boolean);
 }
 
@@ -549,9 +566,10 @@ const FOUR = `四个依据都要用上，并且看得出来：
 const CITE = `- 关键设计后面用方括号标出依据：记忆编号如 [S2]、[T1]，考试结构标 [考]，学校标 [校]。只引用材料里有的编号，不编造学生情况。
 - 学校这一维只说材料里写了的事实（出卷来源、库里有哪些卷子），不要推测学校的出题偏好；材料里没有本校卷子就直说。
 - 不要把老师或学生带来的份额说成考试结构给的（【本次占比】里写了每个题型的份额来自哪一维）。
-- 例题只用材料里给的题，按编号引用，例如「E3（东林中学 2024 九上期末）」。不要自己出题，不要抄题目原文。`;
+- 例题只用材料里给的题，按编号引用，例如「E3（东林中学 2024 九上期末）」。不要自己出题，不要抄题目原文。
+- 标着「借自别的学期」的题，用到时说一句（「E5 借自八下，生词多一点，先扫词再做」）。`;
 const diffText = (d) => (d ? `｜难度：${d.tier}${d.words.length ? `（这个学生没学过的词 ${d.words.length} 个：${d.words.slice(0, 5).map((x) => x.w).join("、")}）` : ""}` : "");
-const itemLine = (it, n) => `${it.code}［${it.type}］${it.school} ${it.year} ${it.gt}${it.kind}（${it.level}）｜考点：${it.kp.join("、")}${it.topic ? "｜话题：" + it.topic : ""}${diffText(it.diff)}｜答案：${it.ans.filter(Boolean).join(" ")}\n题面：${clip(withImageText(it), n)}`;
+const itemLine = (it, n) => `${it.code}${it.hw ? "（作业用题）" : ""}［${it.type}］${it.school} ${it.year} ${it.gt}${it.kind}（${it.level}）${it.borrow ? `｜${it.borrow}` : ""}｜考点：${it.kp.join("、")}${it.topic ? "｜话题：" + it.topic : ""}${diffText(it.diff)}｜答案：${it.ans.filter(Boolean).join(" ")}\n题面：${clip(withImageText(it), n)}`;
 function materials(p) {
     const st = p.student, at = attnLine(st.attention);
     return [
@@ -569,8 +587,11 @@ function materials(p) {
         `【学校】${clip(p.exam.school, 300)}`,
         `【本次占比】课时 ${p.minutes} 分钟。${p.mix.map((m) => `${m.type} ${Math.round(m.share * 100)}%（约 ${m.minutes} 分钟；来源：${clip(m.from, 60)}）`).join("；")}`,
         `【单元安排】${clip(p.unitPlan, 120)}`,
+        p.lib?.length ? `【老师自己的教案（教案库里检索到的，和这节课相关）】\n${p.lib.map((c) => `《${c.doc}》「${c.title}」：${clip(c.text, 900)}`).join("\n")}` : "",
     ].filter(Boolean);
 }
+// 教案库检索到的块（MAT-542）：老师的讲法优先，但里面的练习不是这次的例题
+const LIB_RULE = `- 【老师自己的教案】是这位老师以前写的、和这节课相关的几节：讲法、步骤、提问、口诀、板书照它来（老师自己的讲法优先于你想的），用到的地方写一句「照你《教案名》里的讲法」；里面的练习不是这次的例题，例题照样只用 E 编号的题。`;
 
 // 第一步：排大纲（JSON），老师在页面上改完再写成教案
 export function outlineMessages(p, items) {
@@ -593,9 +614,9 @@ ${FOUR}
 - 课后作业照【老师设置】的时长上限和范围留。${p.student?.attention === "容易分心" ? `
 - 这个学生注意力容易分散：每个环节不超过 ${p.attentionMax} 分钟；讲和练交替，讲 5–8 分钟就让学生动手；每两个讲解环节之间插一个 3–5 分钟的动手小环节（圈线索词、画时间轴、抢答、配对），points 里写清楚怎么做。` : ""}
 ${p.student?.group?.length ? `- 这是一对多的课：几个人共同的薄弱点放进全组一起讲的环节；只有个别人有的问题，放进练习环节分层安排，points 里点名写清楚谁做哪道、先讲给谁；注意力按最需要照顾的那个学生安排；title 用组名。
-` : ""}- 每道例题至少用在一个环节里；items 只能填材料里的 E 编号。
+` : ""}- 每道例题至少用在一个环节里；items 只能填材料里的 E 编号。标着「作业用题」的是课后作业用的同考点新题：不放进环节，课后作业写清楚做哪几道（「E12–E14 动词填空，每题画时间轴」）；作业里不要让学生重做课上讲过答案的题（作文按课上提纲重写可以）。
 - points 要具体：这几道题考什么、这个学生容易错在哪（对照薄弱点）、照老师的讲题习惯怎么讲。
-${CITE}
+${p.lib?.length ? LIB_RULE + "\n" : ""}${CITE}
 - type 只能从这些里选：${TYPES.join("、")}，或空字符串。
 - 简体中文，不写空话。`;
     const lines = [...materials(p), `【例题和练习】`, ...items.map((it) => itemLine(it, 500))];
@@ -620,11 +641,12 @@ export function cleanOutline(o, codes, infer = false) {
         title: clip(o?.title, 60),
         basis: Object.fromEntries(["年级", "学校", "学生", "老师"].map((k) => [k, clip(basis[k], 200)])),
         adjust: arr(o?.adjust, 4, 160), goals: arr(o?.goals, 5, 120), homework: arr(o?.homework, 6, 120), watch: arr(o?.watch, 4, 120),
+        ...(Array.isArray(o?.changes) ? { changes: arr(o.changes, 6, 120).map((c) => c.replace(/[。；;，,]+$/, "")) } : {}),   // 改写、融合：和原教案比改了什么（MAT-542），页面用「；」连起来
         sections: (Array.isArray(o?.sections) ? o.sections : []).slice(0, 14).map((x, i) => {
             const points = arr(x?.points, 6, 160), items = pickCodes(Array.isArray(x?.items) ? x.items : []);
             return { id: `s${i + 1}`, name: clip(x?.name, 30) || `环节 ${i + 1}`, minutes: Math.max(0, Math.min(240, Math.round(+x?.minutes || 0))),
                 type: TYPES.includes(x?.type) ? x.type : "", items: items.length || !infer ? items : pickCodes(points), points,
-                ...(Array.isArray(x?.extras) ? { extras: arr(x.extras, 6, 40) } : {}) };
+                ...(Array.isArray(x?.extras) ? { extras: arr(x.extras, 6, 40) } : {}), ...(x?.from ? { from: clip(x.from, 12) } : {}) };   // from：来自哪份原教案
         }),
     };
 }
@@ -663,11 +685,12 @@ export function outlineText(o) {
         `依据：${Object.entries(o.basis || {}).map(([k, v]) => `${k}：${v}`).join("；")}`,
         `根据前几次课的调整：${(o.adjust || []).join("；") || "（无）"}`,
         `教学目标：${(o.goals || []).join("；")}`,
+        o.changes?.length ? `和原教案比：${o.changes.join("；")}` : "",
         `环节：`,
-        ...(o.sections || []).map((x, i) => `${i + 1}. [${x.id}] ${x.name}（${x.minutes} 分钟${x.type ? "，" + x.type : ""}${x.items.length ? "；用题 " + x.items.join("、") : ""}）${x.points.map((t) => "\n   - " + t).join("")}`),
+        ...(o.sections || []).map((x, i) => `${i + 1}. [${x.id}] ${x.name}（${x.minutes} 分钟${x.type ? "，" + x.type : ""}${x.items.length ? "；用题 " + x.items.join("、") : ""}${x.from ? "；来自原教案 " + x.from : ""}）${x.points.map((t) => "\n   - " + t).join("")}`),
         `课后作业：${(o.homework || []).join("；")}`,
         `下次课观察点：${(o.watch || []).join("；")}`,
-    ].join("\n");
+    ].filter((l) => l !== "").join("\n");
 }
 
 // 教案模板（MAT-502）：一组有顺序的小节。kind：basis 四维依据 / flow 课堂流程（简要的环节顺序）/ types 分题型讲解（每个带题型的环节一个 ### 小节）/ text 普通
@@ -709,20 +732,20 @@ ${FOUR}
 ${tpl.sections.some((x) => x.kind === "basis") ? `- 「${tpl.sections.find((x) => x.kind === "basis").title}」写每一维怎么影响了这节课，不要解释占比是怎么算出来的，也不要写来源百分比。几条依据真有冲突时才加一句怎么取舍的，没有冲突就不写。
 ` : ""}- 教案是给老师上课用的：不要在里面复述这些写作规则（比如「不照抄」「不推测」「以大纲为准」）。
 ${extrasSec ? `- 大纲里「${extrasSec.name}」这一环节的讲解由系统直接拼进教案：课堂流程里照常列这一行，但不要为它写讲解小节，也不要在别处展开这些条目。
-` : ""}${CITE}
+` : ""}${p.sources?.length ? SOURCE_RULE(p.sources.length) + "\n" : ""}${p.lib?.length ? LIB_RULE + "\n" : ""}${CITE}
 - 教案的核心是讲解各节的内容编排：每一节写清楚内容怎么排：先讲什么、例题按什么顺序用、为什么这样排、哪里让学生先做、哪里停下来讲、怎么接到下一节；再写这几道题考什么、这个学生容易错在哪、照老师的讲题习惯怎么讲。老师档案里的编排习惯和关于课堂结构、讲题顺序的记忆，优先照着排。${p.student?.group?.length ? "\n- 这是一对多的课：写清楚哪些是全组一起讲的、哪些分给谁单独练，学生容易错在哪按人点名写。" : ""}
 ${tpl.sections.length && !tpl.free ? `- 用 Markdown，照老师选的教案模板${tpl.name ? `「${tpl.name}」` : ""}，二级标题就用下面这些、按这个顺序，不多不少：
 # 标题（用大纲的标题）
 ${templateLines(tpl)}` : `- 用 Markdown，结构不限：按大纲和这节课的需要自己组织，第一行 # 标题（用大纲的标题），每一部分用 ## 二级标题分开${tpl.sections.length ? `；可以参考这些小节，但不必照搬：${tpl.sections.map((x) => x.title).join("、")}` : ""}。`}
 ${p.planNote ? `- 老师对这份教案的要求（优先照这个来，和上面冲突时以这里为准）：${p.planNote}\n` : ""}${p.visual ? VISUAL_RULES + "\n" : ""}- 简体中文，具体，不写空话套话，全文 ${tpl.length === "short" ? "500–900" : "1000–1800"} 字。`;
-    const lines = [...materials(p), `【大纲（老师确认过）】\n${outlineText(p.outline)}`, `【例题和练习】`,
+    const lines = [...materials(p), `【大纲（老师确认过）】\n${outlineText(p.outline)}`, ...sourceLines(p.sources || []), `【例题和练习】`,
         ...items.map((it) => `${itemLine(it, 900)}\n解析要点：${clip(it.explain.replace(/【[^】]*】/g, " "), 200)}`)];
     return [{ role: "system", content: sys }, { role: "user", content: lines.join("\n") }];
 }
 
 // ---------- 聊天：老师在右下角和 agent 商量，agent 回话并给出修改 ----------
 const CHAT_OPS = {
-    setup: `- {"op":"set_share","type":"题型","share":0 到 0.6} 调这个题型的占比，其他题型按比例让出
+    setup: `- {"op":"set_share","type":"题型","share":0 到 0.6} 调这个题型的占比，其他题型按比例让出；老师说「某题型专题」「这节只练某题型」就把它调到 0.6
 - {"op":"set_guidance","text":"这次课的要求"} 改写「这次课的要求」（整段替换）
 - {"op":"set_level","level":"统考|不统考|不知道"} 这场考试用谁的卷子
 - {"op":"set_kind","kind":"单元|月考/阶段|期中|期末|中考模拟|中考"} 下一场考试的类型`,
@@ -860,6 +883,161 @@ export function templateMessages(text) {
 kind：教学过程、课堂流程这类按时间排环节的表格写 flow；按题型 / 环节逐个展开讲解的写 types；「设计依据」「学情分析」这类说明为什么这样设计的写 basis（最多一节）；教学目标、重难点、板书、作业、反思等其他小节一律写 text。flow、types、basis 各最多一节。
 按原教案的顺序，最多 10 节；只要结构，不要抄原教案的具体内容。教案标题本身不算一节。`;
     return [{ role: "system", content: sys }, { role: "user", content: String(text).slice(0, 4000) }];   // 不用 clip：要留着换行，模型才看得出标题和表格行
+}
+
+// ---------- 教案库（MAT-542，用户 10-30「相当于是一个动态的知识库了，用户上传的教案之后能融入到原有的基础的rag知识库里」）----------
+// 老师上传的教案（Word / 文本，页面和微信端先抽成文字）按小节切块，模型给每块标题型、考点，bge-m3 算向量（int8，同题库），整份交回去存进老师自己的工作区（S.library）。
+// 之后排大纲时页面把教案库的块带上来，和题库一起检索（libRetrieve），挑中的几节进大纲和教案的提示词；改写、融合（adapt）也从这里取原教案。
+// 教案库只在老师自己的账号里，不进公共题库（别人的教案有版权，也常带学生的名字）
+const HEADS = [/^【.{1,30}】$/, /^#{1,4}\s+\S/, /^[一二三四五六七八九十]{1,3}\s*[、.．]\s*\S/, /^[（(][一二三四五六七八九十]{1,3}[)）]\s*\S/, /^(step|part)\s*\d+/i, /^第[一二三四五六七八九十\d]{1,3}(部分|环节|步|课时|阶段)/,
+    /^(教学目标|教学重点|教学难点|教学重难点|重难点|学情分析|教材分析|教学准备|教学过程|课堂流程|教学流程|课后作业|作业布置|板书设计|教学反思|课堂小结|导入|热身|新授|巩固练习|拓展延伸|warm[- ]?up|lead[- ]?in|presentation|practice|production|homework|summary)[：:]?$/i];
+const isHead = (l) => l.length <= 32 && HEADS.some((re) => re.test(l));
+// 保留换行的清洗（clip 会把换行压掉，原教案要留着段落和表格行）
+export const cleanText = (t, n) => String(t ?? "").replace(/\r/g, "").replace(/[ \t　]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n").trim().slice(0, n);
+// 按小节标题切块：只有标题的块并进下一块（「教学过程」+「Step 1」→「教学过程 · Step 1」）；超过 1400 字的按行切开（「（续）」）；一份最多 24 块
+export function splitPlan(text) {
+    const secs = [];
+    let cur = { title: "", text: "" };
+    const push = () => { if (cur.title || cur.text.trim()) secs.push({ title: cur.title, text: cur.text.trim() }); };
+    for (const l of cleanText(text, 20000).split("\n").flatMap((l) => l.match(/[^]{1,1000}/g) || [""])) {
+        const t = l.trim();
+        if (isHead(t)) { push(); cur = { title: t.replace(/^#+\s*|^【|】$/g, "").replace(/[：:]$/, "").slice(0, 30), text: "" }; }
+        else cur.text += l + "\n";
+    }
+    push();
+    const merged = [];
+    for (const s of secs) {
+        const p = merged.at(-1);
+        if (p && !p.text) Object.assign(p, { title: [p.title, s.title].filter(Boolean).join(" · ").slice(0, 30), text: s.text });
+        else merged.push({ ...s });
+    }
+    const out = [];
+    for (const s of merged) {
+        if (s.text.length <= 1400) { out.push(s); continue; }
+        let part = "", k = 0;
+        const title = () => (s.title && k++ ? `${s.title}（续）` : s.title);   // 没标题的整段长文：留空，下面按「第 N 段」编
+        for (const l of s.text.split("\n")) {
+            if (part && part.length + l.length > 1000) { out.push({ title: title(), text: part.trim() }); part = ""; }
+            part += l + "\n";
+        }
+        if (part.trim()) out.push({ title: title(), text: part.trim() });
+    }
+    while (out.length > 24) {   // 块太多：相邻两块加起来最短的合并
+        let i = 0;
+        for (let k = 1; k < out.length - 1; k++) if (out[k].text.length + out[k + 1].text.length < out[i].text.length + out[i + 1].text.length) i = k;
+        out.splice(i, 2, { title: out[i].title, text: `${out[i].text}\n${out[i + 1].title}\n${out[i + 1].text}` });
+    }
+    return out.filter((s) => s.text).map((s, i) => ({ title: s.title || (i ? `第 ${i + 1} 段` : "开头"), text: s.text }));
+}
+export function ingestMessages(name, chunks) {
+    const sys = `老师把自己的一份英语教案存进教案库，以后备课时按题型、考点检索出来参照。读下面切好的各块（编号、标题、开头一段），只输出一个 JSON 对象：
+{"name": "这份教案的简称，12 字以内（有文件名就参照文件名）", "gt": "七上|七下|八上|八下|九上|九下，看不出就给空字符串", "summary": "一句话：这份教案讲什么、给什么样的学生、多长时间，40 字以内", "topics": ["讲的话题或语法点，最多 5 个"], "chunks": [{"i": 编号, "types": ["这一块讲或练的题型"], "kps": ["考点，最多 3 个，比如「现在完成时」「推理判断」"]}]}
+types 只能从这些里选：${TYPES.join("、")}；导入、目标、作业、反思这类不讲题型的块给空数组。老师说「阅读」就是阅读理解，「完形」是完形填空，「作文」是书面表达，「时态」多半是动词填空。`;
+    const user = [`【文件名】${clip(name, 40) || "（没给）"}`, "【各块】", ...chunks.map((c, i) => `#${i} 「${c.title}」${clip(c.text, 400)}`)].join("\n");
+    return [{ role: "system", content: sys }, { role: "user", content: user }];
+}
+const GTS = ["七上", "七下", "八上", "八下", "九上", "九下"];
+// int8 量化（同 demo/build.mjs）：存 base64 和一个缩放系数，一块 1.4 KB
+const quant = (v) => { let mx = 1e-9; for (const x of v) mx = Math.max(mx, Math.abs(x)); const s = mx / 127; return { v: Buffer.from(Int8Array.from(v, (x) => Math.round(x / s)).buffer).toString("base64"), s }; };
+const unquant = (c) => { const b = Buffer.from(String(c.v || ""), "base64"); return b.length === DIMS && Number.isFinite(+c.s) ? new Int8Array(b.buffer, b.byteOffset, DIMS) : null; };
+// 每块带上整份的简介：「Step 3 讲解三步法」里没有「完形」两个字，光看这一块认不出是讲完形的
+const chunkText = (c, sum) => `${sum}｜${c.title}｜${c.types.join("、")}｜${c.kps.join("、")}\n${c.text.slice(0, 1200)}`;
+export async function ingest(name, text, { signal, cfg } = {}) {
+    const chunks = splitPlan(text);
+    if (!chunks.length) return { doc: null };
+    const { data, usage } = await json(ingestMessages(name, chunks), { signal, cfg, max_tokens: 1800 });
+    const tag = new Map((Array.isArray(data?.chunks) ? data.chunks : []).map((c) => [+c?.i, c]));
+    const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
+    chunks.forEach((c, i) => { const t = tag.get(i) || {}; c.types = strs(t.types, 4, 10).filter((x) => TYPES.includes(x)); c.kps = strs(t.kps, 3, 12); });
+    const doc = { name: clip(name.replace(/\.(docx|txt|md)$/i, ""), 40) || clip(data?.name, 16) || "我的教案", gt: GTS.includes(data?.gt) ? data.gt : "", summary: clip(data?.summary, 60), topics: strs(data?.topics, 5, 12),
+        types: [...new Set(chunks.flatMap((c) => c.types))], chunks };
+    const vs = await embed(chunks.map((c) => chunkText(c, `《${doc.name}》${doc.summary}`)), { signal });
+    chunks.forEach((c, i) => Object.assign(c, quant(vs[i])));
+    return { doc, usage };
+}
+// 页面带上来的教案库块：只认合法的字段，向量对不上维度的不要
+export const cleanLib = (xs) => (Array.isArray(xs) ? xs : []).slice(0, 80).map((c) => ({ id: clip(c?.id, 40), doc: clip(c?.doc, 40), sum: clip(c?.sum, 60), title: clip(c?.title, 30), text: cleanText(c?.text, 1600),
+    types: (Array.isArray(c?.types) ? c.types : []).filter((t) => TYPES.includes(t)), kps: (Array.isArray(c?.kps) ? c.kps : []).slice(0, 3).map((k) => clip(k, 12)), v: String(c?.v || ""), s: +c?.s })).filter((c) => c.text && unquant(c));
+// 检索到的块（写教案时页面再传回来，只要文字）
+export const cleanLibPicked = (xs) => (Array.isArray(xs) ? xs : []).slice(0, 4).map((c) => ({ doc: clip(c?.doc, 40), title: clip(c?.title, 30), text: cleanText(c?.text, 1500) })).filter((c) => c.text);
+const LIB_MIN = 0.3;   // 重排分低于这个的不要（宁缺毋滥：不相关的讲法塞进提示词只会带偏）。10-30 三份样例教案：对口的 0.52–0.96，不对口的不超过 0.12
+// 只要讲法：目标、重难点、学情、默写、作业、反思这类块不拿来参照（开头多是标题和课时）
+const NOT_METHOD = /^(开头|.*(教学目标|重难点|重点|难点|学情|教材分析|教学准备|默写|作业|反思))/;
+// 和这节课相关的几块：每个题型一个查询（同 retrieve），余弦取最高的、题型对上加一点 → 前 8 块重排 → 最多 3 块、同一份最多 2 块
+export async function libRetrieve(lib, mix, guidance, { signal, n = 3, min = LIB_MIN } = {}) {
+    const cs = lib.filter((c) => !NOT_METHOD.test(c.title)).map((c) => ({ ...c, vec: unquant(c) })).filter((c) => c.vec);
+    if (!cs.length || !mix.length) return [];
+    const queries = mix.map((m) => `${m.type}${m.kps?.length ? "：" + m.kps.join("、") : ""}${guidance ? "。" + guidance : ""}`);
+    const qv = await embed(queries, { signal });
+    for (const c of cs) c.f = Math.max(...qv.map((q, k) => { let d = 0; for (let j = 0; j < DIMS; j++) d += q[j] * c.vec[j]; return d * c.s + (c.types.includes(mix[k].type) ? 0.1 : 0); }));
+    const top = cs.sort((a, b) => b.f - a.f).slice(0, 8);
+    // 重排的查询只写一遍老师的要求、占比最大的三个题型（每个题型都带一遍要求，要求一长就把题型冲淡了）
+    const focus = [...mix].sort((a, b) => b.share - a.share).slice(0, 3).map((m) => `${m.type}${m.kps?.length ? "（" + m.kps.join("、") + "）" : ""}`).join("、");
+    const rr = await rerank(`这节课要讲：${focus}${guidance ? "。老师的要求：" + guidance : ""}`, top.map((c) => `${c.sum ? c.sum + "｜" : ""}${c.title}｜${c.types.join("、")}\n${c.text.slice(0, 700)}`), { signal });
+    for (const r of rr) top[r.index].rr = r.score;
+    const pick = [], per = {};
+    for (const c of top.sort((a, b) => b.rr - a.rr)) {
+        if (pick.length >= n || c.rr < min) break;
+        if ((per[c.doc] || 0) >= 2) continue;
+        per[c.doc] = (per[c.doc] || 0) + 1; pick.push(c);
+    }
+    return pick.map(({ id, doc, title, text, types, rr }) => ({ id, doc, title, text, types, rr: +rr.toFixed(3) }));
+}
+
+// ---------- 改写、融合（MAT-542）：原教案（教案库里的、存下来的、正在备的，最多 4 份）→ 这个学生这节课的大纲（格式同 outlineMessages），每个环节标来自哪一份 ----------
+// 原教案自带的练习能用的留着（老师自己的材料）；要补题的环节报 need / query，函数按题型从题库检索后挂上 E 编号。
+// 存下来的教案带着当时用的题库例题（items：[{code, id}]）：几份之间编号会撞，这里统一重编成 E1、E2……，原文里的编号跟着换
+export function cleanSources(xs) {
+    const arr = (Array.isArray(xs) ? xs : []).filter((s) => cleanText(s?.text, 100).length >= 20).slice(0, 4);
+    const per = Math.min(8000, Math.floor(16000 / (arr.length || 1)));
+    const items = [], seen = new Map();
+    const sources = arr.map((s, k) => {
+        let text = cleanText(s.text, per);
+        const map = new Map();
+        for (const it of (Array.isArray(s.items) ? s.items : []).slice(0, 30)) {
+            const id = String(it?.id || "").slice(0, 60), code = String(it?.code || "");
+            if (!id || !/^E\d{1,3}$/.test(code)) continue;
+            if (!seen.has(id)) { seen.set(id, `E${seen.size + 1}`); items.push({ code: seen.get(id), id }); }
+            map.set(code, seen.get(id));
+        }
+        if (map.size) text = text.replace(/(?<![A-Za-z0-9])E\d{1,3}(?![0-9])/g, (m) => map.get(m) || m);
+        return { label: "ABCD"[k], name: clip(s.name, 40) || `教案 ${"ABCD"[k]}`, text };
+    });
+    return { sources, items };
+}
+const SOURCE_RULE = (n) => `- 这份教案是在老师给的原教案上${n > 1 ? "融合" : "改写"}的，大纲每个环节标了来自哪份原教案：写这一节时照那份原教案里对应部分的讲法、例子、提问、板书来写，能用的原样用，按这个学生和大纲调整；原教案自带的练习是老师自己的材料，可以照搬进教案（不受「不要抄题目原文」的限制）；原教案里别的学生的名字和情况不要出现，也不要写「原教案说」这类话。`;
+const sourceLines = (sources) => sources.map((s) => `【原教案 ${s.label || ""}】《${s.name}》\n${s.text}`);
+export function adaptMessages(p, sources, items) {
+    const many = sources.length > 1;
+    const sys = `你是无锡初中英语老师的备课助手。老师给了 ${sources.length} 份原教案，要${many ? "把它们融合成" : "在它的基础上改写成"}给这个学生这节课用的教案。先排大纲，老师确认、修改以后再写成完整教案。
+
+依据的优先级：【这次的改写要求】> 原教案 > 老师档案（讲题习惯、编排习惯、设置）> 学生档案 > 考试结构。原教案定这节课讲什么、怎么排；学生档案和考试结构只用来调原教案里的讲法和难度（例题降难度、讲解时点名这个学生容易错在哪），不用来加环节、换题型。
+
+只输出一个 JSON 对象：
+{"title": "学生名 · 这次课的主题",
+ "minutes": 这节课一共多少分钟（【这次的改写要求】里说了就照它，没说就是 ${p.minutes}）,
+ "basis": {"年级": "一两句", "学校": "一两句", "学生": "一两句", "老师": "一两句"},
+ "changes": ["和原教案比改了什么，2–5 条，每条一句，比如「课时 120 → 90 分钟，砍掉了 B 的书面表达」「完形的讲法照 A，改成练这个学生弱的上下文逻辑」"],
+ "adjust": ["根据前几次课的调整，引用日期和数据，0–3 条"],
+ "goals": ["教学目标，2–4 条"],
+ "sections": [{"name": "环节名", "minutes": 分钟数, "type": "这个环节练的题型，默写、回顾这类写空字符串", "from": "来自哪份原教案：${many ? "A / B / A、B（几份合并的）" : "A"} / 新加（固定环节以外，整节课最多一个新加的讲题环节）", "items": [], "points": ["讲什么、怎么讲，2–4 条，每条一句；照原教案讲法的写清楚原教案怎么讲"], "need": 0, "query": ""}],
+ "homework": ["课后作业"],
+ "watch": ["下次课观察点，1–3 条"]}
+
+规则：
+${many ? `- 融合：把几份合成一节课，各取所长：同一个题型的环节合成一个（讲法取讲得更清楚的那份，或把几份的步骤合在一起），不同题型的按上课顺序排；每个环节 from 写来自哪一份，合并的写「A、B」；课时装不下就按这个学生的薄弱点和下一场考试取舍，changes 里写砍了什么、为什么。每份原教案至少有一个环节用上；固定环节以外的时间都给原教案的环节。`
+        : `- 改写：以原教案为底，环节顺序、讲法、例子、提问、板书思路尽量保留，points 里写清楚照原教案怎么讲；只改需要改的：课时、这个学生的水平（太难的降一点）、下一场考试、老师设置和【这次的改写要求】。固定环节以外的时间，原教案的环节至少占八成。`}
+- 新加的讲题环节最多一个、不超过 10 分钟（这个学生最弱、原教案又没覆盖的题型），【这次的改写要求】里点名要加的不算在内。时间不够时宁可多给原教案的环节，也不要再加。
+- 原教案里的练习是老师自己的材料：能用的照用，points 里写明用的是哪份的哪道（「用 A 的第 2 篇阅读」），need 填 0。原教案只写了「做一篇阅读」没给题、或者题和这个学生对不上（年级不对、太难太易），need 填要从题库补几道（1–3），query 写要找什么样的题（话题、考点），系统检索好以后挂上编号。${items.length ? "原教案里用的题库例题已经换成这次的 E 编号（见【原教案用到的题库例题】），合适的继续用，填进 items；不合适的不填，按需要 need 补。" : "items 给空数组。"}
+- 原教案是给别的学生、别的课时写的：学生名字、年级、考试、课时、薄弱点一律换成这个学生的，原教案里别的学生的名字不要出现。
+- sections 按上课顺序排，分钟数加起来等于 minutes。【老师设置】里的固定环节（开头默写、课外知识补充、结尾回顾）原教案没有的按设置加上，from 写「新加」。
+- 【这次的改写要求】优先级最高，和上面冲突时照它来。
+- 关键设计后面用方括号标出依据：记忆编号如 [S2]、[T1]，考试结构标 [考]，学校标 [校]；只引用材料里有的编号，不编造学生情况。
+${p.lib?.length ? LIB_RULE + "\n" : ""}- type 只能从这些里选：${TYPES.join("、")}，或空字符串。
+- 简体中文，不写空话；不要在大纲里复述这些规则。`;
+    const lines = [...materials({ ...p, mix: [] }), `【这次的改写要求】${clip(p.instruction, 300) || "（没有特别要求）"}`,
+        ...(items.length ? ["【原教案用到的题库例题】", ...items.map((it) => itemLine(it, 300))] : []), ...sourceLines(sources)];
+    return [{ role: "system", content: sys }, { role: "user", content: lines.join("\n") }];
 }
 
 // 建档（MAT-508）：老师贴一大段话（家长的话、聊天记录、自己的印象），抽成档案字段、画像维度和几条初始记忆，老师核对后再建档。

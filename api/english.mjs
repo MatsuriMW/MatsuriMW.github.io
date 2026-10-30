@@ -8,6 +8,8 @@
 // POST { action: "memory", ... }  → JSON { ops, log }：把一条课后记录变成对老师 / 学生档案的增删改
 // POST { action: "review", ... }  → JSON { suggestions, gaps }：读最近几次课的记录，给下一次课的教案提改进建议
 // POST { action: "template", ... }→ JSON { template }：从老师上传的旧教案（页面抽出的文字）里抽小节结构，做成教案模板
+// POST { action: "ingest", name, text } → JSON { doc }：老师上传的教案切块、标题型、算向量，存进老师自己的教案库（MAT-542）；outline 带上 lib（教案库的块）就和题库一起检索
+// POST { action: "adapt", sources: [{name, text, items?}], instruction, ... } → text/event-stream：stage → sources（编号统一后的原教案）→ items → extras → outline → done。在原教案上改写（1 份）或几份融合（2–4 份）成这节课的大纲（MAT-542）
 // POST { action: "intake", ... }  → JSON { profile }：建档时老师贴的一段话 → 名字、年级学期、学校、进度、画像维度、初始记忆
 // POST { action: "afterclass", words, lesson: {topics, hw}, mix: {lesson, perf, weak, hw, exam}, praise, plan, examLabel, student, studentMems, logs, perf | members: [{name, gradeLabel, schoolLabel, profile, mems, logs, perf}] }
 //   perf = { items: [["专注", "很专注"]], good: [题型], weak: [题型] }
@@ -23,7 +25,7 @@
 // 页面可以带自己的模型 key（byok），带了就不限次数；不带用站长的 DeepSeek，按 IP 限次。
 import crypto from "node:crypto";
 import {
-    loadDB, retrieve, itemsByIds, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
+    loadDB, retrieve, slotSize, itemsByIds, homeworkSlots, ingest, cleanLib, cleanLibPicked, libRetrieve, cleanSources, adaptMessages, outlineMessages, cleanOutline, fitMinutes, splitLong, planMessages, chatMessages, CHAT_OP_NAMES, memoryMessages, reviewMessages, sectionMessages,
     templateMessages, cleanTemplate, tidyMessages, intakeMessages, cleanIntake, ocr, okImages, afterclassMessages, AFTER_PARTS, shortenMessages, hanCount, noPronoun, feedbackPush, feedbackList, feedbackToken, stream, json, llmConfig, hit, cleanMems, cleanLogs, pickLogs, pickMems, TYPES, ATTN, TIER, extrasMinutes, pickExtras, withExtras,
     itemBodies, adminToken, verifyToken, acctLogin, acctDemo, dataLoad, dataSave, itemsQuota, acctAdmin,
 } from "./_lib/english.mjs";
@@ -31,8 +33,9 @@ import {
 const env = (k, d) => Number(process.env[k] ?? d);
 const PER_IP = { outline: env("EN_PLAN_DAILY", 8), plan: env("EN_PLAN_DAILY", 8), search: env("EN_SEARCH_DAILY", 30), chat: env("EN_CHAT_DAILY", 30),
     section: env("EN_SECTION_DAILY", 30), memory: env("EN_MEMORY_DAILY", 30), review: env("EN_REVIEW_DAILY", 15), template: env("EN_TEMPLATE_DAILY", 10),
-    intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), afterclass: env("EN_AFTERCLASS_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10), tidy: env("EN_TIDY_DAILY", 10) };
-const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈", tidy: "整理记忆" };
+    intake: env("EN_INTAKE_DAILY", 15), ocr: env("EN_OCR_DAILY", 10), afterclass: env("EN_AFTERCLASS_DAILY", 15), feedback: env("EN_FEEDBACK_DAILY", 10), tidy: env("EN_TIDY_DAILY", 10),
+    ingest: env("EN_INGEST_DAILY", 20), adapt: env("EN_PLAN_DAILY", 8) };
+const LABEL = { outline: "排大纲", plan: "写教案", search: "找题", chat: "聊天", section: "改教案", memory: "更新记忆", review: "复盘", template: "抽模板", intake: "分析建档描述", ocr: "认图片里的字", afterclass: "写课后反馈", feedback: "提反馈", tidy: "整理记忆", ingest: "存教案库", adapt: "改写教案" };
 const clip = (s, n) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
 const strs = (x, n, m) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => clip(v, m)).filter(Boolean);
 
@@ -97,6 +100,8 @@ export async function POST(request) {
         school: clip(p.student?.school, 10), district: clip(p.student?.district, 6), textbook: p.student?.textbook === "旧" ? "旧" : "新", guidance: clip(p.guidance, 200),
         difficulty: Object.keys(TIER).includes(p.difficulty) ? p.difficulty : "",
     };
+    // 这个学生以前的课上、作业用过的题（MAT-487）：检索默认不再出；老师说「上次那道」「错题重做」时放开
+    const used = /上次那[道篇]|错题重做|重做/.test(ctx.guidance) ? new Set() : new Set(strs(p.used, 400, 60));
     const mix = (Array.isArray(p.mix) ? p.mix : []).filter((m) => TYPES.includes(m.type) && +m.share > 0).slice(0, 14)
         .map((m) => ({ type: m.type, share: Math.min(1, +m.share), minutes: Math.round(+m.minutes || 0), from: clip(m.from, 60), kps: strs(m.kps, 4, 12) }));
     const minutes = Math.max(30, Math.min(240, +p.minutes || 120));
@@ -212,6 +217,59 @@ export async function POST(request) {
         } catch (e) { return fail(e); }
     }
 
+    if (action === "ingest") {
+        const text = String(p.text || "").slice(0, 20000);
+        if (text.trim().length < 50) return Response.json({ error: "没从文件里读出多少文字（至少 50 个字）" }, { status: 400 });
+        try {
+            const { doc, usage } = await ingest(clip(p.name, 40), text, { signal: request.signal, cfg });
+            if (!doc) return Response.json({ error: "没读出能用的内容" }, { status: 422 });
+            return Response.json({ doc, usage, left });
+        } catch (e) { return fail(e); }
+    }
+
+    if (action === "adapt") {
+        const { sources, items: refs } = cleanSources(p.sources);
+        if (!sources.length) return Response.json({ error: "没收到原教案（每份至少 20 个字）" }, { status: 400 });
+        return sse(async (send) => {
+            const t0 = Date.now();
+            send("stage", { k: "adapt" });
+            send("sources", sources);
+            const own = itemsByIds(refs, ctx.gt);   // 存下来的教案带着的题库例题，编号已经统一
+            const { data, usage } = await json(adaptMessages({ ...base, instruction: clip(p.instruction, 300) }, sources, own), { signal: request.signal, max_tokens: 3500, cfg });
+            const o0 = cleanOutline(data, own.map((i) => i.code));
+            // 要补题的环节：同一题型合成一个检索槽，检索到的按顺序分给这些环节
+            const want = new Map();
+            (Array.isArray(data.sections) ? data.sections : []).slice(0, 14).forEach((x, i) => {
+                const sec = o0.sections[i], need = Math.max(0, Math.min(3, Math.round(+x?.need || 0)));
+                if (sec?.type && need) (want.get(sec.type) || want.set(sec.type, []).get(sec.type)).push({ sec, need, query: clip(x?.query, 80) });
+            });
+            send("stage", { k: "retrieve" });
+            const slots = [...want].map(([type, ws]) => ({ type, share: 0.1, kps: mix.find((m) => m.type === type)?.kps || [], query: ws.map((w) => w.query).filter(Boolean).join("；") || undefined, n: ws.reduce((a, w) => a + w.need, 0) }));
+            const R = slots.length ? await retrieve(slots, { ...ctx, exclude: new Set([...used, ...refs.map((r) => r.id)]) }, { signal: request.signal }) : [];
+            const byId = new Map(itemBodies(refs.map((r) => r.id), ctx.gt).map((x) => [x.id, x]));
+            const items = refs.map((r) => byId.get(r.id) && { ...byId.get(r.id), code: r.code }).filter(Boolean);
+            let n = refs.length;
+            R.forEach((r, k) => {
+                const ws = want.get(slots[k].type);
+                for (const it of r.items) {
+                    const w = ws.find((x) => x.need > 0); if (!w) break;
+                    const code = `E${++n}`;
+                    items.push({ ...it, code }); w.sec.items.push(code); w.need--;
+                }
+            });
+            send("items", { items, alts: R.flatMap((s) => s.alts), slots: R.map((s) => ({ type: s.type, n: s.n, query: s.query, relax: s.relax, pool: s.pool })), ms: Date.now() - t0 });
+            const exMin = extrasMinutes(settings);
+            let ex = { picked: [], candidates: [] };
+            if (exMin) try { ex = pickExtras(items, ctx.gt); send("extras", ex); } catch (e) { console.error("课外知识没挑成", e); }
+            // 改写要求里改了课时（「改成 90 分钟」）就按它排，页面和微信端跟着改这节课的课时
+            const total = Math.max(30, Math.min(240, Math.round(+data.minutes || minutes)));
+            const o = fitMinutes(exMin ? withExtras(o0, ex.picked, exMin) : o0, total);
+            if (total !== minutes) o.lessonMinutes = total;
+            send("outline", student.attention === "容易分心" ? splitLong(o, base.attentionMax) : o);
+            send("done", { ms: Date.now() - t0, usage, left });
+        });
+    }
+
     if (action === "template") {
         const text = String(p.text || "").slice(0, 4000);
         if (text.trim().length < 20) return Response.json({ error: "没从文件里读出文字" }, { status: 400 });
@@ -227,7 +285,7 @@ export async function POST(request) {
         const type = TYPES.includes(p.type) ? p.type : null;
         if (!type) return Response.json({ error: "题型不对" }, { status: 400 });
         try {
-            const exclude = new Set(strs(p.exclude, 60, 40));
+            const exclude = new Set([...strs(p.exclude, 60, 40), ...used]);
             const [R] = await retrieve([{ type, share: 0.1, kps: strs(p.kps, 4, 12), query: clip(p.query, 120) || undefined, n: Math.max(1, Math.min(3, +p.n || 1)) }], { ...ctx, exclude }, { signal: request.signal });
             return Response.json({ items: R?.items || [], relax: R?.relax, left });
         } catch (e) { return fail(e); }
@@ -267,7 +325,8 @@ export async function POST(request) {
         return sse(async (send) => {
             const t0 = Date.now();
             let usage = null;
-            for await (const x of stream(planMessages({ ...base, outline, template: cleanTemplate(p.template), planNote: clip(p.planNote, 300) }, items), { signal: request.signal, max_tokens: 4000, cfg })) {
+            const sources = cleanSources(p.sources).sources, lib = cleanLibPicked(p.lib);   // 改写、融合时的原教案；排大纲时从教案库挑中的几节（MAT-542）
+            for await (const x of stream(planMessages({ ...base, outline, template: cleanTemplate(p.template), planNote: clip(p.planNote, 300), sources, lib }, items), { signal: request.signal, max_tokens: 4000, cfg })) {
                 if (typeof x === "string") send("delta", { t: x }); else usage = x.usage;
             }
             send("done", { ms: Date.now() - t0, usage, left });
@@ -279,17 +338,27 @@ export async function POST(request) {
     return sse(async (send) => {
         const t0 = Date.now();
         send("stage", { k: "retrieve" });
-        const R = await retrieve(mix.map((m) => ({ type: m.type, share: m.share, kps: m.kps })), ctx, { signal: request.signal, onStage: (k, d) => send("stage", { k, ...d }) });
+        // 题库和老师自己的教案库一起检索（MAT-542）：教案库出错不影响排大纲
+        const libIn = cleanLib(p.lib);
+        // 作业用题和课上的一起检索，撞上课上的题就跳过（MAT-487）；作业出错不影响排大纲
+        const rctx = { ...ctx, exclude: used }, hwSlots = homeworkSlots(mix, settings);
+        const [R, H, lib] = await Promise.all([retrieve(mix.map((m) => ({ type: m.type, share: m.share, kps: m.kps })), rctx, { signal: request.signal, onStage: (k, d) => send("stage", { k, ...d }) }),
+            // 和课上同一种排法，前几道就是课上那几道：多要课上那么多道再加一道，跳过撞上的
+            retrieve(hwSlots.map((s) => ({ ...s, n: s.n + slotSize(s.type, mix.find((m) => m.type === s.type)?.share || 0) + 1 })), rctx, { signal: request.signal }).catch((e) => { console.error("作业用题没检索成", e); return []; }),
+            libIn.length ? libRetrieve(libIn, mix, ctx.guidance, { signal: request.signal }).catch((e) => { console.error("教案库没检索成", e); return []; }) : []]);
+        if (lib.length) send("lib", lib);
         let n = 0;
-        const items = R.flatMap((s) => s.items.map((it) => ({ ...it, code: `E${++n}` })));
+        const cls = R.flatMap((s) => s.items.map((it) => ({ ...it, code: `E${++n}` }))), inClass = new Set(cls.map((it) => it.id));
+        const hw = H.flatMap((s, k) => s.items.filter((it) => !inClass.has(it.id)).slice(0, hwSlots[k].n)).map((it) => ({ ...it, code: `E${++n}`, hw: true }));
+        const items = [...cls, ...hw];
         send("items", { slots: R.map((s) => ({ type: s.type, n: s.n, query: s.query, relax: s.relax, extra: s.extra, levelRelaxed: s.levelRelaxed, pool: s.pool, candidates: s.candidates, kpCovered: s.kpCovered })),
             items, alts: R.flatMap((s) => s.alts), ms: Date.now() - t0 });
         // 课外知识是附加的：挑条目出错（比如条目文件没拷上去）就不加这一节，大纲照排
         const exMin = extrasMinutes(settings);
         let ex = { picked: [], candidates: [] };
-        if (exMin) try { ex = pickExtras(items, ctx.gt); send("extras", ex); } catch (e) { console.error("课外知识没挑成", e); }
+        if (exMin) try { ex = pickExtras(cls, ctx.gt); send("extras", ex); } catch (e) { console.error("课外知识没挑成", e); }
         send("stage", { k: "outline" });
-        const { data, usage } = await json(outlineMessages(base, items), { signal: request.signal, max_tokens: 3000, cfg });
+        const { data, usage } = await json(outlineMessages({ ...base, lib }, items), { signal: request.signal, max_tokens: 3000, cfg });
         const o0 = cleanOutline(data, items.map((i) => i.code), true);
         const o = fitMinutes(exMin ? withExtras(o0, ex.picked, exMin) : o0, minutes);
         send("outline", student.attention === "容易分心" ? splitLong(o, base.attentionMax) : o);

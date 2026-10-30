@@ -452,6 +452,12 @@
   .gm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .gm-table th, .gm-table td { border-bottom: 1px solid var(--rule); padding: 5px 6px; text-align: left; }
   .gm-table th { color: var(--ink-3); font-weight: 500; }
+  /* 教案库、改写和融合（MAT-542） */
+  details.lib { margin: 12px 0 4px; border: 1px solid var(--rule); border-radius: 12px; padding: 10px 14px; background: #fff; }
+  details.lib summary { cursor: pointer; color: var(--blue); font-size: 14px; font-weight: 600; }
+  details.lib .lib-h { margin: 14px 0 0; font-size: 13px; color: var(--ink-3); }
+  #libPaste { display: grid; gap: 6px; margin-top: 8px; }
+  .srctag { font-size: 12px; color: var(--blue); background: var(--accent-bg); border-radius: 99px; padding: 1px 9px; white-space: nowrap; }
   .assign { margin-top: 12px; font-size: 14px; }
   .assign summary { cursor: pointer; color: var(--blue); font-size: 13.5px; }
   .draft { color: var(--green); }
@@ -683,6 +689,16 @@
   <div class="card">
     <div class="row"><button class="btn" id="outlineBtn">生成大纲</button><span class="note" id="outlineNote"></span></div>
     <p class="note xhint" id="xHint"></p>
+    <details class="lib" id="libWrap"><summary>从已有教案开始：改写、融合 · 我的教案库 <span class="note" id="libSum" style="font-weight:400"></span></summary>
+      <p class="note" style="margin:6px 0 0">上传的教案存进你自己的教案库（只有你这个账号能看到，不进公共题库）：以后排大纲会和题库一起检索，用得上的讲法会照着排；也能挑一份改写成这节课的，或者几份融合成一份。</p>
+      <div class="row" style="margin-top:8px"><label class="btn small ghost" style="cursor:pointer">上传教案（Word / txt / md）<input type="file" id="libFile" accept=".docx,.txt,.md" multiple hidden></label><button type="button" class="btn small ghost" id="libPasteBtn">贴一段文字</button><span class="note" id="libNote"></span></div>
+      <div id="libPaste" hidden><input type="text" id="libPasteName" maxlength="30" placeholder="起个名字，比如「去年的完形专题」" aria-label="教案名"><textarea id="libPasteText" rows="6" placeholder="把教案的文字贴进来" aria-label="教案文字"></textarea><div class="row"><button type="button" class="btn small" id="libPasteOk">存进教案库</button></div></div>
+      <ul class="grp-list" id="libList"></ul>
+      <p class="lib-h" id="libHistH" hidden></p><ul class="grp-list" id="libHist"></ul>
+      <label class="field" style="margin-top:12px"><span class="lab">怎么改 <span class="note" style="font-weight:400">可不填</span></span>
+        <input type="text" id="adaptNote" maxlength="300" placeholder="比如：改成 90 分钟；多练她弱的上下文逻辑；两份里的阅读只留一篇"></label>
+      <div class="row" style="margin-top:8px"><button class="btn" id="adaptBtn" disabled>选一份改写，或几份融合</button><span class="note" id="adaptMsg"></span></div>
+    </details>
       <div class="tplrow"><label>教案模板 <select id="tplSel" aria-label="教案模板"></select></label><span class="note" id="tplNote"></span><button type="button" class="linkbtn" id="tplStu"></button><button type="button" class="linkbtn" id="tplEdit">管理模板</button></div>
       <div class="tpled" id="tplEd" hidden></div>
       <label class="field" style="margin-top:8px"><span class="lab">对这份教案还有什么要求 <span class="note" style="font-weight:400">结构、风格都可以写，优先于模板</span></span>
@@ -691,6 +707,7 @@
     <div id="outlineWrap" hidden>
       <input type="text" class="o-title" id="oTitle" maxlength="60" aria-label="大纲标题">
       <dl class="o-basis" id="oBasis"></dl>
+      <p class="note" id="oSrc" hidden></p>
       <div class="o-grid">
         <label class="field"><span class="lab">教学目标 <span class="note">一行一条</span></span><textarea class="o-list" data-list="goals" rows="3"></textarea></label>
         <label class="field"><span class="lab">根据前几次课的调整</span><textarea class="o-list" data-list="adjust" rows="3"></textarea></label>
@@ -818,6 +835,7 @@
 import * as M from "./model.js";
 import * as Mem from "./memory.js";
 import * as Met from "./metrics.js";
+import * as Lib from "./library.js";
 import { seed } from "./seed.js";
 
 const API = "/api/english";
@@ -1884,7 +1902,7 @@ function ctxPayload() {
     const fl = M.flows(U.rows.filter((r) => r.share >= 0.005));
     return {
         student: { name: st.name, gradeLabel: gradeLabel(st), schoolLabel: schoolLabel(st), school: st.school, district: st.district, textbook: st.textbook, attention: st.attention, profile: profileLine(st), members: st.members?.map((m) => m.name) },
-        studentMems: st.mems, teacherMems: S.teacher.mems, logs: logsLite(st), guidance: U.guidance, minutes: U.minutes,
+        studentMems: st.mems, teacherMems: S.teacher.mems, logs: logsLite(st), guidance: U.guidance, minutes: U.minutes, used: Mem.usedIds(st.members || [st], TODAY),
         settings: SET(), difficulty: U.difficulty, weakKps: weakKpsText(c.led), attentionMax: R.student.attentionMaxMinutes,
         visual: U.W?.md ? !!U.W.visual : isVisual(st),
         unitPlan: `当前在 Unit ${U.unit}；下一场考试范围 ${R.examCalendar.scope[U.gt[1]]?.[U.kind] || "未知"}；旧单元复习 ${U.review}% / 新单元 ${100 - U.review}%`,
@@ -1895,7 +1913,7 @@ function ctxPayload() {
             from: M.SOURCES.map((k) => `${k} ${Math.round((f.c[k] / f.share) * 100)}%`).join("、") })),
     };
 }
-const itemRefs = () => (U.W?.items || []).map(({ code, id }) => ({ code, id }));
+const itemRefs = () => (U.W?.items || []).map(({ code, id, hw }) => ({ code, id, hw }));
 // 长期薄弱、反复出错的知识点，给模型看
 const weakKpsText = (led) => (led || []).filter((r) => r.status !== "待观察").slice(0, 6).map((r) => `${r.qtype}·${r.kp} ${r.status}（练了 ${r.practiced} 次错 ${r.wrongN} 次，最近 ${r.last}）`).join("；");
 // 观察老师：text 进「最近的调整」给模型看；evs 进画像的操作记录（MAT-498）
@@ -1914,27 +1932,33 @@ function clearPlan() {
 }
 let ctrl = null;
 function setStage(k) {
-    const order = ["retrieve", "outline", "done"];
+    const order = [...$("#stages").children].map((s) => s.dataset.k);
     for (const s of $("#stages").children) { const i = order.indexOf(s.dataset.k), j = order.indexOf(k); s.className = i < j || k === "done" ? "done" : i === j ? "on" : ""; }
 }
-async function makeOutline() {
-    const st = stu();
+// picks：改写、融合时的原教案（MAT-542，[{name, text, items?}]），没有就是按占比从题库排；按占比排时老师的教案库一起检索
+const STAGES_OUTLINE = `<span data-k="retrieve">检索例题和教案库</span><span data-k="outline">排大纲</span><span data-k="done">完成</span>`;
+const STAGES_ADAPT = `<span data-k="adapt">读原教案、排大纲</span><span data-k="retrieve">从题库补题</span><span data-k="done">完成</span>`;
+async function makeOutline(picks = null) {
+    const st = stu(), instruction = picks ? $("#adaptNote").value.trim() : "";
     ctrl?.abort(); ctrl = new AbortController();
-    $("#outlineBtn").disabled = true; $("#reOutline").disabled = true; $("#outlineNote").textContent = "";
-    $("#stages").hidden = false; setStage("retrieve");
+    $("#outlineBtn").disabled = true; $("#reOutline").disabled = true; $("#adaptBtn").disabled = true; $("#outlineNote").textContent = "";
+    $("#stages").innerHTML = picks ? STAGES_ADAPT : STAGES_OUTLINE;
+    $("#stages").hidden = false; setStage(picks ? "adapt" : "retrieve");
     $("#outlineWrap").hidden = true; $("#itemsWrap").hidden = true; $("#step5").hidden = true;
     U.lock = null;
-    const W = U.W = { items: [], alts: [], extras: {}, stale: new Map(), md: "", student: st.name, sid: st.id, date: TODAY };
-    const t0 = Date.now();
+    const W = U.W = { items: [], alts: [], extras: {}, stale: new Map(), md: "", student: st.name, sid: st.id, date: TODAY, ...(picks ? { base: { picks, instruction, sources: [] } } : {}) };
+    const t0 = Date.now(), ctx = ctxPayload();
     try {
-        await sse({ action: "outline", ...ctxPayload() }, (ev, d) => {
-            if (ev === "stage" && d.k === "outline") setStage("outline");
+        await sse(picks ? { action: "adapt", ...ctx, sources: picks, instruction } : { action: "outline", ...ctx, lib: Lib.libChunks(S, ctx.mix.map((m) => m.type)) }, (ev, d) => {
+            if (ev === "stage" && ["outline", "retrieve"].includes(d.k)) setStage(d.k);
+            else if (ev === "sources") W.base.sources = d;
+            else if (ev === "lib") W.lib = d;
             else if (ev === "items") { W.items = d.items; W.alts = d.alts || []; W.slots = d.slots; renderItems(); }
             else if (ev === "extras") W.extras = Object.fromEntries([...d.picked, ...d.candidates].map((e) => [e.id, e]));
-            else if (ev === "outline") { W.outline = d; W.outline0 = clone(d); }
+            else if (ev === "outline") { W.outline = d; W.outline0 = clone(d); if (d.lessonMinutes) { U.minutes = d.lessonMinutes; delete d.lessonMinutes; delete W.outline0.lessonMinutes; recompute(); } }
             else if (ev === "done") { setStage("done"); $("#outlineNote").textContent = `用时 ${((Date.now() - t0) / 1000).toFixed(1)} 秒${d.left != null ? ` · 今天还能排 ${d.left} 次` : ""}`; }
         }, ctrl.signal);
-        recordMix(st);   // 排成功了才算一次（被限次、出错的不算）
+        if (!picks) recordMix(st);   // 排成功了才算一次（被限次、出错的不算）；改写、融合的占比跟原教案走，不算老师调的
         putItems([...W.items, ...W.alts], U.gt); snapWork();
         lockFromOutline(); renderOutline(); if (page() === "home") renderHome();
         $("#outlineWrap").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1942,7 +1966,7 @@ async function makeOutline() {
         if (e.name !== "AbortError") $("#outlineNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`;
         $("#stages").hidden = true;
     }
-    $("#outlineBtn").disabled = false; $("#reOutline").disabled = false;
+    $("#outlineBtn").disabled = false; $("#reOutline").disabled = false; renderLib();
 }
 // 老师这次手动调过的占比记进画像：同一天同一个学生同一个题型只记最后一次，重排大纲不重复算
 function recordMix(st) {
@@ -1959,8 +1983,8 @@ function recordMix(st) {
     observe(adj.length ? `给${st.name}的教案：${adj.map((x) => `${x.type} ${x.from}% → ${x.to}%`).join("、")}` : "",
         ...adj.map((x) => ({ kind: "mix", ...x, delta: x.to - x.from })), { kind: "outline_gen" });
 }
-$("#outlineBtn").onclick = makeOutline;
-$("#reOutline").onclick = makeOutline;
+$("#outlineBtn").onclick = () => makeOutline();
+$("#reOutline").onclick = () => makeOutline(U.W?.base?.picks || null);   // 改写、融合出来的大纲：照同几份原教案重排
 // 这份大纲也给…（MAT-509）：复制给年级学期一样的学生或组，带上用题和考试设置，教案各自按自己的档案再写；对方原来的能撤销回来
 function assignTargets() {
     const cur = stu();
@@ -2015,6 +2039,10 @@ function renderOutline(flash = []) {
     $("#outlineWrap").hidden = false;
     $("#oTitle").value = o.title;
     $("#oBasis").innerHTML = ["年级", "学校", "学生", "老师"].map((k) => `<dt style="color:${SRC_COLOR[k]}">${k}</dt><dd><textarea rows="2" data-basis="${k}">${esc(o.basis[k] || "")}</textarea></dd>`).join("");
+    // 改写、融合的原教案和改了什么；按占比排的写参考了教案库里的哪几节（MAT-542）
+    const src = W.base?.sources?.length ? `${W.base.sources.length > 1 ? "融合" : "改写"}自：${W.base.sources.map((x) => `${x.label}《${x.name}》`).join("、")}${o.changes?.length ? `。和原教案比：${o.changes.join("；")}` : ""}`
+        : W.lib?.length ? `参考了你教案库里的：${W.lib.map((c) => `《${c.doc}》「${c.title}」`).join("、")}` : "";
+    $("#oSrc").hidden = !src; $("#oSrc").textContent = src;
     document.querySelectorAll(".o-list").forEach((t) => (t.value = (o[t.dataset.list] || []).join("\n")));
     const times = secTimes(o);
     const typeOpts = (cur) => `<option value="">（不练题型）</option>` + [...new Set([...U.rows.map((r) => r.type), ...Object.keys(data.stats.byType)])].map((t) => `<option ${t === cur ? "selected" : ""}>${esc(t)}</option>`).join("");
@@ -2022,7 +2050,7 @@ function renderOutline(flash = []) {
         const used = new Set(o.sections.flatMap((y) => y.items));
         const pool = x.extras ? [] : W.items.filter((it) => !x.items.includes(it.code)).sort((a, b) => (b.type === x.type) - (a.type === x.type) || used.has(a.code) - used.has(b.code));
         return `<li class="o-sec${x.extras ? " o-extra" : ""}${flash.includes(x.id) ? " flash" : ""}" data-id="${x.id}" style="border-left-color:${x.extras ? "var(--green)" : x.type ? "var(--s-grade)" : "#cfcdc6"}">
-      <div class="o-top"><span class="drag drag-sec" title="按住拖动，调整环节顺序" aria-label="拖动">⠿</span><span class="o-time">${times[i]}′</span><input type="text" class="o-name" value="${esc(x.name)}" maxlength="30" aria-label="环节名">${x.extras ? `<span class="xtag">课外知识</span>` : ""}<select class="o-type" aria-label="题型">${typeOpts(x.type)}</select>
+      <div class="o-top"><span class="drag drag-sec" title="按住拖动，调整环节顺序" aria-label="拖动">⠿</span><span class="o-time">${times[i]}′</span><input type="text" class="o-name" value="${esc(x.name)}" maxlength="30" aria-label="环节名">${x.extras ? `<span class="xtag">课外知识</span>` : ""}${x.from ? `<span class="srctag" title="来自哪份原教案">${/^[A-D]/.test(x.from) ? "原教案 " : ""}${esc(x.from)}</span>` : ""}<select class="o-type" aria-label="题型">${typeOpts(x.type)}</select>
         <span class="o-min"><input type="number" min="0" max="240" step="5" value="${x.minutes}" aria-label="分钟"> 分钟</span>
         <span class="o-ctl"><button data-up title="上移">↑</button><button data-down title="下移">↓</button><button data-del title="删掉这个环节">×</button></span></div>
       <ol class="o-pts">${x.extras ? extrasOf(x).map((e) => `<li class="xcard"><span><span class="xcat">${esc(e.cat)}</span><b>${esc(e.key)}</b>　${esc(e.mean)}${e.where ? `<span class="note"> · ${esc(e.where)}</span>` : ""}</span><button data-xrm="${e.id}" title="不要这条" aria-label="不要这条">×</button></li>`).join("") : x.points.map((t, pi) => `<li data-i="${pi}"><span class="drag drag-pt" title="按住拖动，调整要点顺序" aria-label="拖动">⠿</span><input class="o-pt" value="${esc(t)}" maxlength="160" aria-label="要点 ${pi + 1}"><span class="o-ctl"><button data-pup title="上移">↑</button><button data-pdown title="下移">↓</button><button data-pdel title="删掉这条">×</button></span></li>`).join("")}</ol>
@@ -2161,7 +2189,7 @@ function qHTML(it) {
 function renderItems() {
     const W = U.W;
     $("#itemsWrap").hidden = false;
-    $("#items").innerHTML = W.items.map((it, i) => `<div class="it" id="item-${it.code}" data-i="${i}"><div class="hd"><span class="code">${it.code}</span><b>${esc(it.type)}</b><span class="src">${esc(it.school)} ${it.year} ${it.gt}${it.kind} · ${esc(it.level)}</span></div>
+    $("#items").innerHTML = W.items.map((it, i) => `<div class="it" id="item-${it.code}" data-i="${i}"><div class="hd"><span class="code">${it.code}</span><b>${esc(it.type)}</b>${it.hw ? `<span class="xtag" title="同考点的新题，留作课后作业">作业</span>` : ""}<span class="src">${esc(it.school)} ${it.year} ${it.gt}${it.kind} · ${esc(it.level)}</span></div>
       <div class="ws">${dtier(it.diff)}${it.why.map((w) => `<span class="${w.startsWith("考点") ? "k" : ""}">${esc(w)}</span>`).join("")}${it.imgs.length ? `<span>${it.imgs.length} 张图</span>` : ""}<span title="重排分 / 余弦">rr ${it.score.rr} · cos ${it.score.cos}</span></div>
       ${it.diff ? `<div class="ans dwords" hidden style="white-space:pre-line">${esc(diffWords(it.diff))}</div>` : ""}
       <div class="qt">${qHTML(it)}</div>
@@ -2205,7 +2233,7 @@ $("#writeBtn").onclick = async () => {
     let raf = 0;
     try {
         const tpl = curTemplate(); W.visual = isVisual(st, tpl);
-        await sse({ action: "plan", ...ctxPayload(), visual: W.visual, template: tpl, planNote: U.planNote || "", outline: W.outline, items: itemRefs() }, (ev, d) => {
+        await sse({ action: "plan", ...ctxPayload(), visual: W.visual, template: tpl, planNote: U.planNote || "", outline: W.outline, items: itemRefs(), sources: W.base?.sources || [], lib: W.lib || [] }, (ev, d) => {
             if (ev === "delta") { W.md += d.t; if (!raf) raf = requestAnimationFrame(() => { raf = 0; renderPlan(true); }); }
             else if (ev === "done") $("#usage").textContent = `用时 ${((Date.now() - t0) / 1000).toFixed(1)} 秒 · ${d.usage?.total_tokens ?? "?"} tokens${d.left != null ? ` · 今天还能写 ${d.left} 次` : ""}`;
         }, ctrl.signal);
@@ -2220,6 +2248,7 @@ $("#writeBtn").onclick = async () => {
         if (diff) observe(`给${st.name}改了大纲：${diff}`, { kind: "outline_edit" });
         if (!W.arranged) { Mem.noteArrange(S.teacher, { date: TODAY, student: st.name, o0: W.outline0, o1: W.outline }); W.arranged = true; }   // 编排情景（MAT-527），同一份大纲只记一次
         S.lastPlan = { sid: st.id, date: TODAY, mix: Object.entries(U.lock || {}).map(([t, v]) => [t, +v.toFixed(2)]) };
+        Mem.markUsed(st.members || [st], W.items, TODAY);   // 以后给这个学生检索不再出这些题（MAT-487）
         save();
     } catch (e) {
         if (e.name !== "AbortError") $("#writeNote").innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`;
@@ -2585,25 +2614,100 @@ async function loadScript(src, name) {
     await new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => bad(new Error("组件没加载上")); document.head.append(s); });
     return window[name];
 }
-// 读 Word 教案：mammoth 转成 HTML，在不执行脚本、不加载图片的文档里取出标题、段落、表格行
+// 读 Word 教案：mammoth 转成 HTML，在不执行脚本、不加载图片的文档里取出标题、段落、表格行（抽模板和存教案库共用）
+async function docxText(file) {
+    const mm = await loadScript("https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js", "mammoth");
+    // 只要文字：图片不解压、不转 base64
+    const { value } = await mm.convertToHtml({ arrayBuffer: await file.arrayBuffer() }, { convertImage: mm.images.imgElement(() => ({ src: "" })) });
+    const doc = new DOMParser().parseFromString(value, "text/html");
+    return [...doc.body.children].flatMap((el) => /^H\d$/.test(el.tagName) ? [`【${el.textContent.trim()}】`]
+        : el.tagName === "TABLE" ? [...el.rows].map((r) => [...r.cells].map((c) => c.textContent.trim()).join(" | "))
+        : /^(UL|OL)$/.test(el.tagName) ? [...el.children].map((li) => "· " + li.textContent.trim()) : [el.textContent.trim()]).filter(Boolean).join("\n");
+}
+async function addTemplate(text, name, note) {
+    note.textContent = "交给 agent 抽结构……";
+    const j = await post({ action: "template", text: text.slice(0, 4000) });
+    const t = { ...j.template, id: "c" + Date.now().toString(36), name: j.template.name || name.slice(0, 16), note: `从「${name.slice(0, 30)}」抽的` };
+    S.teacher.templates.push(t); U.template = t.id; save(); renderTplSel(); renderSettings();
+    note.textContent = "";
+    toast(`抽出了 ${t.sections.length} 节：${t.sections.map((x) => x.title).join(" / ")}`);
+}
 async function uploadTpl(file) {
     const note = $("#tplUpNote");
     note.textContent = "读文件……";
-    try {
-        const mm = await loadScript("https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js", "mammoth");
-        // 只要文字：图片不解压、不转 base64
-        const { value } = await mm.convertToHtml({ arrayBuffer: await file.arrayBuffer() }, { convertImage: mm.images.imgElement(() => ({ src: "" })) });
-        const doc = new DOMParser().parseFromString(value, "text/html");
-        const text = [...doc.body.children].flatMap((el) => /^H\d$/.test(el.tagName) ? [`【${el.textContent.trim()}】`]
-            : el.tagName === "TABLE" ? [...el.rows].map((r) => [...r.cells].map((c) => c.textContent.trim()).join(" | "))
-            : /^(UL|OL)$/.test(el.tagName) ? [...el.children].map((li) => "· " + li.textContent.trim()) : [el.textContent.trim()]).filter(Boolean).join("\n");
-        note.textContent = "交给 agent 抽结构……";
-        const j = await post({ action: "template", text: text.slice(0, 4000) });
-        const t = { ...j.template, id: "c" + Date.now().toString(36), name: j.template.name || file.name.replace(/\.docx$/i, "").slice(0, 16), note: `从「${file.name.slice(0, 30)}」抽的` };
-        S.teacher.templates.push(t); U.template = t.id; save(); renderTplSel(); renderSettings();
-        toast(`抽出了 ${t.sections.length} 节：${t.sections.map((x) => x.title).join(" / ")}`);
-    } catch (e) { note.innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; }
+    try { await addTemplate(await docxText(file), file.name.replace(/\.docx$/i, ""), note); }
+    catch (e) { note.innerHTML = `<span class="err">没成功：${esc(e.message)}</span>`; }
 }
+
+// ---------- 教案库、改写和融合（MAT-542）：上传的教案存进老师自己的教案库，排大纲时和题库一起检索；挑一份改写，或几份融合 ----------
+const LIBSEL = new Set();   // 选中的原教案：L:教案库里的 id / H:课次记录下标 / C 正在备的这份
+function libPicks() {
+    const st = stu(), out = [];
+    for (const k of LIBSEL) {
+        if (k.startsWith("L:")) { const d = (S.library || []).find((x) => x.id === k.slice(2)); if (d) out.push(Lib.libSource(d)); }
+        else if (k.startsWith("H:")) { const l = st.logs?.[+k.slice(2)]; if (l?.plan?.md) out.push(Lib.planSource(`${md5(l.date)} 的教案`, l.plan)); }
+        else if (k === "C" && U.W?.md) out.push(Lib.planSource(U.W.outline?.title || "正在备的这份", U.W));
+    }
+    return out;
+}
+function renderLib() {
+    const lib = S.library || [], st = stu();
+    for (const k of [...LIBSEL]) if ((k.startsWith("L:") && !lib.some((d) => "L:" + d.id === k)) || (k === "C" && !U.W?.md) || (k.startsWith("H:") && !st.logs?.[+k.slice(2)]?.plan?.md)) LIBSEL.delete(k);
+    $("#libSum").textContent = lib.length ? `（${lib.length} 份）` : "";
+    const row = (k, name, meta, acts = "") => `<li class="${LIBSEL.has(k) ? "on" : ""}"><input type="checkbox" data-sel="${k}" ${LIBSEL.has(k) ? "checked" : ""} aria-label="选「${esc(name)}」"><span><b>${esc(name)}</b><br><span class="m note">${esc(meta)}</span></span><span class="row">${acts}</span></li>`;
+    $("#libList").innerHTML = lib.length ? lib.map((d) => row("L:" + d.id, d.name, [d.gt, d.types.join("、"), `${d.chunks.length} 节`, d.at && `${md5(d.at)} 存`].filter(Boolean).join(" · ") + (d.summary ? `｜${d.summary}` : ""),
+        `<button type="button" class="linkbtn" data-tpl="${d.id}" title="照这份的小节结构做一个教案模板">抽成模板</button><button type="button" class="linkbtn" data-rm="${d.id}" style="color:var(--red)">删掉</button>`)).join("")
+        : `<li class="note" style="display:block">教案库是空的：上传或贴一份你自己的教案。</li>`;
+    const hist = (st.logs || []).map((l, i) => [l, i]).filter(([l]) => l.plan?.md).reverse().slice(0, 6);
+    $("#libHistH").hidden = !hist.length && !U.W?.md; $("#libHistH").textContent = `${st.name}存下来的教案（也能拿来改写、融合）`;
+    $("#libHist").innerHTML = (U.W?.md ? row("C", "正在备的这份", U.W.outline?.title || "") : "") + hist.map(([l, i]) => row("H:" + i, `${md5(l.date)} 的教案`, l.plan.outline?.title || l.summary || "")).join("");
+    const n = LIBSEL.size;
+    $("#adaptBtn").disabled = !n || n > 4;
+    $("#adaptBtn").textContent = !n ? "选一份改写，或几份融合" : n > 4 ? "最多选 4 份" : n === 1 ? "照这份改写成这节课的大纲" : `把这 ${n} 份融合成一份大纲`;
+}
+async function libIngest(name, text) {
+    const note = $("#libNote");
+    note.textContent = `读「${name}」：切成小节、认题型……`;
+    try {
+        const j = await post({ action: "ingest", name, text: text.slice(0, 20000) });
+        const d = Lib.libAdd(S, j.doc, TODAY);
+        LIBSEL.add("L:" + d.id); save(); renderLib();
+        note.textContent = `「${d.name}」存进教案库了：${d.chunks.length} 节${d.types.length ? "，讲" + d.types.join("、") : ""}。`;
+        return d;
+    } catch (e) { note.innerHTML = `<span class="err">「${esc(name)}」没存进去：${esc(e.message)}</span>`; return null; }
+}
+$("#libWrap").addEventListener("toggle", () => $("#libWrap").open && renderLib());
+$("#libWrap").onchange = async (e) => {
+    const k = e.target.dataset.sel;
+    if (k) { e.target.checked ? LIBSEL.add(k) : LIBSEL.delete(k); renderLib(); return; }
+    if (e.target.id !== "libFile") return;
+    const files = [...e.target.files]; e.target.value = "";
+    for (const f of files) {
+        if (!/\.(docx|txt|md)$/i.test(f.name)) { $("#libNote").textContent = `「${f.name}」打不开：只认 Word（.docx）、txt、md；老版 .doc 先另存成 .docx`; continue; }
+        try { await libIngest(f.name.replace(/\.(docx|txt|md)$/i, "").slice(0, 40), /\.docx$/i.test(f.name) ? await docxText(f) : await f.text()); }
+        catch (err) { $("#libNote").innerHTML = `<span class="err">「${esc(f.name)}」没读出来：${esc(err.message)}</span>`; }
+    }
+};
+$("#libWrap").onclick = (e) => {
+    const rm = e.target.dataset.rm, tp = e.target.dataset.tpl;
+    if (rm) {
+        const at = S.library.findIndex((d) => d.id === rm), d = Lib.libRemove(S, rm);
+        save(); renderLib();
+        toast(`从教案库删掉了「${d.name}」`, { label: "撤销", fn: () => { Lib.libRestore(S, d, at); save(); renderLib(); } });
+    } else if (tp) {
+        const d = S.library.find((x) => x.id === tp);
+        if (d) addTemplate(Lib.docText(d), d.name, $("#libNote")).catch((err) => { $("#libNote").innerHTML = `<span class="err">没抽成模板：${esc(err.message)}</span>`; });
+    }
+};
+$("#libPasteBtn").onclick = () => { $("#libPaste").hidden = !$("#libPaste").hidden; };
+$("#libPasteOk").onclick = async () => {
+    const text = $("#libPasteText").value.trim(), name = $("#libPasteName").value.trim() || "贴进来的教案";
+    if (text.length < 50) { $("#libNote").textContent = "多贴一点（至少 50 个字）"; return; }
+    $("#libPasteOk").disabled = true;
+    if (await libIngest(name, text)) { $("#libPasteText").value = ""; $("#libPasteName").value = ""; $("#libPaste").hidden = true; }
+    $("#libPasteOk").disabled = false;
+};
+$("#adaptBtn").onclick = () => makeOutline(libPicks());
 
 // Word：教案正文 + 附录（例题原文，图片放回原位置）+ 参考答案
 const loadDocx = () => loadScript("https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.iife.js", "docx");
@@ -2766,7 +2870,7 @@ async function getItems(keys) {
     try { const st = (await idb).transaction("items").objectStore("items"); return await Promise.all(keys.map((k) => new Promise((ok) => { const r = st.get(k); r.onsuccess = () => ok(r.result); r.onerror = () => ok(null); }))); }
     catch { return keys.map(() => null); }
 }
-const workRef = (it) => ({ id: it.id, code: it.code, why: it.why, score: it.score });
+const workRef = (it) => ({ id: it.id, code: it.code, why: it.why, score: it.score, hw: it.hw });
 const withBodies = async (refs, gt) => {
     let its = await getItems(refs.map((r) => `${r.id}@${gt}`));
     const miss = [...new Set(refs.filter((r, i) => !its[i]).map((r) => r.id))];
@@ -2788,7 +2892,7 @@ function snapWork() {
         u: { gt: U.gt, kind: U.kind, unit: U.unit, minutes: U.minutes, level: U.level, guidance: U.guidance, overrides: U.overrides, frozen: U.frozen, unlocked: U.unlocked, difficulty: U.difficulty,
             template: U.template, planNote: U.planNote, review: U.review, reviewTouched: U.reviewTouched, t0: U.t0, chat: (U.chat || []).filter((m) => !m.wait).map(({ snap, ...m }) => m) },
         W: W?.outline ? { items: W.items.map(workRef), alts: W.alts.map(workRef), extras: W.extras, slots: W.slots, outline: W.outline, outline0: W.outline0, md: W.md,
-            stale: [...W.stale].map(([c, set]) => [c, [...set]]), visual: W.visual, student: W.student, sid: W.sid, date: W.date, checked: W.checked, metric: W.metric } : null,
+            stale: [...W.stale].map(([c, set]) => [c, [...set]]), visual: W.visual, student: W.student, sid: W.sid, date: W.date, checked: W.checked, metric: W.metric, base: W.base, lib: W.lib } : null,
     };
     const json = JSON.stringify(snap);
     if (json === lastSnap) return;   // 没变就不写
@@ -3159,7 +3263,7 @@ $("#acGo").onclick = async () => {
 // ---------- 刷新 ----------
 function recompute() { deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); }
 function refresh() { renderMemories(); renderFolders(); deriveCtx(); renderExam(); renderMix(); reminders(); renderXHint(); if (page() === "home") renderHome(); }
-function renderAll() { if (!U.gt) initExam(); renderStudents(); renderRecEx(); refresh(); renderTplSel(); }
+function renderAll() { if (!U.gt) initExam(); renderStudents(); renderRecEx(); refresh(); renderTplSel(); for (const k of [...LIBSEL]) if (!k.startsWith("L:")) LIBSEL.delete(k); renderLib(); }   // 换了学生：存下来的教案是别人的了
 if (!stu()) S.current = S.students[0].id;
 renderAll(); route(); restoreWork(); renderAcct(); syncOnOpen();
 </script>
