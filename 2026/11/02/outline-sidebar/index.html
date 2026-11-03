@@ -68,9 +68,9 @@ Claude Code 一轮能改十几个文件，跑几十条命令。写代码的速�
     </div>
     <h1>AI 干得越快，人 review 得越累：我给 Claude Code 做了个侧栏</h1>
     <div class="meta-line">
-      <span><svg class="ph" aria-hidden="true"><use href="#ph-text-aa"/></svg>4,280 字</span>
+      <span><svg class="ph" aria-hidden="true"><use href="#ph-text-aa"/></svg>4,519 字</span>
       <span><svg class="ph" aria-hidden="true"><use href="#ph-clock"/></svg>约 11 分钟读完</span>
-      
+      <span><svg class="ph" aria-hidden="true"><use href="#ph-calendar-blank"/></svg>更新于 2026-11-03</span>
     </div>
   </header>
 
@@ -79,26 +79,32 @@ Claude Code 一轮能改十几个文件，跑几十条命令。写代码的速�
 <p>Claude Code 一轮能改十几个文件，跑几十条命令。写代码的速度已经不是瓶颈。瓶颈落到了人身上：它做完了，你要判断做得对不对，再决定下一步往哪走。</p>
 <p>为什么 AI 干得越快，人 review 得越累呢？</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/MatsuriMW/outline-sidebar">Outline Sidebar</a> 是我为这个问题做的一个 Claude Code mod。它把一场会话整理成一串可折叠大纲：一轮对话是一块，同一话题接着做的几轮并列挂在话题下面，换了话题就开新的顶层块。</p>
+<img src="/images/posts/outline-sidebar-views-3-4.png" alt="3 号视图“我让它做的”和 4 号视图“它已做的”" width="720">
+<p><em>Claude 桌面版里的侧栏，截自一场排查代理端口的真实会话。左边是 3 号视图“我让它做的”，每件事带着我的原话、做了几件、结果验证了几条；右边是 4 号视图“它已做的”，每条“做了”下面挂着工具记录。</em></p>
 <hr>
 <h2 id="一、被切碎的是什么"><a class="header-anchor" href="#一、被切碎的是什么">¶</a>一、被切碎的是什么</h2>
-<p>1971 年，赫伯特·西蒙写过一句后来被反复引用的话：“信息的丰富造成了注意力的贫乏。”（Simon，1971）他讲的是组织怎么应对越来越多的信息。放到 AI 编程里，信息是 Agent 源源不断吐出来的，贫乏的是人那一侧。</p>
-<p>人在 review 时用的，是一种装着问题的注意力。脑子里同时放着整个问题的状态：什么算对，什么试过了，哪里最可能出错。这个状态建起来要二三十分钟（这是我自己的估计），毁掉只要 3 秒。</p>
-<p>心理学里有一个现象能解释这一点。索菲·勒鲁瓦（Sophie Leroy）发现，人从一件没做完的事切到另一件事时，注意力会有一部分留在前一件上。她把留下的这部分叫“注意力残留”（attention residue），残留越多，后一件事做得越差（Leroy，2009）。</p>
-<p>残留的注意力就像一层层拖影，垂落遮蔽了一张理应干净的工作台。</p>
+<p>1971 年，赫伯特·西蒙写过一句后来被反复引用的话：“<strong>信息的丰富造成了注意力的贫乏</strong>。”（Simon，1971）他讲的是组织怎么应对越来越多的信息。放到 AI 编程里，信息是 Agent 源源不断吐出来的，贫乏的是人那一侧。</p>
+<p>人在 review 时用的，是一种<strong>装着问题的注意力</strong>。脑子里同时放着整个问题的状态：什么算对，什么试过了，哪里最可能出错。这个状态建起来要二三十分钟（这是我自己的估计），毁掉只要 3 秒。</p>
+<p>心理学里有一个现象能解释这一点。索菲·勒鲁瓦（Sophie Leroy）发现，人从一件没做完的事切到另一件事时，注意力会有一部分留在前一件上。她把留下的这部分叫“注意力残留”（attention residue），残留越多，后一件事做得越差。</p>
+<p>这些残留的注意力就像一层层拖影，垂落遮蔽了一张理应干净的工作台。</p>
 <p>一场长会话就是一台制造残留的机器。对话是一条只往下长的流。结论、等我拍板的事、交出去的活、做完的事和技术细节，全搅在一起。想找回刚才定了什么，只能往上翻。每翻一屏，都要把别的事装进脑子，再把它们挤出去。</p>
 <p><strong>真正要护住的，是脑子里装好的那份问题状态。</strong> 它被切碎了，就要从头再装一遍。而那个电话，只打了 3 分钟。</p>
 <hr>
 <h2 id="二、harness-的人这一侧"><a class="header-anchor" href="#二、harness-的人这一侧">¶</a>二、harness 的人这一侧</h2>
 <p>harness engineering 说的是给 Agent 搭的那一圈东西：给它什么上下文，给它什么工具，怎么验证它的产出。大多数 harness 都做在 Agent 这一侧。Outline Sidebar 做在人这一侧，管两件事。</p>
 <p>第一件是可观测性。</p>
-<p>同一棵大纲按 6 个方向过滤：需要我做的、问题与结论、我让它做的、它已做的、全部、技术信息。被打断以后回来，扫一眼 3 号视图“我让它做的”，就能看到当时的原话、做成了几件、还有几件在等我。</p>
+<p>同一棵大纲按 6 个方向过滤：需要我做的、问题与结论、我让它做的、它已做的、全部、技术信息。被打断以后回来，扫一眼 2 号视图“问题与结论”，就能看到当时的原话、事情的进度。</p>
+<img src="/images/posts/outline-sidebar-view-2.png" alt="2 号视图“问题与结论”" width="360">
+<p><em>2 号视图“问题与结论”：我问过的问题当标题，结论挂在下面。“刚才定了什么”，在这里扫一眼就有。</em></p>
 <p>第二件是结构化的反馈。</p>
 <p>我在侧栏里改的状态，会跟着下一条消息发给 Claude。比如我把“确认仓库是否公开”标成 Done，Claude 收到的是一条明确的状态变化，不用从一段话里去猜我的意思。人的判断用固定的格式回到 Agent 的上下文里，比在对话里写一句可靠。</p>
 <p>这两件事背后是同一条分工：<strong>AI 可以出初稿，最后一句话归人。</strong> 大纲的层级由 AI 出初稿，我在侧栏里手动纠正，改过的块 AI 不再动。Claude 说它替我办完了的事，只会变成 ToReview 等我看一眼，不会直接变成 Done。ToReview 要改成 Done，得先展开详情看过证据：没看就按，这一下只展开证据，不改状态。</p>
+<img src="/images/posts/outline-sidebar-view-1.png" alt="1 号视图“需要我做的”" width="360">
+<p><em>1 号视图“需要我做的”：等我验收的 ToReview、交给我做的 Todo、卡住等我的 Waiting，排成一个队列。</em></p>
 <p>这当然会让人多按几下键。多出来的那一下，记录的是“人看过证据才放行”。Claude 收到通过的消息时，也会知道哪几条是没证据就被放过去的。</p>
 <hr>
 <h2 id="三、证据证明了什么"><a class="header-anchor" href="#三、证据证明了什么">¶</a>三、证据证明了什么</h2>
-<p>Agent 的可观测性建设重点应当从过程指标，转向结果指标；围绕关键事实节点开展。</p>
+<p>Agent 的可观测性建设重点不应当是过程指标，而是结果指标；围绕关键事实节点开展。</p>
 <p>过程指标是 token 用量、缓存命中率、耗时、调了几次工具。它们说明 Agent 花了多少力气，说明不了事情办成没有。Outline Sidebar 把它们放在 6 号视图，只当参考。</p>
 <p>更隐蔽的过程指标藏在「证据」里。最早的版本里，每条「做了」下面挂的证据只有两种：改了一个文件，跑了一条命令。命令那一条带着 <code>isOk</code>（工具有没有报错的标记），意思是工具没报错。它能证明动作做了，证明不了结论成立：</p>
 <ul>
@@ -107,13 +113,15 @@ Claude Code 一轮能改十几个文件，跑几十条命令。写代码的速�
 <li>「做了」里写着「部署好了」，下面挂的是一条改文件的记录。</li>
 </ul>
 <p><strong>命令没报错，只说明动作做完了；结论成不成立，要靠专门验证它的那条命令。</strong></p>
-<p>最新的 0.13.0 版按这个判断改了三处。</p>
+<p>按这个判断，现在的 0.14.0 版有三处设计。</p>
 <p>第一，分开动作和结果。</p>
 <p>总结时，模型给每条“做了”标一个 <code>result</code>（说明这条是动作还是结果的字段）。动作是“改了、加了、建了什么”，挂上工具记录就算有证据。结果是“某件事现在成立”，比如测试通过、页面能打开，必须挂一条跑成功的命令。只挂了改文件的结果，标成“未验证”。模型仍然只能从工具记录里挑，不能自己编。</p>
 <p>第二，事实会过期。</p>
 <p>一条验证过的结果，会记下它依赖的文件，也就是同一轮里验证命令之前改过的那些。后面哪一轮又改了其中任何一个，它就标成“待复验”。第 3 轮测试过了，第 5 轮又改了同一个文件，第 3 轮的“测试通过”就不能再信。这一步只比对文件名，不经过模型。</p>
 <p>第三，指标改成看结果。</p>
 <p>原来的“证据覆盖率”拆成两个数：动作有记录的比例，结果有验证的比例。另外加一个待复验的条数。3 号视图每件事的汇总里，也多了“结果已验证 a/b · 待复验 n”。</p>
+<img src="/images/posts/outline-sidebar-metrics.png" alt="6 号视图“技术信息”里的验收指标" width="360">
+<p><em>6 号视图“技术信息”顶上：上面是过程指标的合计，下面“验收与返工”是看结果的指标，本次会话和所有会话各算一遍。</em></p>
 <p>这套做法有几处粗糙的地方，我先说清楚。只比对文件名，不同目录下的同名文件会被当成一个，宁可多标几条待复验。网页上线、仓库公开这类文件以外的事实，判断不了过没过期，干脆不标。子代理改的文件不在主会话的记录里，也算不进依赖。这些都是已知的漏洞，不影响主干：可观测要追的，是现在还有哪些事实成立。</p>
 <p>（过程指标也没有删。它们是另一张账：一件事花了多少 token、多少时间。第五节会说到它的用处。）</p>
 <hr>
@@ -128,6 +136,8 @@ Claude Code 一轮能改十几个文件，跑几十条命令。写代码的速�
 <li>同一层的块：顶层话题、子块和“需要我做”的条目，超过 5 个时留最新的 4 个，前面的折成一行“还有 N 项”。光标所在的块和正在跑的那一轮照留。</li>
 <li>一块下面的“做了”：超过 5 条，只摆前 4 条和一行“另有 N 条”。</li>
 </ul>
+<img src="/images/posts/outline-sidebar-viewbar.png" alt="折叠后的视图栏" width="360">
+<p><em>视图栏只摆 4 个视图，“全部”和“技术信息”收进“… 还有 2 个”。</em></p>
 <p>“…”那一行自己也算一块，所以是 4 加 1。<strong>折叠就是替人做组块：8 个块收成一行“还有 8 项”，在注意力里只占一个位置。</strong> 折进去的里面要是有在等我的，那一行会写成“还有 8 项，2 件等你”，免得被折掉的事从此被忘了。</p>
 <p>要看全的时候，总有办法看到。展开那一行“…”，这一层就整层摆出来。把层级切到“全部展开”或者搜索时，大纲完全不折。导出成 Markdown 时也不折。</p>
 <p>这当然不是说 5 是一条测出来的定律。考恩给的是 3 到 5 的范围，什么算一个组块也有弹性：一行长标题本身可能就占好几块。所以 5 是一个设计预算，用来逼自己做取舍。它说的是“摆第六个之前，先想想能不能把其中几个打成一包”。</p>
@@ -144,7 +154,7 @@ Claude Code 一轮能改十几个文件，跑几十条命令。写代码的速�
 <li>Miller, G. A. (1956). The magical number seven, plus or minus two: Some limits on our capacity for processing information. <em>Psychological Review</em>, 63(2), 81–97.</li>
 <li>Cowan, N. (2001). The magical number 4 in short-term memory: A reconsideration of mental storage capacity. <em>Behavioral and Brain Sciences</em>, 24(1), 87–114.</li>
 <li>DeepSeek Harness 团队（Yujia Qiao 执笔）. (2026). Super-agent 设计探索：迈向更自主的 Agent 系统. 知乎专栏：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/2100165774447059306">zhuanlan.zhihu.com/p/2100165774447059306</a></li>
-<li>Outline Sidebar 仓库和 README：<a target="_blank" rel="noopener" href="https://github.com/MatsuriMW/outline-sidebar">github.com/MatsuriMW/outline-sidebar</a>。结果验证与待复验见 0.12.0（提交 6967b06），五块上限见 0.13.0（提交 17f7741）。</li>
+<li>Outline Sidebar 仓库和 README（0.14.0，提交 f88c7ec）：<a target="_blank" rel="noopener" href="https://github.com/MatsuriMW/outline-sidebar">github.com/MatsuriMW/outline-sidebar</a>。</li>
 </ul>
 </div>
     <aside class="toc" hidden>
