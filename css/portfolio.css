@@ -69,9 +69,9 @@
 .pf-idea p { flex: 1; margin: 0; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
 .pf-idea .chips { gap: 6px; font-size: 13px; }
 .pf-core { margin-top: 20px; }
-/* Outline Sidebar 的截图是 2:1 的宽图，放在上面整张露出来，文字在下面 */
+/* Outline Sidebar 的封面是 5:2 的宽图，放在上面整张露出来，文字在下面 */
 .pf .pf-core .pf-feat { display: flex; }
-.pf .pf-core .pf-shot { order: 0; aspect-ratio: 1400 / 677; min-height: 0; border-left: 0; border-bottom: 1px solid var(--rule); }
+.pf .pf-core .pf-shot { order: 0; aspect-ratio: 5 / 2; min-height: 0; border-left: 0; border-bottom: 1px solid var(--rule); }
 .pf .pf-core .pf-body { padding: 24px 32px 26px; }
 .pf .pf-core .pf-body p:not(.pf-links) { max-width: 760px; }
 
