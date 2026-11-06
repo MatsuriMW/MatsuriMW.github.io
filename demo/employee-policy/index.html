@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>员工问政策 · 演示</title>
+<style>
+:root {
+  --bg: #f5f4f0; --panel: #ffffff; --ink: #24272c; --muted: #6c7078; --faint: #9a9ea6; --line: #e3e1db; --soft: #f0efea;
+  --rule: #3d7a5a; --rule-bg: #edf5f0; --rag: #3a6b9e; --rag-bg: #edf2f8; --human: #9c6a24; --human-bg: #faf3e7;
+  --bad: #b04a3e; --bad-bg: #fbeeec; --ok: #7a7f87; --good: #3d7a5a; --warn: #9c6a24; --warn-bg: #fdf6e9;
+  --r: 10px; --shadow: 0 1px 2px rgba(30,30,20,.05), 0 2px 8px rgba(30,30,20,.04);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body { display: flex; flex-direction: column; }
+body > main { flex: 1; min-height: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; }
+button { font: inherit; cursor: pointer; }
+input, textarea, select { font: inherit; color: inherit; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+
+/* 顶栏 */
+header { display: flex; align-items: center; gap: 18px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .5px; white-space: nowrap; }
+.tabs { display: flex; gap: 4px; background: var(--soft); padding: 3px; border-radius: 9px; }
+.tabs button { border: 0; background: transparent; padding: 5px 14px; border-radius: 7px; color: var(--muted); }
+.tabs button.on { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); font-weight: 600; }
+.who { display: flex; align-items: center; gap: 8px; }
+.who select { border: 1px solid var(--line); border-radius: 7px; padding: 4px 8px; background: var(--panel); max-width: 300px; }
+.tabs button, .who span { white-space: nowrap; }
+.disclaimer { margin-left: auto; font-size: 12px; max-width: 470px; color: var(--muted); text-align: right; line-height: 1.4; }
+.replay-badge { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd9b5; padding: 2px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+
+/* 员工端 */
+.emp { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; padding: 16px 20px; }
+.col { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); display: flex; flex-direction: column; min-height: 0; box-shadow: var(--shadow); }
+.col h2 { font-size: 14px; margin: 0; padding: 11px 16px; border-bottom: 1px solid var(--line); font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.chat { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.examples { padding: 8px 16px 0; display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--line); }
+.examples button { border: 1px solid var(--line); background: var(--soft); border-radius: 99px; padding: 2px 10px; font-size: 13px; color: var(--ink); }
+.examples button:hover { border-color: #c9c6bd; background: #e9e7e1; }
+.examples .n { color: var(--faint); margin-right: 3px; font-size: 12px; }
+.composer { display: flex; gap: 8px; padding: 10px 16px 14px; }
+.composer input { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: #fcfcfa; }
+.composer input:focus { outline: 2px solid #c9d6e6; border-color: #b8c7da; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 14px; }
+.btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn.small { padding: 2px 10px; font-size: 13px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.msg-user { align-self: flex-end; max-width: 78%; background: #e9eef3; border-radius: 12px 12px 3px 12px; padding: 7px 12px; }
+.card { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 13px; max-width: 94%; position: relative; cursor: pointer; }
+.card.sel { box-shadow: 0 0 0 2px #cdd6e0; }
+.card.rule { background: var(--rule-bg); border-color: #cfe3d7; }
+.card.rag { background: var(--rag-bg); border-color: #cfdcea; }
+.card.human { background: var(--human-bg); border-color: #ecdcc0; }
+.card.pending { background: #fafaf8; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 1px 9px; border-radius: 99px; margin-bottom: 5px; }
+.rule .badge.k { background: #d6eadf; color: var(--rule); }
+.rag .badge.k { background: #d8e4f1; color: var(--rag); }
+.human .badge.k { background: #f1e2c6; color: var(--human); }
+.badge.tier-high { background: #d8e4f1; color: var(--rag); }
+.badge.tier-mid { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd9b5; }
+.badge.stale { background: #f1ece2; color: #8a6a3a; }
+.answer { white-space: pre-wrap; }
+.answer strong { font-weight: 700; }
+.rule .answer strong { color: var(--rule); font-size: 1.08em; }
+.cite { display: inline-block; font-size: 11.5px; line-height: 1; vertical-align: super; color: var(--rag); background: #fff; border: 1px solid #c8d6e6; border-radius: 4px; padding: 2px 4px; margin: 0 1px; cursor: pointer; }
+.sources { margin-top: 7px; display: flex; flex-direction: column; gap: 5px; }
+.src { font-size: 13px; background: rgba(255,255,255,.7); border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px; }
+.src summary { cursor: pointer; color: var(--muted); list-style: none; }
+.src summary::-webkit-details-marker { display: none; }
+.src summary b { color: var(--ink); font-weight: 600; }
+.src .orig { white-space: pre-wrap; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--line); font-size: 13px; color: var(--ink); max-height: 260px; overflow: auto; }
+.quote { font-size: 13px; color: var(--muted); border-left: 3px solid #b9d5c5; padding-left: 8px; margin-top: 6px; }
+.notice { font-size: 13px; margin-top: 7px; padding: 5px 9px; border-radius: 7px; background: var(--warn-bg); border: 1px solid #ecd9b5; color: #7d5518; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.notice .btn { margin-left: auto; }
+.redact-note { font-size: 12.5px; color: var(--muted); align-self: flex-end; margin-top: -8px; }
+.slot-opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.slot-opts button { border: 1px solid #c8d9cf; background: #fff; border-radius: 7px; padding: 3px 12px; }
+.slot-opts button:hover { background: #e3efe8; }
+.slot-opts button.chosen { background: var(--rule); color: #fff; border-color: var(--rule); }
+.hr-reply { margin-top: 8px; padding: 7px 10px; background: #fff; border: 1px solid #ecdcc0; border-radius: 8px; }
+.hr-reply .by { font-size: 12.5px; color: var(--human); font-weight: 600; }
+
+.fb { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.fb button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 0 10px; font-size: 13px; }
+.fb button.on.good { background: var(--good); color: #fff; border-color: var(--good); }
+.fb button.on.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
+.fb button.on.bad { background: var(--bad); color: #fff; border-color: var(--bad); }
+.fb .saved { color: var(--good); }
+.badform { margin-top: 8px; background: #fff; border: 1px solid #ebcfca; border-radius: 8px; padding: 8px 10px; font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; cursor: default; }
+.badform .reasons { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.badform textarea { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-height: 48px; resize: vertical; }
+
+/* 右侧：这次怎么走的 */
+.trace { flex: 1; overflow-y: auto; padding: 12px 16px 16px; }
+.trace .q { font-size: 13.5px; color: var(--muted); margin-bottom: 10px; }
+.trace .q b { color: var(--ink); font-weight: 600; }
+.gate { display: grid; grid-template-columns: 28px 1fr; gap: 0 10px; position: relative; padding-bottom: 12px; }
+.gate:not(:last-child)::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
+.gate .dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); background: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--faint); transition: all .25s; }
+.gate .gt { font-weight: 600; font-size: 14px; color: var(--faint); padding-top: 3px; transition: color .25s; }
+.gate .gd { grid-column: 2; font-size: 13px; color: var(--muted); }
+.gate.pass .dot { border-color: #bfc4ca; color: var(--muted); } .gate.pass .gt { color: var(--muted); }
+.gate.hit.human .dot, .gate.on.human .dot { background: var(--human); border-color: var(--human); color: #fff; } .gate.hit.human .gt { color: var(--human); }
+.gate.hit.rule .dot, .gate.on.rule .dot { background: var(--rule); border-color: var(--rule); color: #fff; } .gate.hit.rule .gt { color: var(--rule); }
+.gate.hit.rag .dot { background: var(--rag); border-color: var(--rag); color: #fff; } .gate.hit.rag .gt { color: var(--rag); }
+.gate.fail .dot { background: var(--human); border-color: var(--human); color: #fff; } .gate.fail .gt { color: var(--human); }
+.gate.skip { opacity: .45; }
+.gate.run .dot { border-color: var(--rag); color: var(--rag); animation: pulse 1s infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgba(58,107,158,.15); } }
+.substeps { grid-column: 2; margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+.sub { font-size: 13px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; background: #fcfcfa; }
+.sub .h { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 12.5px; color: var(--muted); }
+.sub.bad { border-color: #ebcfca; background: var(--bad-bg); }
+.sub.good { border-color: #cfe3d7; background: var(--rule-bg); }
+.meter { position: relative; height: 10px; background: var(--soft); border-radius: 5px; margin: 16px 0 16px; }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--rag); }
+.meter .mk { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.meter .mk span { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 11px; white-space: nowrap; color: var(--muted); }
+.meter .mk.low span { top: 14px; }
+.cands { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; }
+.cands td, .cands th { padding: 2px 5px; border-bottom: 1px solid var(--soft); text-align: left; }
+.cands th { color: var(--faint); font-weight: 500; }
+.cands tr.inctx td:first-child { box-shadow: inset 3px 0 var(--rag); }
+.cands .num { text-align: right; font-variant-numeric: tabular-nums; }
+.draftbox { white-space: pre-wrap; color: var(--faint); font-size: 13px; max-height: 120px; overflow: auto; }
+.costs { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.cost { flex: 1; min-width: 90px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.cost .v { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.cost .l { font-size: 12px; color: var(--muted); }
+.cost.zero .v { color: var(--rule); }
+.devtoggle { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; margin-left: auto; font-weight: 400; }
+.empty { color: var(--faint); font-size: 13.5px; padding: 30px 10px; text-align: center; }
+
+/* HR 工作台 */
+.hr { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.hr .tabs { align-self: flex-start; }
+.hrbody { flex: 1; min-height: 0; }
+.tk { display: grid; grid-template-columns: 340px 1fr; gap: 16px; height: 100%; }
+.tklist { overflow-y: auto; }
+.tkitem { padding: 9px 14px; border-bottom: 1px solid var(--soft); cursor: pointer; }
+.tkitem:hover { background: #fafaf7; } .tkitem.sel { background: var(--human-bg); }
+.tkitem .top { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.st { font-size: 12px; padding: 0 8px; border-radius: 99px; font-weight: 600; }
+.st.s0 { background: var(--human-bg); color: var(--human); border: 1px solid #ecdcc0; }
+.st.s1 { background: var(--rule-bg); color: var(--rule); }
+.st.s2 { background: var(--bad-bg); color: var(--bad); }
+.tkdetail { overflow-y: auto; padding: 14px 18px; }
+.kv { display: grid; grid-template-columns: 90px 1fr; gap: 4px 12px; font-size: 14px; margin-bottom: 12px; }
+.kv .k { color: var(--muted); }
+.trailmini { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.trailmini .gg { font-weight: 600; margin-right: 6px; }
+textarea.reply { width: 100%; min-height: 90px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.sec { font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 6px; }
+.bclist { overflow-y: auto; height: 100%; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; }
+.bc { padding: 12px 16px; flex-shrink: 0; }
+.bc .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13.5px; margin-top: 8px; }
+.bc select, .bc input { border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; background: #fff; }
+.bc .ans { background: var(--soft); border-radius: 7px; padding: 6px 10px; font-size: 13.5px; white-space: pre-wrap; margin-top: 6px; }
+.chip { font-size: 12px; background: var(--bad-bg); color: var(--bad); border-radius: 99px; padding: 0 8px; }
+.dash { overflow-y: auto; height: 100%; display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; align-content: start; padding-bottom: 20px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 16px; box-shadow: var(--shadow); }
+.tile h3 { margin: 0 0 6px; font-size: 13.5px; color: var(--muted); font-weight: 600; }
+.big { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.big small { font-size: 15px; color: var(--muted); font-weight: 500; margin-left: 8px; }
+.span6 { grid-column: span 6; } .span4 { grid-column: span 4; } .span12 { grid-column: span 12; } .span8 { grid-column: span 8; }
+.bars { display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; margin-top: 6px; }
+.bar { display: grid; grid-template-columns: 190px 1fr 40px; align-items: center; gap: 8px; }
+.bar .track { height: 9px; background: var(--soft); border-radius: 5px; overflow: hidden; }
+.bar .track i { display: block; height: 100%; background: #9aa9b8; border-radius: 5px; }
+.bar .n { text-align: right; font-variant-numeric: tabular-nums; }
+table.t { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.t th, table.t td { border-bottom: 1px solid var(--soft); padding: 5px 8px; text-align: left; vertical-align: top; }
+table.t th { color: var(--muted); font-weight: 500; }
+table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.note { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.span7 { grid-column: span 7; } .span5 { grid-column: span 5; } .span3 { grid-column: span 3; }
+.grp { grid-column: span 12; font-size: 13px; font-weight: 650; color: var(--muted); margin: 8px 0 -4px; letter-spacing: .5px; }
+.kpis { display: flex; gap: 10px; margin-bottom: 8px; }
+.kpi { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.kpi b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.kpi span { font-size: 12px; color: var(--muted); }
+.kpi.bad b { color: var(--bad); } .kpi.good b { color: var(--rule); }
+.prio { font-size: 11.5px; padding: 0 7px; border-radius: 99px; font-weight: 600; }
+.prio.p-h { background: var(--bad-bg); color: var(--bad); } .prio.p-m { background: var(--warn-bg); color: var(--warn); } .prio.p-n { background: var(--soft); color: var(--muted); }
+.late { color: var(--bad); font-weight: 600; }
+.tksum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.tksum div { display: flex; flex-direction: column; } .tksum b { font-size: 17px; font-variant-numeric: tabular-nums; } .tksum span { font-size: 11.5px; color: var(--muted); }
+.tkfilter { display: flex; gap: 4px; padding: 6px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.tkfilter button, .funnel button { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 0 10px; font-size: 12.5px; color: var(--muted); }
+.tkfilter button.on, .funnel button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.funnel { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.funnel button { padding: 2px 12px; } .funnel button b { margin-right: 5px; }
+.funnel.static div { border: 1px solid var(--line); border-radius: 8px; padding: 4px 12px; font-size: 13px; color: var(--muted); }
+.funnel.static b { display: block; font-size: 20px; color: var(--ink); }
+.funnel .arrow { color: var(--faint); }
+.route { font-size: 12.5px; padding: 0 8px; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+.route.r-rule { background: var(--rule-bg); color: var(--rule); } .route.r-rag { background: var(--rag-bg); color: var(--rag); } .route.r-human { background: var(--human-bg); color: var(--human); } .route.r-ask_slot { background: var(--soft); color: var(--muted); }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 7px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
+.toast.on { opacity: .92; }
+@media (max-width: 1100px) { .emp { grid-template-columns: 1fr; } body { display: block; } .col { min-height: 60vh; } .tk { grid-template-columns: 1fr; } .disclaimer { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>员工问政策</h1>
+  <div class="tabs" id="viewTabs">
+    <button data-v="emp" class="on">员工端</button>
+    <button data-v="hr">HR 工作台 <span id="openCount" class="muted"></span></button>
+  </div>
+  <div class="who" id="whoBox">
+    <span class="muted">身份</span>
+    <select id="subject"></select>
+  </div>
+  <span id="replayBadge"></span>
+  <div class="disclaimer">演示资料来自公开网页（复星旅文员工手册 V5.0、泛亚人力外包员工服务手册），不代表信华制度<br>数据均为演示时现场产生，不含真实个人信息</div>
+</header>
+
+<main id="empView" class="emp">
+  <section class="col">
+    <h2>对话 <span class="faint" style="font-weight:400">· 请问一个完整的问题，每题独立处理</span></h2>
+    <div class="chat" id="chat"></div>
+    <div class="examples" id="examples"></div>
+    <form class="composer" id="composer">
+      <input id="qInput" placeholder="例如：病假要交什么材料？" autocomplete="off">
+      <button class="btn primary" id="sendBtn">发送</button>
+    </form>
+  </section>
+  <section class="col">
+    <h2>这次怎么走的
+      <label class="devtoggle" title="演示用：把生成的回答里的一个数字改错，看数字校验会不会拦下"><input type="checkbox" id="tamper"> 演示：篡改回答里的数字</label>
+    </h2>
+    <div class="trace" id="trace"><div class="empty">提一个问题，这里会依次点亮三道闸：<br>① 人工闸 → ② 规则闸 → ③ RAG</div></div>
+  </section>
+</main>
+
+<main id="hrView" class="hr" hidden>
+  <div class="tabs" id="hrTabs">
+    <button data-t="tickets" class="on">工单</button>
+    <button data-t="bad">Bad case</button>
+    <button data-t="dash">看板</button>
+    <button data-t="rules">规则表</button>
+  </div>
+  <div class="hrbody" id="hrBody"></div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const api = async (p, body) => { const r = await fetch(p, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}); const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); return j; };
+const toast = (t) => { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("on"), 1800); };
+const fmtDur = (ms) => ms == null ? "—" : ms < 1000 ? `${ms} ms` : ms < 60e3 ? `${(ms / 1000).toFixed(ms < 10e3 ? 1 : 0)} 秒` : ms < 3600e3 ? `${Math.round(ms / 60e3)} 分钟` : `${Math.floor(ms / 3600e3)} 小时 ${Math.round((ms % 3600e3) / 60e3)} 分`;
+const PRI = { sensitive: "高", personal: "中", feedback: "中", system: "普通", explicit: "普通" };
+const prioOf = (t) => t.priority || PRI[t.reasonType] || "普通";
+const prioTag = (p) => `<span class="prio p-${p === "高" ? "h" : p === "中" ? "m" : "n"}">${p === "普通" ? "普通" : p + "优先"}</span>`;
+const REASON_TYPE = { explicit: "用户主动要求", sensitive: "敏感事项", personal: "查个人数据", system: "系统判断答不了", feedback: "看完回答 / 反馈后" };
+const fmtTime = (iso) => { const d = new Date(iso); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`; };
+
+let META = null;
+const state = { msgs: [], sel: null, subject: "fosun", view: "emp", hrTab: "tickets", selTicket: null, fb: {}, tickets: {} };
+
+// 演示脚本（条款已对照手册原文）
+const EXAMPLES = [
+  { q: "年假有几天？", s: "fosun" },
+  { q: "我外婆去世了可以请几天丧假？", s: "fosun" },
+  { q: "去年没休完的年假今年还能休吗？", s: "fosun" },
+  { q: "病假要交什么材料？", s: "fosun" },
+  { q: "我今年结婚能休几天婚假？", s: "fosun" },
+  { q: "公司有班车吗？", s: "fosun" },
+  { q: "我被主管口头辞退了，能要赔偿吗？", s: "fosun" },
+  { q: "转人工", s: "fosun" },
+  { q: "工龄 6 年年假几天？", s: "fairhr" },
+  { q: "我手机号 13800000000，产假要提前多久申请？", s: "fosun" },
+  { q: "离职后年假能折现吗？", s: "fosun", tag: "低置信" },
+];
+
+// ---------- 初始化 ----------
+(async function init() {
+  META = await api("/api/policy/meta");
+  const sel = $("#subject");
+  for (const [k, v] of Object.entries(META.subjects)) sel.insertAdjacentHTML("beforeend", `<option value="${k}">${esc(v.label)}（${esc(v.source)} ${esc(v.version)}）</option>`);
+  sel.onchange = () => { state.subject = sel.value; toast(`已切到「${META.subjects[sel.value].label}」，只在《${META.subjects[sel.value].source}》里查`); };
+  if (META.replay) $("#replayBadge").innerHTML = `<span class="replay-badge" title="不联网，模型结果来自录制">回放模式</span>`;
+  $("#examples").innerHTML = EXAMPLES.map((e, i) => `<button data-i="${i}" title="${e.s === "fairhr" ? "会切到外包员工" : ""}"><span class="n">${i + 1}</span>${esc(e.q)}${e.s === "fairhr" ? "（外包）" : ""}${e.tag ? `（${e.tag}）` : ""}</button>`).join("");
+  $("#examples").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; const e = EXAMPLES[b.dataset.i]; setSubject(e.s); send(e.q); };
+  $("#composer").onsubmit = (ev) => { ev.preventDefault(); const q = $("#qInput").value.trim(); if (q) { $("#qInput").value = ""; send(q); } };
+  $("#viewTabs").onclick = (ev) => { const b = ev.target.closest("button"); if (b) setView(b.dataset.v); };
+  $("#hrTabs").onclick = (ev) => { const b = ev.target.closest("button"); if (b) { state.hrTab = b.dataset.t; renderHR(); } };
+  setInterval(poll, 2500);
+  poll();
+})();
+
+function setSubject(s) { if (state.subject !== s) { state.subject = s; $("#subject").value = s; toast(`已切到「${META.subjects[s].label}」`); } }
+function setView(v) {
+  state.view = v;
+  for (const b of $("#viewTabs").children) b.classList.toggle("on", b.dataset.v === v);
+  $("#empView").hidden = v !== "emp"; $("#hrView").hidden = v !== "hr"; $("#whoBox").style.visibility = v === "emp" ? "visible" : "hidden";
+  if (v === "hr") renderHR();
+}
+
+// ---------- 提问（SSE） ----------
+async function send(q, extra = {}) {
+  const m = extra.msg || { id: Math.random().toString(36).slice(2), q, subject: state.subject, steps: [], stages: {}, draft: "", status: "running" };
+  if (!extra.msg) { state.msgs.push(m); }
+  else { Object.assign(m, { steps: [], stages: {}, draft: "", status: "running", answer: null, handoff: null, retrieval: null, checks: null, done: null, error: null }); }
+  state.sel = m.id;
+  renderChat(); renderTrace();
+  const body = { q: m.q, subject: m.subject, tamper: $("#tamper").checked, ...(extra.slot ? { ruleId: extra.ruleId, slot: extra.slot, traceId: m.traceId } : {}) };
+  const r = await fetch("/api/policy/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const reader = r.body.getReader(), dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n\n")) >= 0) {
+      const raw = buf.slice(0, i); buf = buf.slice(i + 2);
+      const ev = raw.match(/^event: (.*)$/m)?.[1], data = JSON.parse(raw.match(/^data: (.*)$/m)?.[1] || "null");
+      onEvent(m, ev, data);
+    }
+  }
+  m.status = "done";
+  renderChat(); renderTrace();
+}
+
+function onEvent(m, ev, d) {
+  if (ev === "start") { m.traceId = d.traceId; m.qShown = d.q; m.redacted = d.redacted; }
+  else if (ev === "step") m.steps.push(d);
+  else if (ev === "stage") m.stages[d.k] = d;
+  else if (ev === "retrieval") m.retrieval = d;
+  else if (ev === "draft") { m.draft += d.t; renderTrace(true); return; }
+  else if (ev === "checks") m.checks = d;
+  else if (ev === "ask_slot") m.slotAsk = d;
+  else if (ev === "answer") m.answer = d;
+  else if (ev === "handoff") { m.handoff = d; if (d.ticketId) m.ticketId = d.ticketId; }
+  else if (ev === "done") m.done = d;
+  else if (ev === "error") m.error = d.message;
+  renderChat(); renderTrace();
+}
+
+// ---------- 左：对话 ----------
+function mdLite(text, msg) {
+  return esc(text).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\[(\d+)\]/g, (_, n) => `<span class="cite" data-n="${n}" data-m="${msg.id}">${n}</span>`);
+}
+function sourcesHTML(sources) {
+  return `<div class="sources">${sources.map((s) => `<details class="src" data-n="${s.n}"><summary><b>[${s.n}]</b> ${esc(s.cite)} · <span class="faint">${esc(s.ctx)}</span> ▸ 原文</summary><div class="orig">${esc(s.text)}</div></details>`).join("")}</div>`;
+}
+function fbHTML(target, key) {
+  const f = state.fb?.[key] || {};
+  return `<div class="fb" data-key="${esc(key)}" data-target='${esc(JSON.stringify(target))}'>这条回答
+    <button class="good ${f.rating === "good" ? "on good" : ""}" data-r="good">Good</button>
+    <button class="ok ${f.rating === "ok" ? "on ok" : ""}" data-r="ok">OK</button>
+    <button class="bad ${f.rating === "bad" ? "on bad" : ""}" data-r="bad">Bad</button>
+    ${f.saved ? `<span class="saved">已记录${f.ticket ? `，工单 ${esc(f.ticket)}` : ""}</span>` : ""}
+  </div>${f.open ? badFormHTML(key) : ""}`;
+}
+function badFormHTML(key) {
+  return `<div class="badform" data-key="${esc(key)}">
+    <div><b>哪里不好？</b>（可多选）</div>
+    <div class="reasons">${META.reasons.map((r) => `<label><input type="checkbox" value="${esc(r)}"> ${esc(r)}</label>`).join("")}</div>
+    <textarea placeholder="说说原因（选填）。手机号、身份证号会被自动遮盖"></textarea>
+    <label><input type="checkbox" class="wanthuman"> 要真人回答（会转给 HR）</label>
+    <div><button class="btn small primary sub-bad">提交</button> <button class="btn small cancel-bad">取消</button></div>
+  </div>`;
+}
+
+function renderChat() {
+  const el = $("#chat");
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  if (!state.msgs.length) { el.innerHTML = `<div class="empty">点下面的示例问题，或者直接输入。<br>示例问题按演示顺序排好了。</div>`; return; }
+  el.innerHTML = state.msgs.map((m) => {
+    let h = `<div class="msg-user">${esc(m.qShown || m.q)}${m.subject === "fairhr" ? ` <span class="faint">· 外包员工</span>` : ""}</div>`;
+    if (m.redacted?.length) h += `<div class="redact-note">🔒 已遮盖${esc(m.redacted.join("、"))}，模型、日志、工单里都只有遮盖后的文字</div>`;
+    const sel = state.sel === m.id ? " sel" : "";
+    if (m.error) return h + `<div class="card pending${sel}" data-m="${m.id}">出错了：${esc(m.error)}</div>`;
+    if (m.answer?.kind === "rule") {
+      const a = m.answer;
+      h += `<div class="card rule${sel}" data-m="${m.id}"><span class="badge k">规则直答 · 查表 · 0 token</span>${staleBadge(a)}
+        <div class="answer">${mdLite(a.text, m)}</div>
+        <div class="quote">手册原文：${esc(a.quote)}</div>
+        ${sourcesHTML(a.sources)}${a.locality ? localNotice(m) : ""}
+        ${fbHTML({ targetType: "rule", traceId: a.traceId }, "rule:" + a.traceId)}</div>`;
+    } else if (m.answer?.kind === "rag") {
+      const a = m.answer;
+      h += `<div class="card rag${sel}" data-m="${m.id}"><span class="badge k">RAG 生成</span> <span class="badge tier-${a.tier}">${a.tier === "high" ? "高置信" : "中置信"}</span>${staleBadge(a)}
+        <div class="answer">${mdLite(a.text, m)}</div>
+        ${sourcesHTML(a.sources)}
+        ${a.tier === "mid" ? `<div class="notice">置信度中等，建议找 HR 核实。${handoffBtn(m, "置信度中等，员工要求核实")}</div>` : ""}
+        ${a.locality ? localNotice(m) : ""}
+        ${fbHTML({ targetType: "rag", traceId: a.traceId }, "rag:" + a.traceId)}</div>`;
+    } else if (m.handoff || m.manualTicket) {
+      const d = m.handoff || {};
+      const t = state.tickets?.[m.ticketId];
+      h += `<div class="card human${sel}" data-m="${m.id}"><span class="badge k">已转人工${m.ticketId ? ` · 工单 ${esc(m.ticketId)}` : ""}</span>
+        <div>${t?.replies?.length ? "HR 已回复：" : "已经转给 HR，回复后会显示在这里。"}</div>
+        <div class="muted" style="font-size:13px">转人工原因：${esc(d.reason || t?.reason || "")}${d.clauses?.length ? `<br>已附上相关条款：${d.clauses.map((c) => esc(c.clause)).join("、")}` : ""}</div>
+        ${t ? repliesHTML(t) : ""}</div>`;
+    } else if (m.slotAsk) {
+      const s = m.slotAsk;
+      h += `<div class="card rule${sel}" data-m="${m.id}"><span class="badge k">规则 · 追问条件</span>
+        <div>${esc(s.ask)}</div>
+        <div class="slot-opts">${s.options.map((o) => `<button data-slot="${esc(o)}" data-m="${m.id}" class="${m.slotChosen === o ? "chosen" : ""}">${esc(o)}</button>`).join("")}</div></div>`;
+    } else {
+      h += `<div class="card pending${sel}" data-m="${m.id}"><span class="faint">${m.stages?.embed ? (m.draft ? "生成中，校验通过前不展示…" : "检索中…") : "处理中…"}</span></div>`;
+    }
+    // 中置信 / 属地提示后点了转人工
+    if (m.answer && m.ticketId) {
+      const t = state.tickets?.[m.ticketId];
+      h += `<div class="card human" data-m="${m.id}"><span class="badge k">已转人工 · 工单 ${esc(m.ticketId)}</span>
+        <div>${t?.replies?.length ? "HR 已回复：" : "已经转给 HR，回复后会显示在这里。"}</div>${t ? repliesHTML(t) : ""}</div>`;
+    }
+    return h;
+  }).join("");
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+const staleBadge = (a) => a.stale?.stale ? ` <span class="badge stale" title="资料日期 ${esc(a.subject.date)}，超过 ${META.staleYears} 年">资料较旧 · ${esc(a.subject.date.slice(0, 4))} 年版</span>` : ` <span class="faint" style="font-size:12px">${esc(a.subject.source)} ${esc(a.subject.version)}（${esc(a.subject.date)}）</span>`;
+const handoffBtn = (m, why) => m.ticketId ? `<span class="muted">已转工单 ${esc(m.ticketId)}</span>` : `<button class="btn small" data-handoff="${m.id}" data-why="${esc(why)}">转人工</button>`;
+const localNotice = (m) => `<div class="notice">依据条款写的是「按雇佣地规定」，具体以你工作地的规定为准。${handoffBtn(m, "属地规定，员工要求 HR 确认")}</div>`;
+function repliesHTML(t) {
+  return t.replies.map((r, i) => `<div class="hr-reply"><div class="by">HR 回复 · ${fmtTime(r.at)}</div><div class="answer">${esc(r.text)}</div>
+    ${fbHTML({ targetType: "human", traceId: t.traceId, ticketId: t.id, replyIdx: i }, `human:${t.id}:${i}`)}</div>`).join("")
+    + (t.status === "重新打开" ? `<div class="muted" style="font-size:13px;margin-top:6px">工单已重新打开，等 HR 再次回复</div>` : "");
+}
+
+// 点击：选中、引用、追问、反馈、转人工
+$("#chat").addEventListener("click", async (ev) => {
+  const t = ev.target;
+  if (t.closest(".badform")) {
+    const form = t.closest(".badform"), key = form.dataset.key;
+    if (t.classList.contains("cancel-bad")) { state.fb[key].open = false; renderChat(); }
+    if (t.classList.contains("sub-bad")) {
+      const target = JSON.parse(form.previousElementSibling.dataset.target);
+      const reasons = [...form.querySelectorAll(".reasons input:checked")].map((x) => x.value);
+      await submitFb(key, target, "bad", { reasons, note: form.querySelector("textarea").value, wantHuman: form.querySelector(".wanthuman").checked });
+    }
+    return;
+  }
+  const fb = t.closest(".fb button");
+  if (fb) {
+    const box = fb.closest(".fb"), key = box.dataset.key, target = JSON.parse(box.dataset.target), r = fb.dataset.r;
+    state.fb ||= {};
+    if (r === "bad") { state.fb[key] = { ...(state.fb[key] || {}), open: true, rating: "bad", saved: false }; renderChat(); return; }
+    await submitFb(key, target, r, {});
+    return;
+  }
+  if (t.dataset.slot) {
+    const m = state.msgs.find((x) => x.id === t.dataset.m);
+    m.slotChosen = t.dataset.slot;
+    const ruleId = m.slotAsk.ruleId;
+    m.slotAsk = null;
+    await send(m.q, { msg: m, slot: t.dataset.slot, ruleId });
+    return;
+  }
+  if (t.dataset.handoff) {
+    const m = state.msgs.find((x) => x.id === t.dataset.handoff);
+    const tk = await api("/api/policy/handoff", { traceId: m.traceId, why: t.dataset.why });
+    m.ticketId = tk.id; state.tickets ||= {}; state.tickets[tk.id] = tk;
+    toast(`已转人工，工单 ${tk.id}`); renderChat(); return;
+  }
+  if (t.classList.contains("cite")) {
+    const card = t.closest(".card"), d = card.querySelector(`details.src[data-n="${t.dataset.n}"]`);
+    if (d) { d.open = true; d.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+    return;
+  }
+  const card = t.closest(".card");
+  if (card && !t.closest("details") && card.dataset.m) { state.sel = card.dataset.m; renderChat(); renderTrace(); }
+});
+async function submitFb(key, target, rating, extra) {
+  const r = await api("/api/policy/feedback", { ...target, rating, ...extra });
+  state.fb[key] = { rating, saved: true, open: false, ticket: r.ticket?.id };
+  if (r.ticket) {
+    state.tickets ||= {}; state.tickets[r.ticket.id] = r.ticket;
+    const m = state.msgs.find((x) => x.traceId === target.traceId);
+    if (m && target.targetType !== "human") m.ticketId = r.ticket.id;
+    toast(target.targetType === "human" ? `工单 ${r.ticket.id} 已重新打开` : `已转人工，工单 ${r.ticket.id}`);
+  } else toast(rating === "bad" ? "已进 Bad case 队列" : "已记录");
+  renderChat();
+}
+
+// ---------- 右：这次怎么走的 ----------
+function renderTrace(onlyDraft) {
+  const m = state.msgs.find((x) => x.id === state.sel);
+  const el = $("#trace");
+  if (!m) return;
+  if (onlyDraft && $("#draftbox")) { $("#draftbox").textContent = m.draft; return; }
+  const st = (g) => m.steps.filter((s) => s.gate === g).at(-1);
+  const hs = st("human"), rs = st("rule"), gs = st("rag"), cs = st("check"), ls = st("lookup"), red = st("redact");
+  const running = m.status === "running";
+  const gateCls = (s, kind) => !s ? (running ? "" : "skip") : s.status === "hit" ? `hit ${kind}` : s.status === "ask" ? `hit ${kind}` : s.status === "skip" ? "skip" : s.status === "pass" || s.status === "conflict" ? "pass" : s.status === "refuse" || s.status === "uncovered" ? "fail" : s.status === "gen" ? `hit ${kind}` : "";
+  let ragSubs = "";
+  if (m.stages.embed || gs) {
+    const sr = m.stages.search, rr = m.stages.rerank, R = m.retrieval;
+    ragSubs += `<div class="substeps">`;
+    if (sr) ragSubs += `<div class="sub ${sr.refused ? "bad" : ""}"><div class="h"><span>混合检索（BM25 + 向量）</span><span>${m.stages.embed.ms + sr.ms} ms</span></div>
+      ${sr.n} 个候选（共 ${sr.total} 块）；最高余弦 <b>${sr.topCos.toFixed(3)}</b> ${sr.topCos >= sr.gate ? "≥" : "<"} 粗门槛 ${sr.gate}${sr.refused ? " → 检索拒答" : ""}</div>`;
+    if (rr) {
+      const w = (v) => Math.min(100, Math.max(0, v * 100));
+      ragSubs += `<div class="sub ${rr.tier === "low" ? "bad" : ""}"><div class="h"><span>重排（bge-reranker-v2-m3）</span><span>${rr.ms} ms</span></div>
+        最高分 <b>${rr.topRR.toFixed(3)}</b> → ${{ high: "高置信", mid: "中置信", low: "低置信，不生成，转人工" }[rr.tier]}
+        <div class="meter"><div class="fill" style="width:${w(rr.topRR)}%;background:${rr.tier === "low" ? "var(--human)" : rr.tier === "mid" ? "var(--warn)" : "var(--rag)"}"></div>
+          <div class="mk" style="left:${w(rr.fine)}%"><span>细门槛 ${rr.fine}</span></div><div class="mk low" style="left:${w(rr.high)}%"><span>高门槛 ${rr.high}</span></div></div></div>`;
+    }
+    if (R?.hits?.length) ragSubs += `<div class="sub"><div class="h"><span>候选（前 ${Math.min(8, R.hits.length)}，左侧色条 = 进了提示词）</span></div>
+      <table class="cands"><tr><th>条款</th><th>标题</th><th class="num">余弦</th><th class="num">重排</th></tr>
+      ${R.hits.slice(0, 8).map((h) => `<tr class="${h.inContext ? "inctx" : ""}"><td class="mono">${esc(h.clause)}</td><td>${esc(h.ctx.split(" > ").pop())}</td><td class="num mono">${h.cos.toFixed(3)}</td><td class="num mono">${h.rr != null ? h.rr.toFixed(3) : "—"}</td></tr>`).join("")}</table></div>`;
+    if (m.draft || (gs?.status === "gen")) ragSubs += `<div class="sub"><div class="h"><span>生成（DeepSeek，校验通过才展示）</span><span>${m.done?.model || ""}</span></div><div class="draftbox" id="draftbox">${esc(m.checks?.tampered ? m.checks.text : m.draft)}</div></div>`;
+    if (cs) ragSubs += `<div class="sub ${cs.status === "pass" ? "good" : "bad"}"><div class="h"><span>引用和数字校验</span><span>${cs.status === "pass" ? "通过" : "拦下 → 转人工"}</span></div>${esc(cs.detail)}${m.checks?.tampered ? `<div class="faint">（演示开关打开：回答里的数字被故意改过）</div>` : ""}</div>`;
+    ragSubs += `</div>`;
+  }
+  const d = m.done;
+  const calls = d ? d.calls.embed + d.calls.rerank + d.calls.gen : null;
+  el.innerHTML = `
+    <div class="q">问题：<b>${esc(m.qShown || m.q)}</b> · ${esc(META.subjects[m.subject].label)}${m.traceId ? ` · <span class="mono faint">trace ${esc(m.traceId)}</span>` : ""}</div>
+    ${red ? `<div class="sub" style="margin-bottom:10px">🔒 ${esc(red.detail)}</div>` : ""}
+    <div class="gate ${gateCls(hs, "human")} human"><div class="dot">1</div><div class="gt">人工闸 <span class="faint" style="font-weight:400">· 关键词，不调模型</span></div><div class="gd">${esc(hs?.detail || (running ? "检查中…" : ""))}</div></div>
+    <div class="gate ${gateCls(rs, "rule")} rule"><div class="dot">2</div><div class="gt">规则闸 <span class="faint" style="font-weight:400">· 查表，不调模型</span></div><div class="gd">${esc(rs?.detail || "")}${ls ? `<br><b style="color:var(--rule)">${esc(ls.detail)}</b>` : ""}</div></div>
+    <div class="gate ${gateCls(gs, "rag")} ${running && rs && !gs ? "run" : ""} rag"><div class="dot">3</div><div class="gt">RAG <span class="faint" style="font-weight:400">· 检索 → 重排 → 生成 → 校验</span></div><div class="gd">${esc(gs?.detail || "")}</div>${ragSubs}</div>
+    ${m.handoff ? `<div class="sub" style="border-color:#ecdcc0;background:var(--human-bg)"><div class="h"><span style="color:var(--human)">转人工 → 工单 ${esc(m.handoff.ticketId || "")}</span><span>分类：${esc(m.handoff.category)}</span></div>原因：${esc(m.handoff.reason)}<br>附带条款：${m.handoff.clauses.map((c) => esc(c.ctx.split(" > ").pop().startsWith(c.clause) ? c.ctx.split(" > ").pop() : c.clause + " " + c.ctx.split(" > ").pop())).join("；") || "无"}</div>` : ""}
+    ${d ? `<div class="costs" style="margin-top:12px">
+      <div class="cost"><div class="v">${(d.ms / 1000).toFixed(2)}s</div><div class="l">耗时</div></div>
+      <div class="cost ${calls === 0 ? "zero" : ""}"><div class="v">${calls}</div><div class="l">模型调用（向量 ${d.calls.embed} / 重排 ${d.calls.rerank} / 生成 ${d.calls.gen}）</div></div>
+      <div class="cost ${!d.usage ? "zero" : ""}"><div class="v">${d.usage?.total_tokens ?? 0}</div><div class="l">生成 token</div></div></div>
+      ${d.replay ? `<div class="note">回放模式：模型结果来自录制，路由和校验是现场跑的</div>` : ""}` : ""}`;
+}
+
+// ---------- 轮询：工单状态（员工端显示 HR 回复）+ 工作台计数 ----------
+async function poll() {
+  try {
+    const list = await api("/api/policy/tickets");
+    state.tickets = Object.fromEntries(list.map((t) => [t.id, t]));
+    const open = list.filter((t) => t.status !== "已回复").length;
+    $("#openCount").textContent = open ? `(${open})` : "";
+    const sig = list.map((t) => t.id + t.status + t.replies.length).join();
+    if (sig !== state.sig && !document.activeElement?.closest?.(".badform")) { state.sig = sig; renderChat(); if (state.view === "hr" && state.hrTab === "tickets") renderHR(true); }
+    if (state.view === "hr" && state.hrTab === "dash") renderHR(true);
+  } catch {}
+}
+
+// ---------- HR 工作台 ----------
+async function renderHR(soft) {
+  for (const b of $("#hrTabs").children) b.classList.toggle("on", b.dataset.t === state.hrTab);
+  const el = $("#hrBody");
+  if (state.hrTab === "tickets") return renderTickets(el, soft);
+  if (state.hrTab === "bad") return renderBad(el);
+  if (state.hrTab === "dash") return renderDash(el);
+  if (state.hrTab === "rules") return renderRules(el);
+}
+
+function renderTickets(el, soft) {
+  const all = Object.values(state.tickets || {});
+  const isOpen = (t) => t.status !== "已回复";
+  const rank = { 高: 0, 中: 1, 普通: 2 };
+  // 排队顺序：没处理完的在前；其中高优先在前；同优先级先来先处理
+  all.sort((a, b) => (isOpen(b) - isOpen(a)) || (isOpen(a) ? rank[prioOf(a)] - rank[prioOf(b)] || a.createdAt.localeCompare(b.createdAt) : b.createdAt.localeCompare(a.createdAt)));
+  const F = state.tkFilter || "全部";
+  const filters = { 全部: () => true, 待处理: (t) => t.status === "待处理", 重新打开: (t) => t.status === "重新打开", 已回复: (t) => t.status === "已回复", 高优先: (t) => prioOf(t) === "高" && isOpen(t) };
+  const list = all.filter(filters[F]);
+  if (!state.selTicket && list[0]) state.selTicket = list[0].id;
+  const t = state.tickets?.[state.selTicket];
+  const stCls = (s) => ({ 待处理: "s0", 已回复: "s1", 重新打开: "s2" }[s]);
+  const keepDraft = soft && $("#replyBox") ? $("#replyBox").value : null;
+  if (soft && document.activeElement?.id === "replyBox") return;   // 正在打字，不刷新
+  const now = Date.now();
+  const open = all.filter(isOpen);
+  const oldest = open.length ? Math.max(...open.map((x) => now - Date.parse(x.reopenedAt || x.createdAt))) : null;
+  const resp = all.filter((x) => x.replies.length).map((x) => Date.parse(x.replies[0].at) - Date.parse(x.createdAt)).sort((a, b) => a - b);
+  const med = resp.length ? resp[Math.ceil(resp.length / 2) - 1] : null;
+  const waitOf = (x) => isOpen(x) ? `<span class="${now - Date.parse(x.reopenedAt || x.createdAt) > 5 * 60e3 ? "late" : ""}">已等 ${fmtDur(now - Date.parse(x.reopenedAt || x.createdAt))}</span>` : `首次响应 ${fmtDur(Date.parse(x.replies[0].at) - Date.parse(x.createdAt))}`;
+  el.innerHTML = `<div class="tk">
+    <div class="col"><h2 style="flex-wrap:wrap;row-gap:4px">工单队列 <span class="faint" style="font-weight:400">${all.length} 张</span></h2>
+      <div class="tksum"><div><b>${open.length}</b><span>未处理完</span></div><div><b style="color:var(--bad)">${open.filter((x) => prioOf(x) === "高").length}</b><span>高优先</span></div><div><b>${fmtDur(oldest)}</b><span>最久等待</span></div><div><b>${fmtDur(med)}</b><span>首次响应中位</span></div></div>
+      <div class="tkfilter">${Object.keys(filters).map((k) => `<button data-f="${k}" class="${k === F ? "on" : ""}">${k} ${all.filter(filters[k]).length}</button>`).join("")}</div>
+      <div class="tklist">
+      ${list.map((x) => `<div class="tkitem ${x.id === state.selTicket ? "sel" : ""}" data-id="${x.id}"><div class="top"><b style="color:var(--ink)">${x.id}</b><span class="st ${stCls(x.status)}">${x.status}</span>${prioTag(prioOf(x))}<span>${esc(x.category)}</span><span style="margin-left:auto">${waitOf(x)}</span></div>
+        <div>${esc(x.q)}</div><div class="faint" style="font-size:12.5px">${esc(REASON_TYPE[x.reasonType] || "")} · ${esc(x.reason)}</div></div>`).join("") || `<div class="empty">${all.length ? "这个筛选下没有工单" : "还没有工单"}</div>`}
+    </div></div>
+    <div class="col"><div class="tkdetail">${t ? ticketDetail(t) : `<div class="empty">选一张工单</div>`}</div></div></div>`;
+  el.querySelector(".tkfilter").onclick = (ev) => { const b = ev.target.closest("button"); if (b) { state.tkFilter = b.dataset.f; state.selTicket = null; renderTickets(el); } };
+  if (keepDraft != null && $("#replyBox")) $("#replyBox").value = keepDraft;
+  el.querySelector(".tklist").onclick = (ev) => { const it = ev.target.closest(".tkitem"); if (it) { state.selTicket = it.dataset.id; renderTickets(el); } };
+  const send = el.querySelector("#sendReply");
+  if (send) send.onclick = async () => {
+    const text = $("#replyBox").value.trim(); if (!text) return toast("回复不能为空");
+    const tk = await api(`/api/policy/tickets/${t.id}/reply`, { text, draft: t.draft?.text || null });
+    state.tickets[tk.id] = tk; toast(`已回复 ${tk.id}，员工端会显示`); renderTickets(el);
+  };
+  const dr = el.querySelector("#mkDraft");
+  if (dr) dr.onclick = async () => {
+    dr.disabled = true; dr.textContent = "生成中…";
+    try { const tk = await api(`/api/policy/tickets/${t.id}/draft`, {}); state.tickets[tk.id] = tk; renderTickets(el); $("#replyBox").value = tk.draft.text; }
+    catch (e) { toast("草稿生成失败：" + e.message); dr.disabled = false; dr.textContent = "用条款生成回复草稿"; }
+  };
+}
+function ticketDetail(t) {
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><b style="font-size:17px">${t.id}</b><span class="st ${({ 待处理: "s0", 已回复: "s1", 重新打开: "s2" })[t.status]}">${t.status}</span>${t.reopenReason ? `<span class="muted" style="font-size:13px">${esc(t.reopenReason)}</span>` : ""}</div>
+    <div class="kv">
+      <div class="k">问题</div><div><b>${esc(t.q)}</b></div>
+      <div class="k">身份</div><div>${esc(META.subjects[t.subject]?.label || t.subject)}</div>
+      <div class="k">转人工原因</div><div>${esc(t.reason)}</div>
+      <div class="k">分类</div><div>${esc(t.category)}（按最相关条款的章节推出）</div>
+      <div class="k">优先级</div><div>${prioTag(prioOf(t))} <span class="muted" style="font-size:13px">${prioOf(t) === "高" ? "敏感事项，可能涉及劳动纠纷，先处理" : prioOf(t) === "中" ? "涉及个人数据或员工已对机器回答不满意" : "一般咨询"}</span></div>
+      <div class="k">时效</div><div>${new Date(t.createdAt).toLocaleString("zh-CN")} 建单 · ${t.replies.length ? `首次响应 ${fmtDur(Date.parse(t.replies[0].at) - Date.parse(t.createdAt))}` : `已等 ${fmtDur(Date.now() - Date.parse(t.createdAt))}`}${t.reopenedAt ? ` · ${fmtTime(t.reopenedAt)} 重新打开` : ""}</div>
+      ${t.replies.length ? `<div class="k">员工评价</div><div>${t.replies.map((r, i) => { const f = r.fb; return f ? `第 ${i + 1} 次回复：<b style="color:${f.rating === "bad" ? "var(--bad)" : "var(--good)"}">${({ good: "Good", ok: "OK", bad: "Bad" })[f.rating]}</b>${f.reasons?.length ? "（" + esc(f.reasons.join("、")) + "）" : ""}${f.note ? " 「" + esc(f.note) + "」" : ""}` : `第 ${i + 1} 次回复：<span class="faint">还没评价</span>`; }).join("<br>")}</div>` : ""}
+      <div class="k">路由轨迹</div><div class="trailmini">${(t.trail || []).map((s) => `<div><span class="gg">${({ redact: "脱敏", human: "① 人工闸", rule: "② 规则闸", rag: "③ RAG", check: "校验", lookup: "查表" })[s.gate] || s.gate}</span>${esc(s.detail)}</div>`).join("")}</div>
+      ${t.fromAnswer ? `<div class="k">机器的回答</div><div class="muted">${esc(t.fromAnswer)}</div>` : ""}
+    </div>
+    <div class="sec">最相关的条款（HR 不用从头查）</div>
+    ${(t.clauses || []).map((c) => `<details class="src"><summary><b>${esc(c.clause)}</b> ${esc(c.ctx)} · ${esc(c.source)} ${esc(c.version)} 第 ${c.page} 页 ▸</summary><div class="orig">${esc(c.text)}</div></details>`).join("") || `<div class="faint">没有相关条款</div>`}
+    ${t.replies.length ? `<div class="sec">已回复</div>${t.replies.map((r, i) => `<div class="hr-reply"><div class="by">HR · ${fmtTime(r.at)}${r.draft ? (r.draft.unchanged ? " · 草稿未修改直接发送" : " · 改过草稿") : ""}</div><div class="answer">${esc(r.text)}</div></div>`).join("")}` : ""}
+    <div class="sec">${t.status === "已回复" ? "补充回复" : "回复员工"}</div>
+    ${t.draft ? `<div class="notice" style="margin-bottom:6px">下面是用条款生成的草稿，<b>待确认</b>：核对后再发。</div>` : ""}
+    <textarea class="reply" id="replyBox" placeholder="写给员工的回复…"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary" id="sendReply">发送给员工</button><button class="btn" id="mkDraft">${t.draft ? "重新生成草稿" : "用条款生成回复草稿"}</button>${META.replay ? `<span class="faint" style="font-size:12.5px;align-self:center">回放模式下草稿只能用录过的</span>` : ""}</div>`;
+}
+
+async function renderBad(el) {
+  const all = await api("/api/policy/badcases");
+  const causes = META.causes, sts = META.statuses;
+  const F = state.bcFilter || "全部";
+  const list = all.filter((b) => F === "全部" || b.status === F);
+  el.innerHTML = `<div class="bclist">
+    <div class="col bc" style="padding:10px 16px"><div class="funnel">${["全部", ...sts].map((k, i) => `${i > 1 ? `<span class="arrow">→</span>` : ""}<button data-f="${k}" class="${k === F ? "on" : ""}"><b>${k === "全部" ? all.length : all.filter((b) => b.status === k).length}</b>${k}</button>`).join("")}
+      <span class="faint" style="margin-left:auto;font-size:12.5px">按目标：规则 ${all.filter((b) => b.targetType === "rule").length} · RAG ${all.filter((b) => b.targetType === "rag").length} · HR 回复 ${all.filter((b) => b.targetType === "human").length}　｜　已进回归集 ${all.filter((b) => b.inEval).length}</span></div></div>
+    ${list.length ? "" : `<div class="col"><div class="empty">${all.length ? "这个状态下没有" : "还没有 Bad case。员工在任何回答下点 Bad，这里就会出现一条，带着当时的完整轨迹。"}</div></div>`}
+    ${list.map((b) => `<div class="col bc" data-id="${esc(b.id)}">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(b.q || "")}</b>
+        <span class="badge" style="background:${b.targetType === "rule" ? "var(--rule-bg);color:var(--rule)" : b.targetType === "rag" ? "var(--rag-bg);color:var(--rag)" : "var(--human-bg);color:var(--human)"}">${({ rule: "规则直答", rag: "RAG 回答", human: "HR 回复" })[b.targetType]}</span>
+        ${b.reasons.map((r) => `<span class="chip">${esc(r)}</span>`).join("")}${b.wantHuman ? `<span class="chip" style="background:var(--human-bg);color:var(--human)">要真人回答</span>` : ""}
+        ${b.replay ? `<span class="faint">回放</span>` : ""}<span class="faint" style="margin-left:auto;font-size:12.5px">${fmtTime(b.at)} · ${esc(META.subjects[b.subject]?.label || "")}</span></div>
+      ${b.note ? `<div style="font-size:13.5px;margin-top:4px">员工说：「${esc(b.note)}」</div>` : ""}
+      <div class="ans">${esc(b.answer || "（没有回答文本）")}</div>
+      <details style="margin-top:6px;font-size:13px"><summary class="muted" style="cursor:pointer">完整轨迹（路由、候选、分数、模型、提示词版本）</summary>
+        <div class="trailmini" style="margin-top:4px">${(b.trail || []).map((s) => `<div><span class="gg">${({ redact: "脱敏", human: "① 人工闸", rule: "② 规则闸", rag: "③ RAG", check: "校验", lookup: "查表" })[s.gate] || s.gate}</span>${esc(s.detail)}</div>`).join("")}</div>
+        ${b.scores ? `<div class="mono" style="margin-top:4px">最高余弦 ${b.scores.topCos?.toFixed(3)} · 重排最高分 ${b.scores.topRR?.toFixed(3)} · 档位 ${b.scores.tier} · 门槛 ${JSON.stringify(b.scores.gates)}</div>` : ""}
+        ${b.hits?.length ? `<div class="mono">候选：${b.hits.map((h) => `${h.clause}(${h.rr ?? "—"})${h.inContext ? "*" : ""}`).join(" ")}</div>` : ""}
+        <div class="mono">模型 ${esc(b.model || "无（未调模型）")} · 提示词 ${esc(b.promptVersion || "—")} · trace ${esc(b.traceId)}</div>
+      </details>
+      <div class="row">
+        <label>归因 <select class="cause"><option value="">选一个</option>${causes.map((c) => `<option ${b.cause === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
+        <label>状态 <select class="status">${sts.map((s) => `<option ${b.status === s ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></label>
+        ${b.targetType !== "human" ? `<label>期望路由 <select class="er">${["rule", "rag", "human"].map((r) => `<option value="${r}" ${(b.expectRoute || (b.wantHuman ? "human" : "rag")) === r ? "selected" : ""}>${({ rule: "规则", rag: "RAG", human: "人工" })[r]}</option>`).join("")}</select></label>
+        <label>期望条款 <input class="ec" size="9" value="${esc(b.expectClause || "")}" placeholder="如 5.6"></label>
+        <button class="btn small ${b.inEval ? "" : "primary"} add">${b.inEval ? "已在回归集，更新" : "加入回归集"}</button>` : `<span class="faint">HR 回复的 bad case 修的是知识或流程，不进回归集</span>`}
+      </div></div>`).join("")}</div>`;
+  el.querySelector(".funnel").onclick = (ev) => { const b = ev.target.closest("button"); if (b) { state.bcFilter = b.dataset.f; renderBad(el); } };
+  el.querySelectorAll(".bc[data-id]").forEach((card) => {
+    const id = card.dataset.id;
+    const upd = async (body, msg) => { await api(`/api/policy/badcases/${encodeURIComponent(id)}`, body); toast(msg); renderBad(el); };
+    card.querySelector(".cause").onchange = (e) => upd({ cause: e.target.value || null }, "已归因");
+    card.querySelector(".status").onchange = (e) => upd({ status: e.target.value }, "状态已更新");
+    const add = card.querySelector(".add");
+    if (add) add.onclick = () => upd({ expectRoute: card.querySelector(".er").value, expectClause: card.querySelector(".ec").value.trim() || null, addToEval: true }, "已写进 eval/badcases.json，下次跑 eval/run.mjs 会带上它");
+  });
+}
+
+async function renderDash(el) {
+  const s = await api("/api/policy/stats");
+  const frac = (o) => `${o.num} / ${o.den}`;
+  const p = (o) => (o.pct == null ? "—" : o.pct + "%");
+  const bars = (obj, labels = {}) => { const ent = Array.isArray(obj) ? obj : Object.entries(obj); const mx = Math.max(1, ...ent.map((e) => e[1])); return ent.length ? `<div class="bars">${ent.map(([k, v]) => `<div class="bar"><span>${esc(labels[k] || k)}</span><span class="track"><i style="width:${(v / mx) * 100}%"></i></span><span class="n">${v}</span></div>`).join("")}</div>` : `<div class="faint">还没有数据</div>`; };
+  const kpi = (v, l, cls = "") => `<div class="kpi ${cls}"><b>${v}</b><span>${l}</span></div>`;
+  const R = s.ratings, S = s.service, T = s.tiers, L = s.latency;
+  const tierRow = (k, name) => { const x = T[k]; return `<tr><td>${name}</td><td class="num">${x.gen}</td><td class="num">${x.shown}</td><td class="num">${x.blocked}</td><td class="num">${x.good}</td><td class="num" style="color:${x.bad ? "var(--bad)" : ""}">${x.bad}</td><td class="num">${x.handoffAfter}</td><td class="num">${x.shown ? Math.round(((x.bad + x.handoffAfter) / x.shown) * 100) + "%" : "—"}</td></tr>`; };
+  const latRow = (k, name) => `<tr><td>${name}</td><td class="num">${L[k].n}</td><td class="num">${fmtDur(L[k].p50)}</td><td class="num">${fmtDur(L[k].p90)}</td></tr>`;
+  const scroll = el.querySelector(".dash")?.scrollTop || 0;
+  el.innerHTML = `<div class="dash">
+    <div class="tile span6"><h3>人工介入率 · 有多少问题最后需要人处理</h3><div class="big">${p(s.handoffRate)}<small>${frac(s.handoffRate)} 个问题产生了工单</small></div>
+      ${bars({ explicit: s.handoffRate.kinds.explicit, sensitive: s.handoffRate.kinds.sensitive, system: s.handoffRate.kinds.system, feedback: s.handoffRate.kinds.feedback }, { explicit: "用户主动要求", sensitive: "敏感或个人数据", system: "系统判断答不了", feedback: "看完回答 / 反馈后转人工" })}
+      <div class="note">前两类不是模型的问题；后两类（拒答、低置信、校验拦截、反馈后转人工）才反映问答质量。</div></div>
+    <div class="tile span6"><h3>自然通过率 · 模型生成的回答有多少不靠人干预就过关</h3><div class="big">${p(s.naturalPass)}<small>${frac(s.naturalPass)} 条 RAG 回答</small></div>
+      <div class="bars">
+        <div class="bar"><span>被校验拦下</span><span class="n" style="grid-column:2/4;text-align:left">${s.naturalPass.blocked} 条</span></div>
+        <div class="bar"><span>评价覆盖率</span><span class="n" style="grid-column:2/4;text-align:left">${frac(s.naturalPass.coverage)}（${p(s.naturalPass.coverage)}）${s.naturalPass.coverage.pct != null && s.naturalPass.coverage.pct < 50 ? " · 覆盖率低，通过率偏乐观" : ""}</span></div>
+        <div class="bar"><span>好评口径</span><span class="n" style="grid-column:2/4;text-align:left">Good + OK ${frac(s.naturalPass.goodRate)}（${p(s.naturalPass.goodRate)}）</span></div>
+      </div>
+      <div class="note">分母是进入生成环节的 RAG 回答（含被校验拦下的）；没评价的算通过。规则直答不是生成内容，不计入，单独看它的 Bad 数：<b>${s.ruleBad}</b>。</div></div>
+
+    <div class="grp">工单服务 · HR 这边的服务水平</div>
+    <div class="tile span4"><h3>排队情况</h3><div class="kpis">${kpi(S.open, "未处理完")}${kpi(S.openByPriority["高"], "其中高优先", S.openByPriority["高"] ? "bad" : "")}${kpi(fmtDur(S.oldestWaitMs), "最久等待")}</div>
+      ${bars({ 高: S.openByPriority["高"], 中: S.openByPriority["中"], 普通: S.openByPriority["普通"] }, { 高: "高优先（敏感事项）", 中: "中优先（个人数据、反馈）", 普通: "普通" })}</div>
+    <div class="tile span4"><h3>响应和解决</h3><div class="kpis">${kpi(fmtDur(S.firstResp.p50), "首次响应 P50")}${kpi(fmtDur(S.firstResp.p90), "首次响应 P90")}${kpi(p(S.fcr), "一次解决率")}</div>
+      <div class="note">一次解决 = HR 回复后没有被员工打 Bad 要求再看：${frac(S.fcr)}；重新打开 ${S.reopened} 张。${s.drafts.sent ? `用草稿回复 ${s.drafts.sent} 次，草稿未修改直接发送 ${s.drafts.unchanged} 次。` : ""}</div></div>
+    <div class="tile span4"><h3>转人工原因</h3>${bars(s.ticketReasons)}</div>
+
+    <div class="grp">回答质量 · 门槛定得对不对，线上也要验</div>
+    <div class="tile span8"><h3>按置信度分档看结果</h3>
+      <table class="t"><tr><th>档位</th><th class="num">生成</th><th class="num">展示</th><th class="num">校验拦下</th><th class="num">Good/OK</th><th class="num">Bad</th><th class="num">看完转人工</th><th class="num">出问题比例</th></tr>
+        ${tierRow("high", `高置信（重排 ≥ ${META.gates.high}）`)}${tierRow("mid", `中置信（${META.gates.fine}–${META.gates.high}）`)}
+        <tr class="muted"><td>低置信（重排 &lt; ${META.gates.fine}）</td><td colspan="7">${s.refusedAtRerank} 题不生成，直接转人工；另有 ${s.refusedAtSearch} 题在检索阶段被粗门槛拒答</td></tr></table>
+      <div class="note">出问题比例 =（Bad + 看完转人工）/ 展示。中置信这一行应该明显高于高置信；如果两档差不多，说明高门槛没起作用，要回去看评测。</div></div>
+    <div class="tile span4"><h3>拦截和追问</h3>
+      ${bars({ number: s.blockedKinds.number, citation: s.blockedKinds.citation, fallback: s.blockedKinds.fallback }, { number: "数字校验拦下", citation: "引用校验拦下", fallback: "模型自己说没写到" })}
+      <div class="sec">规则追问</div><div style="font-size:13.5px">追问后答完 <b>${s.slot.done}</b> 次，追问后没回 <b>${s.slot.pending}</b> 次</div>
+      <div class="note">追问没回多，说明追问太难答或选项不合适。</div></div>
+    <div class="tile span6"><h3>Good / OK / Bad</h3><table class="t"><tr><th></th><th class="num">Good</th><th class="num">OK</th><th class="num">Bad</th></tr>
+      ${[["rule", "规则直答"], ["rag", "RAG 回答"], ["human", "HR 回复"]].map(([k, l]) => `<tr><td>${l}</td><td class="num">${R[k].good}</td><td class="num">${R[k].ok}</td><td class="num" style="color:${R[k].bad ? "var(--bad)" : ""}">${R[k].bad}</td></tr>`).join("")}</table>
+      <div class="sec" style="margin-top:10px">Bad 的原因</div>${bars(s.badReasons)}</div>
+    <div class="tile span6"><h3>闭环 · Bad case 走到哪一步</h3>
+      <div class="funnel static">${["待归因", "已归因", "已修复", "已回归"].map((k, i) => `${i ? `<span class="arrow">→</span>` : ""}<div><b>${s.funnel[k] || 0}</b>${k}</div>`).join("")}</div>
+      <div class="note">回归集（eval/badcases.json）现有 <b>${s.evalSize}</b> 题，每次跑 eval 都会带上。</div>
+      <div class="sec">Bad 的归因</div>${bars(s.badCauses)}</div>
+
+    <div class="grp">效率与成本</div>
+    <div class="tile span6"><h3>耗时（按最终走的路）</h3><table class="t"><tr><th></th><th class="num">题数</th><th class="num">P50</th><th class="num">P90</th></tr>
+      ${latRow("rule", "规则直答")}${latRow("rag", "RAG 回答")}${latRow("human", "转人工（到建单）")}</table>
+      <div class="note">RAG 的耗时含向量、重排、生成和校验；规则直答不调模型，是毫秒级。</div></div>
+    <div class="tile span6"><h3>模型调用和 token</h3><div class="kpis">${kpi(s.callsPerQ ?? "—", "平均每问调用")}${kpi(s.tokensPerGen ?? "—", "每次生成 token")}${kpi(s.ruleAnswers, "规则直答（0 token）", "good")}</div>
+      <div class="note">本次演示共调用模型 <b>${s.calls}</b> 次、生成 token <b>${s.tokens}</b>。每次规则直答省下 1 次生成（以及向量、重排各 1 次）。只显示真实计数，不推算人力。</div></div>
+
+    <div class="grp">员工在问什么</div>
+    <div class="tile span6"><h3>话题（按条款章节）</h3>${bars(s.topics)}</div>
+    <div class="tile span6"><h3>身份和三路分布</h3><div class="kpis">${kpi(s.questions, "个问题")}${kpi(s.subjects.fosun || 0, "集团直属")}${kpi(s.subjects.fairhr || 0, "外包员工")}</div>
+      ${bars(s.routes, { rule: "规则直答", rag: "RAG 回答", human: "转人工", ask_slot: "追问中未答", error: "出错" })}</div>
+    <div class="tile span12"><h3>知识缺口清单 · 下一步该补什么资料（问得多的排前面）</h3>${s.gaps.length ? `<table class="t"><tr><th>问题</th><th>身份</th><th class="num">被问次数</th><th>为什么没答</th><th>来自</th></tr>${s.gaps.map((g) => `<tr><td>${esc(g.q)}</td><td>${esc(META.subjects[g.subject]?.label || "")}</td><td class="num">${g.n}</td><td>${esc(g.why)}</td><td class="faint">${esc(g.from)}</td></tr>`).join("")}</table>` : `<div class="faint">还没有</div>`}</div>
+
+    <div class="tile span12"><h3>实时动态 · 最近 ${s.recent.length} 个问题</h3>${s.recent.length ? `<table class="t"><tr><th>时间</th><th>问题</th><th>身份</th><th>走了哪条路</th><th class="num">耗时</th><th>评价 / 工单</th></tr>
+      ${s.recent.map((r) => `<tr><td class="mono">${fmtTime(r.ts)}</td><td>${esc(r.q)}</td><td>${esc(META.subjects[r.subject]?.label || "")}</td>
+        <td><span class="route r-${r.final}">${({ rule: "规则直答", rag: r.tier === "mid" ? "RAG · 中置信" : "RAG · 高置信", human: "转人工", ask_slot: "追问中", error: "出错" })[r.final] || r.final}</span>${r.final === "human" && r.reason ? ` <span class="faint">${esc(r.reason.replace(/：.*$/, ""))}</span>` : ""}</td>
+        <td class="num mono">${fmtDur(r.ms)}</td><td>${r.rating ? `<b style="color:${r.rating === "bad" ? "var(--bad)" : "var(--good)"}">${({ good: "Good", ok: "OK", bad: "Bad" })[r.rating]}</b> ` : ""}${r.ticketId ? esc(r.ticketId) : ""}</td></tr>`).join("")}</table>` : `<div class="faint">还没有</div>`}</div>
+    <div class="tile span12 note" style="margin:0">口径：所有数字都从 trace / feedback / tickets 三份记录现算，不另存。${s.replayExcluded ? `回放产生的 ${s.replayExcluded} 个问题不计入。` : "回放数据不计入。"} 样本少，看分子分母，不要只看百分比。</div>
+  </div>`;
+  el.querySelector(".dash").scrollTop = scroll;
+}
+
+function renderRules(el) {
+  el.innerHTML = `<div class="bclist">${META.rules.map((r) => `<div class="col bc">
+    <div style="display:flex;gap:10px;align-items:center"><b>${esc(r.name)}</b><span class="badge" style="background:var(--rule-bg);color:var(--rule)">${esc(META.subjects[r.subject].label)}</span><span class="mono faint">${esc(r.id)}</span><span class="muted" style="margin-left:auto">条款 ${esc(r.clause)}</span></div>
+    <div style="font-size:13.5px;margin-top:6px">命中条件：含「${r.any.map(esc).join(" / ")}」之一，且含「${r.all.map(esc).join(" / ")}」之一，且不含「${r.not.map(esc).join(" / ")}」</div>
+    <div style="font-size:13.5px">缺条件时追问：${esc(r.slot.ask)}</div>
+    <table class="t" style="margin-top:6px"><tr><th>${esc(r.slot.name)}</th><th>结果</th><th>条款</th><th>手册原文（构建时逐条核对）</th></tr>
+      ${r.table.map((row) => `<tr><td>${row.when ? esc(row.when) : `${row.gte !== undefined ? row.gte + " 年 ≤ " : ""}${esc(r.slot.name)}${row.lt !== undefined ? " < " + row.lt + " 年" : ""}`}</td><td><b>${esc(row.value)}</b></td><td class="mono">${esc(row.clause || r.clause)}</td><td class="muted">${[].concat(row.src).map(esc).join("；")}</td></tr>`).join("")}</table></div>`).join("")}
+    <div class="note">规则由业务维护，写在 rules/rules.json；构建时检查每一行的数值都能在条款原文里找到，对不上就构建失败。</div></div>`;
+}
+</script>
+</body>
+</html>
