@@ -4,6 +4,11 @@ import * as S from "./store.mjs";
 import * as P from "./pipeline.mjs";
 import { loadRules } from "./rules.mjs";
 import { REPLAY, MODELS, generate } from "./models.mjs";
+import { loadProfileData, cleanProfile, companyOf } from "./profile.mjs";
+
+// 登录了就返回档案，没登录返回 null
+const empOf = () => { const s = S.getSession(); return s?.loggedIn ? s.profile : null; };
+const me = () => { const p = empOf(); return { loggedIn: !!p, profile: p, company: p ? companyOf(p) : null }; };
 
 const ipOf = (req) => req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "local";
 const body = (req) => req.body !== undefined && S.ONLINE ? Promise.resolve(typeof req.body === "object" && req.body ? req.body : {}) : new Promise((r) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { try { r(b ? JSON.parse(b) : {}); } catch { r({}); } }); });
@@ -33,18 +38,39 @@ export async function route(req, res, p) {
         res.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-store", "X-Accel-Buffering": "no" });
         const ac = new AbortController(); res.on("close", () => ac.abort());
         const send = (event, data) => { if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
-        await ask(b, send, { signal: ac.signal });
+        await ask(b, send, { signal: ac.signal, emp: empOf() });
         await S.flush();
         return res.end();
     }
     if (p === "/api/meta") {
-        const idx = P.loadIndex();
+        const idx = P.loadIndex(), PD = loadProfileData({ fresh: true });
         const count = {}; for (const b of idx.blocks) count[b.subject] = (count[b.subject] || 0) + 1;
         return json(res, {
             replay: REPLAY, models: MODELS, promptVersion: P.PROMPT_VERSION, gates: { cos: P.CONFIG.minTopCos, fine: P.CONFIG.fineRerank, high: P.CONFIG.highRerank },
             subjects: Object.fromEntries(Object.entries(P.SUBJECTS).map(([k, v]) => [k, { ...v, chunks: count[k] || 0, ...P.staleness(k) }])),
             staleYears: P.STALE_YEARS, reasons: S.REASONS, causes: S.CAUSES, statuses: S.STATUSES, rules: loadRules({ fresh: true }).rules, built: idx.meta.built,
+            companies: PD.companies, local: PD.local, demoAccount: { account: PD.demo.account, password: PD.demo.password },
         });
+    }
+    // 演示账户登录：不开放注册；档案改动存在登录状态里，退出再登录还在
+    if (p === "/api/me") return json(res, me());
+    if (p === "/api/login" && m === "POST") {
+        const b = await body(req), D = loadProfileData().demo;
+        if (b.account !== D.account || b.password !== D.password) return json(res, { error: "账号或密码不对（演示账户见登录框）" }, 401);
+        S.setSession({ loggedIn: true, profile: S.getSession()?.profile || D.profile, at: new Date().toISOString() });
+        return json(res, me());
+    }
+    if (p === "/api/logout" && m === "POST") {
+        const s = S.getSession();
+        if (s) S.setSession({ ...s, loggedIn: false });
+        return json(res, me());
+    }
+    if (p === "/api/profile" && m === "POST") {
+        const s = S.getSession();
+        if (!s?.loggedIn) return json(res, { error: "先登录" }, 401);
+        const b = await body(req);
+        S.setSession({ ...s, profile: b.reset ? loadProfileData().demo.profile : cleanProfile(s.profile, b) });
+        return json(res, me());
     }
     if (p === "/api/clause") {
         const b = P.loadIndex().blocks.find((x) => x.cid === url.searchParams.get("cid"));
@@ -82,7 +108,7 @@ export async function route(req, res, p) {
         if (ex) return json(res, ex);
         const idx = P.loadIndex();
         const clauses = (tr.clauses || []).map((cid) => idx.blocks.find((x) => x.cid === cid)).filter(Boolean).slice(0, 3).map(P.showBlock);
-        return json(res, S.createTicket({ traceId: tr.traceId, q: tr.q, subject: tr.subject, reasonType: "feedback", reason: `看完回答后转人工：${b.why || "员工要求 HR 核实"}`, trail: tr.trail, clauses, category: tr.category || "其他", fromAnswer: tr.answer }));
+        return json(res, S.createTicket({ traceId: tr.traceId, q: tr.q, subject: tr.subject, reasonType: "feedback", reason: `看完回答后转人工：${b.why || "员工要求 HR 核实"}`, trail: tr.trail, clauses, category: tr.category || "其他", fromAnswer: tr.answer, emp: tr.emp }));
     }
     if (p === "/api/feedback" && m === "POST") return json(res, S.addFeedback(await body(req)));
     if (p === "/api/badcases" && m === "GET") return json(res, S.badcases());

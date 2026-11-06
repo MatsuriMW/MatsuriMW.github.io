@@ -1,0 +1,28 @@
+[
+  {
+    "id": "group", "name": "集团本部", "type": "直属", "subject": "fosun", "doc": "复星旅文员工手册 V5.0",
+    "annualLeave": { "mode": "rule", "ruleId": "annual-leave-days", "desc": "按手册 5.16.1 的累计工龄表" },
+    "payroll": {
+      "cycle": "自然月（1 日至月末）", "payday": "每月 7 日发上月工资（手册 6.4.3）",
+      "base": "baseSalary", "baseName": "月基本工资", "hours": "标准工时", "otExtra": ""
+    }
+  },
+  {
+    "id": "xingyun", "name": "星云科技（驻场客户，虚构）", "type": "外包", "subject": "fairhr", "doc": "《星云科技驻场人员补充约定》（演示配置）",
+    "annualLeave": { "mode": "statutoryPlusTenure", "perYear": 1, "max": 5, "desc": "法定年假 + 在本客户驻场每满 1 年加 1 天，最多加 5 天" },
+    "payroll": {
+      "cycle": "自然月（1 日至月末）", "payday": "次月 10 日",
+      "base": "baseSalary", "baseName": "月基本工资（不含绩效、补贴）", "hours": "标准工时", "otExtra": "",
+      "sickPay": "handbook"
+    }
+  },
+  {
+    "id": "chenghu", "name": "澄湖制造（驻场客户，虚构）", "type": "外包", "subject": "fairhr", "doc": "《澄湖制造驻场人员补充约定》（演示配置）",
+    "annualLeave": { "mode": "rule", "ruleId": "annual-leave-days-outsourced", "desc": "按外包手册第三十二条（即法定年假）" },
+    "payroll": {
+      "cycle": "上月 26 日至本月 25 日", "payday": "每月最后一个工作日",
+      "base": "contractSalary", "baseName": "合同月工资", "hours": "综合计算工时（以季度为周期）", "otExtra": "夜班津贴 30 元 / 晚，不计入加班基数",
+      "sickPay": "handbook"
+    }
+  }
+]

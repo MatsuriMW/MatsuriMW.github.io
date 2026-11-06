@@ -1,0 +1,11 @@
+{
+  "_说明": "演示账户，不开放注册。登录后档案可以在页面上改，用来演示不同公司、用工地、参保地下答案怎么变",
+  "account": "demo",
+  "password": "demo",
+  "profile": {
+    "name": "林晓（演示员工）", "empNo": "D0001", "company": "xingyun",
+    "workCity": "上海", "insuredCity": "上海",
+    "totalYears": 6, "hireDate": "2023-03-01",
+    "baseSalary": 12000, "contractSalary": 15000
+  }
+}

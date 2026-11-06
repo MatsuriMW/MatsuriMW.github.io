@@ -6,6 +6,7 @@ import { retrieve, buildMessages, CONFIG, PROMPT_VERSION, SUBJECTS, staleness, k
 import { generate, MODELS, REPLAY } from "./models.mjs";
 import { checkAnswer, tamper as tamperAnswer } from "./checks.mjs";
 import { writeTrace, createTicket, newId } from "./store.mjs";
+import { answerByProfile, companyOf, snapshot } from "./profile.mjs";
 
 const flat = (s) => String(s).replace(/\s+/g, "");
 function clauseBlock(subject, clause) {
@@ -13,7 +14,9 @@ function clauseBlock(subject, clause) {
     return idx.blocks.find((c) => c.subject === subject && (c.clause === clause || (clause.startsWith(c.clause + ".") && flat(c.text).includes(clause))));
 }
 
-export async function ask({ q, subject = "fosun", ruleId = null, slot = null, traceId = null, tamper = false }, send = () => {}, { dry = false, cfg = CONFIG, signal } = {}) {
+// emp：登录了就是员工档案（见 profile.mjs），身份按所属公司定，不看页面传的 subject
+export async function ask({ q, subject = "fosun", ruleId = null, slot = null, traceId = null, tamper = false }, send = () => {}, { dry = false, cfg = CONFIG, signal, emp = null } = {}) {
+    if (emp && companyOf(emp)) subject = companyOf(emp).subject;
     if (!SUBJECTS[subject]) subject = "fosun";
     const t0 = Date.now();
     const R = redact(String(q || "").slice(0, 300));
@@ -21,6 +24,7 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     const trace = {
         traceId: traceId || newId(), q: qr, subject, trail: [], route: null, final: null, reason: null,
         model: null, promptVersion: null, answer: null, usage: null, calls: { embed: 0, rerank: 0, gen: 0 }, redacted: R.found,
+        emp: emp ? snapshot(emp) : undefined,
     };
     const step = (gate, status, detail, extra = {}) => { const s = { gate, status, detail, ...extra }; trace.trail.push(s); send("step", s); };
     const finish = (extra = {}) => {
@@ -33,12 +37,12 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
         trace.final = "human"; trace.reason = reason; trace.clauses = clauses.map((b) => b.cid);
         trace.category = clauses[0] ? chapterOf(clauses[0]) : "未说明";
         let ticket = null;
-        if (!dry) ticket = createTicket({ traceId: trace.traceId, q: qr, subject, reason, reasonType, trail: trace.trail, clauses: clauses.slice(0, 3), category: trace.category });
+        if (!dry) ticket = createTicket({ traceId: trace.traceId, q: qr, subject, reason, reasonType, trail: trace.trail, clauses: clauses.slice(0, 3), category: trace.category, emp: trace.emp });
         trace.ticketId = ticket?.id || null;
         send("handoff", { ticketId: trace.ticketId, reason, reasonType, clauses: clauses.slice(0, 3), category: trace.category });
     };
 
-    send("start", { traceId: trace.traceId, q: qr, subject, redacted: R.found, replay: REPLAY });
+    send("start", { traceId: trace.traceId, q: qr, subject, redacted: R.found, replay: REPLAY, emp: trace.emp });
     if (qr.length < 2) { send("error", { message: "问题太短" }); return trace; }
     if (R.found.length) step("redact", "hit", `已遮盖：${R.found.join("、")}，后面所有环节只看到遮盖后的文字`);
 
@@ -67,13 +71,24 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     }
     step("human", "pass", "没有要求人工、没有敏感事项、没有查个人数据");
 
-    // ② 规则闸
+    // ② 规则闸。登录了先按档案匹配（公司制度、用工地、参保地），没匹配上再走规则表
+    if (emp) {
+        const pa = answerByProfile(qr, emp);
+        if (pa && !pa.delegate) {
+            trace.route = "rule";
+            step("rule", "hit", `按档案匹配「${pa.topic}」（命中「${pa.hit}」）：${pa.basis.map((b) => `${b.k} ${b.v}`).join("，")}`, { profile: true });
+            return profileAnswer(pa);
+        }
+    }
+
     const M = matchRules(qr, subject);
     const hits = M.filter((m) => m.hit);
     if (hits.length === 1) {
         const rule = ruleById(hits[0].id);
         trace.route = "rule";
-        const filled = fillSlot(rule, qr);
+        let filled = fillSlot(rule, qr);
+        // 登录了：条件直接用档案里的累计工龄，不用追问
+        if (emp && rule.slot.kind === "years" && (!filled || filled.needConfirm)) filled = { value: emp.totalYears, text: `${emp.totalYears} 年`, fromProfile: true };
         if (!filled || filled.needConfirm) {
             const ask = filled?.needConfirm ? rule.slot.confirmAsk : rule.slot.ask;
             step("rule", "ask", `命中规则「${rule.name}」，${filled?.needConfirm ? `问题里的「${filled.text}」是司龄，口径要确认` : `缺条件「${rule.slot.name}」`}，追问`, { ruleId: rule.id, match: hits[0] });
@@ -81,7 +96,7 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
             send("ask_slot", { traceId: trace.traceId, ruleId: rule.id, slotName: rule.slot.name, ask, options: rule.slot.options, q: qr });
             return finish();
         }
-        step("rule", "hit", `命中规则「${rule.name}」（${hits[0].any} + ${hits[0].all}），条件：${rule.slot.name} = ${filled.text}`, { ruleId: rule.id, match: hits[0] });
+        step("rule", "hit", `命中规则「${rule.name}」（${hits[0].any} + ${hits[0].all}），条件：${rule.slot.name} = ${filled.text}${filled.fromProfile ? "（取自档案）" : ""}`, { ruleId: rule.id, match: hits[0] });
         return ruleAnswer(rule, filled);
     }
     step("rule", hits.length > 1 ? "conflict" : "pass", hits.length > 1 ? `同时命中 ${hits.map((x) => x.name).join("、")}，不猜，交给 RAG` : ruleMissText(M), { match: M });
@@ -125,6 +140,18 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     trace.final = "rag"; trace.answer = text; trace.clauses = Rt.context.map((b) => b.cid); trace.category = chapterOf(Rt.context[0]);
     send("answer", { kind: "rag", traceId: trace.traceId, text, sources, tier: Rt.tier, locality: local, stale: staleness(subject), subject: SUBJECTS[subject] });
     return finish();
+
+    function profileAnswer(pa) {
+        const b = pa.clause ? clauseBlock(subject, pa.clause) : null;
+        trace.final = "rule"; trace.profileTopic = pa.topic; trace.answer = pa.text; trace.clauses = b ? [b.cid] : []; trace.category = b ? chapterOf(b) : pa.topic;
+        step("lookup", "hit", `查表：${pa.calc?.length ? pa.calc.join("；") : pa.refs[0].label}，不调模型`);
+        send("answer", {
+            kind: "profile", traceId: trace.traceId, text: pa.text, topic: pa.topic, basis: pa.basis, refs: pa.refs, calc: pa.calc || [], notice: pa.notice || null,
+            sources: b ? [{ n: 1, ...showBlock(b), clause: pa.clause, cite: `${b.source} ${b.version}，${pa.clause}，第 ${b.page} 页` }] : [],
+            stale: staleness(subject), subject: SUBJECTS[subject],
+        });
+        return finish();
+    }
 
     function ruleAnswer(rule, filled) {
         const row = lookup(rule, filled);

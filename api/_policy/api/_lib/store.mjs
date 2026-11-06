@@ -21,7 +21,7 @@ async function redis(cmds) {
     if (!r.ok) throw new Error(`redis ${r.status}`);
     return (await r.json()).map((x) => { if (x.error) throw new Error(`redis ${x.error}`); return x.result; });
 }
-const JSON_FILES = ["tickets.json", "badcases.json", "eval-badcases.json"], LINE_FILES = ["trace.jsonl", "feedback.jsonl"];
+const JSON_FILES = ["tickets.json", "badcases.json", "eval-badcases.json", "session.json"], LINE_FILES = ["trace.jsonl", "feedback.jsonl"];
 const TTL = 7 * 86400, MAX_LINES = 1000;
 const als = new AsyncLocalStorage();
 const box = () => { const c = als.getStore(); if (!c) throw new Error("线上读写记录要在 withStore 里"); return c; };
@@ -85,16 +85,20 @@ export function traces({ includeReplay = false } = {}) {
 }
 export const getTrace = (id) => readLines("trace.jsonl").filter((t) => t.traceId === id).at(-1) || null;
 
+// ---------- 登录状态和档案（演示账户，见 profile.mjs） ----------
+export const getSession = () => readJSON("session.json", null);
+export const setSession = (v) => writeJSON("session.json", v);
+
 // ---------- 工单 ----------
 export const tickets = () => readJSON("tickets.json", []);
 const saveTickets = (v) => writeJSON("tickets.json", v);
 // 优先级：敏感事项要先处理（可能涉及劳动纠纷）；查个人数据和反馈后转人工次之
 export const PRIORITY = { sensitive: "高", personal: "中", feedback: "中", system: "普通", explicit: "普通" };
-export function createTicket({ traceId, q, subject, reason, reasonType, trail, clauses, category, fromAnswer = null }) {
+export function createTicket({ traceId, q, subject, reason, reasonType, trail, clauses, category, fromAnswer = null, emp = null }) {
     const all = tickets();
     const t = {
         id: `T-${String(all.length + 1).padStart(3, "0")}`, traceId, q, subject, reason, reasonType, priority: PRIORITY[reasonType] || "普通", trail, clauses, category,
-        fromAnswer, status: "待处理", createdAt: now(), replies: [], replay: REPLAY || undefined,
+        fromAnswer, emp: emp || undefined, status: "待处理", createdAt: now(), replies: [], replay: REPLAY || undefined,
     };
     all.push(t); saveTickets(all);
     return t;
@@ -151,7 +155,7 @@ export function addFeedback(body) {
                 ticket = createTicket({
                     traceId: f.traceId, q: tr.q, subject: tr.subject, reasonType: "feedback",
                     reason: `用户反馈 Bad：${f.reasons.join("、") || "未选原因"}${f.note ? `（${f.note}）` : ""}`,
-                    trail: tr.trail || [], clauses: tr.clauses || [], category: tr.category || "其他", fromAnswer: tr.answer || null,
+                    trail: tr.trail || [], clauses: tr.clauses || [], category: tr.category || "其他", fromAnswer: tr.answer || null, emp: tr.emp,
                 });
             }
         }

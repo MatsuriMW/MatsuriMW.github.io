@@ -203,6 +203,30 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 .route.r-rule { background: var(--rule-bg); color: var(--rule); } .route.r-rag { background: var(--rag-bg); color: var(--rag); } .route.r-human { background: var(--human-bg); color: var(--human); } .route.r-ask_slot { background: var(--soft); color: var(--muted); }
 .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 7px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
 .toast.on { opacity: .92; }
+/* 登录、档案 */
+.me { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.me .chip { background: var(--soft); border: 1px solid var(--line); border-radius: 99px; padding: 2px 10px; white-space: nowrap; cursor: pointer; }
+.modal-bg { position: fixed; inset: 0; background: rgba(30,30,20,.28); display: flex; align-items: center; justify-content: center; z-index: 20; }
+.modal { background: var(--panel); border-radius: 12px; padding: 18px 20px; width: min(460px, 92vw); box-shadow: 0 10px 34px rgba(0,0,0,.16); }
+.modal h3 { margin: 0 0 8px; font-size: 16px; }
+.modal label { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 8px; margin: 7px 0; font-size: 13.5px; color: var(--muted); }
+.modal input, .modal select { border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; font: inherit; color: var(--ink); background: var(--panel); }
+.modal .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.basis { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 6px; }
+.basis span { font-size: 12px; background: #fff; border: 1px solid #cfe3d7; border-radius: 99px; padding: 0 8px; color: var(--rule); }
+.refs { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+/* 生成中的渐进式占位：阶段逐个点亮，下面骨架条 */
+.prog { display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+.prog .st { display: flex; align-items: center; gap: 7px; color: var(--faint); }
+.prog .st.done { color: var(--muted); }
+.prog .st.cur { color: var(--ink); font-weight: 550; }
+.prog .dot { width: 7px; height: 7px; border-radius: 50%; background: #d7d5cf; flex: none; }
+.prog .st.done .dot { background: var(--rule); }
+.prog .st.cur .dot { background: var(--rag); animation: pulse 1s ease-in-out infinite; }
+.skel { height: 10px; border-radius: 5px; margin-top: 7px; background: linear-gradient(90deg, #efeee9 25%, #e3e1db 37%, #efeee9 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+@keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .skel, .prog .st.cur .dot { animation: none; } }
 @media (max-width: 1100px) { .emp { grid-template-columns: 1fr; } body { display: block; } .col { min-height: 60vh; } .tk { grid-template-columns: 1fr; } .disclaimer { display: none; } }
 </style>
 </head>
@@ -216,6 +240,7 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
   <div class="who" id="whoBox">
     <span class="muted">身份</span>
     <select id="subject"></select>
+    <div class="me" id="meBox"></div>
   </div>
   <span id="replayBadge"></span>
   <div class="disclaimer">演示资料来自公开网页（复星旅文员工手册 V5.0、泛亚人力外包员工服务手册），不代表信华制度<br>数据均为演示时现场产生，不含真实个人信息</div>
@@ -287,14 +312,80 @@ const EXAMPLES = [
   for (const [k, v] of Object.entries(META.subjects)) sel.insertAdjacentHTML("beforeend", `<option value="${k}">${esc(v.label)}（${esc(v.source)} ${esc(v.version)}）</option>`);
   sel.onchange = () => { state.subject = sel.value; toast(`已切到「${META.subjects[sel.value].label}」，只在《${META.subjects[sel.value].source}》里查`); };
   if (META.replay) $("#replayBadge").innerHTML = `<span class="replay-badge" title="不联网，模型结果来自录制">回放模式</span>`;
-  $("#examples").innerHTML = EXAMPLES.map((e, i) => `<button data-i="${i}" title="${e.s === "fairhr" ? "会切到外包员工" : ""}"><span class="n">${i + 1}</span>${esc(e.q)}${e.s === "fairhr" ? "（外包）" : ""}${e.tag ? `（${e.tag}）` : ""}</button>`).join("");
-  $("#examples").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; const e = EXAMPLES[b.dataset.i]; setSubject(e.s); send(e.q); };
+  $("#examples").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; const e = state.exList[b.dataset.i]; if (!state.me?.loggedIn) setSubject(e.s); send(e.q); };
+  $("#meBox").onclick = (ev) => { const b = ev.target.closest("[data-me]"); if (b) ({ login: openLogin, profile: openProfile, logout })[b.dataset.me](); };
+  state.me = await api("/api/policy/me");
+  renderMe();
   $("#composer").onsubmit = (ev) => { ev.preventDefault(); const q = $("#qInput").value.trim(); if (q) { $("#qInput").value = ""; send(q); } };
   $("#viewTabs").onclick = (ev) => { const b = ev.target.closest("button"); if (b) setView(b.dataset.v); };
   $("#hrTabs").onclick = (ev) => { const b = ev.target.closest("button"); if (b) { state.hrTab = b.dataset.t; renderHR(); } };
   setInterval(poll, 2500);
   poll();
 })();
+
+// ---------- 登录（演示账户）和档案 ----------
+const EXAMPLES_ME = ["我今年结婚能休几天婚假？", "年假有几天？", "加班费怎么算？", "病假工资怎么算？", "工资每个月几号发？", "产假多少天？", "陪产假有几天？", "生育津贴去哪领？"].map((q) => ({ q }));
+function renderExamples() {
+  const me = state.me?.loggedIn;
+  state.exList = me ? EXAMPLES_ME : EXAMPLES;
+  $("#examples").innerHTML = (me ? `<span class="faint" style="font-size:12.5px;align-self:center">按档案问：</span>` : "") + state.exList.map((e, i) => `<button data-i="${i}" title="${e.s === "fairhr" ? "会切到外包员工" : ""}"><span class="n">${i + 1}</span>${esc(e.q)}${e.s === "fairhr" ? "（外包）" : ""}${e.tag ? `（${e.tag}）` : ""}</button>`).join("");
+}
+function renderMe() {
+  const box = $("#meBox"), sel = $("#subject");
+  if (!state.me?.loggedIn) {
+    sel.disabled = false; sel.title = "";
+    box.innerHTML = `<button class="btn small" data-me="login">登录</button>`;
+  } else {
+    const p = state.me.profile, c = state.me.company;
+    state.subject = c.subject; sel.value = c.subject; sel.disabled = true; sel.title = "登录后身份按所属公司定";
+    box.innerHTML = `<span class="chip" data-me="profile" title="点开看、改档案">${esc(p.name.replace(/（.*）/, ""))} · ${esc(c.name.replace(/（.*）/, ""))} · 用工地 ${esc(p.workCity)} · 参保地 ${esc(p.insuredCity)}</span><button class="btn small" data-me="profile">档案</button><button class="btn small" data-me="logout">退出</button>`;
+  }
+  renderExamples();
+}
+function modal(html, onAction) {
+  closeModal();
+  const bg = document.createElement("div");
+  bg.className = "modal-bg"; bg.id = "modalBg";
+  bg.innerHTML = `<div class="modal">${html}</div>`;
+  bg.onclick = (ev) => { if (ev.target === bg) return closeModal(); const b = ev.target.closest("[data-x]"); if (b) onAction(b.dataset.x); };
+  document.body.appendChild(bg);
+  bg.querySelector("input, select")?.focus();
+}
+function closeModal() { $("#modalBg")?.remove(); }
+function openLogin() {
+  const D = META.demoAccount;
+  modal(`<h3>登录</h3><div class="faint" style="font-size:13px">演示环境只有一个演示账户：账号 <b>${esc(D.account)}</b>，密码 <b>${esc(D.password)}</b>。登录后按你的档案（所属公司、用工地、参保地）匹配回答。</div>
+    <label>账号<input id="lgA" autocomplete="off"></label><label>密码<input id="lgP" type="password" autocomplete="off"></label>
+    <div class="row"><button class="btn" data-x="fill" style="margin-right:auto">填入演示账户</button><button class="btn" data-x="close">取消</button><button class="btn primary" data-x="ok">登录</button></div>`, async (x) => {
+    if (x === "fill") { $("#lgA").value = D.account; $("#lgP").value = D.password; return; }
+    if (x !== "ok") return closeModal();
+    try { state.me = await api("/api/policy/login", { account: $("#lgA").value.trim(), password: $("#lgP").value }); closeModal(); renderMe(); toast("已登录，回答会按你的档案匹配"); }
+    catch (e) { toast(e.message); }
+  });
+  $("#lgP").onkeydown = (ev) => { if (ev.key === "Enter") $("#modalBg [data-x=ok]").click(); };
+}
+function openProfile() {
+  const p = state.me.profile, cities = Object.entries(META.local.cities);
+  const opts = (list, v) => list.map(([k, t]) => `<option value="${esc(k)}"${k === v ? " selected" : ""}>${esc(t)}</option>`).join("");
+  const cityOpts = (v) => opts(cities.map(([k, c]) => [k, c.region]), v);
+  modal(`<h3>我的档案 <span class="faint" style="font-size:12.5px;font-weight:400">· 演示用，可以改，看回答怎么变</span></h3>
+    <label>姓名<span style="color:var(--ink)">${esc(p.name)} · 工号 ${esc(p.empNo)}</span></label>
+    <label>所属公司<select id="pfC">${opts(META.companies.map((c) => [c.id, `${c.name} · ${c.type}`]), p.company)}</select></label>
+    <label>用工地<select id="pfW">${cityOpts(p.workCity)}</select></label>
+    <label>参保地<select id="pfI">${cityOpts(p.insuredCity)}</select></label>
+    <label>累计工龄（年）<input id="pfY" type="number" min="0" max="50" value="${p.totalYears}"></label>
+    <label>入职日期<input id="pfH" type="date" value="${esc(p.hireDate)}"></label>
+    <label>月基本工资<input id="pfB" type="number" min="0" value="${p.baseSalary}"></label>
+    <label>合同月工资<input id="pfS" type="number" min="0" value="${p.contractSalary}"></label>
+    <div class="faint" style="font-size:12.5px">假期天数按用工地，生育津贴按参保地；年假、计薪、加班费按所属公司的制度。</div>
+    <div class="row"><button class="btn" data-x="reset" style="margin-right:auto">恢复默认</button><button class="btn" data-x="close">取消</button><button class="btn primary" data-x="ok">保存</button></div>`, async (x) => {
+    if (x === "close") return closeModal();
+    const body = x === "reset" ? { reset: true } : { company: $("#pfC").value, workCity: $("#pfW").value, insuredCity: $("#pfI").value, totalYears: $("#pfY").value, hireDate: $("#pfH").value, baseSalary: $("#pfB").value, contractSalary: $("#pfS").value };
+    try { state.me = await api("/api/policy/profile", body); closeModal(); renderMe(); toast("档案已更新"); }
+    catch (e) { toast(e.message); }
+  });
+}
+async function logout() { state.me = await api("/api/policy/logout", {}); renderMe(); toast("已退出"); }
 
 function setSubject(s) { if (state.subject !== s) { state.subject = s; $("#subject").value = s; toast(`已切到「${META.subjects[s].label}」`); } }
 function setView(v) {
@@ -331,11 +422,11 @@ async function send(q, extra = {}) {
 }
 
 function onEvent(m, ev, d) {
-  if (ev === "start") { m.traceId = d.traceId; m.qShown = d.q; m.redacted = d.redacted; }
+  if (ev === "start") { m.traceId = d.traceId; m.qShown = d.q; m.redacted = d.redacted; m.emp = d.emp; }
   else if (ev === "step") m.steps.push(d);
   else if (ev === "stage") m.stages[d.k] = d;
   else if (ev === "retrieval") m.retrieval = d;
-  else if (ev === "draft") { m.draft += d.t; renderTrace(true); return; }
+  else if (ev === "draft") { m.draft += d.t; renderTrace(true); if (Date.now() - (m._drawn || 0) > 250) { m._drawn = Date.now(); renderChat(); } return; }
   else if (ev === "checks") m.checks = d;
   else if (ev === "ask_slot") m.slotAsk = d;
   else if (ev === "answer") m.answer = d;
@@ -376,7 +467,7 @@ function renderChat() {
   const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
   if (!state.msgs.length) { el.innerHTML = `<div class="empty">点下面的示例问题，或者直接输入。<br>示例问题按演示顺序排好了。</div>`; return; }
   el.innerHTML = state.msgs.map((m) => {
-    let h = `<div class="msg-user">${esc(m.qShown || m.q)}${m.subject === "fairhr" ? ` <span class="faint">· 外包员工</span>` : ""}</div>`;
+    let h = `<div class="msg-user">${esc(m.qShown || m.q)}${m.emp ? ` <span class="faint">· ${esc(m.emp.company.replace(/（.*）/, ""))} · ${esc(m.emp.workCity)}</span>` : m.subject === "fairhr" ? ` <span class="faint">· 外包员工</span>` : ""}</div>`;
     if (m.redacted?.length) h += `<div class="redact-note">🔒 已遮盖${esc(m.redacted.join("、"))}，模型、日志、工单里都只有遮盖后的文字</div>`;
     const sel = state.sel === m.id ? " sel" : "";
     if (m.error) return h + `<div class="card pending${sel}" data-m="${m.id}">出错了：${esc(m.error)}</div>`;
@@ -386,6 +477,16 @@ function renderChat() {
         <div class="answer">${mdLite(a.text, m)}</div>
         <div class="quote">手册原文：${esc(a.quote)}</div>
         ${sourcesHTML(a.sources)}${a.locality ? localNotice(m) : ""}
+        ${fbHTML({ targetType: "rule", traceId: a.traceId }, "rule:" + a.traceId)}</div>`;
+    } else if (m.answer?.kind === "profile") {
+      const a = m.answer;
+      h += `<div class="card rule${sel}" data-m="${m.id}"><span class="badge k">按档案匹配 · 查表 · 0 token</span>
+        <div class="basis">${a.basis.map((b) => `<span>${esc(b.k)}：${esc(b.v)}</span>`).join("")}</div>
+        <div class="answer">${mdLite(a.text, m)}</div>
+        ${a.calc.length ? `<div class="quote">计算：${a.calc.map(esc).join("；")}</div>` : ""}
+        <div class="refs">${a.refs.map((r) => `<b>${esc(r.label)}</b>：${esc(r.text)}`).join("<br>")}</div>
+        ${a.sources.length ? sourcesHTML(a.sources) : ""}
+        ${a.notice ? `<div class="notice">${esc(a.notice)} ${handoffBtn(m, "用工地和参保地不一致，员工要求 HR 确认")}</div>` : ""}
         ${fbHTML({ targetType: "rule", traceId: a.traceId }, "rule:" + a.traceId)}</div>`;
     } else if (m.answer?.kind === "rag") {
       const a = m.answer;
@@ -408,7 +509,7 @@ function renderChat() {
         <div>${esc(s.ask)}</div>
         <div class="slot-opts">${s.options.map((o) => `<button data-slot="${esc(o)}" data-m="${m.id}" class="${m.slotChosen === o ? "chosen" : ""}">${esc(o)}</button>`).join("")}</div></div>`;
     } else {
-      h += `<div class="card pending${sel}" data-m="${m.id}"><span class="faint">${m.stages?.embed ? (m.draft ? "生成中，校验通过前不展示…" : "检索中…") : "处理中…"}</span></div>`;
+      h += `<div class="card pending${sel}" data-m="${m.id}">${progressHTML(m)}</div>`;
     }
     // 中置信 / 属地提示后点了转人工
     if (m.answer && m.ticketId) {
@@ -420,9 +521,24 @@ function renderChat() {
   }).join("");
   if (atBottom) el.scrollTop = el.scrollHeight;
 }
+// 等回答时的渐进式占位：每过一道闸点亮一行，当前那行闪；生成阶段显示已经写了多少字（校验通过才展示正文）
+function progressHTML(m) {
+  const g = (k) => m.steps.some((s) => s.gate === k);
+  const items = [
+    ["人工闸：要不要直接转人工", g("human")],
+    [m.emp ? "规则闸：按档案和规则表查" : "规则闸：能不能查表直答", g("rule")],
+    ["检索：在手册里找相关条款", !!m.stages.search],
+    ["重排：给候选条款打分", !!m.stages.rerank],
+    [m.draft ? `生成：已写 ${m.draft.length} 字，校验通过前不展示` : "生成：写回答", !!m.checks],
+    ["校验：引用和数字", false],
+  ];
+  const cur = items.findIndex(([, done]) => !done);
+  return `<div class="prog">${items.map(([t, done], i) => `<div class="st${done ? " done" : i === cur ? " cur" : ""}"><span class="dot"></span>${esc(t)}</div>`).join("")}</div>
+    <div class="skel" style="width:94%"></div><div class="skel" style="width:81%"></div><div class="skel" style="width:58%"></div>`;
+}
 const staleBadge = (a) => a.stale?.stale ? ` <span class="badge stale" title="资料日期 ${esc(a.subject.date)}，超过 ${META.staleYears} 年">资料较旧 · ${esc(a.subject.date.slice(0, 4))} 年版</span>` : ` <span class="faint" style="font-size:12px">${esc(a.subject.source)} ${esc(a.subject.version)}（${esc(a.subject.date)}）</span>`;
 const handoffBtn = (m, why) => m.ticketId ? `<span class="muted">已转工单 ${esc(m.ticketId)}</span>` : `<button class="btn small" data-handoff="${m.id}" data-why="${esc(why)}">转人工</button>`;
-const localNotice = (m) => `<div class="notice">依据条款写的是「按雇佣地规定」，具体以你工作地的规定为准。${handoffBtn(m, "属地规定，员工要求 HR 确认")}</div>`;
+const localNotice = (m) => `<div class="notice">依据条款写的是「按雇佣地规定」，${m.emp ? `你的用工地是${esc(m.emp.workCity)}，问「婚假几天」这类问题会按当地规定直接答。` : "具体以你工作地的规定为准；登录后能按你的用工地精准回答。"}${handoffBtn(m, "属地规定，员工要求 HR 确认")}</div>`;
 function repliesHTML(t) {
   return t.replies.map((r, i) => `<div class="hr-reply"><div class="by">HR 回复 · ${fmtTime(r.at)}</div><div class="answer">${esc(r.text)}</div>
     ${fbHTML({ targetType: "human", traceId: t.traceId, ticketId: t.id, replyIdx: i }, `human:${t.id}:${i}`)}</div>`).join("")
@@ -603,6 +719,7 @@ function ticketDetail(t) {
     <div class="kv">
       <div class="k">问题</div><div><b>${esc(t.q)}</b></div>
       <div class="k">身份</div><div>${esc(META.subjects[t.subject]?.label || t.subject)}</div>
+      <div class="k">提问人</div><div>${t.emp ? `${esc(t.emp.name)}（${esc(t.emp.empNo)}）· ${esc(t.emp.company)} · 用工地 ${esc(t.emp.workCity)} · 参保地 ${esc(t.emp.insuredCity)} · 累计工龄 ${t.emp.totalYears} 年${t.emp.workCity !== t.emp.insuredCity ? ` <span class="badge stale">两地不一致</span>` : ""}` : `<span class="faint">没登录，不知道是谁</span>`}</div>
       <div class="k">转人工原因</div><div>${esc(t.reason)}</div>
       <div class="k">分类</div><div>${esc(t.category)}（按最相关条款的章节推出）</div>
       <div class="k">优先级</div><div>${prioTag(prioOf(t))} <span class="muted" style="font-size:13px">${prioOf(t) === "高" ? "敏感事项，可能涉及劳动纠纷，先处理" : prioOf(t) === "中" ? "涉及个人数据或员工已对机器回答不满意" : "一般咨询"}</span></div>
@@ -736,7 +853,13 @@ function renderRules(el) {
     <div style="font-size:13.5px">缺条件时追问：${esc(r.slot.ask)}</div>
     <table class="t" style="margin-top:6px"><tr><th>${esc(r.slot.name)}</th><th>结果</th><th>条款</th><th>手册原文（构建时逐条核对）</th></tr>
       ${r.table.map((row) => `<tr><td>${row.when ? esc(row.when) : `${row.gte !== undefined ? row.gte + " 年 ≤ " : ""}${esc(r.slot.name)}${row.lt !== undefined ? " < " + row.lt + " 年" : ""}`}</td><td><b>${esc(row.value)}</b></td><td class="mono">${esc(row.clause || r.clause)}</td><td class="muted">${[].concat(row.src).map(esc).join("；")}</td></tr>`).join("")}</table></div>`).join("")}
-    <div class="note">规则由业务维护，写在 rules/rules.json；构建时检查每一行的数值都能在条款原文里找到，对不上就构建失败。</div></div>`;
+    <div class="col bc"><b>客户公司制度</b> <span class="faint" style="font-size:13px">· 登录后按员工所属公司匹配。手册里写「按合同 / 协议约定」的部分，由这张表补上（公司是虚构的）</span>
+      <table class="t" style="margin-top:6px"><tr><th>公司</th><th>年假</th><th>计薪周期</th><th>发薪</th><th>工时</th><th>加班基数</th><th>病假工资</th></tr>
+      ${META.companies.map((c) => `<tr><td><b>${esc(c.name)}</b><br><span class="faint">${esc(c.type)} · ${esc(META.subjects[c.subject].source)}</span></td><td>${esc(c.annualLeave.desc)}</td><td>${esc(c.payroll.cycle)}</td><td>${esc(c.payroll.payday)}</td><td>${esc(c.payroll.hours)}</td><td>${esc(c.payroll.baseName)}${c.payroll.otExtra ? `<br><span class="faint">${esc(c.payroll.otExtra)}</span>` : ""}</td><td>${c.payroll.sickPay === "handbook" ? "外包手册第三十六条：用工地最低工资 × 80% ÷ 21.75 × 病假天数" : `<span class="faint">没配置，不硬答，交给 RAG</span>`}</td></tr>`).join("")}</table></div>
+    <div class="col bc"><b>属地政策</b> <span class="faint" style="font-size:13px">· 假期天数按用工地，生育津贴按参保地；${esc(META.local.asOf)} 联网核对，以官方现行文本为准</span>
+      <table class="t" style="margin-top:6px"><tr><th>用工地</th><th>婚假</th><th>产假</th><th>陪产假</th><th>育儿假</th><th>月最低工资</th><th>依据</th></tr>
+      ${Object.values(META.local.cities).map((v) => `<tr><td><b>${esc(v.region)}</b></td>${["婚假", "产假", "陪产假", "育儿假"].map((i) => `<td title="${esc(v.items[i].parts)}">${esc(v.items[i].value)}</td>`).join("")}<td>${v.minWage.value} 元</td><td class="muted">${[...new Set(Object.values(v.items).map((x) => x.law))].map(esc).join("；")}</td></tr>`).join("")}</table></div>
+    <div class="note">规则由业务维护，写在 rules/rules.json、companies.json、local.json；构建时检查规则表的每一行数值都能在条款原文里找到，对不上就构建失败。</div></div>`;
 }
 </script>
 </body>
