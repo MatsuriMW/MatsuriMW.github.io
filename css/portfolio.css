@@ -58,6 +58,18 @@
 .pf-marquee span { margin-right: 10px; padding: 4px 13px; font-size: 13px; white-space: nowrap; color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule); border-radius: 99px; }
 @keyframes pf-marquee { to { transform: translateX(-50%); } }
 
+/* 项目页互链：作品集首屏下面一排，每个项目页底部一排（project-pages 的 project_nav） */
+.pf-nav { margin-top: 44px; }
+.pf-jump { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+@media (max-width: 860px) { .pf-jump { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .pf-jump { grid-template-columns: 1fr; } }
+.pf-jump a { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 13px 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; transition: border-color .2s, transform .25s var(--ease); }
+.pf-jump a:hover { border-color: var(--blue); transform: translateY(-2px); }
+.pf-jump a > span { grid-row: span 2; font-size: 22px; line-height: 1; }
+.pf-jump b { font-size: 15px; font-weight: 600; line-height: 1.4; }
+.pf-jump small { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.pf-jump-more { margin-top: 18px; }
+
 /* ===== 01 理念：大字引语、三条原则，下面是落得最完整的 Outline Sidebar ===== */
 .pf .pf-quote { max-width: 880px; }
 .pf .pf-quote h2 { font-size: clamp(28px, 4.2vw, 46px); line-height: 1.3; letter-spacing: -.01em; margin: 12px 0 18px; }

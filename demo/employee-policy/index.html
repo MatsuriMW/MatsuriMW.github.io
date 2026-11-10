@@ -24,6 +24,8 @@ input, textarea, select { font: inherit; color: inherit; }
 
 /* 顶栏 */
 header { display: flex; align-items: center; gap: 18px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+.back { font-size: 13px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+.back:hover { color: var(--ink); }
 header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .5px; white-space: nowrap; }
 .tabs { display: flex; gap: 4px; background: var(--soft); padding: 3px; border-radius: 9px; }
 .tabs button { border: 0; background: transparent; padding: 5px 14px; border-radius: 7px; color: var(--muted); }
@@ -232,6 +234,7 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 </head>
 <body>
 <header>
+  <a class="back" href="https://matsuri.site/portfolio/employee-policy/" title="这个项目在作品集里的介绍页">← 项目页</a>
   <h1>员工问政策</h1>
   <div class="tabs" id="viewTabs">
     <button data-v="emp" class="on">员工端</button>
