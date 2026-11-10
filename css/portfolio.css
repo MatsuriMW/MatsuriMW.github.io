@@ -227,3 +227,30 @@
 .pj-next { flex: 1; margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
 .pj-next li + li { margin-top: 6px; }
 .pj-next .chip { margin-left: 6px; font-size: 12px; padding: 0 8px; vertical-align: 1px; }
+
+/* ===== 项目页「设计和规则」节（project-pages 的 design）：代码块、表格、说明卡片竖着排 ===== */
+.pj-design { display: grid; gap: 18px; max-width: 980px; }
+.pj-dz { padding: 22px 24px; }
+.pj-dz h3 { margin: 0 0 12px; font-size: 16px; }
+.pj-code { position: relative; border: 1px solid var(--rule); border-radius: 10px; background: #fbfaf7; overflow: hidden; }
+.pj-code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font: 13px/1.65 "SF Mono", Menlo, Consolas, "PingFang SC", monospace; color: var(--ink); white-space: pre; }
+.pj-lang { position: absolute; top: 8px; right: 10px; font: 11px/1 "SF Mono", Menlo, monospace; letter-spacing: .06em; color: var(--ink-3); text-transform: uppercase; }
+.pj-tbl { overflow-x: auto; }
+.pj-tbl table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.65; }
+.pj-tbl th { text-align: left; font-weight: 600; color: var(--ink-3); font-size: 13px; padding: 6px 12px 8px 0; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.pj-tbl td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; color: var(--ink-2); }
+.pj-tbl td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.pj-tbl tr:last-child td { border-bottom: 0; }
+.pj-dz-p { margin: -4px 0 0; font-size: 14px; color: var(--ink-2); max-width: 820px; }
+.pj-dz .pj-next { margin: 0; }
+@media (max-width: 640px) { .pj-dz { padding: 18px 16px; } .pj-code pre { font-size: 12px; padding: 14px; } .pj-tbl td:first-child { white-space: normal; } }
+/* 设计节的卡片可以折叠：点标题行收起，只剩标题；右边一个箭头，展开时朝下 */
+.pj-dz > summary { display: flex; align-items: center; gap: 12px; list-style: none; cursor: pointer; user-select: none; margin: -4px 0; padding: 4px 0; }
+.pj-dz > summary::-webkit-details-marker { display: none; }
+.pj-dz > summary h3 { margin: 0; flex: 1; }
+.pj-dz[open] > summary { margin-bottom: 8px; }
+.pj-fold { width: 9px; height: 9px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(-45deg); transition: transform .25s var(--ease), border-color .2s; flex: none; margin-right: 4px; }
+.pj-dz[open] .pj-fold { transform: rotate(45deg); }
+.pj-dz > summary:hover .pj-fold { border-color: var(--blue); }
+.pj-dz > summary:hover h3 { color: var(--blue); }
+.pj-dz:not([open]) { padding-top: 16px; padding-bottom: 16px; }

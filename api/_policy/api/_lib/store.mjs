@@ -56,6 +56,28 @@ export async function hitLimit(ip) {
     return { ok: true };
 }
 
+// 全站共享的键值（问答缓存的 L2 用）：本机存 data/cache.json，线上存 Upstash（不分访客，按 ttl 秒过期）
+const KV_FILE = () => D("cache.json");
+const readKV = () => { try { return JSON.parse(fs.readFileSync(KV_FILE(), "utf8")); } catch { return {}; } };
+export async function kvGet(key) {
+    if (ONLINE) { const [v] = await redis([["GET", `pol:cache:${key}`]]); return v == null ? null : JSON.parse(v); }
+    const x = readKV()[key];
+    return x && x.exp > Date.now() ? x.v : null;
+}
+export async function kvSet(key, v, ttl) {
+    if (ONLINE) return void (await redis([["SET", `pol:cache:${key}`, JSON.stringify(v), "EX", ttl]]));
+    const all = readKV(), now = Date.now();
+    for (const [k, x] of Object.entries(all)) if (x.exp <= now) delete all[k];
+    all[key] = { v, exp: now + ttl * 1000 };
+    const keys = Object.keys(all);
+    for (const k of keys.slice(0, Math.max(0, keys.length - 600))) delete all[k];   // 本机最多留 600 条，先进先出
+    fs.writeFileSync(KV_FILE(), JSON.stringify(all));
+}
+export async function kvDel(key) {
+    if (ONLINE) return void (await redis([["DEL", `pol:cache:${key}`]]));
+    const all = readKV(); delete all[key]; fs.writeFileSync(KV_FILE(), JSON.stringify(all));
+}
+
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const readJSON = (f, d) => {
     if (ONLINE) { const c = box(); return f in c.json ? clone(c.json[f]) : d; }
@@ -308,6 +330,17 @@ export function stats() {
     for (const k of ["rule", "rag", "human"]) { const a = T.filter((t) => (t.final || t.route) === k && t.ms != null).map((t) => t.ms); lat[k] = { n: a.length, p50: pctl(a, 0.5), p90: pctl(a, 0.9) }; }
     const genTok = gen.filter((t) => t.usage?.total_tokens).map((t) => t.usage.total_tokens);
 
+    // ---- 问答缓存：进到 RAG 并答出来的问题里，有多少直接用了缓存；部分命中（向量 / 重排）单算 ----
+    const ragShown = T.filter((t) => t.route === "rag" && t.final === "rag");
+    const hitT = ragShown.filter((t) => t.cache?.hit);
+    const cache = {
+        answered: ragShown.length, hits: hitT.length, pct: pct(hitT.length, ragShown.length),
+        byLevel: { L1: hitT.filter((t) => t.cache.level === "L1").length, L2: hitT.filter((t) => t.cache.level === "L2").length },
+        tokensSaved: hitT.reduce((a, t) => a + (t.cache.tokensSaved || 0), 0),
+        callsSaved: hitT.length * 3 + T.filter((t) => t.cache && !t.cache.hit).reduce((a, t) => a + (t.cache.vec ? 1 : 0) + (t.cache.rr ? 1 : 0), 0),
+        partial: T.filter((t) => t.cache && !t.cache.hit).length,
+    };
+
     // ---- 员工在问什么 ----
     const topics = Object.entries(count(T.filter((t) => t.final !== "ask_slot"), (t) => t.category || "未说明")).sort((a, b) => b[1] - a[1]).slice(0, 8);
     const subjects = count(T, (t) => t.subject);
@@ -324,7 +357,7 @@ export function stats() {
     }));
 
     return {
-        service, tiers, refusedAtSearch, refusedAtRerank, blockedKinds, slot: { done: slotDone, pending: slotPending },
+        service, cache, tiers, refusedAtSearch, refusedAtRerank, blockedKinds, slot: { done: slotDone, pending: slotPending },
         latency: lat, tokensPerGen: genTok.length ? Math.round(genTok.reduce((a, b) => a + b, 0) / genTok.length) : null,
         callsPerQ: T.length ? +(calls / T.length).toFixed(2) : null,
         topics, subjects, funnel, evalSize, recent,

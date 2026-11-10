@@ -7,6 +7,7 @@ import { REPLAY, MODELS, generate } from "./models.mjs";
 import { loadProfileData, cleanProfile, companyOf } from "./profile.mjs";
 import { ROLES, canSee, today, effectiveAt } from "./docs.mjs";
 import { settle, sendFeedback, lsOn, LS_PROJECT } from "./langsmith.mjs";
+import * as C from "./cache.mjs";
 import fs from "node:fs";
 
 // 登录了就返回档案，没登录返回 null
@@ -97,7 +98,10 @@ export async function route(req, res, p) {
         const s = S.getSession();
         if (!s?.loggedIn) return json(res, { error: "先登录" }, 401);
         const b = await body(req);
-        S.setSession({ ...s, profile: b.reset ? loadProfileData().demo.profile : cleanProfile(s.profile, b) });
+        const next = b.reset ? loadProfileData().demo.profile : cleanProfile(s.profile, b);
+        const from = s.profile.role || "employee", to = next.role || "employee";
+        if (from !== to) S.writeAudit({ action: "角色变更", who: `${next.name}（${next.empNo}）`, role: to, q: `${ROLES[from]} → ${ROLES[to]}（演示里在档案上改；真实系统从 HR 系统同步）`, denied: [] });
+        S.setSession({ ...s, profile: next });
         return json(res, me());
     }
     if (p === "/api/clause") {
@@ -111,7 +115,8 @@ export async function route(req, res, p) {
         return b ? json(res, P.showBlock(b)) : json(res, { error: "没有这一条" }, 404);
     }
     if (p === "/api/versions") return json(res, versionsReport());
-    if (p === "/api/audit") return json(res, S.audits());
+    // 审计：这位访客自己的记录 + 一组演示虚构的示例记录（rules/audit-sample.json），页面上分开显示
+    if (p === "/api/audit") return json(res, { rows: S.audits(), samples: JSON.parse(fs.readFileSync(new URL("../../rules/audit-sample.json", import.meta.url), "utf8")).rows });
     if (p === "/api/tickets" && m === "GET") {
         // 每条 HR 回复带上员工最近一次评价，工单详情里显示
         const fb = S.latestFeedback({ includeReplay: true });
@@ -149,6 +154,8 @@ export async function route(req, res, p) {
     if (p === "/api/feedback" && m === "POST") {
         const r = S.addFeedback(await body(req));
         sendFeedback(r.feedback);
+        // 被打 Bad 的 RAG 回答从缓存里删掉，下次重新生成（不让一条被嫌弃的回答继续发给别人）
+        if (r.feedback.rating === "bad" && r.feedback.targetType === "rag") { const k = S.getTrace(r.feedback.traceId)?.cacheKey; if (k) await C.del(k); }
         await settle();
         return json(res, r);
     }

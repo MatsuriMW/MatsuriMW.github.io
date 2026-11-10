@@ -19,7 +19,7 @@ export function runId(traceId, name = "root") {
 // LangSmith 的 dotted_order：20261110T130417123000Z + run id，子节点接在父节点后面用点隔开
 const stamp = (ms) => new Date(ms).toISOString().replace(/[-:]/g, "").replace(/\.(\d{3})Z$/, "$1000Z");
 const iso = (ms) => new Date(ms).toISOString();
-const GATE = { redact: "脱敏", human: "人工闸", rule: "规则闸", lookup: "查表", rag: "RAG 分档", check: "引用和数字校验" };
+const GATE = { redact: "脱敏", human: "人工闸", rule: "规则闸", lookup: "查表", cache: "缓存", rag: "RAG 分档", check: "引用和数字校验" };
 
 // 由 trace（ask.mjs 里攒的）拼出 run 列表。x 是只在内存里的细节：t0、检索 / 生成的起止时间、提示词
 export function buildRuns(trace, x) {

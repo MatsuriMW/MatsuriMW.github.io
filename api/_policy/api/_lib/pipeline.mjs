@@ -6,7 +6,8 @@
 import fs from "node:fs";
 import crypto from "node:crypto";
 import { BlockIndex } from "./core.mjs";
-import { embedQuery, rerankDocs } from "./models.mjs";
+import { embedQuery, rerankDocs, MODELS } from "./models.mjs";
+import * as C from "./cache.mjs";
 import { today, effectiveAt, canSee, inSubject } from "./docs.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
@@ -103,20 +104,25 @@ export function keywordTop(q, subject, k = 3, scope = {}) {
 
 // 检索 + 重排 + 分档。onStage(k, data) 每步回调一次，页面用它把三道闸后面的小步骤点亮
 // 权限：先按角色过滤再检索，没权限的块进不了候选，更进不了提示词。另外不带角色再搜一遍，只为记下「过滤掉了哪些相关块」写审计
-export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage, role = "employee", asOf = today() } = {}) {
+// useCache：问题向量、重排结果走缓存（cache.mjs），命中的那一步不调模型
+export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage, role = "employee", asOf = today(), useCache = false } = {}) {
     const idx = loadIndex();
-    const t0 = Date.now(), ms = {};
-    const qvec = await embedQuery(q, { signal });
+    const t0 = Date.now(), ms = {}, cached = {};
+    const vk = C.key("vec", [MODELS.embed, C.normQ(q)]);
+    let qvec = null;
+    if (useCache) { const h = await C.get(vk); if (h) { qvec = C.unpackVec(h.v); cached.vec = h.level; } }
+    if (!qvec) { qvec = await embedQuery(q, { signal }); if (useCache) await C.set(vk, C.packVec(qvec)); }
     ms.embed = Date.now() - t0;
     onStage?.("embed", { ms: ms.embed });
     const scope = visible(subject, { role, asOf });
     const S = idx.search(q, qvec, { ...cfg, limit: cfg.candidates, perFile: cfg.perFile, minZ: cfg.minZ, filter: scope });
     const allRoles = idx.search(q, qvec, { ...cfg, limit: cfg.candidates, perFile: cfg.perFile, minZ: cfg.minZ, filter: (b) => inSubject(b, subject) && effectiveAt(b, asOf) });
-    const denied = allRoles.hits.map((h) => idx.blocks[h.i]).filter((b) => !canSee(role, b)).map((b) => ({ cid: b.cid, clause: b.clause, source: b.source }));
+    // 只记「不分角色时会排进前 contextK、可能进提示词」却因为角色被挡掉的块；排在后面的弱相关块不算，免得每次检索都报一堆
+    const denied = allRoles.hits.slice(0, cfg.contextK).map((h) => idx.blocks[h.i]).filter((b) => !canSee(role, b)).map((b) => ({ cid: b.cid, clause: b.clause, source: b.source }));
     ms.search = Date.now() - t0 - ms.embed;
     const hits = S.hits.map((h, rank) => ({ i: h.i, rank: rank + 1, cos: +h.cos.toFixed(4), bm: +h.bm.toFixed(3), f: +h.f.toFixed(3) }));
     const topCos = hits.length ? Math.max(...hits.slice(0, 10).map((h) => h.cos)) : 0;
-    const calls = { embed: 1, rerank: 0 };
+    const calls = { embed: cached.vec ? 0 : 1, rerank: 0 };
     let refused = null;
     if (!hits.length) refused = { stage: "检索", reason: "检索拒答：没有候选过线" };
     else if (topCos < cfg.minTopCos) refused = { stage: "检索", reason: `检索拒答：最高余弦 ${topCos.toFixed(3)} < 粗门槛 ${cfg.minTopCos}` };
@@ -124,8 +130,10 @@ export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage, role
     let topRR = null, tier = null;
     if (!refused) {
         const docs = hits.map((h) => { const b = idx.blocks[h.i]; return `${b.ctx}\n${b.text}`.slice(0, 1200); });
-        const rr = await rerankDocs(q, docs, { signal });
-        calls.rerank = 1;
+        const rk = C.key("rr", [MODELS.rerank, C.normQ(q), hits.map((h) => idx.blocks[h.i].cid)]);
+        let rr = null;
+        if (useCache) { const h = await C.get(rk); if (h) { rr = h.v; cached.rr = h.level; } }
+        if (!rr) { rr = await rerankDocs(q, docs, { signal }); calls.rerank = 1; if (useCache) await C.set(rk, rr); }
         for (const r of rr) hits[r.index].rr = +r.score.toFixed(4);
         hits.sort((a, b) => (b.rr ?? -1) - (a.rr ?? -1));
         ms.rerank = Date.now() - t0 - ms.embed - ms.search;
@@ -138,7 +146,7 @@ export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage, role
     return {
         hits: hits.map((h) => ({ ...h, ...showBlock(idx.blocks[h.i]), inContext: context.includes(h) })),
         context: context.map((h) => showBlock(idx.blocks[h.i])),
-        topCos, topRR, tier, refused, ms, calls, denied, role, asOf,
+        topCos, topRR, tier, refused, ms, calls, denied, role, asOf, cached,
         gates: { cos: cfg.minTopCos, fine: cfg.fineRerank, high: cfg.highRerank },
     };
 }

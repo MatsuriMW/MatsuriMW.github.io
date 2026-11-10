@@ -8,6 +8,7 @@ import { checkAnswer, tamper as tamperAnswer } from "./checks.mjs";
 import { writeTrace, createTicket, newId, writeAudit } from "./store.mjs";
 import { today, upcoming, ROLES } from "./docs.mjs";
 import { sendTrace } from "./langsmith.mjs";
+import * as C from "./cache.mjs";
 import { answerByProfile, companyOf, snapshot } from "./profile.mjs";
 
 // 「资料较旧」按真正引用的那份资料算（引用了 2026 版内部口径就不该标外包手册 2019 年版）；引用了几份取最旧的
@@ -114,28 +115,38 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     }
     step("rule", hits.length > 1 ? "conflict" : "pass", hits.length > 1 ? `同时命中 ${hits.map((x) => x.name).join("、")}，不猜，交给 RAG` : ruleMissText(M), { match: M });
 
-    // ③ RAG
+    // ③ RAG。先查答案缓存（cache.mjs）：同一问题、同一身份和角色、同一天、同一版本的资料和提示词，答过就直接用
     trace.route = "rag";
     trace.promptVersion = PROMPT_VERSION;
+    const useCache = !dry && !tamper;
+    const ak = C.key("ans", [C.normQ(qr), subject, role, asOf, loadIndex().meta.built, PROMPT_VERSION, MODELS.gen, cfg.minTopCos, cfg.fineRerank, cfg.highRerank]);
+    trace.cacheKey = useCache ? ak : undefined;
+    if (useCache) {
+        const hit = await C.get(ak);
+        if (hit) return cachedAnswer(hit.v, hit.level);
+    }
     let Rt;
-    const retStart = Date.now() - t0;
+    const retStart = Date.now() - t0, stages = {};
     try {
-        Rt = await retrieve(qr, subject, { cfg, signal, role, asOf, onStage: (k, d) => send("stage", { k, ...d }) });
+        Rt = await retrieve(qr, subject, { cfg, signal, role, asOf, useCache, onStage: (k, d) => { stages[k] = { k, ...d }; send("stage", { k, ...d }); } });
     } catch (e) { send("error", { message: String(e.message || e).slice(0, 200) }); trace.final = "error"; return finish({ error: String(e.message || e) }); }
     lsx.ret = { start: retStart, ms: Rt.ms };
+    if (Rt.cached.vec || Rt.cached.rr) trace.cache = { hit: false, vec: Rt.cached.vec, rr: Rt.cached.rr };
     trace.calls.embed = Rt.calls.embed; trace.calls.rerank = Rt.calls.rerank;
     // 权限：过滤掉的相关块只进 trace、审计和工单，不推给页面（员工不该知道有这份资料）
     trace.acl = { role, visible: Rt.hits.length, denied: Rt.denied };
     if (!dry) writeAudit({ traceId: trace.traceId, action: "检索", who: trace.emp ? `${trace.emp.name}（${trace.emp.empNo}）` : "访客（没登录）", role, subject, q: qr, visible: Rt.hits.length, denied: Rt.denied });
     trace.scores = { topCos: Rt.topCos, topRR: Rt.topRR, tier: Rt.tier, gates: Rt.gates };
     trace.hits = Rt.hits.slice(0, 8).map((x) => ({ cid: x.cid, clause: x.clause, cos: x.cos, rr: x.rr ?? null, inContext: x.inContext }));
-    send("retrieval", { hits: Rt.hits.slice(0, 10).map(({ text, ...x }) => ({ ...x, snippet: text.slice(0, 80) })), topCos: Rt.topCos, topRR: Rt.topRR, tier: Rt.tier, gates: Rt.gates, ms: Rt.ms });
+    const retrieval = { hits: Rt.hits.slice(0, 10).map(({ text, ...x }) => ({ ...x, snippet: text.slice(0, 80) })), topCos: Rt.topCos, topRR: Rt.topRR, tier: Rt.tier, gates: Rt.gates, ms: Rt.ms };
+    send("retrieval", retrieval);
     if (Rt.refused) {
         step("rag", "refuse", Rt.refused.reason);
         handoff("system", Rt.refused.reason, Rt.hits.slice(0, 3));
         return finish();
     }
-    step("rag", "gen", `置信度${{ high: "高", mid: "中" }[Rt.tier]}（重排最高分 ${Rt.topRR.toFixed(3)}），用 ${Rt.context.length} 条条款生成`);
+    const ragDetail = `置信度${{ high: "高", mid: "中" }[Rt.tier]}（重排最高分 ${Rt.topRR.toFixed(3)}），用 ${Rt.context.length} 条条款生成`;
+    step("rag", "gen", ragDetail);
     let text = "", usage = null, model = MODELS.gen;
     lsx.messages = buildMessages(qr, Rt.context); lsx.gen = { start: Date.now() - t0 };
     try {
@@ -154,14 +165,36 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
         handoff("system", chk.reason, Rt.context);
         return finish();
     }
-    step("check", "pass", `引用 [${chk.cited.join("][")}] 都存在；回答里的数字 ${chk.numbers.length ? chk.numbers.join("、") : "（没有）"} 都能在所引条款里找到`);
+    const checkDetail = `引用 [${chk.cited.join("][")}] 都存在；回答里的数字 ${chk.numbers.length ? chk.numbers.join("、") : "（没有）"} 都能在所引条款里找到`;
+    step("check", "pass", checkDetail);
     const sources = Rt.context.map((b, k) => ({ n: k + 1, ...b, cite: cite(b) })).filter((x) => chk.cited.includes(x.n));   // 只列回答真正引用的条款
     const local = localityHint(text);
     trace.final = "rag"; trace.answer = text; trace.clauses = Rt.context.map((b) => b.cid); trace.category = chapterOf(Rt.context[0]);
     const idx = loadIndex();
     const soon = sources.map((x) => upcomingOf(idx.blocks.find((b) => b.cid === x.cid), x.clause, asOf)).filter(Boolean);
-    send("answer", { kind: "rag", traceId: trace.traceId, text, sources, tier: Rt.tier, locality: local, ...freshness(sources, subject), upcoming: soon });
+    const answer = { kind: "rag", text, sources, tier: Rt.tier, locality: local, ...freshness(sources, subject), upcoming: soon };
+    send("answer", { ...answer, traceId: trace.traceId });
+    if (useCache) await C.set(ak, {
+        fromTrace: trace.traceId, at: new Date().toISOString(), tokens: usage?.total_tokens || 0, model, answer, retrieval, stages, checks: chk, checkDetail, ragDetail,
+        scores: trace.scores, hits: trace.hits, clauses: trace.clauses, category: trace.category, acl: trace.acl,
+    });
     return finish();
+
+    // 命中答案缓存：把当时的检索、分数、校验原样发给页面（轨迹照样能看），不调模型
+    function cachedAnswer(c, level) {
+        const where = level === "L1" ? "L1 内存" : "L2 全站共享";
+        step("cache", "hit", `缓存命中（${where}）：同一问题、同一身份和角色、同一版本的资料今天答过（trace ${c.fromTrace}），不调模型，省下 ${c.tokens} token`);
+        for (const k of ["embed", "search", "rerank"]) if (c.stages[k]) send("stage", { ...c.stages[k], ms: 0, cached: true });
+        send("retrieval", { ...c.retrieval, cached: true });
+        step("rag", "gen", c.ragDetail.replace(/生成$/, "生成过，这次直接用缓存"));
+        send("checks", c.checks);
+        step("check", "pass", c.checkDetail);
+        Object.assign(trace, { final: "rag", answer: c.answer.text, model: c.model, generated: true, checks: c.checks, scores: c.scores, hits: c.hits, clauses: c.clauses, category: c.category,
+            acl: c.acl, cache: { hit: true, level, fromTrace: c.fromTrace, tokensSaved: c.tokens } });
+        if (!dry) writeAudit({ traceId: trace.traceId, action: "检索（缓存）", who: trace.emp ? `${trace.emp.name}（${trace.emp.empNo}）` : "访客（没登录）", role, subject, q: qr, visible: c.acl?.visible, denied: c.acl?.denied || [] });
+        send("answer", { ...c.answer, traceId: trace.traceId, cached: { level, fromTrace: c.fromTrace, tokensSaved: c.tokens } });
+        return finish();
+    }
 
     function profileAnswer(pa) {
         const b = pa.clause ? clauseBlock(subject, pa.clause, asOf) : null;

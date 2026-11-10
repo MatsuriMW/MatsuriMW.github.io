@@ -502,7 +502,7 @@ function renderChat() {
         ${fbHTML({ targetType: "rule", traceId: a.traceId }, "rule:" + a.traceId)}</div>`;
     } else if (m.answer?.kind === "rag") {
       const a = m.answer;
-      h += `<div class="card rag${sel}" data-m="${m.id}"><span class="badge k">RAG 生成</span> <span class="badge tier-${a.tier}">${a.tier === "high" ? "高置信" : "中置信"}</span>${staleBadge(a)}
+      h += `<div class="card rag${sel}" data-m="${m.id}"><span class="badge k">RAG 生成</span> <span class="badge tier-${a.tier}">${a.tier === "high" ? "高置信" : "中置信"}</span>${a.cached ? ` <span class="badge" style="background:var(--rule-bg);color:var(--rule)" title="来自 trace ${esc(a.cached.fromTrace)}">缓存命中 · 0 token</span>` : ""}${staleBadge(a)}
         <div class="answer">${mdLite(a.text, m)}</div>
         ${sourcesHTML(a.sources)}${upcomingHTML(a)}
         ${a.tier === "mid" ? `<div class="notice">置信度中等，建议找 HR 核实。${handoffBtn(m, "置信度中等，员工要求核实")}</div>` : ""}
@@ -622,13 +622,14 @@ function renderTrace(onlyDraft) {
   if (!m) return;
   if (onlyDraft && $("#draftbox")) { $("#draftbox").textContent = m.draft; return; }
   const st = (g) => m.steps.filter((s) => s.gate === g).at(-1);
-  const hs = st("human"), rs = st("rule"), gs = st("rag"), cs = st("check"), ls = st("lookup"), red = st("redact");
+  const hs = st("human"), rs = st("rule"), gs = st("rag"), cs = st("check"), ls = st("lookup"), red = st("redact"), cas = st("cache");
   const running = m.status === "running";
   const gateCls = (s, kind) => !s ? (running ? "" : "skip") : s.status === "hit" ? `hit ${kind}` : s.status === "ask" ? `hit ${kind}` : s.status === "skip" ? "skip" : s.status === "pass" || s.status === "conflict" ? "pass" : s.status === "refuse" || s.status === "uncovered" ? "fail" : s.status === "gen" ? `hit ${kind}` : "";
   let ragSubs = "";
   if (m.stages.embed || gs) {
     const sr = m.stages.search, rr = m.stages.rerank, R = m.retrieval;
     ragSubs += `<div class="substeps">`;
+    if (cas) ragSubs += `<div class="sub good"><div class="h"><span>问答缓存</span><span>命中</span></div>${esc(cas.detail)}<div class="faint">下面的检索、重排、校验是当时那次的记录</div></div>`;
     if (sr) ragSubs += `<div class="sub ${sr.refused ? "bad" : ""}"><div class="h"><span>混合检索（BM25 + 向量）</span><span>${m.stages.embed.ms + sr.ms} ms</span></div>
       ${sr.n} 个候选（共 ${sr.total} 块）；最高余弦 <b>${sr.topCos.toFixed(3)}</b> ${sr.topCos >= sr.gate ? "≥" : "<"} 粗门槛 ${sr.gate}${sr.refused ? " → 检索拒答" : ""}</div>`;
     if (rr) {
@@ -641,7 +642,7 @@ function renderTrace(onlyDraft) {
     if (R?.hits?.length) ragSubs += `<div class="sub"><div class="h"><span>候选（前 ${Math.min(8, R.hits.length)}，左侧色条 = 进了提示词）</span></div>
       <table class="cands"><tr><th>条款</th><th>标题</th><th class="num">余弦</th><th class="num">重排</th></tr>
       ${R.hits.slice(0, 8).map((h) => `<tr class="${h.inContext ? "inctx" : ""}"><td class="mono">${esc(h.clause)}</td><td>${esc(h.ctx.split(" > ").pop())}</td><td class="num mono">${h.cos.toFixed(3)}</td><td class="num mono">${h.rr != null ? h.rr.toFixed(3) : "—"}</td></tr>`).join("")}</table></div>`;
-    if (m.draft || (gs?.status === "gen")) ragSubs += `<div class="sub"><div class="h"><span>生成（DeepSeek，校验通过才展示）</span><span>${m.done?.model || ""}</span></div><div class="draftbox" id="draftbox">${esc(m.checks?.tampered ? m.checks.text : m.draft)}</div></div>`;
+    if (!cas && (m.draft || (gs?.status === "gen"))) ragSubs += `<div class="sub"><div class="h"><span>生成（DeepSeek，校验通过才展示）</span><span>${m.done?.model || ""}</span></div><div class="draftbox" id="draftbox">${esc(m.checks?.tampered ? m.checks.text : m.draft)}</div></div>`;
     if (cs) ragSubs += `<div class="sub ${cs.status === "pass" ? "good" : "bad"}"><div class="h"><span>引用和数字校验</span><span>${cs.status === "pass" ? "通过" : "拦下 → 转人工"}</span></div>${esc(cs.detail)}${m.checks?.tampered ? `<div class="faint">（演示开关打开：回答里的数字被故意改过）</div>` : ""}</div>`;
     ragSubs += `</div>`;
   }
@@ -835,6 +836,11 @@ async function renderDash(el) {
       ${bars({ number: s.blockedKinds.number, citation: s.blockedKinds.citation, fallback: s.blockedKinds.fallback }, { number: "数字校验拦下", citation: "引用校验拦下", fallback: "模型自己说没写到" })}
       <div class="sec">规则追问</div><div style="font-size:13.5px">追问后答完 <b>${s.slot.done}</b> 次，追问后没回 <b>${s.slot.pending}</b> 次</div>
       <div class="note">追问没回多，说明追问太难答或选项不合适。</div></div>
+    <div class="tile span6"><h3>问答缓存 · 答过的问题不再花模型调用</h3><div class="big">${s.cache.pct == null ? "—" : s.cache.pct + "%"}<small>${s.cache.hits} / ${s.cache.answered} 条 RAG 回答直接用了缓存</small></div>
+      <div class="bars"><div class="bar"><span>L1 内存 / L2 全站共享</span><span class="n" style="grid-column:2/4;text-align:left">${s.cache.byLevel.L1} / ${s.cache.byLevel.L2}</span></div>
+        <div class="bar"><span>省下</span><span class="n" style="grid-column:2/4;text-align:left">${s.cache.callsSaved} 次模型调用、${s.cache.tokensSaved} token</span></div>
+        <div class="bar"><span>只命中向量或重排</span><span class="n" style="grid-column:2/4;text-align:left">${s.cache.partial} 题</span></div></div>
+      <div class="note">键里有问题、身份、角色、日期、资料版本、提示词、模型和门槛，任何一样变了就重新算；被打 Bad 的回答当场删掉。规则直答本来就 0 token，不进缓存。</div></div>
     <div class="tile span6"><h3>Good / OK / Bad</h3><table class="t"><tr><th></th><th class="num">Good</th><th class="num">OK</th><th class="num">Bad</th></tr>
       ${[["rule", "规则直答"], ["rag", "RAG 回答"], ["human", "HR 回复"]].map(([k, l]) => `<tr><td>${l}</td><td class="num">${R[k].good}</td><td class="num">${R[k].ok}</td><td class="num" style="color:${R[k].bad ? "var(--bad)" : ""}">${R[k].bad}</td></tr>`).join("")}</table>
       <div class="sec" style="margin-top:10px">Bad 的原因</div>${bars(s.badReasons)}</div>
@@ -886,14 +892,38 @@ async function renderVersions(el) {
   </div>`;
 }
 
-// 权限与审计：每次检索、查条款原文都留一行；过滤掉的相关资料只在这里和工单上看得到
+// 权限与审计：谁能看什么、规则怎么定；每次检索、查条款、改角色都留一行。过滤掉的相关资料只在这里和工单上看得到
 async function renderAudit(el) {
-  const A = await api("/api/policy/audit");
-  const denied = A.filter((a) => a.denied?.length);
-  el.innerHTML = `<div class="bclist"><div class="col bc"><b>审计记录</b> <span class="faint" style="font-size:13px">· 最近 ${A.length} 条，其中 ${denied.length} 条因为角色过滤掉了相关资料。员工那边看不到这些，只看到「转人工」或照常的回答</span>
-    ${A.length ? `<table class="t" style="margin-top:6px"><tr><th>时间</th><th>谁</th><th>角色</th><th>动作</th><th>问题 / 条款</th><th class="num">能看到的候选</th><th>因角色过滤掉</th></tr>
-    ${A.map((a) => `<tr><td class="mono">${fmtTime(a.at)}</td><td>${esc(a.who)}</td><td>${esc(META.roles[a.role] || a.role)}</td><td>${esc(a.action)}</td><td>${esc(a.q || a.cid || "")}</td><td class="num">${a.visible ?? "—"}</td>
-      <td>${a.denied?.length ? `<b style="color:var(--bad)">${a.denied.length} 块</b> <span class="faint">${[...new Set(a.denied.map((d) => d.source))].map(esc).join("、")}</span>` : `<span class="faint">无</span>`}</td></tr>`).join("")}</table>` : `<div class="faint" style="margin-top:6px">还没有。员工端问一个要检索的问题，这里就会多一行</div>`}</div></div>`;
+  const [A, V] = await Promise.all([api("/api/policy/audit"), api("/api/policy/versions")]);
+  const roles = V.roles;
+  const cell = (d, r) => !d.roles || d.roles.includes(r) ? `<b style="color:var(--good)">能查</b>` : `<span class="faint">查不到</span>`;
+  const sum = (rows) => {
+    const bySrc = {};
+    for (const a of rows) for (const d of a.denied || []) bySrc[d.source] = (bySrc[d.source] || 0) + 1;
+    return { n: rows.length, filtered: rows.filter((a) => a.action.startsWith("检索") && a.denied?.length).length, refused: rows.filter((a) => a.action === "查看条款被拒").length,
+      roleChange: rows.filter((a) => a.action === "角色变更").length, top: Object.entries(bySrc).sort((a, b) => b[1] - a[1]) };
+  };
+  const table = (rows, sample) => `<table class="t" style="margin-top:6px"><tr><th>时间</th><th>谁</th><th>角色</th><th>动作</th><th>问题 / 条款</th><th class="num">能看到的候选</th><th>因角色过滤掉</th>${sample ? "<th>结果</th>" : ""}</tr>
+    ${rows.map((a) => `<tr><td class="mono">${fmtTime(a.at)}</td><td>${esc(a.who)}</td><td>${esc(roles[a.role] || a.role)}</td><td>${a.action === "查看条款被拒" ? `<b style="color:var(--bad)">${esc(a.action)}</b>` : esc(a.action)}</td><td>${esc(a.q || a.cid || "")}</td><td class="num">${a.visible ?? "—"}</td>
+      <td>${a.denied?.length ? `<b style="color:var(--bad)">${a.denied.length} 块</b> <span class="faint">${[...new Set(a.denied.map((d) => d.source))].map(esc).join("、")}</span>` : `<span class="faint">无</span>`}</td>${sample ? `<td class="muted">${esc(a.result || "")}</td>` : ""}</tr>`).join("")}</table>`;
+  const S = sum(A.rows.length ? A.rows : A.samples);
+  el.innerHTML = `<div class="bclist">
+    <div class="col bc"><b>角色和可见范围</b> <span class="faint" style="font-size:13px">· 角色只从登录档案来（演示里在「档案」上改，真实系统从 HR 系统同步），没登录按员工</span>
+      <table class="t" style="margin-top:6px"><tr><th>资料</th><th>适用</th><th class="num">块数</th>${Object.values(roles).map((r) => `<th>${esc(r)}</th>`).join("")}</tr>
+      ${V.docs.map((d) => `<tr><td>${esc(d.name)}</td><td class="muted">${esc(d.who)}</td><td class="num">${d.n}</td>${Object.keys(roles).map((r) => `<td>${cell(d, r)}</td>`).join("")}</tr>`).join("")}</table>
+      <ul style="margin:10px 0 0;padding-left:1.2em;font-size:13.5px;line-height:1.8">
+        <li><b>先过滤再检索</b>：没权限的块进不了候选、更进不了提示词，不是答完再拦</li>
+        <li><b>没权限和不存在一样</b>：员工那边只看到「转人工」或照常的回答；直接按编号查条款原文也回 404</li>
+        <li><b>过滤掉什么只给 HR 看</b>：记在这里，工单上标「可能是权限问题」</li>
+        <li><b>缓存也分角色</b>：答案缓存的键里有角色，经理问出来的答案不会发给员工</li></ul></div>
+    <div class="col bc"><b>汇总</b> <span class="faint" style="font-size:13px">· ${A.rows.length ? "按你这次的记录算" : "你还没有记录，先按下面的示例记录算"}</span>
+      <div class="tksum" style="margin-top:8px"><div><b>${S.n}</b><span>条记录</span></div><div><b style="color:var(--bad)">${S.filtered}</b><span>次检索因角色过滤掉相关资料</span></div><div><b>${S.refused}</b><span>次查条款被拒</span></div><div><b>${S.roleChange}</b><span>次角色变更</span></div></div>
+      ${S.top.length ? `<div style="font-size:13.5px;margin-top:8px">被过滤最多的资料：${S.top.map(([k, v]) => `${esc(k)} <b>${v}</b> 次`).join("；")}</div>` : ""}</div>
+    <div class="col bc"><b>你的审计记录</b> <span class="faint" style="font-size:13px">· 最近 ${A.rows.length} 条（线上每位访客一份，7 天过期）</span>
+      ${A.rows.length ? table(A.rows, false) : `<div class="faint" style="margin-top:6px">还没有。员工端问一个要检索的问题，或登录后在「档案」里改角色，这里就会多一行</div>`}</div>
+    <div class="col bc"><b>示例记录</b> <span class="badge stale">演示虚构</span> <span class="faint" style="font-size:13px">· 一个工作日里三种角色会留下什么：人物是编的，问题和被过滤的资料与内部口径对得上</span>
+      ${table(A.samples, true)}</div>
+  </div>`;
 }
 
 function renderRules(el) {
