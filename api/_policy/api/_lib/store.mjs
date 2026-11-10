@@ -21,7 +21,7 @@ async function redis(cmds) {
     if (!r.ok) throw new Error(`redis ${r.status}`);
     return (await r.json()).map((x) => { if (x.error) throw new Error(`redis ${x.error}`); return x.result; });
 }
-const JSON_FILES = ["tickets.json", "badcases.json", "eval-badcases.json", "session.json"], LINE_FILES = ["trace.jsonl", "feedback.jsonl"];
+const JSON_FILES = ["tickets.json", "badcases.json", "eval-badcases.json", "session.json"], LINE_FILES = ["trace.jsonl", "feedback.jsonl", "audit.jsonl"];
 const TTL = 7 * 86400, MAX_LINES = 1000;
 const als = new AsyncLocalStorage();
 const box = () => { const c = als.getStore(); if (!c) throw new Error("线上读写记录要在 withStore 里"); return c; };
@@ -85,6 +85,10 @@ export function traces({ includeReplay = false } = {}) {
 }
 export const getTrace = (id) => readLines("trace.jsonl").filter((t) => t.traceId === id).at(-1) || null;
 
+// ---------- 审计：每次检索、每次查条款原文记一行（谁、什么角色、能看到几块、因为角色被过滤掉了哪些） ----------
+export function writeAudit(a) { append("audit.jsonl", { ...a, at: now(), replay: REPLAY || undefined }); }
+export const audits = () => readLines("audit.jsonl").slice(-200).reverse();
+
 // ---------- 登录状态和档案（演示账户，见 profile.mjs） ----------
 export const getSession = () => readJSON("session.json", null);
 export const setSession = (v) => writeJSON("session.json", v);
@@ -94,11 +98,12 @@ export const tickets = () => readJSON("tickets.json", []);
 const saveTickets = (v) => writeJSON("tickets.json", v);
 // 优先级：敏感事项要先处理（可能涉及劳动纠纷）；查个人数据和反馈后转人工次之
 export const PRIORITY = { sensitive: "高", personal: "中", feedback: "中", system: "普通", explicit: "普通" };
-export function createTicket({ traceId, q, subject, reason, reasonType, trail, clauses, category, fromAnswer = null, emp = null }) {
+// acl：检索时因为角色被过滤掉了相关资料，HR 在工单上看得到（员工那边不显示，不暴露有这份资料）
+export function createTicket({ traceId, q, subject, reason, reasonType, trail, clauses, category, fromAnswer = null, emp = null, acl = null }) {
     const all = tickets();
     const t = {
         id: `T-${String(all.length + 1).padStart(3, "0")}`, traceId, q, subject, reason, reasonType, priority: PRIORITY[reasonType] || "普通", trail, clauses, category,
-        fromAnswer, emp: emp || undefined, status: "待处理", createdAt: now(), replies: [], replay: REPLAY || undefined,
+        fromAnswer, emp: emp || undefined, acl: acl || undefined, status: "待处理", createdAt: now(), replies: [], replay: REPLAY || undefined,
     };
     all.push(t); saveTickets(all);
     return t;

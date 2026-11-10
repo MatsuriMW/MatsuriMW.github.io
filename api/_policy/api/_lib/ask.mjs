@@ -2,34 +2,47 @@
 // send(event, data) 把每一步推给页面；dry=true 时不写 trace、不建工单（评测用）
 import { redact } from "./redact.mjs";
 import { handoffGate, matchRules, fillSlot, parseSlotAnswer, lookup, ruleById } from "./rules.mjs";
-import { retrieve, buildMessages, CONFIG, PROMPT_VERSION, SUBJECTS, staleness, keywordTop, loadIndex, showBlock, cite, chapterOf, localityHint } from "./pipeline.mjs";
+import { retrieve, buildMessages, CONFIG, PROMPT_VERSION, SUBJECTS, STALE_YEARS, staleness, keywordTop, loadIndex, showBlock, cite, chapterOf, localityHint, clauseBlock } from "./pipeline.mjs";
 import { generate, MODELS, REPLAY } from "./models.mjs";
 import { checkAnswer, tamper as tamperAnswer } from "./checks.mjs";
-import { writeTrace, createTicket, newId } from "./store.mjs";
+import { writeTrace, createTicket, newId, writeAudit } from "./store.mjs";
+import { today, upcoming, ROLES } from "./docs.mjs";
+import { sendTrace } from "./langsmith.mjs";
 import { answerByProfile, companyOf, snapshot } from "./profile.mjs";
 
-const flat = (s) => String(s).replace(/\s+/g, "");
-function clauseBlock(subject, clause) {
-    const idx = loadIndex();
-    return idx.blocks.find((c) => c.subject === subject && (c.clause === clause || (clause.startsWith(c.clause + ".") && flat(c.text).includes(clause))));
+// 「资料较旧」按真正引用的那份资料算（引用了 2026 版内部口径就不该标外包手册 2019 年版）；引用了几份取最旧的
+function freshness(blocks, subject) {
+    const b = blocks.filter(Boolean).sort((x, y) => String(x.date).localeCompare(String(y.date)))[0];
+    if (!b) return { stale: staleness(subject), subject: SUBJECTS[subject] };
+    const years = (Date.now() - Date.parse(b.date)) / (365.25 * 864e5);
+    return { stale: { years: +years.toFixed(1), stale: years > STALE_YEARS }, subject: { ...SUBJECTS[subject], source: b.source, version: b.version, date: b.date } };
+}
+
+// 引用的条款在今天之后有待生效的修订：回答下面提示员工
+function upcomingOf(b, clause, asOf) {
+    const u = b && upcoming(loadIndex().blocks, b, clause, asOf);
+    return u ? { ...u, text: loadIndex().blocks.find((x) => x.cid === u.cid)?.text } : null;
 }
 
 // emp：登录了就是员工档案（见 profile.mjs），身份按所属公司定，不看页面传的 subject
-export async function ask({ q, subject = "fosun", ruleId = null, slot = null, traceId = null, tamper = false }, send = () => {}, { dry = false, cfg = CONFIG, signal, emp = null } = {}) {
+// role：只从档案来，没登录按员工（评测可以直接传）；asOf：按哪一天有效的条款答，默认今天（评测固定日期，结果不随日子变）
+export async function ask({ q, subject = "fosun", ruleId = null, slot = null, traceId = null, tamper = false }, send = () => {}, { dry = false, cfg = CONFIG, signal, emp = null, role = null, asOf = today() } = {}) {
     if (emp && companyOf(emp)) subject = companyOf(emp).subject;
     if (!SUBJECTS[subject]) subject = "fosun";
-    const t0 = Date.now();
+    role = emp?.role || role || "employee";
+    if (!ROLES[role]) role = "employee";
+    const t0 = Date.now(), lsx = { t0 };
     const R = redact(String(q || "").slice(0, 300));
     const qr = R.text.trim();
     const trace = {
         traceId: traceId || newId(), q: qr, subject, trail: [], route: null, final: null, reason: null,
-        model: null, promptVersion: null, answer: null, usage: null, calls: { embed: 0, rerank: 0, gen: 0 }, redacted: R.found,
+        model: null, promptVersion: null, answer: null, usage: null, calls: { embed: 0, rerank: 0, gen: 0 }, redacted: R.found, role, asOf,
         emp: emp ? snapshot(emp) : undefined,
     };
-    const step = (gate, status, detail, extra = {}) => { const s = { gate, status, detail, ...extra }; trace.trail.push(s); send("step", s); };
+    const step = (gate, status, detail, extra = {}) => { const s = { gate, status, detail, ...extra, at: Date.now() - t0 }; trace.trail.push(s); send("step", s); };
     const finish = (extra = {}) => {
         Object.assign(trace, extra, { ms: Date.now() - t0, replay: REPLAY || undefined });
-        if (!dry) writeTrace(trace);
+        if (!dry) { writeTrace(trace); sendTrace(trace, lsx); }
         send("done", { traceId: trace.traceId, route: trace.route, final: trace.final, ms: trace.ms, usage: trace.usage, calls: trace.calls, model: trace.model, replay: REPLAY });
         return trace;
     };
@@ -37,7 +50,7 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
         trace.final = "human"; trace.reason = reason; trace.clauses = clauses.map((b) => b.cid);
         trace.category = clauses[0] ? chapterOf(clauses[0]) : "未说明";
         let ticket = null;
-        if (!dry) ticket = createTicket({ traceId: trace.traceId, q: qr, subject, reason, reasonType, trail: trace.trail, clauses: clauses.slice(0, 3), category: trace.category, emp: trace.emp });
+        if (!dry) ticket = createTicket({ traceId: trace.traceId, q: qr, subject, reason, reasonType, trail: trace.trail, clauses: clauses.slice(0, 3), category: trace.category, emp: trace.emp, acl: trace.acl?.denied.length ? trace.acl : null });
         trace.ticketId = ticket?.id || null;
         send("handoff", { ticketId: trace.ticketId, reason, reasonType, clauses: clauses.slice(0, 3), category: trace.category });
     };
@@ -66,7 +79,7 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
         step("rule", "skip", "人工闸已拦下"); step("rag", "skip", "人工闸已拦下");
         // 只说了「转人工」、没说什么事：不硬凑条款
         const rest = qr.replace(h.hit, "").replace(/[\s\p{P}]|我要|帮我|请|麻烦|一下|聊聊|谢谢/gu, "");
-        handoff(h.type, `${h.label}：命中「${h.hit}」`, rest.length >= 4 ? keywordTop(qr, subject) : []);
+        handoff(h.type, `${h.label}：命中「${h.hit}」`, rest.length >= 4 ? keywordTop(qr, subject, 3, { role, asOf }) : []);
         return finish();
     }
     step("human", "pass", "没有要求人工、没有敏感事项、没有查个人数据");
@@ -105,10 +118,15 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     trace.route = "rag";
     trace.promptVersion = PROMPT_VERSION;
     let Rt;
+    const retStart = Date.now() - t0;
     try {
-        Rt = await retrieve(qr, subject, { cfg, signal, onStage: (k, d) => send("stage", { k, ...d }) });
+        Rt = await retrieve(qr, subject, { cfg, signal, role, asOf, onStage: (k, d) => send("stage", { k, ...d }) });
     } catch (e) { send("error", { message: String(e.message || e).slice(0, 200) }); trace.final = "error"; return finish({ error: String(e.message || e) }); }
+    lsx.ret = { start: retStart, ms: Rt.ms };
     trace.calls.embed = Rt.calls.embed; trace.calls.rerank = Rt.calls.rerank;
+    // 权限：过滤掉的相关块只进 trace、审计和工单，不推给页面（员工不该知道有这份资料）
+    trace.acl = { role, visible: Rt.hits.length, denied: Rt.denied };
+    if (!dry) writeAudit({ traceId: trace.traceId, action: "检索", who: trace.emp ? `${trace.emp.name}（${trace.emp.empNo}）` : "访客（没登录）", role, subject, q: qr, visible: Rt.hits.length, denied: Rt.denied });
     trace.scores = { topCos: Rt.topCos, topRR: Rt.topRR, tier: Rt.tier, gates: Rt.gates };
     trace.hits = Rt.hits.slice(0, 8).map((x) => ({ cid: x.cid, clause: x.clause, cos: x.cos, rr: x.rr ?? null, inContext: x.inContext }));
     send("retrieval", { hits: Rt.hits.slice(0, 10).map(({ text, ...x }) => ({ ...x, snippet: text.slice(0, 80) })), topCos: Rt.topCos, topRR: Rt.topRR, tier: Rt.tier, gates: Rt.gates, ms: Rt.ms });
@@ -119,11 +137,13 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     }
     step("rag", "gen", `置信度${{ high: "高", mid: "中" }[Rt.tier]}（重排最高分 ${Rt.topRR.toFixed(3)}），用 ${Rt.context.length} 条条款生成`);
     let text = "", usage = null, model = MODELS.gen;
+    lsx.messages = buildMessages(qr, Rt.context); lsx.gen = { start: Date.now() - t0 };
     try {
-        for await (const x of generate(buildMessages(qr, Rt.context), { signal })) {
+        for await (const x of generate(lsx.messages, { signal })) {
             if (typeof x === "string") { text += x; send("draft", { t: x }); } else { usage = x.usage; model = x.model || model; }
         }
     } catch (e) { send("error", { message: String(e.message || e).slice(0, 200) }); trace.final = "error"; return finish({ error: String(e.message || e) }); }
+    lsx.gen.end = Date.now() - t0;
     trace.calls.gen = 1; trace.usage = usage; trace.model = model; trace.generated = true;
     if (tamper) { text = tamperAnswer(text); trace.tampered = true; }
     const chk = checkAnswer(text, Rt.context);
@@ -138,17 +158,19 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     const sources = Rt.context.map((b, k) => ({ n: k + 1, ...b, cite: cite(b) })).filter((x) => chk.cited.includes(x.n));   // 只列回答真正引用的条款
     const local = localityHint(text);
     trace.final = "rag"; trace.answer = text; trace.clauses = Rt.context.map((b) => b.cid); trace.category = chapterOf(Rt.context[0]);
-    send("answer", { kind: "rag", traceId: trace.traceId, text, sources, tier: Rt.tier, locality: local, stale: staleness(subject), subject: SUBJECTS[subject] });
+    const idx = loadIndex();
+    const soon = sources.map((x) => upcomingOf(idx.blocks.find((b) => b.cid === x.cid), x.clause, asOf)).filter(Boolean);
+    send("answer", { kind: "rag", traceId: trace.traceId, text, sources, tier: Rt.tier, locality: local, ...freshness(sources, subject), upcoming: soon });
     return finish();
 
     function profileAnswer(pa) {
-        const b = pa.clause ? clauseBlock(subject, pa.clause) : null;
+        const b = pa.clause ? clauseBlock(subject, pa.clause, asOf) : null;
         trace.final = "rule"; trace.profileTopic = pa.topic; trace.answer = pa.text; trace.clauses = b ? [b.cid] : []; trace.category = b ? chapterOf(b) : pa.topic;
         step("lookup", "hit", `查表：${pa.calc?.length ? pa.calc.join("；") : pa.refs[0].label}，不调模型`);
         send("answer", {
             kind: "profile", traceId: trace.traceId, text: pa.text, topic: pa.topic, basis: pa.basis, refs: pa.refs, calc: pa.calc || [], notice: pa.notice || null,
-            sources: b ? [{ n: 1, ...showBlock(b), clause: pa.clause, cite: `${b.source} ${b.version}，${pa.clause}，第 ${b.page} 页` }] : [],
-            stale: staleness(subject), subject: SUBJECTS[subject],
+            sources: b ? [{ n: 1, ...showBlock(b), clause: pa.clause, cite: cite(b, pa.clause) }] : [],
+            ...freshness([b], subject), upcoming: [upcomingOf(b, pa.clause, asOf)].filter(Boolean),
         });
         return finish();
     }
@@ -156,7 +178,7 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
     function ruleAnswer(rule, filled) {
         const row = lookup(rule, filled);
         const clause = row?.clause || rule.clause;
-        const b = clauseBlock(rule.subject, clause);
+        const b = clauseBlock(rule.subject, clause, asOf);
         if (!row) {
             const reason = `规则表没有覆盖这个条件：${rule.slot.name} = ${filled.text}`;
             step("rule", "uncovered", reason);
@@ -168,8 +190,8 @@ export async function ask({ q, subject = "fosun", ruleId = null, slot = null, tr
         step("lookup", "hit", `查表：${rule.slot.name} ${filled.text} → ${row.value}（条款 ${clause}），不调模型`);
         send("answer", {
             kind: "rule", traceId: trace.traceId, text, ruleId: rule.id, ruleName: rule.name, clause, quote: [].concat(row.src).join("；"),
-            sources: [{ n: 1, ...showBlock(b), clause, cite: `${b.source} ${b.version}，${clause}，第 ${b.page} 页` }],
-            stale: staleness(rule.subject), subject: SUBJECTS[rule.subject], locality: localityHint(text),
+            sources: [{ n: 1, ...showBlock(b), clause, cite: cite(b, clause) }],
+            ...freshness([b], rule.subject), locality: localityHint(text), upcoming: [upcomingOf(b, clause, asOf)].filter(Boolean),
         });
         return finish();
     }

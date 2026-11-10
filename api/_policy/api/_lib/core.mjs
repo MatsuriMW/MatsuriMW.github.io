@@ -185,11 +185,12 @@ export class BlockIndex {
         return { bm, cos, f, mu, sd, terms: terms.map((x) => x.t) };
     }
     // 圈范围 → 混合分 > minZ → 去重、每篇最多 perFile 块 → 前 limit 块。返回每块的分数明细，给页面上的「检索过程」用
-    search(query, qvec, { limit = 30, perFile = 2, minZ = 1.5, dateFrom = null, dateTo = null, folder = null, ...opts } = {}) {
+    // filter(b)：额外的圈范围条件（员工问政策用它按身份、生效日期、角色过滤，过滤在打分排序之前）
+    search(query, qvec, { limit = 30, perFile = 2, minZ = 1.5, dateFrom = null, dateTo = null, folder = null, filter = null, ...opts } = {}) {
         const S = this.scoreAll(query, qvec, opts);
         const fold = folder ? folder + "/" : null;
-        const inScope = (b) => (!fold || (b.folder + "/").startsWith(fold)) && (!(dateFrom || dateTo) || (b.day && (!dateFrom || b.day >= dateFrom) && (!dateTo || b.day <= dateTo)));
-        const scoped = !!(fold || dateFrom || dateTo);
+        const inScope = (b) => (!fold || (b.folder + "/").startsWith(fold)) && (!(dateFrom || dateTo) || (b.day && (!dateFrom || b.day >= dateFrom) && (!dateTo || b.day <= dateTo))) && (!filter || filter(b));
+        const scoped = !!(fold || dateFrom || dateTo || filter);
         const order = [];
         for (let i = 0; i < S.f.length; i++) if ((S.cos ? S.f[i] > minZ : S.bm[i] > 0) && (!scoped || inScope(this.blocks[i]))) order.push(i);
         order.sort((a, b) => S.f[b] - S.f[a]);

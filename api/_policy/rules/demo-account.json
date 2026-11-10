@@ -3,7 +3,7 @@
   "account": "demo",
   "password": "demo",
   "profile": {
-    "name": "林晓（演示员工）", "empNo": "D0001", "company": "xingyun",
+    "name": "林晓（演示员工）", "empNo": "D0001", "role": "employee", "company": "xingyun",
     "workCity": "上海", "insuredCity": "上海",
     "totalYears": 6, "hireDate": "2023-03-01",
     "baseSalary": 12000, "contractSalary": 15000

@@ -273,6 +273,8 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
     <button data-t="bad">Bad case</button>
     <button data-t="dash">看板</button>
     <button data-t="rules">规则表</button>
+    <button data-t="versions">资料版本</button>
+    <button data-t="audit">权限与审计</button>
   </div>
   <div class="hrbody" id="hrBody"></div>
 </main>
@@ -327,7 +329,8 @@ const EXAMPLES = [
 })();
 
 // ---------- 登录（演示账户）和档案 ----------
-const EXAMPLES_ME = ["我今年结婚能休几天婚假？", "年假有几天？", "加班费怎么算？", "病假工资怎么算？", "工资每个月几号发？", "产假多少天？", "陪产假有几天？", "生育津贴去哪领？"].map((q) => ({ q }));
+const EXAMPLES_ME = ["我今年结婚能休几天婚假？", "年假有几天？", "加班费怎么算？", "病假工资怎么算？", "工资每个月几号发？", "产假多少天？", "陪产假有几天？", "生育津贴去哪领？"].map((q) => ({ q }))
+  .concat([{ q: "试用期转正考核表要提前多少天交？", tag: "经理能查" }, { q: "调薪幅度超过多少要报人力资源中心审批？", tag: "HR 能查" }]);
 function renderExamples() {
   const me = state.me?.loggedIn;
   state.exList = me ? EXAMPLES_ME : EXAMPLES;
@@ -341,7 +344,7 @@ function renderMe() {
   } else {
     const p = state.me.profile, c = state.me.company;
     state.subject = c.subject; sel.value = c.subject; sel.disabled = true; sel.title = "登录后身份按所属公司定";
-    box.innerHTML = `<span class="chip" data-me="profile" title="点开看、改档案">${esc(p.name.replace(/（.*）/, ""))} · ${esc(c.name.replace(/（.*）/, ""))} · 用工地 ${esc(p.workCity)} · 参保地 ${esc(p.insuredCity)}</span><button class="btn small" data-me="profile">档案</button><button class="btn small" data-me="logout">退出</button>`;
+    box.innerHTML = `<span class="chip" data-me="profile" title="点开看、改档案">${esc(p.name.replace(/（.*）/, ""))} · ${esc(META.roles[p.role || "employee"])} · ${esc(c.name.replace(/（.*）/, ""))} · 用工地 ${esc(p.workCity)} · 参保地 ${esc(p.insuredCity)}</span><button class="btn small" data-me="profile">档案</button><button class="btn small" data-me="logout">退出</button>`;
   }
   renderExamples();
 }
@@ -373,6 +376,7 @@ function openProfile() {
   const cityOpts = (v) => opts(cities.map(([k, c]) => [k, c.region]), v);
   modal(`<h3>我的档案 <span class="faint" style="font-size:12.5px;font-weight:400">· 演示用，可以改，看回答怎么变</span></h3>
     <label>姓名<span style="color:var(--ink)">${esc(p.name)} · 工号 ${esc(p.empNo)}</span></label>
+    <label>角色<select id="pfR">${opts(Object.entries(META.roles), p.role || "employee")}</select></label>
     <label>所属公司<select id="pfC">${opts(META.companies.map((c) => [c.id, `${c.name} · ${c.type}`]), p.company)}</select></label>
     <label>用工地<select id="pfW">${cityOpts(p.workCity)}</select></label>
     <label>参保地<select id="pfI">${cityOpts(p.insuredCity)}</select></label>
@@ -380,10 +384,10 @@ function openProfile() {
     <label>入职日期<input id="pfH" type="date" value="${esc(p.hireDate)}"></label>
     <label>月基本工资<input id="pfB" type="number" min="0" value="${p.baseSalary}"></label>
     <label>合同月工资<input id="pfS" type="number" min="0" value="${p.contractSalary}"></label>
-    <div class="faint" style="font-size:12.5px">假期天数按用工地，生育津贴按参保地；年假、计薪、加班费按所属公司的制度。</div>
+    <div class="faint" style="font-size:12.5px">假期天数按用工地，生育津贴按参保地；年假、计薪、加班费按所属公司的制度。角色决定能检索到哪些资料：内部口径只有部门经理、HR 查得到（真实系统里角色来自 HR 系统，这里为了演示可以改）。</div>
     <div class="row"><button class="btn" data-x="reset" style="margin-right:auto">恢复默认</button><button class="btn" data-x="close">取消</button><button class="btn primary" data-x="ok">保存</button></div>`, async (x) => {
     if (x === "close") return closeModal();
-    const body = x === "reset" ? { reset: true } : { company: $("#pfC").value, workCity: $("#pfW").value, insuredCity: $("#pfI").value, totalYears: $("#pfY").value, hireDate: $("#pfH").value, baseSalary: $("#pfB").value, contractSalary: $("#pfS").value };
+    const body = x === "reset" ? { reset: true } : { role: $("#pfR").value, company: $("#pfC").value, workCity: $("#pfW").value, insuredCity: $("#pfI").value, totalYears: $("#pfY").value, hireDate: $("#pfH").value, baseSalary: $("#pfB").value, contractSalary: $("#pfS").value };
     try { state.me = await api("/api/policy/profile", body); closeModal(); renderMe(); toast("档案已更新"); }
     catch (e) { toast(e.message); }
   });
@@ -479,7 +483,7 @@ function renderChat() {
       h += `<div class="card rule${sel}" data-m="${m.id}"><span class="badge k">规则直答 · 查表 · 0 token</span>${staleBadge(a)}
         <div class="answer">${mdLite(a.text, m)}</div>
         <div class="quote">手册原文：${esc(a.quote)}</div>
-        ${sourcesHTML(a.sources)}${a.locality ? localNotice(m) : ""}
+        ${sourcesHTML(a.sources)}${a.locality ? localNotice(m) : ""}${upcomingHTML(a)}
         ${fbHTML({ targetType: "rule", traceId: a.traceId }, "rule:" + a.traceId)}</div>`;
     } else if (m.answer?.kind === "profile") {
       const a = m.answer;
@@ -488,14 +492,14 @@ function renderChat() {
         <div class="answer">${mdLite(a.text, m)}</div>
         ${a.calc.length ? `<div class="quote">计算：${a.calc.map(esc).join("；")}</div>` : ""}
         <div class="refs">${a.refs.map((r) => `<b>${esc(r.label)}</b>：${esc(r.text)}`).join("<br>")}</div>
-        ${a.sources.length ? sourcesHTML(a.sources) : ""}
+        ${a.sources.length ? sourcesHTML(a.sources) : ""}${upcomingHTML(a)}
         ${a.notice ? `<div class="notice">${esc(a.notice)} ${handoffBtn(m, "用工地和参保地不一致，员工要求 HR 确认")}</div>` : ""}
         ${fbHTML({ targetType: "rule", traceId: a.traceId }, "rule:" + a.traceId)}</div>`;
     } else if (m.answer?.kind === "rag") {
       const a = m.answer;
       h += `<div class="card rag${sel}" data-m="${m.id}"><span class="badge k">RAG 生成</span> <span class="badge tier-${a.tier}">${a.tier === "high" ? "高置信" : "中置信"}</span>${staleBadge(a)}
         <div class="answer">${mdLite(a.text, m)}</div>
-        ${sourcesHTML(a.sources)}
+        ${sourcesHTML(a.sources)}${upcomingHTML(a)}
         ${a.tier === "mid" ? `<div class="notice">置信度中等，建议找 HR 核实。${handoffBtn(m, "置信度中等，员工要求核实")}</div>` : ""}
         ${a.locality ? localNotice(m) : ""}
         ${fbHTML({ targetType: "rag", traceId: a.traceId }, "rag:" + a.traceId)}</div>`;
@@ -540,6 +544,9 @@ function progressHTML(m) {
     <div class="skel" style="width:94%"></div><div class="skel" style="width:81%"></div><div class="skel" style="width:58%"></div>`;
 }
 const staleBadge = (a) => a.stale?.stale ? ` <span class="badge stale" title="资料日期 ${esc(a.subject.date)}，超过 ${META.staleYears} 年">资料较旧 · ${esc(a.subject.date.slice(0, 4))} 年版</span>` : ` <span class="faint" style="font-size:12px">${esc(a.subject.source)} ${esc(a.subject.version)}（${esc(a.subject.date)}）</span>`;
+// 引用的条款有待生效的修订：提醒员工哪天起按新条款
+const upcomingHTML = (a) => (a.upcoming || []).map((u) => `<div class="notice" style="display:block">这条 <b>${esc(u.effectiveFrom)}</b> 起有修订（${esc(u.version)}，改了 ${u.changed.map(esc).join("、")}），现在仍按上面的条款执行。
+  <details class="src" style="margin-top:4px"><summary>看修订后的条款 ▸</summary><div class="orig">${esc(u.text || "")}</div></details></div>`).join("");
 const handoffBtn = (m, why) => m.ticketId ? `<span class="muted">已转工单 ${esc(m.ticketId)}</span>` : `<button class="btn small" data-handoff="${m.id}" data-why="${esc(why)}">转人工</button>`;
 const localNotice = (m) => `<div class="notice">依据条款写的是「按雇佣地规定」，${m.emp ? `你的用工地是${esc(m.emp.workCity)}，问「婚假几天」这类问题会按当地规定直接答。` : "具体以你工作地的规定为准；登录后能按你的用工地精准回答。"}${handoffBtn(m, "属地规定，员工要求 HR 确认")}</div>`;
 function repliesHTML(t) {
@@ -646,7 +653,8 @@ function renderTrace(onlyDraft) {
       <div class="cost"><div class="v">${(d.ms / 1000).toFixed(2)}s</div><div class="l">耗时</div></div>
       <div class="cost ${calls === 0 ? "zero" : ""}"><div class="v">${calls}</div><div class="l">模型调用（向量 ${d.calls.embed} / 重排 ${d.calls.rerank} / 生成 ${d.calls.gen}）</div></div>
       <div class="cost ${!d.usage ? "zero" : ""}"><div class="v">${d.usage?.total_tokens ?? 0}</div><div class="l">生成 token</div></div></div>
-      ${d.replay ? `<div class="note">回放模式：模型结果来自录制，路由和校验是现场跑的</div>` : ""}` : ""}`;
+      ${d.replay ? `<div class="note">回放模式：模型结果来自录制，路由和校验是现场跑的</div>` : ""}
+      ${META.langsmith?.on && !d.replay ? `<div class="note">整条链路已上报 LangSmith（项目 ${esc(META.langsmith.project)}），在那边按 trace 看每一步的耗时和 token；评价也会同步过去</div>` : ""}` : ""}`;
 }
 
 // ---------- 轮询：工单状态（员工端显示 HR 回复）+ 工作台计数 ----------
@@ -658,7 +666,7 @@ async function poll() {
     $("#openCount").textContent = open ? `(${open})` : "";
     const sig = list.map((t) => t.id + t.status + t.replies.length).join();
     if (sig !== state.sig && !document.activeElement?.closest?.(".badform")) { state.sig = sig; renderChat(); if (state.view === "hr" && state.hrTab === "tickets") renderHR(true); }
-    if (state.view === "hr" && state.hrTab === "dash") renderHR(true);
+    if (state.view === "hr" && (state.hrTab === "dash" || state.hrTab === "audit" || (state.hrTab === "versions" && state.jobRunning))) renderHR(true);
   } catch {}
 }
 
@@ -670,6 +678,8 @@ async function renderHR(soft) {
   if (state.hrTab === "bad") return renderBad(el);
   if (state.hrTab === "dash") return renderDash(el);
   if (state.hrTab === "rules") return renderRules(el);
+  if (state.hrTab === "versions") return renderVersions(el);
+  if (state.hrTab === "audit") return renderAudit(el);
 }
 
 function renderTickets(el, soft) {
@@ -722,8 +732,9 @@ function ticketDetail(t) {
     <div class="kv">
       <div class="k">问题</div><div><b>${esc(t.q)}</b></div>
       <div class="k">身份</div><div>${esc(META.subjects[t.subject]?.label || t.subject)}</div>
-      <div class="k">提问人</div><div>${t.emp ? `${esc(t.emp.name)}（${esc(t.emp.empNo)}）· ${esc(t.emp.company)} · 用工地 ${esc(t.emp.workCity)} · 参保地 ${esc(t.emp.insuredCity)} · 累计工龄 ${t.emp.totalYears} 年${t.emp.workCity !== t.emp.insuredCity ? ` <span class="badge stale">两地不一致</span>` : ""}` : `<span class="faint">没登录，不知道是谁</span>`}</div>
+      <div class="k">提问人</div><div>${t.emp ? `${esc(t.emp.name)}（${esc(t.emp.empNo)}）· ${esc(META.roles[t.emp.role || "employee"])} · ${esc(t.emp.company)} · 用工地 ${esc(t.emp.workCity)} · 参保地 ${esc(t.emp.insuredCity)} · 累计工龄 ${t.emp.totalYears} 年${t.emp.workCity !== t.emp.insuredCity ? ` <span class="badge stale">两地不一致</span>` : ""}` : `<span class="faint">没登录，不知道是谁</span>`}</div>
       <div class="k">转人工原因</div><div>${esc(t.reason)}</div>
+      ${t.acl ? `<div class="k">权限</div><div><span class="badge stale">可能是权限问题</span> 按角色「${esc(META.roles[t.acl.role])}」检索时过滤掉了 ${t.acl.denied.length} 块相关资料：${[...new Set(t.acl.denied.map((d) => d.source))].map((x) => "《" + esc(x) + "》").join("、")}（${t.acl.denied.map((d) => esc(d.clause)).join("、")}）。员工那边只看到「转人工」，不知道有这份资料。</div>` : ""}
       <div class="k">分类</div><div>${esc(t.category)}（按最相关条款的章节推出）</div>
       <div class="k">优先级</div><div>${prioTag(prioOf(t))} <span class="muted" style="font-size:13px">${prioOf(t) === "高" ? "敏感事项，可能涉及劳动纠纷，先处理" : prioOf(t) === "中" ? "涉及个人数据或员工已对机器回答不满意" : "一般咨询"}</span></div>
       <div class="k">时效</div><div>${new Date(t.createdAt).toLocaleString("zh-CN")} 建单 · ${t.replies.length ? `首次响应 ${fmtDur(Date.parse(t.replies[0].at) - Date.parse(t.createdAt))}` : `已等 ${fmtDur(Date.now() - Date.parse(t.createdAt))}`}${t.reopenedAt ? ` · ${fmtTime(t.reopenedAt)} 重新打开` : ""}</div>
@@ -732,7 +743,7 @@ function ticketDetail(t) {
       ${t.fromAnswer ? `<div class="k">机器的回答</div><div class="muted">${esc(t.fromAnswer)}</div>` : ""}
     </div>
     <div class="sec">最相关的条款（HR 不用从头查）</div>
-    ${(t.clauses || []).map((c) => `<details class="src"><summary><b>${esc(c.clause)}</b> ${esc(c.ctx)} · ${esc(c.source)} ${esc(c.version)} 第 ${c.page} 页 ▸</summary><div class="orig">${esc(c.text)}</div></details>`).join("") || `<div class="faint">没有相关条款</div>`}
+    ${(t.clauses || []).map((c) => `<details class="src"><summary><b>${esc(c.clause)}</b> ${esc(c.ctx)} · ${esc(c.source)} ${esc(c.version)}${c.page ? ` 第 ${c.page} 页` : ""} ▸</summary><div class="orig">${esc(c.text)}</div></details>`).join("") || `<div class="faint">没有相关条款</div>`}
     ${t.replies.length ? `<div class="sec">已回复</div>${t.replies.map((r, i) => `<div class="hr-reply"><div class="by">HR · ${fmtTime(r.at)}${r.draft ? (r.draft.unchanged ? " · 草稿未修改直接发送" : " · 改过草稿") : ""}</div><div class="answer">${esc(r.text)}</div></div>`).join("")}` : ""}
     <div class="sec">${t.status === "已回复" ? "补充回复" : "回复员工"}</div>
     ${t.draft ? `<div class="notice" style="margin-bottom:6px">下面是用条款生成的草稿，<b>待确认</b>：核对后再发。</div>` : ""}
@@ -847,6 +858,37 @@ async function renderDash(el) {
     <div class="tile span12 note" style="margin:0">口径：所有数字都从 trace / feedback / tickets 三份记录现算，不另存。${s.replayExcluded ? `回放产生的 ${s.replayExcluded} 个问题不计入。` : "回放数据不计入。"} 样本少，看分子分母，不要只看百分比。</div>
   </div>`;
   el.querySelector(".dash").scrollTop = scroll;
+}
+
+// 资料版本：已导入的修订（新旧条款对比）、导入任务每一步的进度、每份资料谁能看
+async function renderVersions(el) {
+  const V = await api("/api/policy/versions");
+  state.jobRunning = V.jobs.some((j) => j.status === "排队" || j.status === "处理中");
+  const roleCell = (d, r) => !d.roles || d.roles.includes(r) ? `<b style="color:var(--good)">能查</b>` : `<span class="faint">查不到</span>`;
+  const stCol = { 完成: "var(--good)", 失败: "var(--bad)", 处理中: "var(--rag)", 排队: "var(--muted)" };
+  el.innerHTML = `<div class="bclist">
+    <div class="col bc"><b>资料和可见范围</b> <span class="faint" style="font-size:13px">· 检索之前先按角色过滤，没权限的块进不了候选、更进不了提示词</span>
+      <table class="t" style="margin-top:6px"><tr><th>资料</th><th>适用</th><th class="num">块数</th>${Object.values(V.roles).map((r) => `<th>${esc(r)}</th>`).join("")}</tr>
+      ${V.docs.map((d) => `<tr><td>${esc(d.name)}</td><td class="muted">${esc(d.who)}</td><td class="num">${d.n}</td>${Object.keys(V.roles).map((r) => `<td>${roleCell(d, r)}</td>`).join("")}</tr>`).join("")}</table></div>
+    <div class="col bc"><b>导入任务</b> <span class="faint" style="font-size:13px">· ${V.readOnly ? "线上只读：修订在本机导入后随发布同步过来" : "本机运行 <span class=\"mono\">node dev/import.mjs &lt;修订通知.md&gt;</span> 入队，后台 worker 处理，这里自动刷新"}</span>
+      ${V.jobs.length ? V.jobs.map((j) => `<div style="margin-top:8px;font-size:13.5px"><b class="mono">${esc(j.id)}</b> <b style="color:${stCol[j.status]}">${esc(j.status)}</b> · ${j.kind === "rollback" ? `撤回 ${esc(j.revisionId)}` : esc(j.title || j.file)} <span class="faint">${fmtTime(j.createdAt)}${j.endedAt ? " · 用时 " + fmtDur(Date.parse(j.endedAt) - Date.parse(j.startedAt || j.createdAt)) : ""}</span>
+        <div class="trailmini">${j.steps.map((s) => `<div><span class="gg" style="color:${s.status === "失败" ? "var(--bad)" : ""}">${esc(s.name)}</span>${esc(s.detail)} <span class="faint">${fmtDur(s.ms)}</span></div>`).join("")}${j.error ? `<div style="color:var(--bad)">${esc(j.error)}</div>` : ""}</div></div>`).join("") : `<div class="faint" style="margin-top:6px">还没有导入过修订</div>`}</div>
+    ${V.revisions.map((r) => `<div class="col bc"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(r.title)}</b><span class="badge" style="${r.status === "已生效" ? "background:var(--rule-bg);color:var(--rule)" : ""}">${esc(r.status)}</span><span class="faint" style="font-size:13px">${esc(r.version)} · ${esc(r.effectiveFrom)} 起生效${r.status === "待生效" ? `，在那之前仍按旧条款答，回答下面会提示` : `，旧条款 ${esc(r.effectiveFrom)} 前一天失效`}</span></div>
+      ${r.changes.map((c) => `<div style="margin-top:8px"><span class="chip">${esc(c.op)} ${esc(c.clause)}${c.title ? " " + esc(c.title) : ""}</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;font-size:13px">
+          <div><div class="faint">旧（${c.old ? esc(c.old.version) + "，" + (c.old.effectiveTo ? esc(c.old.effectiveTo) + " 止" : "") : "无"}）</div><div class="orig">${c.old ? esc(c.old.text) : "—"}</div></div>
+          <div><div class="faint">新（${c.new ? esc(c.new.version) + "，" + esc(c.new.effectiveFrom) + " 起" : "删除"}）</div><div class="orig">${c.new ? esc(c.new.text) : "—"}</div></div></div></div>`).join("")}</div>`).join("")}
+  </div>`;
+}
+
+// 权限与审计：每次检索、查条款原文都留一行；过滤掉的相关资料只在这里和工单上看得到
+async function renderAudit(el) {
+  const A = await api("/api/policy/audit");
+  const denied = A.filter((a) => a.denied?.length);
+  el.innerHTML = `<div class="bclist"><div class="col bc"><b>审计记录</b> <span class="faint" style="font-size:13px">· 最近 ${A.length} 条，其中 ${denied.length} 条因为角色过滤掉了相关资料。员工那边看不到这些，只看到「转人工」或照常的回答</span>
+    ${A.length ? `<table class="t" style="margin-top:6px"><tr><th>时间</th><th>谁</th><th>角色</th><th>动作</th><th>问题 / 条款</th><th class="num">能看到的候选</th><th>因角色过滤掉</th></tr>
+    ${A.map((a) => `<tr><td class="mono">${fmtTime(a.at)}</td><td>${esc(a.who)}</td><td>${esc(META.roles[a.role] || a.role)}</td><td>${esc(a.action)}</td><td>${esc(a.q || a.cid || "")}</td><td class="num">${a.visible ?? "—"}</td>
+      <td>${a.denied?.length ? `<b style="color:var(--bad)">${a.denied.length} 块</b> <span class="faint">${[...new Set(a.denied.map((d) => d.source))].map(esc).join("、")}</span>` : `<span class="faint">无</span>`}</td></tr>`).join("")}</table>` : `<div class="faint" style="margin-top:6px">还没有。员工端问一个要检索的问题，这里就会多一行</div>`}</div></div>`;
 }
 
 function renderRules(el) {

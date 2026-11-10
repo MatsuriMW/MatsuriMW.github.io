@@ -5,10 +5,37 @@ import * as P from "./pipeline.mjs";
 import { loadRules } from "./rules.mjs";
 import { REPLAY, MODELS, generate } from "./models.mjs";
 import { loadProfileData, cleanProfile, companyOf } from "./profile.mjs";
+import { ROLES, canSee, today, effectiveAt } from "./docs.mjs";
+import { settle, sendFeedback, lsOn, LS_PROJECT } from "./langsmith.mjs";
+import fs from "node:fs";
 
 // 登录了就返回档案，没登录返回 null
 const empOf = () => { const s = S.getSession(); return s?.loggedIn ? s.profile : null; };
 const me = () => { const p = empOf(); return { loggedIn: !!p, profile: p, company: p ? companyOf(p) : null }; };
+const roleOf = () => empOf()?.role || "employee";
+
+// 资料版本：已导入的修订（新旧条款对比）、导入任务、各份资料谁能看。
+// 本机读 data/ 下的文件（导入任务的进度实时变）；线上读 dev/publish.mjs 打进去的 api/_data/versions.json，只读
+const readData = (f, d) => { try { return JSON.parse(fs.readFileSync(new URL(`../../data/${f}`, import.meta.url), "utf8")); } catch { return d; } };
+function versionsReport() {
+    const idx = P.loadIndex(), asOf = today();
+    const snap = S.ONLINE ? JSON.parse(fs.readFileSync(new URL("../_data/versions.json", import.meta.url), "utf8")) : { revisions: readData("revisions.json", []), jobs: readData("import-jobs.json", []) };
+    const byCid = new Map(idx.blocks.map((b) => [b.cid, b]));
+    const side = (b) => b && { cid: b.cid, clause: b.clause, version: b.version, text: b.text, effectiveFrom: b.effectiveFrom, effectiveTo: b.effectiveTo };
+    const revisions = snap.revisions.map((r) => ({
+        id: r.id, title: r.title, version: r.version, effectiveFrom: r.effectiveFrom, importedAt: r.importedAt, status: r.effectiveFrom <= asOf ? "已生效" : "待生效",
+        changes: r.changes.map((c) => {
+            const nb = idx.blocks.find((b) => b.revision === r.id && b.changed?.includes(c.clause));
+            const ob = nb?.prevCid ? byCid.get(nb.prevCid) : c.op === "删除" ? idx.blocks.find((b) => b.subject === r.subject && b.clause === c.clause && b.effectiveTo) : null;
+            return { op: c.op, clause: c.clause, title: c.title, old: side(ob), new: side(nb) };
+        }),
+    }));
+    const docs = [
+        ...Object.entries(P.SUBJECTS).map(([k, v]) => ({ name: `${v.source} ${v.version}`, who: v.label, roles: null, n: idx.blocks.filter((b) => b.subject === k && effectiveAt(b, asOf)).length })),
+        ...[...new Set(idx.blocks.filter((b) => b.roles).map((b) => b.doc))].map((d) => { const bs = idx.blocks.filter((b) => b.doc === d); return { name: `${bs[0].source} ${bs[0].version}`, who: "两种用工身份都适用", roles: bs[0].roles, n: bs.length }; }),
+    ];
+    return { asOf, readOnly: S.ONLINE, revisions, jobs: snap.jobs.slice(-10).reverse(), docs, roles: ROLES };
+}
 
 const ipOf = (req) => req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "local";
 const body = (req) => req.body !== undefined && S.ONLINE ? Promise.resolve(typeof req.body === "object" && req.body ? req.body : {}) : new Promise((r) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { try { r(b ? JSON.parse(b) : {}); } catch { r({}); } }); });
@@ -39,7 +66,7 @@ export async function route(req, res, p) {
         const ac = new AbortController(); res.on("close", () => ac.abort());
         const send = (event, data) => { if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
         await ask(b, send, { signal: ac.signal, emp: empOf() });
-        await S.flush();
+        await Promise.all([S.flush(), settle()]);
         return res.end();
     }
     if (p === "/api/meta") {
@@ -50,6 +77,7 @@ export async function route(req, res, p) {
             subjects: Object.fromEntries(Object.entries(P.SUBJECTS).map(([k, v]) => [k, { ...v, chunks: count[k] || 0, ...P.staleness(k) }])),
             staleYears: P.STALE_YEARS, reasons: S.REASONS, causes: S.CAUSES, statuses: S.STATUSES, rules: loadRules({ fresh: true }).rules, built: idx.meta.built,
             companies: PD.companies, local: PD.local, demoAccount: { account: PD.demo.account, password: PD.demo.password },
+            roles: ROLES, asOf: today(), langsmith: { on: lsOn(), project: LS_PROJECT() },
         });
     }
     // 演示账户登录：不开放注册；档案改动存在登录状态里，退出再登录还在
@@ -73,9 +101,17 @@ export async function route(req, res, p) {
         return json(res, me());
     }
     if (p === "/api/clause") {
+        // 没权限的条款和不存在的一样回 404，不暴露有这份资料；被拒记一笔审计
         const b = P.loadIndex().blocks.find((x) => x.cid === url.searchParams.get("cid"));
+        if (b && !canSee(roleOf(), b)) {
+            const e = empOf();
+            S.writeAudit({ action: "查看条款被拒", who: e ? `${e.name}（${e.empNo}）` : "访客（没登录）", role: roleOf(), cid: b.cid, denied: [{ cid: b.cid, clause: b.clause, source: b.source }] });
+            return json(res, { error: "没有这一条" }, 404);
+        }
         return b ? json(res, P.showBlock(b)) : json(res, { error: "没有这一条" }, 404);
     }
+    if (p === "/api/versions") return json(res, versionsReport());
+    if (p === "/api/audit") return json(res, S.audits());
     if (p === "/api/tickets" && m === "GET") {
         // 每条 HR 回复带上员工最近一次评价，工单详情里显示
         const fb = S.latestFeedback({ includeReplay: true });
@@ -110,7 +146,12 @@ export async function route(req, res, p) {
         const clauses = (tr.clauses || []).map((cid) => idx.blocks.find((x) => x.cid === cid)).filter(Boolean).slice(0, 3).map(P.showBlock);
         return json(res, S.createTicket({ traceId: tr.traceId, q: tr.q, subject: tr.subject, reasonType: "feedback", reason: `看完回答后转人工：${b.why || "员工要求 HR 核实"}`, trail: tr.trail, clauses, category: tr.category || "其他", fromAnswer: tr.answer, emp: tr.emp }));
     }
-    if (p === "/api/feedback" && m === "POST") return json(res, S.addFeedback(await body(req)));
+    if (p === "/api/feedback" && m === "POST") {
+        const r = S.addFeedback(await body(req));
+        sendFeedback(r.feedback);
+        await settle();
+        return json(res, r);
+    }
     if (p === "/api/badcases" && m === "GET") return json(res, S.badcases());
     if ((mm = p.match(/^\/api\/badcases\/(.+)$/)) && m === "POST") return json(res, S.updateBadcase(decodeURIComponent(mm[1]), await body(req)));
     if (p === "/api/stats") return json(res, S.stats());

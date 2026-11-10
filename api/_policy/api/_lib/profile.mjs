@@ -2,6 +2,7 @@
 // 数据在 rules/companies.json（公司制度）、rules/local.json（属地政策）、rules/demo-account.json（演示账户）。
 // 没配置的情况（比如集团本部没配病假工资）不硬答，交回后面的规则闸和 RAG。
 import fs from "node:fs";
+import { ROLES } from "./docs.mjs";
 
 const read = (f) => JSON.parse(fs.readFileSync(new URL(`../../rules/${f}`, import.meta.url), "utf8"));
 let DATA = null;
@@ -16,6 +17,7 @@ export function cleanProfile(old, body) {
     const { companies, local } = loadProfileData();
     const p = { ...old };
     if (companies.some((c) => c.id === body.company)) p.company = body.company;
+    if (ROLES[body.role]) p.role = body.role;
     if (local.cities[body.workCity]) p.workCity = body.workCity;
     if (local.cities[body.insuredCity]) p.insuredCity = body.insuredCity;
     const num = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) && n >= lo && n <= hi ? n : null; };
@@ -27,7 +29,7 @@ export function cleanProfile(old, body) {
 // 写进 trace 和工单的档案快照：HR 看工单时知道是谁、在哪
 export function snapshot(p) {
     const c = companyOf(p);
-    return { name: p.name, empNo: p.empNo, company: c?.name, type: c?.type, workCity: p.workCity, insuredCity: p.insuredCity, totalYears: p.totalYears, hireDate: p.hireDate };
+    return { name: p.name, empNo: p.empNo, role: p.role || "employee", company: c?.name, type: c?.type, workCity: p.workCity, insuredCity: p.insuredCity, totalYears: p.totalYears, hireDate: p.hireDate };
 }
 
 const has = (s, words) => words.find((w) => s.includes(w)) || null;

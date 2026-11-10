@@ -1,5 +1,5 @@
 // 第三路 RAG：混合检索 → 粗门槛 → 重排 → 细门槛 → 生成 → 校验。拷自第二大脑的 pipeline.mjs，改了这几处：
-// ① 关掉日期解析（「去年没休完的年假」会被解析成 2025 全年，手册块没有日期，全部被滤掉）；只按身份圈 folder
+// ① 关掉日期解析（「去年没休完的年假」会被解析成 2025 全年，手册块没有日期，全部被滤掉）；按身份、生效日期、角色圈范围（visible）
 // ② perFile 放开（path 是条款号，本来就一条一块）
 // ③ 去掉限流和缓存；④ 提示词改成手册口径，兜底句换成「手册里没有写到这个」
 // ⑤ 重排最高分分三档；门槛取向和第二大脑相反：宁可多转人工，也不答错
@@ -7,6 +7,7 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import { BlockIndex } from "./core.mjs";
 import { embedQuery, rerankDocs } from "./models.mjs";
+import { today, effectiveAt, canSee, inSubject } from "./docs.mjs";
 
 const env = (k, d) => Number(process.env[k] ?? d);
 // 门槛由 eval/run.mjs 在标定集上扫出来，见 eval/REPORT.md
@@ -35,20 +36,31 @@ export function staleness(subject, now = new Date()) {
     return { years: +years.toFixed(1), stale: years > STALE_YEARS };
 }
 
-let INDEX = null;
+// 本机导入修订后 build/pack.mjs 会重写 api/_data（meta.json 最后写），这里看 meta.json 变了就重新读；线上只读一次
+let INDEX = null, STAMP = null;
+const ONLINE = !!process.env.VERCEL;
 export function loadIndex() {
-    if (INDEX) return INDEX;
+    const metaUrl = new URL("../_data/meta.json", import.meta.url);
+    if (INDEX && ONLINE) return INDEX;
+    const stamp = ONLINE ? 0 : fs.statSync(metaUrl).mtimeMs;
+    if (INDEX && stamp === STAMP) return INDEX;
+    try { INDEX = readIndex(); STAMP = stamp; }
+    catch (e) { if (!INDEX) throw e; console.warn("索引正在重写，先用旧的：", e.message); }
+    return INDEX;
+}
+function readIndex() {
     const rd = (f) => fs.readFileSync(new URL(`../_data/${f}`, import.meta.url));
     const meta = JSON.parse(rd("meta.json"));
     const blocks = JSON.parse(fs.existsSync(new URL("../_data/blocks.json", import.meta.url)) ? rd("blocks.json") : openBlocks(rd("blocks.enc")));
     const vb = rd("vectors.bin"), sb = rd("scales.bin");
-    INDEX = new BlockIndex(blocks, {
+    const idx = new BlockIndex(blocks, {
         vectors: new Int8Array(vb.buffer, vb.byteOffset, vb.length),
         scales: new Float32Array(sb.buffer.slice(sb.byteOffset, sb.byteOffset + sb.length)),
         dims: meta.dims,
     });
-    INDEX.meta = meta;
-    return INDEX;
+    if (idx.blocks.length !== meta.n || idx.vectors.length !== meta.n * meta.dims) throw new Error("块数和向量数对不上");
+    idx.meta = meta;
+    return idx;
 }
 
 // 线上的手册切块加密放（部署仓库是公开的，不放第三方手册原文）：AES-256-GCM，密钥从 DEEPSEEK_API_KEY 用 HKDF 派生。
@@ -67,26 +79,40 @@ function openBlocks(buf) {
 
 // 给页面和工单看的块信息
 export function showBlock(b) {
-    return { cid: b.cid, clause: b.clause, ctx: b.ctx, page: b.page, subject: b.subject, source: b.source, version: b.version, date: b.date, text: b.text };
+    return { cid: b.cid, clause: b.clause, ctx: b.ctx, page: b.page, subject: b.subject, source: b.source, version: b.version, date: b.date, text: b.text,
+        effectiveFrom: b.effectiveFrom, effectiveTo: b.effectiveTo, revision: b.revision, internal: !!b.roles || undefined };
 }
-export const cite = (b) => `${b.source} ${b.version}，${b.clause}，第 ${b.page} 页`;
+// 修订新增的条款、内部资料没有 PDF 页码
+export const cite = (b, clause = b.clause) => `${b.source} ${b.version}，${clause}${b.page ? `，第 ${b.page} 页` : ""}`;
+
+// 这个身份、这一天、这个角色能查到的块。role 只从登录档案来，没登录按员工
+export const visible = (subject, { role = "employee", asOf = today() } = {}) => (b) => inSubject(b, subject) && effectiveAt(b, asOf) && canSee(role, b);
+// 规则闸、按档案匹配引用的条款：取 asOf 当天有效的那一版
+export function clauseBlock(subject, clause, asOf = today()) {
+    const flat = (s) => String(s).replace(/\s+/g, "");
+    return loadIndex().blocks.find((c) => c.subject === subject && effectiveAt(c, asOf) && (c.clause === clause || (clause.startsWith(c.clause + ".") && flat(c.text).includes(clause))));
+}
 export const chapterOf = (b) => b.ctx.split(" > ")[0].replace(/^第.+?章\s*/, "");
 
 // 不调模型的关键词检索（人工闸的工单要带相关条款，但人工闸不能发模型请求）
-export function keywordTop(q, subject, k = 3) {
+export function keywordTop(q, subject, k = 3, scope = {}) {
     const idx = loadIndex();
-    const S = idx.search(q, null, { limit: k, perFile: 99, folder: subject });
+    const S = idx.search(q, null, { limit: k, perFile: 99, filter: visible(subject, scope) });
     return S.hits.map((h) => showBlock(idx.blocks[h.i]));
 }
 
 // 检索 + 重排 + 分档。onStage(k, data) 每步回调一次，页面用它把三道闸后面的小步骤点亮
-export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage } = {}) {
+// 权限：先按角色过滤再检索，没权限的块进不了候选，更进不了提示词。另外不带角色再搜一遍，只为记下「过滤掉了哪些相关块」写审计
+export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage, role = "employee", asOf = today() } = {}) {
     const idx = loadIndex();
     const t0 = Date.now(), ms = {};
     const qvec = await embedQuery(q, { signal });
     ms.embed = Date.now() - t0;
     onStage?.("embed", { ms: ms.embed });
-    const S = idx.search(q, qvec, { limit: cfg.candidates, perFile: cfg.perFile, minZ: cfg.minZ, folder: subject, ...cfg });
+    const scope = visible(subject, { role, asOf });
+    const S = idx.search(q, qvec, { ...cfg, limit: cfg.candidates, perFile: cfg.perFile, minZ: cfg.minZ, filter: scope });
+    const allRoles = idx.search(q, qvec, { ...cfg, limit: cfg.candidates, perFile: cfg.perFile, minZ: cfg.minZ, filter: (b) => inSubject(b, subject) && effectiveAt(b, asOf) });
+    const denied = allRoles.hits.map((h) => idx.blocks[h.i]).filter((b) => !canSee(role, b)).map((b) => ({ cid: b.cid, clause: b.clause, source: b.source }));
     ms.search = Date.now() - t0 - ms.embed;
     const hits = S.hits.map((h, rank) => ({ i: h.i, rank: rank + 1, cos: +h.cos.toFixed(4), bm: +h.bm.toFixed(3), f: +h.f.toFixed(3) }));
     const topCos = hits.length ? Math.max(...hits.slice(0, 10).map((h) => h.cos)) : 0;
@@ -94,7 +120,7 @@ export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage } = {
     let refused = null;
     if (!hits.length) refused = { stage: "检索", reason: "检索拒答：没有候选过线" };
     else if (topCos < cfg.minTopCos) refused = { stage: "检索", reason: `检索拒答：最高余弦 ${topCos.toFixed(3)} < 粗门槛 ${cfg.minTopCos}` };
-    onStage?.("search", { ms: ms.search, n: hits.length, total: idx.blocks.filter((b) => b.subject === subject).length, topCos, gate: cfg.minTopCos, terms: S.terms.slice(0, 10), refused: !!refused });
+    onStage?.("search", { ms: ms.search, n: hits.length, total: idx.blocks.filter(scope).length, topCos, gate: cfg.minTopCos, terms: S.terms.slice(0, 10), refused: !!refused });
     let topRR = null, tier = null;
     if (!refused) {
         const docs = hits.map((h) => { const b = idx.blocks[h.i]; return `${b.ctx}\n${b.text}`.slice(0, 1200); });
@@ -112,7 +138,7 @@ export async function retrieve(q, subject, { cfg = CONFIG, signal, onStage } = {
     return {
         hits: hits.map((h) => ({ ...h, ...showBlock(idx.blocks[h.i]), inContext: context.includes(h) })),
         context: context.map((h) => showBlock(idx.blocks[h.i])),
-        topCos, topRR, tier, refused, ms, calls,
+        topCos, topRR, tier, refused, ms, calls, denied, role, asOf,
         gates: { cos: cfg.minTopCos, fine: cfg.fineRerank, high: cfg.highRerank },
     };
 }
