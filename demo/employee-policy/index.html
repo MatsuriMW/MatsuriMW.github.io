@@ -23,17 +23,17 @@ input, textarea, select { font: inherit; color: inherit; }
 .muted { color: var(--muted); } .faint { color: var(--faint); }
 
 /* 顶栏 */
-header { display: flex; align-items: center; gap: 18px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; padding: 12px 24px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
 .back { font-size: 13px; color: var(--muted); text-decoration: none; white-space: nowrap; }
 .back:hover { color: var(--ink); }
 header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .5px; white-space: nowrap; }
 .tabs { display: flex; gap: 4px; background: var(--soft); padding: 3px; border-radius: 9px; }
 .tabs button { border: 0; background: transparent; padding: 5px 14px; border-radius: 7px; color: var(--muted); }
 .tabs button.on { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); font-weight: 600; }
-.who { display: flex; align-items: center; gap: 8px; }
-.who select { border: 1px solid var(--line); border-radius: 7px; padding: 4px 8px; background: var(--panel); max-width: 300px; }
+.who { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin-left: auto; }
+.who select { border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; background: var(--panel); max-width: 320px; height: 32px; }
 .tabs button, .who span { white-space: nowrap; }
-.disclaimer { margin-left: auto; font-size: 12px; max-width: 470px; color: var(--muted); text-align: right; line-height: 1.4; }
+.disclaimer { font-size: 12px; color: var(--faint); line-height: 1.5; padding: 6px 24px; border-bottom: 1px solid var(--line); background: var(--bg); }
 .replay-badge { background: var(--warn-bg); color: var(--warn); border: 1px solid #ecd9b5; padding: 2px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; }
 
 /* 员工端 */
@@ -48,7 +48,7 @@ header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .5px; 
 .composer { display: flex; gap: 8px; padding: 10px 16px 14px; }
 .composer input { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: #fcfcfa; }
 .composer input:focus { outline: 2px solid #c9d6e6; border-color: #b8c7da; }
-.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 14px; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 14px; white-space: nowrap; }
 .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
 .btn.small { padding: 2px 10px; font-size: 13px; }
 .btn:disabled { opacity: .5; cursor: default; }
@@ -206,8 +206,12 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 7px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
 .toast.on { opacity: .92; }
 /* 登录、档案 */
-.me { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-.me .chip { background: var(--soft); border: 1px solid var(--line); border-radius: 99px; padding: 2px 10px; white-space: nowrap; cursor: pointer; }
+.me { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.me .chip { display: inline-flex; align-items: center; gap: 10px; height: 32px; background: var(--soft); color: var(--ink); border: 1px solid var(--line); border-radius: 99px; padding: 0 14px; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.me .chip:hover { border-color: #cfccc4; }
+.me .chip .sep { color: var(--faint); }
+.me .chip b { font-weight: 600; }
+.me .btn.small { height: 32px; padding: 0 12px; }
 .modal-bg { position: fixed; inset: 0; background: rgba(30,30,20,.28); display: flex; align-items: center; justify-content: center; z-index: 20; }
 .modal { background: var(--panel); border-radius: 12px; padding: 18px 20px; width: min(460px, 92vw); box-shadow: 0 10px 34px rgba(0,0,0,.16); }
 .modal h3 { margin: 0 0 8px; font-size: 16px; }
@@ -229,7 +233,7 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { .skel, .prog .st.cur .dot { animation: none; } }
-@media (max-width: 1100px) { .emp { grid-template-columns: 1fr; } body { display: block; } .col { min-height: 60vh; } .tk { grid-template-columns: 1fr; } .disclaimer { display: none; } }
+@media (max-width: 1100px) { .emp { grid-template-columns: 1fr; } body { display: block; } .col { min-height: 60vh; } .tk { grid-template-columns: 1fr; } .who { margin-left: 0; } .who select { max-width: 220px; } }
 </style>
 </head>
 <body>
@@ -246,8 +250,8 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
     <div class="me" id="meBox"></div>
   </div>
   <span id="replayBadge"></span>
-  <div class="disclaimer">演示资料来自公开网页（复星旅文员工手册 V5.0、泛亚人力外包员工服务手册），只用于演示，不代表任何公司的现行制度<br>数据均为演示时现场产生，不含真实个人信息</div>
 </header>
+<div class="disclaimer">演示资料来自公开网页（复星旅文员工手册 V5.0、泛亚人力外包员工服务手册），只用于演示，不代表任何公司的现行制度；修订通知和内部口径是虚构的。数据均为演示时现场产生，不含真实个人信息。</div>
 
 <main id="empView" class="emp">
   <section class="col">
@@ -344,7 +348,8 @@ function renderMe() {
   } else {
     const p = state.me.profile, c = state.me.company;
     state.subject = c.subject; sel.value = c.subject; sel.disabled = true; sel.title = "登录后身份按所属公司定";
-    box.innerHTML = `<span class="chip" data-me="profile" title="点开看、改档案">${esc(p.name.replace(/（.*）/, ""))} · ${esc(META.roles[p.role || "employee"])} · ${esc(c.name.replace(/（.*）/, ""))} · 用工地 ${esc(p.workCity)} · 参保地 ${esc(p.insuredCity)}</span><button class="btn small" data-me="profile">档案</button><button class="btn small" data-me="logout">退出</button>`;
+    const sep = `<span class="sep">·</span>`;
+    box.innerHTML = `<span class="chip" data-me="profile" title="点开看、改档案"><b>${esc(p.name.replace(/（.*）/, ""))}</b>${sep}${esc(META.roles[p.role || "employee"])}${sep}${esc(c.name.replace(/（.*）/, ""))}${sep}用工地 ${esc(p.workCity)}${sep}参保地 ${esc(p.insuredCity)}</span><button class="btn small" data-me="profile">档案</button><button class="btn small" data-me="logout">退出</button>`;
   }
   renderExamples();
 }
