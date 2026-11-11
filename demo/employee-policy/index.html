@@ -45,6 +45,10 @@ header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .5px; 
 .examples button { border: 1px solid var(--line); background: var(--soft); border-radius: 99px; padding: 2px 10px; font-size: 13px; color: var(--ink); }
 .examples button:hover { border-color: #c9c6bd; background: #e9e7e1; }
 .examples .n { color: var(--faint); margin-right: 3px; font-size: 12px; }
+/* 登录后「按档案问」题多：默认只露一行，右边的「更多」展开 */
+.examples.me { position: relative; padding-right: 68px; }
+.examples.me.fold { max-height: 37px; overflow: hidden; }
+.examples .more { position: absolute; right: 16px; top: 8px; background: #fff; color: var(--muted); }
 .composer { display: flex; gap: 8px; padding: 10px 16px 14px; }
 .composer input { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: #fcfcfa; }
 .composer input:focus { outline: 2px solid #c9d6e6; border-color: #b8c7da; }
@@ -94,6 +98,7 @@ header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .5px; 
 .fb button.on.ok { background: var(--ok); color: #fff; border-color: var(--ok); }
 .fb button.on.bad { background: var(--bad); color: #fff; border-color: var(--bad); }
 .fb .saved { color: var(--good); }
+.fb button.close { border-color: transparent; background: none; color: var(--faint); }
 .badform { margin-top: 8px; background: #fff; border: 1px solid #ebcfca; border-radius: 8px; padding: 8px 10px; font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; cursor: default; }
 .badform .reasons { display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .badform textarea { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-height: 48px; resize: vertical; }
@@ -325,7 +330,7 @@ const EXAMPLES = [
   for (const [k, v] of Object.entries(META.subjects)) sel.insertAdjacentHTML("beforeend", `<option value="${k}">${esc(v.label)}（${esc(v.source)} ${esc(v.version)}）</option>`);
   sel.onchange = () => { state.subject = sel.value; toast(`已切到「${META.subjects[sel.value].label}」，只在《${META.subjects[sel.value].source}》里查`); };
   if (META.replay) $("#replayBadge").innerHTML = `<span class="replay-badge" title="不联网，模型结果来自录制">回放模式</span>`;
-  $("#examples").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; const e = state.exList[b.dataset.i]; if (!state.me?.loggedIn) setSubject(e.s); send(e.q); };
+  $("#examples").onclick = (ev) => { const b = ev.target.closest("button"); if (!b) return; if (b.classList.contains("more")) { state.exOpen = !state.exOpen; renderExamples(); return; } const e = state.exList[b.dataset.i]; if (!state.me?.loggedIn) setSubject(e.s); send(e.q); };
   $("#meBox").onclick = (ev) => { const b = ev.target.closest("[data-me]"); if (b) ({ login: openLogin, profile: openProfile, logout })[b.dataset.me](); };
   state.me = await api("/api/policy/me");
   renderMe();
@@ -344,7 +349,8 @@ const EXAMPLES_ME = ["我今年结婚能休几天婚假？", "年假有几天？
 function renderExamples() {
   const me = state.me?.loggedIn;
   state.exList = me ? EXAMPLES_ME : EXAMPLES;
-  $("#examples").innerHTML = (me ? `<span class="faint" style="font-size:12.5px;align-self:center">按档案问：</span>` : "") + state.exList.map((e, i) => `<button data-i="${i}" title="${e.s === "fairhr" ? "会切到外包员工" : ""}"><span class="n">${i + 1}</span>${esc(e.q)}${e.s === "fairhr" ? "（外包）" : ""}${e.tag ? `（${e.tag}）` : ""}</button>`).join("");
+  $("#examples").innerHTML = (me ? `<span class="faint" style="font-size:12.5px;align-self:center">按档案问：</span>` : "") + state.exList.map((e, i) => `<button data-i="${i}" title="${e.s === "fairhr" ? "会切到外包员工" : ""}"><span class="n">${i + 1}</span>${esc(e.q)}${e.s === "fairhr" ? "（外包）" : ""}${e.tag ? `（${e.tag}）` : ""}</button>`).join("") + (me ? `<button class="more">${state.exOpen ? "收起" : "更多"}</button>` : "");
+  $("#examples").className = "examples" + (me ? " me" + (state.exOpen ? "" : " fold") : "");
 }
 function renderMe() {
   const box = $("#meBox"), sel = $("#subject");
@@ -463,10 +469,12 @@ function sourcesHTML(sources) {
 }
 function fbHTML(target, key) {
   const f = state.fb?.[key] || {};
+  if (f.closed) return "";
   return `<div class="fb" data-key="${esc(key)}" data-target='${esc(JSON.stringify(target))}'>这条回答
-    <button class="good ${f.rating === "good" ? "on good" : ""}" data-r="good">Good</button>
-    <button class="ok ${f.rating === "ok" ? "on ok" : ""}" data-r="ok">OK</button>
-    <button class="bad ${f.rating === "bad" ? "on bad" : ""}" data-r="bad">Bad</button>
+    <button class="good ${f.rating === "good" ? "on good" : ""}" data-r="good">好</button>
+    <button class="ok ${f.rating === "ok" ? "on ok" : ""}" data-r="ok">还行</button>
+    <button class="bad ${f.rating === "bad" ? "on bad" : ""}" data-r="bad">差</button>
+    <button class="close" data-r="close" title="不评价，收起这一行">关闭</button>
     ${f.saved ? `<span class="saved">已记录${f.ticket ? `，工单 ${esc(f.ticket)}` : ""}</span>` : ""}
   </div>${f.open ? badFormHTML(key) : ""}`;
 }
@@ -583,6 +591,7 @@ $("#chat").addEventListener("click", async (ev) => {
   if (fb) {
     const box = fb.closest(".fb"), key = box.dataset.key, target = JSON.parse(box.dataset.target), r = fb.dataset.r;
     state.fb ||= {};
+    if (r === "close") { state.fb[key] = { ...(state.fb[key] || {}), closed: true }; renderChat(); return; }
     if (r === "bad") { state.fb[key] = { ...(state.fb[key] || {}), open: true, rating: "bad", saved: false }; renderChat(); return; }
     await submitFb(key, target, r, {});
     return;
@@ -771,7 +780,7 @@ async function renderBad(el) {
   el.innerHTML = `<div class="bclist">
     <div class="col bc" style="padding:10px 16px"><div class="funnel">${["全部", ...sts].map((k, i) => `${i > 1 ? `<span class="arrow">→</span>` : ""}<button data-f="${k}" class="${k === F ? "on" : ""}"><b>${k === "全部" ? all.length : all.filter((b) => b.status === k).length}</b>${k}</button>`).join("")}
       <span class="faint" style="margin-left:auto;font-size:12.5px">按目标：规则 ${all.filter((b) => b.targetType === "rule").length} · RAG ${all.filter((b) => b.targetType === "rag").length} · HR 回复 ${all.filter((b) => b.targetType === "human").length}　｜　已进回归集 ${all.filter((b) => b.inEval).length}</span></div></div>
-    ${list.length ? "" : `<div class="col"><div class="empty">${all.length ? "这个状态下没有" : "还没有 Bad case。员工在任何回答下点 Bad，这里就会出现一条，带着当时的完整轨迹。"}</div></div>`}
+    ${list.length ? "" : `<div class="col"><div class="empty">${all.length ? "这个状态下没有" : "还没有 Bad case。员工在任何回答下点「差」，这里就会出现一条，带着当时的完整轨迹。"}</div></div>`}
     ${list.map((b) => `<div class="col bc" data-id="${esc(b.id)}">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(b.q || "")}</b>
         <span class="badge" style="background:${b.targetType === "rule" ? "var(--rule-bg);color:var(--rule)" : b.targetType === "rag" ? "var(--rag-bg);color:var(--rag)" : "var(--human-bg);color:var(--human)"}">${({ rule: "规则直答", rag: "RAG 回答", human: "HR 回复" })[b.targetType]}</span>
