@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>员工问政策 · 演示</title>
+<title>企业知识库问答 · 演示</title>
 <style>
 :root {
   --bg: #f5f4f0; --panel: #ffffff; --ink: #24272c; --muted: #6c7078; --faint: #9a9ea6; --line: #e3e1db; --soft: #f0efea;
@@ -239,7 +239,7 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
 <body>
 <header>
   <a class="back" href="https://matsuri.site/portfolio/employee-policy/" title="这个项目在作品集里的介绍页">← 项目页</a>
-  <h1>员工问政策</h1>
+  <h1>企业知识库问答</h1>
   <div class="tabs" id="viewTabs">
     <button data-v="emp" class="on">员工端</button>
     <button data-v="hr">HR 工作台 <span id="openCount" class="muted"></span></button>
@@ -251,7 +251,7 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
   </div>
   <span id="replayBadge"></span>
 </header>
-<div class="disclaimer">演示资料来自公开网页（复星旅文员工手册 V5.0、泛亚人力外包员工服务手册），只用于演示，不代表任何公司的现行制度；修订通知和内部口径是虚构的。数据均为演示时现场产生，不含真实个人信息。</div>
+<div class="disclaimer">演示资料来自公开网页（复星旅文员工手册 V5.0、泛亚人力外包员工服务手册），只用于演示，不代表任何公司的现行制度；修订通知、内部口径、SOP 手册和销售案例库是虚构的。数据均为演示时现场产生，不含真实个人信息。</div>
 
 <main id="empView" class="emp">
   <section class="col">
@@ -259,7 +259,7 @@ table.t td.num, table.t th.num { text-align: right; font-variant-numeric: tabula
     <div class="chat" id="chat"></div>
     <div class="examples" id="examples"></div>
     <form class="composer" id="composer">
-      <input id="qInput" placeholder="例如：病假要交什么材料？" autocomplete="off">
+      <input id="qInput" placeholder="例如：病假要交什么材料？报销要在多少天内提交？" autocomplete="off">
       <button class="btn primary" id="sendBtn">发送</button>
     </form>
   </section>
@@ -312,6 +312,10 @@ const EXAMPLES = [
   { q: "工龄 6 年年假几天？", s: "fairhr" },
   { q: "我手机号 13800000000，产假要提前多久申请？", s: "fosun" },
   { q: "离职后年假能折现吗？", s: "fosun", tag: "低置信" },
+  { q: "报销要在多少天内提交？", s: "fosun", tag: "SOP" },
+  { q: "出差住宿标准是多少？", s: "fosun", tag: "SOP" },
+  { q: "客户投诉多久要响应？", s: "fosun", tag: "SOP" },
+  { q: "折扣超过多少要销售总监审批？", s: "fosun", tag: "销售能查，员工查不到" },
 ];
 
 // ---------- 初始化 ----------
@@ -334,7 +338,9 @@ const EXAMPLES = [
 
 // ---------- 登录（演示账户）和档案 ----------
 const EXAMPLES_ME = ["我今年结婚能休几天婚假？", "年假有几天？", "加班费怎么算？", "病假工资怎么算？", "工资每个月几号发？", "产假多少天？", "陪产假有几天？", "生育津贴去哪领？"].map((q) => ({ q }))
-  .concat([{ q: "试用期转正考核表要提前多少天交？", tag: "经理能查" }, { q: "调薪幅度超过多少要报人力资源中心审批？", tag: "HR 能查" }]);
+  .concat([{ q: "试用期转正考核表要提前多少天交？", tag: "经理能查" }, { q: "调薪幅度超过多少要报人力资源中心审批？", tag: "HR 能查" },
+    { q: "报销要在多少天内提交？", tag: "SOP" }, { q: "电脑坏了多久有人响应？", tag: "SOP" },
+    { q: "折扣超过多少要销售总监审批？", tag: "销售能查" }, { q: "采购嫌单价高，有没有谈下来的案例？", tag: "销售能查" }, { q: "制造业客户担心外包人员流失率高，怎么应对？", tag: "销售能查" }]);
 function renderExamples() {
   const me = state.me?.loggedIn;
   state.exList = me ? EXAMPLES_ME : EXAMPLES;
@@ -539,7 +545,7 @@ function progressHTML(m) {
   const items = [
     ["人工闸：要不要直接转人工", g("human")],
     [m.emp ? "规则闸：按档案和规则表查" : "规则闸：能不能查表直答", g("rule")],
-    ["检索：在手册里找相关条款", !!m.stages.search],
+    ["检索：在资料里找相关条款", !!m.stages.search],
     ["重排：给候选条款打分", !!m.stages.rerank],
     [m.draft ? `生成：已写 ${m.draft.length} 字，校验通过前不展示` : "生成：写回答", !!m.checks],
     ["校验：引用和数字", false],

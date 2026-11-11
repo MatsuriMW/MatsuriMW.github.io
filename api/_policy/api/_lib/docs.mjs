@@ -1,8 +1,8 @@
 // 资料的版本、生效日期和可见角色。构建（build/pack.mjs）、导入（build/ingest.mjs）、检索（pipeline.mjs）共用。
 // - 手册修订：docs/revisions/*.md 是修订通知，导入后记在 data/revisions.json。每块带 effectiveFrom / effectiveTo，
 //   改过的条款新旧两版都留着，检索、规则引用只取当天有效的那一版。
-// - 内部资料：docs/internal/*.md，subject 记成 "*"（两种用工身份都查得到），roles 写谁能看；没有 roles 的块所有人都能看。
-export const ROLES = { employee: "员工", manager: "部门经理", hr: "HR" };
+// - 内部资料：docs/internal/*.md（经理 / HR 口径、运营 SOP 手册、销售作业 SOP、销售案例库），subject 记成 "*"（两种用工身份都查得到），roles 写谁能看；没有 roles 的块所有人都能看。
+export const ROLES = { employee: "员工", sales: "销售", manager: "部门经理", hr: "HR" };
 
 // 北京时间的今天 YYYY-MM-DD
 export const today = (d = new Date()) => new Date(d.getTime() + 8 * 3600e3).toISOString().slice(0, 10);

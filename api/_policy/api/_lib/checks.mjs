@@ -34,7 +34,8 @@ function answerNumbers(text) {
 // sources: [{text}]，按引用编号顺序
 export function checkAnswer(answer, sources) {
     const a = String(answer).trim();
-    if (a.replace(/[\s。.]/g, "").startsWith(FALLBACK.replace("。", "")) && a.length < 30) {
+    // 以兜底句开头、后面又补了几句解释的，也算兜底（模型有时不肯只说一句）
+    if (a.startsWith(FALLBACK) || (a.replace(/[\s。.]/g, "").startsWith(FALLBACK.replace("。", "")) && a.length < 30)) {
         return { ok: false, kind: "fallback", reason: "生成兜底：模型回答「手册里没有写到这个」" };
     }
     const cited = [...a.matchAll(/\[(\d+)\]/g)].map((m) => +m[1]);
