@@ -273,3 +273,131 @@
 .pj-dz > summary:hover .pj-fold { border-color: var(--blue); }
 .pj-dz > summary:hover h3 { color: var(--blue); }
 .pj-dz:not([open]) { padding-top: 16px; padding-bottom: 16px; }
+
+/* ===== 功能心愿单与投票（/portfolio/journal-workflow/#wishlist） ===== */
+.wl-app { display: grid; gap: 18px; }
+.wl-form { display: grid; gap: 12px; padding: 22px 24px; }
+.wl-row { display: grid; grid-template-columns: minmax(0, 1fr) 168px; gap: 10px; }
+.wl-input, .wl-select, .wl-textarea, .wl-author, .wl-adm-sel, .wl-adm-in {
+  font: inherit; font-size: 14px; color: var(--ink); background: var(--page);
+  border: 1px solid var(--rule); border-radius: 9px; padding: 9px 12px;
+  transition: border-color .2s, background .2s;
+}
+.wl-input:focus, .wl-select:focus, .wl-textarea:focus, .wl-author:focus {
+  outline: none; border-color: var(--blue); background: var(--surface);
+}
+.wl-textarea { resize: vertical; min-height: 76px; line-height: 1.65; }
+.wl-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.wl-upload {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+  padding: 10px 12px; border: 1px dashed var(--rule); border-radius: 10px; background: var(--page);
+  transition: border-color .2s, background .2s;
+}
+.wl-upload.is-drag { border-color: var(--blue); background: var(--blue-soft); }
+.wl-pick {
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 7px;
+  padding: 5px 11px; cursor: pointer; transition: border-color .2s, color .2s;
+}
+.wl-pick:hover { border-color: var(--blue); color: var(--blue); }
+.wl-hint { font-size: 12.5px; color: var(--ink-3); }
+.wl-previews { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+.wl-previews:empty { display: none; }
+.wl-prev { position: relative; width: 84px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid var(--rule); background: var(--surface); }
+.wl-prev img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wl-prev-rm {
+  position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%;
+  background: rgba(31, 31, 29, .78); color: #fff; font: 600 13px/1 sans-serif; cursor: pointer;
+}
+.wl-form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.wl-author { width: 200px; }
+.wl-msg { font-size: 13px; color: var(--ink-2); margin-right: auto; }
+.wl-msg.is-err { color: var(--red); }
+.wl-submit {
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--surface); background: var(--ink);
+  border: 0; border-radius: 99px; padding: 9px 20px; cursor: pointer;
+  transition: background .2s, transform .2s var(--ease);
+}
+.wl-submit:hover:not(:disabled) { background: var(--blue); transform: translateY(-1px); }
+.wl-submit:disabled { opacity: .55; cursor: default; }
+
+.wl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.wl-filters, .wl-sorts { display: flex; flex-wrap: wrap; gap: 6px; }
+.wl-tab {
+  font: inherit; font-size: 13px; color: var(--ink-2); background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 99px; padding: 5px 12px; cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.wl-tab:hover { border-color: var(--ink-3); color: var(--ink); }
+.wl-tab.on { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+
+.wl-list { display: grid; gap: 12px; }
+.wl-empty { text-align: center; color: var(--ink-3); font-size: 14px; padding: 28px 20px; }
+.wl-item { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 16px; align-items: start; padding: 18px 20px; }
+.wl-vote {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 60px; padding: 8px 6px; border: 1px solid var(--rule); border-radius: 10px;
+  background: var(--page); color: var(--ink-2); cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s, transform .2s var(--ease);
+}
+.wl-vote:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-1px); }
+.wl-vote.on { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+.wl-arrow { font-size: 11px; line-height: 1; }
+.wl-vote b { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+
+.wl-body { min-width: 0; }
+.wl-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 6px; }
+.wl-status { font-size: 12px; font-weight: 600; border-radius: 5px; padding: 0 7px; }
+.wl-status.is-pending { color: var(--ink-2); background: var(--neutral-soft); }
+.wl-status.is-planned { color: var(--blue); background: var(--blue-soft); }
+.wl-status.is-progress { color: var(--violet); background: #eae7fa; }
+.wl-status.is-done { color: #1b7a4b; background: #dff4e8; }
+.wl-who { font-size: 12.5px; color: var(--ink-3); }
+.wl-body h3 { margin: 0 0 6px; font-size: 17px; line-height: 1.45; }
+.wl-desc { margin: 0; font-size: 14px; line-height: 1.75; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+
+.wl-thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.wl-thumb {
+  padding: 0; border: 1px solid var(--rule); border-radius: 9px; overflow: hidden;
+  background: var(--page); cursor: zoom-in; max-width: 180px; max-height: 120px;
+  transition: border-color .2s, transform .2s var(--ease);
+}
+.wl-thumb:hover { border-color: var(--blue); transform: translateY(-1px); }
+.wl-thumb img { display: block; max-width: 180px; max-height: 120px; width: auto; height: auto; }
+
+.wl-reply {
+  margin-top: 12px; padding: 9px 12px; border-radius: 8px;
+  background: var(--accent-bg); border-left: 3px solid var(--blue);
+  font-size: 13.5px; line-height: 1.65; color: var(--ink);
+}
+.wl-adm-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--rule); }
+.wl-adm-in { flex: 1; min-width: 180px; padding: 6px 10px; font-size: 13px; }
+.wl-adm-sel { padding: 6px 8px; font-size: 13px; }
+.wl-adm-btn {
+  font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 7px;
+  border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.wl-adm-btn.is-del { color: var(--red); border-color: var(--red-soft); }
+
+.wl-admin-bar { display: flex; justify-content: flex-end; }
+.wl-admin-link { font: inherit; font-size: 12.5px; color: var(--ink-3); background: none; border: 0; padding: 2px 4px; cursor: pointer; }
+.wl-admin-link:hover { color: var(--ink-2); }
+
+.wl-lightbox {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px;
+  background: rgba(27, 27, 25, .84); backdrop-filter: blur(4px);
+}
+.wl-lightbox[hidden] { display: none; }
+.wl-lightbox img { max-width: min(92vw, 1100px); max-height: 86vh; border-radius: 10px; box-shadow: 0 24px 60px rgba(0, 0, 0, .5); background: #fff; }
+.wl-lb-close {
+  position: fixed; top: 18px; right: 22px; width: 38px; height: 38px; border: 0; border-radius: 50%;
+  background: rgba(252, 252, 251, .16); color: #fff; font: 600 22px/1 sans-serif; cursor: pointer;
+}
+.wl-lb-close:hover { background: rgba(252, 252, 251, .28); }
+
+@media (max-width: 640px) {
+  .wl-form { padding: 16px 14px; }
+  .wl-row { grid-template-columns: 1fr; }
+  .wl-author { width: 100%; }
+  .wl-item { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; padding: 14px; }
+}
