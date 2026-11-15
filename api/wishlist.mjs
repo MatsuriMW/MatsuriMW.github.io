@@ -131,7 +131,197 @@ async function loadImage(id) {
   return null;
 }
 
+const SEED_ITEMS = [
+  {
+    id: "ad0000000001",
+    title: "AI 记录母块视图切换（大纲 / 表格）",
+    desc: "AI 自动记录母块尾部改为视图切换入口，首版支持在默认大纲块与结构化表格之间切换展示，不改写底层 Markdown。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "planned",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T09:50:00.000Z",
+    updatedAt: "2026-11-15T09:50:00.000Z",
+  },
+  {
+    id: "ad0000000002",
+    title: "Grok Bot（Sand）会话追踪与 Pi 支持",
+    desc: "规划接入 Grok Bot（Sand）与 Pi Agent 的本地会话追踪，并探索委派与块级记录粒度。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "planned",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T09:40:00.000Z",
+    updatedAt: "2026-11-15T09:40:00.000Z",
+  },
+  {
+    id: "ad0000000003",
+    title: "Windows 端完整适配",
+    desc: "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容与桌面端窗口联动。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "planned",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T09:30:00.000Z",
+    updatedAt: "2026-11-15T09:30:00.000Z",
+  },
+  {
+    id: "ad0000000004",
+    title: "菜单栏手势唤出、等待通知与 MCDT 排产",
+    desc: "独立 Mac 端规划手势/快捷键唤出侧栏、点击会话跳回终端、等待人工确认通知，以及按额度做多 Agent 排产。",
+    area: "macOS 菜单栏",
+    author: "马自立",
+    status: "planned",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T09:20:00.000Z",
+    updatedAt: "2026-11-15T09:20:00.000Z",
+  },
+  {
+    id: "ad0000000005",
+    title: "行为数据分析与反馈闭环",
+    desc: "结合每日螺旋轨迹、DOING 用时记录与中断快照，统计专注分布与延期规律并给出复盘反馈。",
+    area: "螺旋日程",
+    author: "马自立",
+    status: "planned",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T09:10:00.000Z",
+    updatedAt: "2026-11-15T09:10:00.000Z",
+  },
+  {
+    id: "ad0000000006",
+    title: "Cursor 桌面端（3.30.14+）会话追踪",
+    desc: "基于新版 Cursor 桌面端接入 Hooks 与增量文件监听，自动追踪对话轮次、工具活动与状态回写。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "in_progress",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T11:40:00.000Z",
+    updatedAt: "2026-11-15T11:40:00.000Z",
+  },
+  {
+    id: "ad0000000007",
+    title: "AI 记录项目名前缀与「最近的会话」折叠改版",
+    desc: "自动记录标题统一为「项目名 -> 标题」；侧栏最近的会话支持 7/30/120 天窗口与默认叠放展开，消除收起时位置跳变。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "in_progress",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T11:30:00.000Z",
+    updatedAt: "2026-11-15T11:30:00.000Z",
+  },
+  {
+    id: "ad0000000008",
+    title: "后台长回答 500 字自动分流与设置页精简",
+    desc: "结论字数默认放宽到约 350 字，超过 500 字的后台回答自动沉淀至 Agent Deck/Answers/；设置页高频项留外层、低频收入更多设置。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "in_progress",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T11:20:00.000Z",
+    updatedAt: "2026-11-15T11:20:00.000Z",
+  },
+  {
+    id: "ad0000000009",
+    title: "Obsidian 空闲性能优化与专注计数",
+    desc: "后台暂停循环动画并取消 DOING 旋转，降低空闲功耗；Chrome 书签改手动同步，补充前台 App 专注计数与中断快照。",
+    area: "螺旋日程",
+    author: "马自立",
+    status: "in_progress",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T11:10:00.000Z",
+    updatedAt: "2026-11-15T11:10:00.000Z",
+  },
+  {
+    id: "ad000000000a",
+    title: "摘要链接可点击与 token 显示兼容（v1.9.7）",
+    desc: "任务与结论摘要里的长网址与文件路径改为可点击 [🔗](完整地址)；补全并协调与螺旋日程的 token 显示口径。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "done",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T10:40:00.000Z",
+    updatedAt: "2026-11-15T10:40:00.000Z",
+  },
+  {
+    id: "ad000000000b",
+    title: "AI 协作回顾 Dashboard（v1.9.6）",
+    desc: "上线 GitHub 风格每日 token 热力图与项目投入排行，支持 7/30/90 天及自定义区间汇总、回溯来源日记块与原会话。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "done",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-15T10:30:00.000Z",
+    updatedAt: "2026-11-15T10:30:00.000Z",
+  },
+  {
+    id: "ad000000000c",
+    title: "OpenCode / Qoder 委派归档与三段式总结（v1.9.3–v1.9.6）",
+    desc: "打通 OpenCode 与 Qoder 桌面追踪及后台委派；完整原文归档到 Conversations，总结模型提炼“结论、改动、未完成”。",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "done",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-14T18:00:00.000Z",
+    updatedAt: "2026-11-14T18:00:00.000Z",
+  },
+  {
+    id: "ad000000000d",
+    title: "精简执行入口与 Antigravity / DSH 日志（v2.3.0–v2.4.0）",
+    desc: "支持读取 Antigravity 与 DSH 会话日志；2.4.0 移除冗余专注弹窗与全局预设快捷键，把常用快捷键优先让给 Agent Deck。",
+    area: "螺旋日程",
+    author: "马自立",
+    status: "done",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-14T16:00:00.000Z",
+    updatedAt: "2026-11-14T16:00:00.000Z",
+  },
+];
+
+async function ensureSeeded() {
+  if (!HAS_REDIS) {
+    const db = readDev();
+    if (db.seededV1) return;
+    for (const it of SEED_ITEMS) {
+      if (!db.items[it.id]) {
+        db.ids.push(it.id);
+        db.items[it.id] = { ...it };
+        db.votes[it.id] = [];
+      }
+    }
+    db.seededV1 = true;
+    writeDev(db);
+    return;
+  }
+  const [claimed, existing] = await redis([
+    ["SET", "wish:seeded:v1", "1", "NX"],
+    ["LRANGE", "wish:ids", 0, MAX_ITEMS - 1],
+  ]);
+  if (claimed !== "OK") return;
+  const have = new Set(existing || []);
+  const cmds = [];
+  for (const it of SEED_ITEMS) {
+    if (have.has(it.id)) continue;
+    cmds.push(["SETNX", `wish:item:${it.id}`, JSON.stringify(it)]);
+    cmds.push(["RPUSH", "wish:ids", it.id]);
+  }
+  if (cmds.length) await redis(cmds);
+}
+
 async function listItems(voterId) {
+  await ensureSeeded();
   if (!HAS_REDIS) {
     const db = readDev();
     return db.ids
