@@ -597,6 +597,13 @@
         list.append(el("div", "wl-col-empty", col.id === "pending" ? "还没有新提议，点下方添加第一张卡片" : "暂无卡片"));
       } else {
         for (const it of colItems) list.append(buildCard(it));
+        if (colItems.length > 4) {
+          list.classList.add("is-scroll");
+          requestAnimationFrame(() => {
+            const fourth = list.children[3];
+            if (fourth) list.style.maxHeight = `${fourth.offsetTop + fourth.offsetHeight + 2}px`;
+          });
+        }
       }
 
       colEl.append(head, sub, list);

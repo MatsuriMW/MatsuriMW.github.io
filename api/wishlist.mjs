@@ -169,18 +169,6 @@ const SEED_ITEMS = [
     updatedAt: "2026-11-15T09:30:00.000Z",
   },
   {
-    id: "ad0000000004",
-    title: "菜单栏手势唤出、等待通知与 MCDT 排产",
-    desc: "独立 Mac 端规划手势/快捷键唤出侧栏、点击会话跳回终端、等待人工确认通知，以及按额度做多 Agent 排产。",
-    area: "macOS 菜单栏",
-    author: "马自立",
-    status: "planned",
-    authorNote: "",
-    images: [],
-    createdAt: "2026-11-15T09:20:00.000Z",
-    updatedAt: "2026-11-15T09:20:00.000Z",
-  },
-  {
     id: "ad0000000005",
     title: "行为数据分析与反馈闭环",
     desc: "结合每日螺旋轨迹、DOING 用时记录与中断快照，统计专注分布与延期规律并给出复盘反馈。",
@@ -290,32 +278,54 @@ const SEED_ITEMS = [
   },
 ];
 
+const REMOVED_SEED_IDS = ["ad0000000004"];
+
 async function ensureSeeded() {
   if (!HAS_REDIS) {
     const db = readDev();
-    if (db.seededV1) return;
-    for (const it of SEED_ITEMS) {
-      if (!db.items[it.id]) {
-        db.ids.push(it.id);
-        db.items[it.id] = { ...it };
-        db.votes[it.id] = [];
+    let changed = false;
+    if (!db.seededV1) {
+      for (const it of SEED_ITEMS) {
+        if (!db.items[it.id]) {
+          db.ids.push(it.id);
+          db.items[it.id] = { ...it };
+          db.votes[it.id] = [];
+        }
       }
+      db.seededV1 = true;
+      changed = true;
     }
-    db.seededV1 = true;
-    writeDev(db);
+    if (!db.seededV2) {
+      for (const id of REMOVED_SEED_IDS) {
+        delete db.items[id];
+        delete db.votes[id];
+        db.ids = db.ids.filter((x) => x !== id);
+      }
+      db.seededV2 = true;
+      changed = true;
+    }
+    if (changed) writeDev(db);
     return;
   }
-  const [claimed, existing] = await redis([
+  const [claimed, cleanClaim, existing] = await redis([
     ["SET", "wish:seeded:v1", "1", "NX"],
+    ["SET", "wish:seeded:v2", "1", "NX"],
     ["LRANGE", "wish:ids", 0, MAX_ITEMS - 1],
   ]);
-  if (claimed !== "OK") return;
-  const have = new Set(existing || []);
   const cmds = [];
-  for (const it of SEED_ITEMS) {
-    if (have.has(it.id)) continue;
-    cmds.push(["SETNX", `wish:item:${it.id}`, JSON.stringify(it)]);
-    cmds.push(["RPUSH", "wish:ids", it.id]);
+  if (claimed === "OK") {
+    const have = new Set(existing || []);
+    for (const it of SEED_ITEMS) {
+      if (have.has(it.id)) continue;
+      cmds.push(["SETNX", `wish:item:${it.id}`, JSON.stringify(it)]);
+      cmds.push(["RPUSH", "wish:ids", it.id]);
+    }
+  }
+  if (cleanClaim === "OK") {
+    for (const id of REMOVED_SEED_IDS) {
+      cmds.push(["LREM", "wish:ids", 0, id]);
+      cmds.push(["DEL", `wish:item:${id}`, `wish:votes:${id}`]);
+    }
   }
   if (cmds.length) await redis(cmds);
 }
