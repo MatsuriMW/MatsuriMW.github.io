@@ -274,10 +274,145 @@
 .pj-dz > summary:hover h3 { color: var(--blue); }
 .pj-dz:not([open]) { padding-top: 16px; padding-bottom: 16px; }
 
-/* ===== 功能心愿单与投票（/portfolio/journal-workflow/#wishlist） ===== */
-.wl-app { display: grid; gap: 18px; }
-.wl-form { display: grid; gap: 12px; padding: 22px 24px; }
-.wl-row { display: grid; grid-template-columns: minmax(0, 1fr) 168px; gap: 10px; }
+/* ===== Trello 式功能路线图与心愿单（/portfolio/journal-workflow/#wishlist） ===== */
+.wl-app { display: grid; gap: 14px; }
+.wl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; }
+.wl-filters, .wl-sorts, .wl-bar-right { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.wl-tab {
+  font: inherit; font-size: 12.5px; color: var(--ink-2); background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 99px; padding: 5px 11px; cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.wl-tab:hover { border-color: var(--ink-3); color: var(--ink); }
+.wl-tab.on { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.wl-add-main {
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--surface); background: var(--blue);
+  border: 0; border-radius: 99px; padding: 6px 14px; cursor: pointer;
+  transition: opacity .2s, transform .2s var(--ease);
+}
+.wl-add-main:hover { opacity: .9; transform: translateY(-1px); }
+.wl-board-msg { font-size: 13px; color: var(--ink-3); min-height: 1.2em; }
+.wl-board-msg:empty { display: none; }
+.wl-board-msg.is-err { color: var(--red); }
+
+/* 4 列看板：桌面四列并排，窄屏横向滑动对齐 */
+.wl-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .wl-board {
+    grid-template-columns: repeat(4, minmax(256px, 80vw));
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+  }
+  .wl-col { scroll-snap-align: start; }
+}
+.wl-col {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 10px 10px; border-radius: 13px;
+  background: var(--neutral-soft); border: 1px solid var(--rule);
+}
+.wl-col-head { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+.wl-col-title { display: flex; align-items: center; gap: 7px; }
+.wl-col-title h3 { margin: 0; font-size: 14px; font-weight: 700; color: var(--ink); }
+.wl-col-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.wl-col.is-pending .wl-col-dot { background: var(--ink-2); }
+.wl-col.is-planned .wl-col-dot { background: var(--blue); }
+.wl-col.is-progress .wl-col-dot { background: var(--violet); }
+.wl-col.is-done .wl-col-dot { background: #1b7a4b; }
+.wl-col-count {
+  font: 600 11.5px/1 "SF Mono", Menlo, Consolas, monospace;
+  color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 99px; padding: 3px 8px;
+}
+.wl-col-sub { font-size: 11.5px; color: var(--ink-3); padding: 0 4px 2px; margin-top: -4px; }
+.wl-col-list { display: flex; flex-direction: column; gap: 8px; min-height: 44px; }
+.wl-col-empty {
+  padding: 16px 10px; border-radius: 9px; border: 1px dashed var(--rule);
+  text-align: center; font-size: 12px; color: var(--ink-3); background: rgba(252, 252, 251, .55);
+}
+.wl-col-add {
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink-2); text-align: left;
+  padding: 7px 10px; border-radius: 9px; border: 1px dashed rgba(31, 31, 29, .18);
+  background: rgba(252, 252, 251, .7); cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.wl-col-add:hover { background: var(--surface); color: var(--blue); border-color: var(--blue); }
+
+/* Trello 卡片 */
+.wl-card {
+  display: flex; flex-direction: column; gap: 7px;
+  padding: 11px 12px; border-radius: 10px; background: var(--surface);
+  border: 1px solid var(--rule); box-shadow: 0 1px 2px rgba(31, 31, 29, .05);
+  cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .2s var(--ease);
+}
+.wl-card:hover, .wl-card:focus-visible {
+  outline: none; border-color: var(--blue); transform: translateY(-1px);
+  box-shadow: 0 8px 20px -12px rgba(42, 120, 214, .45);
+}
+.wl-card-cover { position: relative; margin: -11px -12px 2px; overflow: hidden; border-radius: 9px 9px 0 0; border-bottom: 1px solid var(--rule); background: var(--page); max-height: 112px; }
+.wl-card-cover img { display: block; width: 100%; height: 112px; object-fit: cover; }
+.wl-card-imgn {
+  position: absolute; right: 6px; bottom: 6px; padding: 1px 7px; border-radius: 99px;
+  background: rgba(31, 31, 29, .78); color: #fff; font-size: 11px; font-weight: 600;
+}
+.wl-card-top { display: flex; flex-wrap: wrap; gap: 6px; }
+.wl-label { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 5px; padding: 1px 7px; }
+.wl-label.is-deck { color: var(--blue); background: var(--blue-soft); }
+.wl-label.is-spiral { color: #7c4d12; background: #faecd8; }
+.wl-label.is-link { color: var(--violet); background: #eae7fa; }
+.wl-label.is-mac { color: #1b7a4b; background: #dff4e8; }
+.wl-card-title { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; color: var(--ink); word-break: break-word; }
+.wl-card-desc {
+  margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  word-break: break-word;
+}
+.wl-card-note {
+  padding: 5px 8px; border-radius: 6px; background: var(--accent-bg);
+  font-size: 11.5px; line-height: 1.5; color: var(--ink-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.wl-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+.wl-who { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wl-vote-pill {
+  display: inline-flex; align-items: center; gap: 4px; flex: none;
+  padding: 3px 9px; border-radius: 99px; border: 1px solid var(--rule);
+  background: var(--page); color: var(--ink-2); font: inherit; font-size: 12px; cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.wl-vote-pill:hover { border-color: var(--blue); color: var(--blue); }
+.wl-vote-pill.on { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+.wl-vote-pill b { font-variant-numeric: tabular-nums; }
+.wl-arrow { font-size: 10px; line-height: 1; }
+
+/* 弹窗（新增卡片 + 卡片详情） */
+.wl-modal-bg {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px;
+  background: rgba(27, 27, 25, .48); backdrop-filter: blur(3px);
+}
+.wl-modal-bg[hidden] { display: none; }
+.wl-modal {
+  width: min(640px, 100%); max-height: 88vh; overflow-y: auto;
+  padding: 22px 24px; border-radius: 14px; background: var(--surface);
+  border: 1px solid var(--rule); box-shadow: 0 28px 64px -20px rgba(31, 31, 29, .38);
+  display: grid; gap: 14px;
+}
+.wl-modal-head { display: flex; align-items: center; gap: 10px; }
+.wl-modal-head h3 { margin: 0; font-size: 18px; }
+.wl-modal-badge { font-size: 12px; font-weight: 600; color: var(--blue); background: var(--blue-soft); border-radius: 99px; padding: 2px 9px; }
+.wl-x {
+  margin-left: auto; width: 30px; height: 30px; border: 0; border-radius: 50%;
+  background: var(--neutral-soft); color: var(--ink-2); font: 600 18px/1 sans-serif; cursor: pointer;
+}
+.wl-x:hover { background: var(--rule); color: var(--ink); }
+
+.wl-form { display: grid; gap: 12px; }
+.wl-row { display: grid; grid-template-columns: minmax(0, 1fr) 156px; gap: 10px; }
 .wl-input, .wl-select, .wl-textarea, .wl-author, .wl-adm-sel, .wl-adm-in {
   font: inherit; font-size: 14px; color: var(--ink); background: var(--page);
   border: 1px solid var(--rule); border-radius: 9px; padding: 9px 12px;
@@ -286,7 +421,7 @@
 .wl-input:focus, .wl-select:focus, .wl-textarea:focus, .wl-author:focus {
   outline: none; border-color: var(--blue); background: var(--surface);
 }
-.wl-textarea { resize: vertical; min-height: 76px; line-height: 1.65; }
+.wl-textarea { resize: vertical; min-height: 88px; line-height: 1.65; }
 .wl-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .wl-upload {
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
@@ -321,61 +456,43 @@
 .wl-submit:hover:not(:disabled) { background: var(--blue); transform: translateY(-1px); }
 .wl-submit:disabled { opacity: .55; cursor: default; }
 
-.wl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
-.wl-filters, .wl-sorts { display: flex; flex-wrap: wrap; gap: 6px; }
-.wl-tab {
-  font: inherit; font-size: 13px; color: var(--ink-2); background: var(--surface);
-  border: 1px solid var(--rule); border-radius: 99px; padding: 5px 12px; cursor: pointer;
-  transition: border-color .2s, background .2s, color .2s;
-}
-.wl-tab:hover { border-color: var(--ink-3); color: var(--ink); }
-.wl-tab.on { background: var(--ink); border-color: var(--ink); color: var(--surface); }
-
-.wl-list { display: grid; gap: 12px; }
-.wl-empty { text-align: center; color: var(--ink-3); font-size: 14px; padding: 28px 20px; }
-.wl-item { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 16px; align-items: start; padding: 18px 20px; }
-.wl-vote {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  min-height: 60px; padding: 8px 6px; border: 1px solid var(--rule); border-radius: 10px;
-  background: var(--page); color: var(--ink-2); cursor: pointer;
-  transition: border-color .2s, background .2s, color .2s, transform .2s var(--ease);
-}
-.wl-vote:hover { border-color: var(--blue); color: var(--blue); transform: translateY(-1px); }
-.wl-vote.on { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
-.wl-arrow { font-size: 11px; line-height: 1; }
-.wl-vote b { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
-
-.wl-body { min-width: 0; }
-.wl-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 6px; }
-.wl-status { font-size: 12px; font-weight: 600; border-radius: 5px; padding: 0 7px; }
+/* 详情弹窗内部 */
+.wl-detail-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.wl-status { font-size: 12px; font-weight: 600; border-radius: 5px; padding: 1px 8px; }
 .wl-status.is-pending { color: var(--ink-2); background: var(--neutral-soft); }
 .wl-status.is-planned { color: var(--blue); background: var(--blue-soft); }
 .wl-status.is-progress { color: var(--violet); background: #eae7fa; }
 .wl-status.is-done { color: #1b7a4b; background: #dff4e8; }
-.wl-who { font-size: 12.5px; color: var(--ink-3); }
-.wl-body h3 { margin: 0 0 6px; font-size: 17px; line-height: 1.45; }
-.wl-desc { margin: 0; font-size: 14px; line-height: 1.75; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
-
-.wl-thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-.wl-thumb {
-  padding: 0; border: 1px solid var(--rule); border-radius: 9px; overflow: hidden;
-  background: var(--page); cursor: zoom-in; max-width: 180px; max-height: 120px;
-  transition: border-color .2s, transform .2s var(--ease);
+.wl-detail-top { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 14px; align-items: start; }
+.wl-vote--lg {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 58px; padding: 8px 6px; border: 1px solid var(--rule); border-radius: 10px;
+  background: var(--page); color: var(--ink-2); cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
 }
-.wl-thumb:hover { border-color: var(--blue); transform: translateY(-1px); }
-.wl-thumb img { display: block; max-width: 180px; max-height: 120px; width: auto; height: auto; }
-
+.wl-vote--lg:hover, .wl-vote--lg.on { border-color: var(--blue); color: var(--blue); }
+.wl-vote--lg.on { background: var(--blue-soft); }
+.wl-vote--lg b { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wl-detail-title h3 { margin: 0 0 4px; font-size: 18px; line-height: 1.4; }
+.wl-detail-desc { margin: 0; font-size: 14.5px; line-height: 1.75; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+.wl-detail-imgs { display: flex; flex-wrap: wrap; gap: 10px; }
+.wl-detail-img {
+  padding: 0; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden;
+  background: var(--page); cursor: zoom-in; max-width: 260px; max-height: 180px;
+}
+.wl-detail-img img { display: block; max-width: 260px; max-height: 180px; width: auto; height: auto; }
 .wl-reply {
-  margin-top: 12px; padding: 9px 12px; border-radius: 8px;
-  background: var(--accent-bg); border-left: 3px solid var(--blue);
+  padding: 10px 12px; border-radius: 8px; background: var(--accent-bg); border-left: 3px solid var(--blue);
   font-size: 13.5px; line-height: 1.65; color: var(--ink);
 }
-.wl-adm-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--rule); }
-.wl-adm-in { flex: 1; min-width: 180px; padding: 6px 10px; font-size: 13px; }
+.wl-adm-box { padding-top: 12px; border-top: 1px dashed var(--rule); display: grid; gap: 8px; }
+.wl-adm-title { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.wl-adm-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.wl-adm-in { flex: 1; min-width: 160px; padding: 6px 10px; font-size: 13px; }
 .wl-adm-sel { padding: 6px 8px; font-size: 13px; }
 .wl-adm-btn {
   font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 7px;
-  border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer;
+  border: 1px solid var(--rule); background: var(--page); color: var(--ink); cursor: pointer;
 }
 .wl-adm-btn.is-del { color: var(--red); border-color: var(--red-soft); }
 
@@ -396,8 +513,7 @@
 .wl-lb-close:hover { background: rgba(252, 252, 251, .28); }
 
 @media (max-width: 640px) {
-  .wl-form { padding: 16px 14px; }
+  .wl-modal { padding: 18px 16px; }
   .wl-row { grid-template-columns: 1fr; }
   .wl-author { width: 100%; }
-  .wl-item { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; padding: 14px; }
 }
