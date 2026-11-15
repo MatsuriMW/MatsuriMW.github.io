@@ -34,8 +34,86 @@
     }
   }
 
+  const CACHE_KEY = "matsuri_wl_cache_v1";
+  const FALLBACK_ITEMS = [
+    ["ad0000000001", "planned", "Agent Deck", "AI 记录母块视图切换（大纲 / 表格）", "AI 自动记录母块尾部改为视图切换入口，首版支持在默认大纲块与结构化表格之间切换展示，不改写底层 Markdown。", "2026-11-15T09:50:00.000Z"],
+    ["ad0000000002", "planned", "Agent Deck", "Grok Bot（Sand）会话追踪与 Pi 支持", "规划接入 Grok Bot（Sand）与 Pi Agent 的本地会话追踪，并探索委派与块级记录粒度。", "2026-11-15T09:40:00.000Z"],
+    ["ad0000000003", "planned", "Agent Deck", "Windows 端完整适配", "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容与桌面端窗口联动。", "2026-11-15T09:30:00.000Z"],
+    ["ad0000000005", "planned", "螺旋日程", "行为数据分析与反馈闭环", "结合每日螺旋轨迹、DOING 用时记录与中断快照，统计专注分布与延期规律并给出复盘反馈。", "2026-11-15T09:10:00.000Z"],
+    ["ad0000000006", "in_progress", "Agent Deck", "Cursor 桌面端（3.30.14+）会话追踪", "基于新版 Cursor 桌面端接入 Hooks 与增量文件监听，自动追踪对话轮次、工具活动与状态回写。", "2026-11-15T11:40:00.000Z"],
+    ["ad0000000007", "in_progress", "Agent Deck", "AI 记录项目名前缀与「最近的会话」折叠改版", "自动记录标题统一为「项目名 -> 标题」；侧栏最近的会话支持 7/30/120 天窗口与默认叠放展开，消除收起时位置跳变。", "2026-11-15T11:30:00.000Z"],
+    ["ad0000000008", "in_progress", "Agent Deck", "后台长回答 500 字自动分流与设置页精简", "结论字数默认放宽到约 350 字，超过 500 字的后台回答自动沉淀至 Agent Deck/Answers/；设置页高频项留外层、低频收入更多设置。", "2026-11-15T11:20:00.000Z"],
+    ["ad0000000009", "in_progress", "螺旋日程", "Obsidian 空闲性能优化与专注计数", "后台暂停循环动画并取消 DOING 旋转，降低空闲功耗；Chrome 书签改手动同步，补充前台 App 专注计数与中断快照。", "2026-11-15T11:10:00.000Z"],
+    ["ad000000000a", "done", "Agent Deck", "摘要链接可点击与 token 显示兼容（v1.9.7）", "任务与结论摘要里的长网址与文件路径改为可点击 [🔗](完整地址)；补全并协调与螺旋日程的 token 显示口径。", "2026-11-15T10:40:00.000Z"],
+    ["ad000000000b", "done", "Agent Deck", "AI 协作回顾 Dashboard（v1.9.6）", "上线 GitHub 风格每日 token 热力图与项目投入排行，支持 7/30/90 天及自定义区间汇总、回溯来源日记块与原会话。", "2026-11-15T10:30:00.000Z"],
+    ["ad000000000c", "done", "Agent Deck", "OpenCode / Qoder 委派归档与三段式总结（v1.9.3–v1.9.6）", "打通 OpenCode 与 Qoder 桌面追踪及后台委派；完整原文归档到 Conversations，总结模型提炼“结论、改动、未完成”。", "2026-11-14T18:00:00.000Z"],
+    ["ad000000000d", "done", "螺旋日程", "精简执行入口与 Antigravity / DSH 日志（v2.3.0–v2.4.0）", "支持读取 Antigravity 与 DSH 会话日志；2.4.0 移除冗余专注弹窗与全局预设快捷键，把常用快捷键优先让给 Agent Deck。", "2026-11-14T16:00:00.000Z"],
+  ].map(([id, status, area, title, desc, createdAt]) => ({
+    id, status, area, title, desc, author: "马自立", authorNote: "", images: [], votes: 0, voted: false, createdAt, updatedAt: createdAt,
+  }));
+
+  function readCache() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      return Array.isArray(data?.items) && data.items.length ? data.items : null;
+    } catch {
+      return null;
+    }
+  }
+  function writeCache(list) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), items: list }));
+    } catch {}
+  }
+
+  async function fetchJson(url, opts = {}, timeoutMs = 8000) {
+    const ac = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = ac ? setTimeout(() => ac.abort(), timeoutMs) : null;
+    try {
+      const r = await fetch(url, { ...opts, signal: ac ? ac.signal : opts.signal });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const err = new Error(data.error || `请求失败 (${r.status})`);
+        err.status = r.status;
+        throw err;
+      }
+      return data;
+    } catch (e) {
+      if (e?.name === "AbortError") throw new Error("网络请求超时，请检查连接后重试");
+      throw e;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  async function fetchListWithRetry(attempts = 3) {
+    const url = `${API}?voterId=${encodeURIComponent(voterId)}`;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fetchJson(url, { cache: "no-store" }, i === 0 ? 6000 : 8000);
+      } catch (e) {
+        const retriable = e.status == null || e.status >= 500;
+        if (!retriable || i === attempts - 1) throw e;
+        await new Promise((res) => setTimeout(res, 350 * (i + 1)));
+      }
+    }
+  }
+
   const voterId = getVoterId();
-  let items = [];
+  let inflightInit = fetchListWithRetry();
+  let items = readCache() || [];
+  let hasLiveSync = false;
+  let userScrolled = false;
+  for (const ev of ["wheel", "touchmove"]) {
+    window.addEventListener(ev, () => { userScrolled = true; }, { passive: true, once: true });
+  }
+  window.addEventListener("keydown", (e) => {
+    if (["ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End", " "].includes(e.key)) {
+      userScrolled = true;
+    }
+  }, { passive: true });
   let filterArea = "all";
   let sortMode = "top";
   let pendingImages = [];
@@ -217,7 +295,11 @@
   function scrollToAdvice(smooth = true) {
     composeSection.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
   }
+  if (location.hash === "#advice") {
+    scrollToAdvice(false);
+  }
   function focusCompose() {
+    userScrolled = true;
     msgEl.textContent = "";
     msgEl.classList.remove("is-err");
     scrollToAdvice(true);
@@ -225,7 +307,10 @@
   }
   addTopBtn.addEventListener("click", focusCompose);
   window.addEventListener("hashchange", () => {
-    if (location.hash === "#advice") scrollToAdvice(true);
+    if (location.hash === "#advice") {
+      userScrolled = false;
+      scrollToAdvice(true);
+    }
   });
 
   function closeDetail() {
@@ -327,22 +412,21 @@
     onUpdated();
 
     try {
-      const r = await fetch(API, {
+      const data = await fetchJson(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "vote", id: item.id, voterId }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "投票失败");
+      }, 9000);
       item.votes = data.votes;
       item.voted = data.voted;
+      writeCache(items);
       onUpdated();
       if (sortMode === "top") renderBoard();
     } catch (err) {
       item.voted = prevVoted;
       item.votes = prevVotes;
       onUpdated();
-      statusHint.textContent = err.message || "投票失败";
+      statusHint.textContent = err.message || "投票失败，请稍后重试";
       statusHint.classList.add("is-err");
     }
   }
@@ -573,6 +657,14 @@
   }
 
   function renderBoard() {
+    const keepAdvice = location.hash === "#advice" && !userScrolled && !activeItem;
+    const beforeTop = keepAdvice ? composeSection.getBoundingClientRect().top : 0;
+    const syncAdvicePos = () => {
+      if (!keepAdvice) return;
+      const dy = composeSection.getBoundingClientRect().top - beforeTop;
+      if (Math.abs(dy) > 1) window.scrollBy(0, dy);
+    };
+
     boardEl.innerHTML = "";
     const filtered = items.filter((it) => filterArea === "all" || it.area === filterArea);
     const sorted = filtered.slice().sort((a, b) => {
@@ -580,6 +672,7 @@
       return (b.votes || 0) - (a.votes || 0) || (b.createdAt || "").localeCompare(a.createdAt || "");
     });
 
+    const clampLists = [];
     for (const col of COLUMNS) {
       const colItems = sorted.filter((it) => (COL_MAP[it.status] ? it.status : "pending") === col.id);
       const colEl = el("section", `wl-col ${col.cls}`);
@@ -599,10 +692,7 @@
         for (const it of colItems) list.append(buildCard(it));
         if (colItems.length > 4) {
           list.classList.add("is-scroll");
-          requestAnimationFrame(() => {
-            const fourth = list.children[3];
-            if (fourth) list.style.maxHeight = `${fourth.offsetTop + fourth.offsetHeight + 2}px`;
-          });
+          clampLists.push(list);
         }
       }
 
@@ -616,6 +706,18 @@
       }
 
       boardEl.append(colEl);
+    }
+
+    if (clampLists.length) {
+      requestAnimationFrame(() => {
+        for (const list of clampLists) {
+          const fourth = list.children[3];
+          if (fourth) list.style.maxHeight = `${fourth.offsetTop + fourth.offsetHeight + 2}px`;
+        }
+        syncAdvicePos();
+      });
+    } else {
+      syncAdvicePos();
     }
   }
 
@@ -634,7 +736,7 @@
     msgEl.classList.remove("is-err");
 
     try {
-      const r = await fetch(API, {
+      const data = await fetchJson(API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -647,11 +749,10 @@
           website: hpInput.value,
           voterId,
         }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "提交失败");
+      }, 15000);
       if (data.item) {
         items.unshift(data.item);
+        writeCache(items);
         filterArea = "all";
         renderToolbar();
         renderBoard();
@@ -691,28 +792,66 @@
   if (adminToken) adminToggle.textContent = "退出管理";
 
   // ---------- Initial Load ----------
-  async function load() {
-    statusHint.textContent = "正在加载 Roadmap…";
-    statusHint.classList.remove("is-err");
-    try {
-      const r = await fetch(`${API}?voterId=${encodeURIComponent(voterId)}`);
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "加载失败");
-      items = Array.isArray(data.items) ? data.items : [];
-      statusHint.textContent = "";
-      renderToolbar();
-      renderBoard();
-    } catch (err) {
-      statusHint.textContent = err.message || "暂时加载不出来，请稍后刷新";
-      statusHint.classList.add("is-err");
-      renderToolbar();
-      renderBoard();
-    } finally {
-      if (location.hash === "#advice") {
-        requestAnimationFrame(() => scrollToAdvice(false));
-      }
+  function showStatus(text, isErr, canRetry) {
+    statusHint.innerHTML = "";
+    if (!text) {
+      statusHint.classList.remove("is-err");
+      return;
+    }
+    statusHint.classList.toggle("is-err", Boolean(isErr));
+    statusHint.append(document.createTextNode(text));
+    if (canRetry) {
+      const retryBtn = el("button", "wl-retry", "重试");
+      retryBtn.type = "button";
+      retryBtn.addEventListener("click", () => {
+        inflightInit = null;
+        load(true);
+      });
+      statusHint.append(" ", retryBtn);
     }
   }
 
-  load();
+  async function load(forceFresh = false) {
+    if (items.length) {
+      renderToolbar();
+      renderBoard();
+      if (forceFresh) showStatus("正在同步最新数据…", false, false);
+    } else {
+      renderToolbar();
+      renderBoard();
+      showStatus("正在加载 Roadmap…", false, false);
+    }
+
+    const slowTimer = !items.length ? setTimeout(() => {
+      if (!hasLiveSync && !items.length) {
+        items = FALLBACK_ITEMS.map((x) => ({ ...x }));
+        renderToolbar();
+        renderBoard();
+        showStatus("网络较慢，先展示内置路线图，仍在后台同步最新投票…", false, false);
+      }
+    }, 800) : null;
+
+    try {
+      const reqPromise = !forceFresh && inflightInit ? inflightInit : fetchListWithRetry();
+      inflightInit = null;
+      const data = await reqPromise;
+      hasLiveSync = true;
+      if (slowTimer) clearTimeout(slowTimer);
+      items = Array.isArray(data.items) ? data.items : [];
+      writeCache(items);
+      showStatus("", false, false);
+      renderToolbar();
+      renderBoard();
+    } catch (err) {
+      if (slowTimer) clearTimeout(slowTimer);
+      if (!items.length) {
+        items = FALLBACK_ITEMS.map((x) => ({ ...x }));
+        renderToolbar();
+        renderBoard();
+      }
+      showStatus("暂时连不上实时服务器，当前显示缓存路线图（仍可直接提建议）", true, true);
+    }
+  }
+
+  load(false);
 })();

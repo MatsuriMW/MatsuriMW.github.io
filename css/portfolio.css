@@ -291,9 +291,14 @@
   transition: opacity .2s, transform .2s var(--ease);
 }
 .wl-add-main:hover { opacity: .9; transform: translateY(-1px); }
-.wl-board-msg { font-size: 13px; color: var(--ink-3); min-height: 1.2em; }
+.wl-board-msg { font-size: 13px; color: var(--ink-3); min-height: 1.2em; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .wl-board-msg:empty { display: none; }
 .wl-board-msg.is-err { color: var(--red); }
+.wl-retry {
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--blue);
+  background: var(--blue-soft); border: 0; border-radius: 99px; padding: 2px 10px; cursor: pointer;
+}
+.wl-retry:hover { opacity: .85; }
 
 /* 4 列看板：桌面四列并排，窄屏横向滑动对齐 */
 .wl-board {

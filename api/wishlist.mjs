@@ -32,18 +32,25 @@ function writeDev(db) {
   fs.writeFileSync(devFile(), JSON.stringify(db));
 }
 
-async function redis(cmds) {
-  const r = await fetch(`${RURL}/pipeline`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${RTOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify(cmds),
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!r.ok) throw new Error(`redis ${r.status}`);
-  return (await r.json()).map((x) => {
-    if (x.error) throw new Error(`redis ${x.error}`);
-    return x.result;
-  });
+async function redis(cmds, retries = 0) {
+  for (let i = 0; ; i++) {
+    try {
+      const r = await fetch(`${RURL}/pipeline`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RTOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify(cmds),
+        signal: AbortSignal.timeout(7000),
+      });
+      if (!r.ok) throw new Error(`redis ${r.status}`);
+      return (await r.json()).map((x) => {
+        if (x.error) throw new Error(`redis ${x.error}`);
+        return x.result;
+      });
+    } catch (e) {
+      if (i >= retries) throw e;
+      await new Promise((res) => setTimeout(res, 220 * (i + 1)));
+    }
+  }
 }
 
 const clientIp = (req) =>
@@ -279,6 +286,7 @@ const SEED_ITEMS = [
 ];
 
 const REMOVED_SEED_IDS = ["ad0000000004"];
+let seedChecked = false;
 
 async function ensureSeeded() {
   if (!HAS_REDIS) {
@@ -305,13 +313,14 @@ async function ensureSeeded() {
       changed = true;
     }
     if (changed) writeDev(db);
-    return;
+    return null;
   }
+  if (seedChecked) return null;
   const [claimed, cleanClaim, existing] = await redis([
     ["SET", "wish:seeded:v1", "1", "NX"],
     ["SET", "wish:seeded:v2", "1", "NX"],
     ["LRANGE", "wish:ids", 0, MAX_ITEMS - 1],
-  ]);
+  ], 1);
   const cmds = [];
   if (claimed === "OK") {
     const have = new Set(existing || []);
@@ -327,11 +336,18 @@ async function ensureSeeded() {
       cmds.push(["DEL", `wish:item:${id}`, `wish:votes:${id}`]);
     }
   }
-  if (cmds.length) await redis(cmds);
+  if (cmds.length) {
+    cmds.push(["LRANGE", "wish:ids", 0, MAX_ITEMS - 1]);
+    const res = await redis(cmds);
+    seedChecked = true;
+    return res[res.length - 1] || [];
+  }
+  seedChecked = true;
+  return existing || [];
 }
 
 async function listItems(voterId) {
-  await ensureSeeded();
+  const prefetchedIds = await ensureSeeded();
   if (!HAS_REDIS) {
     const db = readDev();
     return db.ids
@@ -343,7 +359,7 @@ async function listItems(voterId) {
       })
       .filter(Boolean);
   }
-  const [ids] = await redis([["LRANGE", "wish:ids", 0, MAX_ITEMS - 1]]);
+  const ids = prefetchedIds ?? (await redis([["LRANGE", "wish:ids", 0, MAX_ITEMS - 1]], 1))[0];
   if (!ids || !ids.length) return [];
   const cmds = [];
   for (const id of ids) {
@@ -351,16 +367,18 @@ async function listItems(voterId) {
     cmds.push(["SCARD", `wish:votes:${id}`]);
     if (voterId) cmds.push(["SISMEMBER", `wish:votes:${id}`, voterId]);
   }
-  const res = await redis(cmds);
+  const res = await redis(cmds, 1);
   const step = voterId ? 3 : 2;
   const items = [];
   for (let i = 0; i < ids.length; i++) {
     const raw = res[i * step];
     if (!raw) continue;
-    const it = JSON.parse(raw);
-    const votes = Number(res[i * step + 1] || 0);
-    const voted = voterId ? res[i * step + 2] === 1 : false;
-    items.push({ ...it, votes, voted });
+    try {
+      const it = JSON.parse(raw);
+      const votes = Number(res[i * step + 1] || 0);
+      const voted = voterId ? res[i * step + 2] === 1 : false;
+      items.push({ ...it, votes, voted });
+    } catch {}
   }
   return items;
 }
