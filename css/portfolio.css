@@ -391,6 +391,7 @@
 .wl-arrow { font-size: 10px; line-height: 1; }
 
 /* 看板下方的显式提建议卡片 + 详情弹窗 */
+.pf-sec[id], .wl-compose[id] { scroll-margin-top: 88px; }
 .wl-compose {
   padding: 20px 22px; border-radius: 14px; background: var(--surface);
   border: 1px solid var(--rule); box-shadow: 0 2px 10px -6px rgba(31, 31, 29, .12);

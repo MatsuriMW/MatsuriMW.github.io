@@ -128,6 +128,7 @@
 
   // Inline Composer Card (placed right below the Trello board)
   const composeSection = el("section", "wl-compose");
+  composeSection.id = "advice";
   composeSection.setAttribute("aria-label", "提一个功能建议");
 
   const composeHead = el("div", "wl-modal-head");
@@ -213,13 +214,19 @@
   root.append(toolbar, statusHint, boardEl, composeSection, adminBar, detailOverlay, lightbox);
 
   // ---------- Focus, Modals & Previews ----------
+  function scrollToAdvice(smooth = true) {
+    composeSection.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+  }
   function focusCompose() {
     msgEl.textContent = "";
     msgEl.classList.remove("is-err");
-    composeSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    scrollToAdvice(true);
     setTimeout(() => titleInput.focus(), 120);
   }
   addTopBtn.addEventListener("click", focusCompose);
+  window.addEventListener("hashchange", () => {
+    if (location.hash === "#advice") scrollToAdvice(true);
+  });
 
   function closeDetail() {
     activeItem = null;
@@ -693,6 +700,10 @@
       statusHint.classList.add("is-err");
       renderToolbar();
       renderBoard();
+    } finally {
+      if (location.hash === "#advice") {
+        requestAnimationFrame(() => scrollToAdvice(false));
+      }
     }
   }
 
