@@ -126,21 +126,14 @@
   adminToggle.type = "button";
   adminBar.append(adminToggle);
 
-  // Composer Modal
-  const composeOverlay = el("div", "wl-modal-bg");
-  composeOverlay.hidden = true;
-  const composeDialog = el("div", "wl-modal");
-  composeDialog.setAttribute("role", "dialog");
-  composeDialog.setAttribute("aria-modal", "true");
-  composeDialog.setAttribute("aria-label", "提交功能建议");
+  // Inline Composer Card (placed right below the Trello board)
+  const composeSection = el("section", "wl-compose");
+  composeSection.setAttribute("aria-label", "提一个功能建议");
 
   const composeHead = el("div", "wl-modal-head");
   composeHead.append(el("h3", "", "提一个功能建议"));
   const composeSub = el("span", "wl-modal-badge", "提交后进入 TODO 列");
-  const composeClose = el("button", "wl-x", "×");
-  composeClose.type = "button";
-  composeClose.setAttribute("aria-label", "关闭");
-  composeHead.append(composeSub, composeClose);
+  composeHead.append(composeSub);
 
   const formCard = el("form", "wl-form");
   formCard.noValidate = true;
@@ -197,8 +190,7 @@
   rowFoot.append(authorInput, msgEl, submitBtn);
 
   formCard.append(row1, descInput, hpInput, uploadBox, rowFoot);
-  composeDialog.append(composeHead, formCard);
-  composeOverlay.append(composeDialog);
+  composeSection.append(composeHead, formCard);
 
   // Detail Modal
   const detailOverlay = el("div", "wl-modal-bg");
@@ -218,23 +210,16 @@
   lbClose.setAttribute("aria-label", "关闭预览");
   lightbox.append(lbImg, lbClose);
 
-  root.append(toolbar, statusHint, boardEl, adminBar, composeOverlay, detailOverlay, lightbox);
+  root.append(toolbar, statusHint, boardEl, composeSection, adminBar, detailOverlay, lightbox);
 
-  // ---------- Modals & Previews ----------
-  function openCompose() {
+  // ---------- Focus, Modals & Previews ----------
+  function focusCompose() {
     msgEl.textContent = "";
     msgEl.classList.remove("is-err");
-    composeOverlay.hidden = false;
-    setTimeout(() => titleInput.focus(), 20);
+    composeSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setTimeout(() => titleInput.focus(), 120);
   }
-  function closeCompose() {
-    composeOverlay.hidden = true;
-  }
-  addTopBtn.addEventListener("click", openCompose);
-  composeClose.addEventListener("click", closeCompose);
-  composeOverlay.addEventListener("click", (e) => {
-    if (e.target === composeOverlay) closeCompose();
-  });
+  addTopBtn.addEventListener("click", focusCompose);
 
   function closeDetail() {
     activeItem = null;
@@ -257,7 +242,6 @@
     if (e.key !== "Escape") return;
     if (!lightbox.hidden) return closeLb();
     if (!detailOverlay.hidden) return closeDetail();
-    if (!composeOverlay.hidden) return closeCompose();
   });
 
   function renderPreviews() {
@@ -613,7 +597,7 @@
       if (col.id === "pending") {
         const addBtn = el("button", "wl-col-add", "+ 添加一张功能卡片");
         addBtn.type = "button";
-        addBtn.addEventListener("click", openCompose);
+        addBtn.addEventListener("click", focusCompose);
         colEl.append(addBtn);
       }
 
@@ -662,8 +646,9 @@
       descInput.value = "";
       pendingImages = [];
       renderPreviews();
-      closeCompose();
-      statusHint.textContent = "已加入 TODO 列！";
+      msgEl.textContent = "已提交到 TODO 列！";
+      msgEl.classList.remove("is-err");
+      statusHint.textContent = "";
       statusHint.classList.remove("is-err");
     } catch (err) {
       msgEl.textContent = err.message || "提交失败";
