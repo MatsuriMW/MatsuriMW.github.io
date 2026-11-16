@@ -282,7 +282,7 @@ const SEED_ITEMS = [
     images: [],
     createdAt: "2026-11-14T16:00:00.000Z",
     updatedAt: "2026-11-14T16:00:00.000Z",
-  },,
+  },
   {
     id: "afbb50626f33",
     title: "原地分形看板与多 Agent 协作工作台（v1.10.0–v1.10.5）",
