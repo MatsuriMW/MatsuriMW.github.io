@@ -140,9 +140,67 @@ async function loadImage(id) {
 
 const SEED_ITEMS = [
   {
+    id: "ad0000000101",
+    title: "M1.1 上下文内核收口、隐私闸门与零静默丢失",
+    titleEn: "M1.1 Unified Context Kernel, Privacy Gate & Zero Silent Loss",
+    desc: "将祖先链、双链解析、记忆挑选、技能卡路径与问答回灌收口为单一 ContextBundle 管道；第 4 篇起双链显式列出绝对路径指针而非静默截断，坏 #^blockId / #标题 显式告警，优先读取未落盘编辑器缓冲，并加入 private: true / 排除目录隐私闸门与单关键词检索补盲。",
+    descEn: "Consolidate ancestor chains, wikilinks, memory selection, skill paths, and Q&A threads into a single ContextBundle pipeline; list file-path pointers for 4th+ linked notes instead of silently truncating, warn on broken anchors, read unsaved editor buffers first, and enforce private: true / excluded-folder gates.",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "in_progress",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-18T11:30:00.000Z",
+    updatedAt: "2026-11-18T11:30:00.000Z",
+  },
+  {
+    id: "ad0000000102",
+    title: "M1.2 结构保真、锚点漂移校验与派发前透明预览",
+    titleEn: "M1.2 Structural Metadata, Anchor Hash Verification & Pre-Dispatch Preview",
+    desc: "提取笔记核心属性摘要（type / def / domain / father / status），为引用块建立软/硬锚点 sha256 漂移校验，提供带 why 信号的一跳结构邻居，并在委派确认框内提供可展开勾选的轻量上下文预览清单。",
+    descEn: "Extract key note metadata (type / def / domain / father / status), verify soft/hard anchor hashes against drift, surface 1-hop structural neighbors with human-readable why signals, and add a collapsible context preview & per-item toggle list inside the delegation confirmation modal.",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "planned",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-18T11:20:00.000Z",
+    updatedAt: "2026-11-18T11:20:00.000Z",
+  },
+  {
+    id: "ad0000000103",
+    title: "M1.3 对外供给引擎：纯 Node CLI + stdio Vault Context MCP Server",
+    titleEn: "M1.3 External Context Engine: Pure Node CLI + stdio Vault Context MCP",
+    desc: "剥离 Obsidian API 的纯 Node 内核，除 memory_search / read / recent 外新增 vault_outline / vault_read / vault_related / vault_find 库级只读工具集，供 Claude Code、Codex、DSH、OpenCode 等任意客户端按需调用。",
+    descEn: "Decouple the context kernel from Obsidian APIs to expose vault_outline, vault_read, vault_related, and vault_find alongside memory_search / read / recent over stdio MCP and CLI for any external agent.",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "planned",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-18T11:10:00.000Z",
+    updatedAt: "2026-11-18T11:10:00.000Z",
+  },
+  {
+    id: "ad0000000104",
+    title: "M0 记忆库（一文一条）、派发草稿、回复信箱与按项目目录派发（v1.11.0–v1.12.2）",
+    titleEn: "M0 Memory Store, Dispatch Drafts, Reply Inbox & Project-Folder Dispatch (v1.11.0–v1.12.2)",
+    desc: "上线一文一条记忆库（Base 表格 / 三列看板 / 逐条审阅 / 来源重锚定）与 memory-query.mjs CLI；支持派发草稿与载荷快照、❓/✍️ 回复协议与非模态回复信箱、按项目目录派发（Codex 自动归组项目）及侧栏「现在」按状态视图。",
+    descEn: "Per-note Markdown memory store (Base table / 3-column board / review modal / source re-anchoring) and memory-query.mjs CLI; dispatch drafts & payload snapshots, Q&A reply protocol & non-modal Reply Inbox, project-folder dispatch (with Codex project grouping), and By-status view in Now.",
+    area: "Agent Deck",
+    author: "马自立",
+    status: "done",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-18T10:50:00.000Z",
+    updatedAt: "2026-11-18T10:50:00.000Z",
+  },
+  {
     id: "ad0000000001",
     title: "AI 记录母块四视图切换（大纲 / 表格 / 卡片 / 时间线）（v1.10.0）",
+    titleEn: "4-View Switcher for AI Record Blocks (Outline / Table / Cards / Timeline) (v1.10.0)",
     desc: "AI 自动记录母块尾部是视图切换入口，支持大纲、表格、卡片、时间线四种展示并记住每个块的偏好，不改写底层 Markdown。",
+    descEn: "Switch any AI record parent block between Outline, Table, Cards, and Timeline views inline with per-block persistence, without altering underlying Markdown.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -153,20 +211,24 @@ const SEED_ITEMS = [
   },
   {
     id: "ad0000000002",
-    title: "Grok Bot（Sand）会话追踪与 Pi 支持",
-    desc: "Grok Bot（Sand）会话追踪已上线；Pi 支持仍在规划中。",
+    title: "更多 Agent 与终端生态扩展（Hermes / 千问 / Kimi / MiniMax / Muse / Pi）",
+    titleEn: "Expanded Agent & Terminal Matrix (Hermes / Qwen / Kimi / MiniMax / Muse / Pi)",
+    desc: "Grok Bot（Sand）追踪已上线；持续接入 Hermes Agent、千问、Kimi Code、ZCode、MiniMax Code、Muse、Pi 与更多终端（Ghostty / WezTerm / Kitty / Alacritty / cmux）。",
+    descEn: "Grok Bot (Sand) tracking is live; expanding support to Hermes Agent, Qwen, Kimi Code, ZCode, MiniMax Code, Muse, Pi, and more terminals (Ghostty / WezTerm / Kitty / Alacritty / cmux).",
     area: "Agent Deck",
     author: "马自立",
     status: "planned",
     authorNote: "",
     images: [],
     createdAt: "2026-11-15T09:40:00.000Z",
-    updatedAt: "2026-11-15T09:40:00.000Z",
+    updatedAt: "2026-11-18T11:00:00.000Z",
   },
   {
     id: "ad0000000003",
     title: "Windows 端完整适配",
-    desc: "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容与桌面端窗口联动。",
+    titleEn: "Full Windows Compatibility & Verification",
+    desc: "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容、跨平台脚本路径转义与桌面端窗口联动。",
+    descEn: "Complete session log discovery, CLI execution compatibility, cross-platform script path escaping, and desktop app window handoff on Windows.",
     area: "Agent Deck",
     author: "马自立",
     status: "planned",
@@ -178,7 +240,9 @@ const SEED_ITEMS = [
   {
     id: "ad0000000005",
     title: "行为数据分析与反馈闭环",
+    titleEn: "Behavioral Analytics & Review Feedback Loop",
     desc: "结合每日螺旋轨迹、DOING 用时记录与中断快照，统计专注分布与延期规律并给出复盘反馈。",
+    descEn: "Combine daily spiral trajectories, DOING active durations, and interruption snapshots to analyze focus patterns and postponement habits.",
     area: "螺旋日程",
     author: "马自立",
     status: "planned",
@@ -190,7 +254,9 @@ const SEED_ITEMS = [
   {
     id: "ad0000000006",
     title: "Cursor 桌面端（3.30.14+）会话追踪（v1.9.8）",
+    titleEn: "Cursor Desktop (3.30.14+) Session Tracking (v1.9.8)",
     desc: "基于 Cursor 桌面端 Hooks 与增量扫描只读追踪对话轮次、工具活动与状态回写。",
+    descEn: "Read-only tracking of Cursor Desktop conversation turns, tool activity, and status write-backs via Hooks and incremental scanning.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -202,7 +268,9 @@ const SEED_ITEMS = [
   {
     id: "ad0000000007",
     title: "AI 记录项目名前缀与「最近的会话」折叠改版（v1.9.8）",
+    titleEn: "Project Prefix for AI Records & Collapsible Recent Sessions (v1.9.8)",
     desc: "自动记录标题统一为「项目名 -> 标题」；最近的会话支持 7/30/120 天窗口、按 Agent 默认叠放和视口锚定。",
+    descEn: "Auto-logged titles use 'Project -> Title'; Recent Sessions supports 7/30/120-day windows, per-agent stacking, and viewport anchoring.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -214,7 +282,9 @@ const SEED_ITEMS = [
   {
     id: "ad0000000008",
     title: "后台长回答 500 字自动分流与设置页精简（v1.9.8）",
+    titleEn: "Auto-Routing Background Answers >500 Chars & Streamlined 5-Tab Settings (v1.9.8)",
     desc: "普通结论默认约 350 字，超过 500 字的后台回答沉淀到 Agent Deck/Answers/；设置页收拢为 5 页。",
+    descEn: "Background answers under 500 chars write inline while longer replies save full notes to Agent Deck/Answers/; settings consolidated into 5 tabs.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -226,7 +296,9 @@ const SEED_ITEMS = [
   {
     id: "ad0000000009",
     title: "Obsidian 空闲性能优化与专注计数",
+    titleEn: "Obsidian Idle CPU Optimization & Focus Counter",
     desc: "后台暂停循环动画并取消 DOING 旋转，降低空闲功耗；Chrome 书签改手动同步，补充前台 App 专注计数与中断快照。",
+    descEn: "Pause background loop animations to reduce idle power usage; switch Chrome bookmarks to manual sync and add foreground app focus counters.",
     area: "螺旋日程",
     author: "马自立",
     status: "in_progress",
@@ -238,7 +310,9 @@ const SEED_ITEMS = [
   {
     id: "ad000000000a",
     title: "摘要链接可点击与 token 显示兼容（v1.9.7）",
+    titleEn: "Clickable Short Links in Summaries & Unified Token Display (v1.9.7)",
     desc: "任务与结论摘要里的长网址与文件路径改为可点击 [🔗](完整地址)；补全并协调与螺旋日程的 token 显示口径。",
+    descEn: "Fold long URLs and file paths in summaries into clickable [🔗](url) links and unify token accounting with Nautilus Spiral.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -250,7 +324,9 @@ const SEED_ITEMS = [
   {
     id: "ad000000000b",
     title: "AI 协作回顾 Dashboard（v1.9.6）",
+    titleEn: "AI Collaboration Review Dashboard (v1.9.6)",
     desc: "上线 GitHub 风格每日 token 热力图与项目投入排行，支持 7/30/90 天及自定义区间汇总、回溯来源日记块与原会话。",
+    descEn: "GitHub-style daily token heatmap, 24-hour concurrency rhythm, model breakdown, and project leaderboard with source block jump.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -262,7 +338,9 @@ const SEED_ITEMS = [
   {
     id: "ad000000000c",
     title: "OpenCode / Qoder 委派归档与三段式总结（v1.9.3–v1.9.6）",
+    titleEn: "OpenCode / Qoder Delegation, Archiving & Structured Summaries (v1.9.3–v1.9.6)",
     desc: "打通 OpenCode 与 Qoder 桌面追踪及后台委派；完整原文归档到 Conversations，总结模型提炼“结论、改动、未完成”。",
+    descEn: "Desktop tracking and background delegation for OpenCode and Qoder, archiving full transcripts to Conversations with structured summaries.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -274,7 +352,9 @@ const SEED_ITEMS = [
   {
     id: "ad000000000d",
     title: "精简执行入口与 Antigravity / DSH 日志（v2.3.0–v2.4.0）",
+    titleEn: "Streamlined Execution & Antigravity / DSH Log Support (v2.3.0–v2.4.0)",
     desc: "支持读取 Antigravity 与 DSH 会话日志；2.4.0 移除冗余专注弹窗与全局预设快捷键，把常用快捷键优先让给 Agent Deck。",
+    descEn: "Read Antigravity and DSH session logs; remove redundant focus dialogs and default global hotkeys in 2.4.0 in favor of Agent Deck.",
     area: "螺旋日程",
     author: "马自立",
     status: "done",
@@ -286,7 +366,9 @@ const SEED_ITEMS = [
   {
     id: "afbb50626f33",
     title: "原地分形看板与多 Agent 协作工作台（v1.10.0–v1.10.5）",
+    titleEn: "In-Place Fractal Boards & Multi-Agent Project Workbench (v1.10.0–v1.10.5)",
     desc: "父块原地切换看板，支持按状态/子组列、Zoom 面包屑、镜像卡、跨列拖拽与列内排序、pin、多选批量状态/置顶/删除、列高收敛、Markdown 卡面与右键菜单；项目工作台提供小队预设、Copilot 拆解、并发派发与 Steward 波次收口。",
+    descEn: "Toggle any parent task into a 2D board with By-status / By-group columns, recursive Zoom breadcrumbs, mirror cards, drag-and-drop, pinning, bulk actions, and Markdown card rendering; Project Workbench adds team presets, Copilot task decomposition, concurrent dispatch, and Steward wave wrap-up.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -298,7 +380,9 @@ const SEED_ITEMS = [
   {
     id: "d0e3b04d1404",
     title: "大纲多选、合并成组与批量改状态（v1.10.3）",
+    titleEn: "Outline Multi-Select, Group Rows & Bulk Status Switch (v1.10.3)",
     desc: "拖拽框选、跨层选区与多光标都能一次改任务状态；⌥⌘↓ 把选中记录合并成组，⌥⌘↑ 跳到母块；整批单步撤销，AI 条目人工锁定照常。",
+    descEn: "Bulk-change task statuses across drag selections or multi-cursors in a single undo step; ⌥⌘↓ groups selected AI records under a new parent block, ⌥⌘↑ jumps to parent.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -310,7 +394,9 @@ const SEED_ITEMS = [
   {
     id: "6806931cd2c1",
     title: "自动记录默认开启、缺日记自动创建与首次只补 10 轮（v1.10.4）",
+    titleEn: "Auto-Journaling On by Default, Daily Note Creation & 10-Round Initial Window (v1.10.4)",
     desc: "自动会话记录默认开启、扫描间隔 30 秒；当天日记不存在时按模板创建；首次接入某个会话只补最近 10 轮；任务关键词配色与图标支持 TODOseq 让位。",
+    descEn: "Auto-journaling enabled by default with 30s polling; auto-creates missing daily notes from templates; caps first-time session backfill to 10 rounds; Logseq-style keyword colors & icons.",
     area: "Agent Deck",
     author: "马自立",
     status: "done",
@@ -348,13 +434,30 @@ async function ensureSeeded() {
       db.seededV2 = true;
       changed = true;
     }
+    if (!db.seededV3) {
+      for (const it of SEED_ITEMS) {
+        if (!db.items[it.id]) {
+          db.ids.unshift(it.id);
+          db.items[it.id] = { ...it };
+          db.votes[it.id] = [];
+        } else {
+          db.items[it.id].title = it.title;
+          db.items[it.id].desc = it.desc;
+          db.items[it.id].titleEn = it.titleEn;
+          db.items[it.id].descEn = it.descEn;
+        }
+      }
+      db.seededV3 = true;
+      changed = true;
+    }
     if (changed) writeDev(db);
     return null;
   }
   if (seedChecked) return null;
-  const [claimed, cleanClaim, existing] = await redis([
+  const [claimed, cleanClaim, claimV3, existing] = await redis([
     ["SET", "wish:seeded:v1", "1", "NX"],
     ["SET", "wish:seeded:v2", "1", "NX"],
+    ["SET", "wish:seeded:v3", "1", "NX"],
     ["LRANGE", "wish:ids", 0, MAX_ITEMS - 1],
   ], 1);
   const cmds = [];
@@ -370,6 +473,15 @@ async function ensureSeeded() {
     for (const id of REMOVED_SEED_IDS) {
       cmds.push(["LREM", "wish:ids", 0, id]);
       cmds.push(["DEL", `wish:item:${id}`, `wish:votes:${id}`]);
+    }
+  }
+  if (claimV3 === "OK") {
+    const have = new Set(existing || []);
+    for (const it of [...SEED_ITEMS].reverse()) {
+      cmds.push(["SET", `wish:item:${it.id}`, JSON.stringify(it)]);
+      if (!have.has(it.id)) {
+        cmds.push(["LPUSH", "wish:ids", it.id]);
+      }
     }
   }
   if (cmds.length) {

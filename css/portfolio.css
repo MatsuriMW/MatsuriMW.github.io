@@ -154,6 +154,9 @@
 .pj-icon:has(img) { background: none; border: 0; overflow: hidden; }
 .pj-icon { flex: none; display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; font-size: .82em; line-height: 1; border-radius: 24%; background: var(--surface); border: 1px solid var(--rule); box-shadow: 0 12px 28px -16px rgba(31, 31, 29, .45); }
 .pj-hero .shine { background: linear-gradient(90deg, var(--ink) 44%, #c3c1ba 50%, var(--ink) 56%) 100% 0 / 300% 100%; -webkit-background-clip: text; background-clip: text; animation: pf-shine 2.2s var(--ease) .9s both; }
+.pj-sub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 16px; }
+.pj-sub-row .pj-sub { margin: 0; }
+.jw-lang { display: inline-flex; gap: 6px; }
 .pj-sub { font-size: 18px; font-weight: 600; color: var(--ink-2); margin: 0 0 16px; }
 .pj-hero .lede { font-size: 16px; line-height: 1.85; }
 .pj-ver { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 20px; font-size: 14px; color: var(--ink-3); }

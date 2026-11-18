@@ -1,23 +1,237 @@
-// Trello 式功能路线图与心愿单（嵌入 /portfolio/journal-workflow/#wishlist）
+// Trello 式功能路线图与心愿单（嵌入 /portfolio/journal-workflow/#wishlist，支持中英文自动检测与手动切换）
 (() => {
   const root = document.getElementById("wishlist-app");
   if (!root) return;
 
+  // Support legacy #whistlist typo in external links
+  if (location.hash === "#whistlist") {
+    history.replaceState(null, "", "#wishlist");
+  }
+
+  const LANG_KEY = "matsuri_jw_lang";
+  function detectInitialLang() {
+    try {
+      const u = new URL(location.href);
+      const q = u.searchParams.get("lang");
+      if (q === "en" || q === "zh") return q;
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved === "en" || saved === "zh") return saved;
+    } catch {}
+    const nav = (navigator.language || (navigator.languages && navigator.languages[0]) || "zh").toLowerCase();
+    return nav.startsWith("zh") ? "zh" : "en";
+  }
+
+  let lang = detectInitialLang();
+  const isEn = () => lang === "en";
+
   const API = "/api/wishlist";
   const AREAS = [
-    { id: "Agent Deck", cls: "is-deck" },
-    { id: "螺旋日程", cls: "is-spiral" },
-    { id: "双插件联动", cls: "is-link" },
-    { id: "macOS 菜单栏", cls: "is-mac" },
+    { id: "Agent Deck", zh: "Agent Deck", en: "Agent Deck", cls: "is-deck" },
+    { id: "螺旋日程", zh: "螺旋日程", en: "Nautilus Spiral", cls: "is-spiral" },
+    { id: "双插件联动", zh: "双插件联动", en: "Dual-Plugin Sync", cls: "is-link" },
+    { id: "macOS 菜单栏", zh: "macOS 菜单栏", en: "macOS Menu Bar", cls: "is-mac" },
   ];
   const AREA_CLS = Object.fromEntries(AREAS.map((a) => [a.id, a.cls]));
+  const AREA_EN = Object.fromEntries(AREAS.map((a) => [a.id, a.en]));
+  const areaLabel = (id) => (isEn() ? AREA_EN[id] || id : id || "Agent Deck");
+
   const COLUMNS = [
-    { id: "pending", title: "TODO", sub: "待评估 · 新提交进这里", cls: "is-pending" },
-    { id: "planned", title: "计划中", sub: "已确认排期", cls: "is-planned" },
-    { id: "in_progress", title: "开发中", sub: "正在推进", cls: "is-progress" },
-    { id: "done", title: "已上线", sub: "已完成发布", cls: "is-done" },
+    { id: "pending", zhTitle: "TODO", enTitle: "TODO", zhSub: "待评估 · 新提交进这里", enSub: "Triaging · New ideas land here", cls: "is-pending" },
+    { id: "planned", zhTitle: "计划中", enTitle: "Planned", zhSub: "已确认排期", enSub: "Scheduled on roadmap", cls: "is-planned" },
+    { id: "in_progress", zhTitle: "开发中", enTitle: "In Progress", zhSub: "正在推进", enSub: "Actively building", cls: "is-progress" },
+    { id: "done", zhTitle: "已上线", enTitle: "Shipped", zhSub: "已完成发布", enSub: "Released", cls: "is-done" },
   ];
   const COL_MAP = Object.fromEntries(COLUMNS.map((c) => [c.id, c]));
+  const colTitle = (c) => (isEn() ? c.enTitle : c.zhTitle);
+  const colSub = (c) => (isEn() ? c.enSub : c.zhSub);
+
+  const UI = {
+    zh: {
+      allAreas: "全部模块",
+      sortTop: "最热投票",
+      sortNew: "最新提交",
+      addMain: "+ 提功能建议（进入 TODO）",
+      addCol: "+ 添加一张功能卡片",
+      emptyPending: "还没有新提议，点下方添加第一张卡片",
+      emptyCol: "暂无卡片",
+      composeTitle: "提一个功能建议",
+      composeBadge: "提交后进入 TODO 列",
+      titlePh: "一句话标题（比如：支持一键把会话摘要导出成周报）",
+      areaAria: "所属模块",
+      descPh: "补充使用场景或痛点（选填，最多 1200 字；也可以直接 Ctrl/⌘+V 粘贴截图）",
+      pickBtn: "上传截图",
+      uploadHint: "可选，最多 2 张；支持拖拽或粘贴截图，自动压缩",
+      authorPh: "昵称（选填，默认匿名）",
+      submitBtn: "提交到 TODO",
+      submitting: "正在提交…",
+      submitted: "已提交到 TODO 列！",
+      titleShort: "标题至少写 2 个字",
+      compressing: "正在压缩截图…",
+      maxImgs: "每次最多上传 2 张截图",
+      imgErr: "处理截图失败",
+      imgTooBig: "图片太大，请换一张小一点的截图",
+      voteFail: "投票失败，请稍后重试",
+      anon: "匿名用户",
+      anonShort: "匿名",
+      authorReply: "作者回复：",
+      replyShort: "回复：",
+      adminLogin: "作者管理",
+      adminLogout: "退出管理",
+      adminPrompt: "输入管理员口令（WISHLIST_ADMIN_TOKEN）：",
+      syncing: "正在同步最新数据…",
+      loading: "正在加载 Roadmap…",
+      slowNet: "网络较慢，先展示内置路线图，仍在后台同步最新投票…",
+      offlineNet: "暂时连不上实时服务器，当前显示缓存路线图（仍可直接提建议）",
+      retry: "重试",
+      close: "关闭",
+    },
+    en: {
+      allAreas: "All Modules",
+      sortTop: "Most Voted",
+      sortNew: "Newest",
+      addMain: "+ Suggest a Feature (to TODO)",
+      addCol: "+ Add a feature card",
+      emptyPending: "No new proposals yet — click below to add the first card",
+      emptyCol: "No cards yet",
+      composeTitle: "Suggest a Feature",
+      composeBadge: "Goes to TODO column",
+      titlePh: "One-line title (e.g., Export weekly summary from session records)",
+      areaAria: "Module",
+      descPh: "Describe your use case or workflow friction (optional, up to 1200 chars; paste screenshots with Ctrl/⌘+V)",
+      pickBtn: "Upload Screenshot",
+      uploadHint: "Optional, up to 2 images; drag & drop or paste from clipboard",
+      authorPh: "Nickname (optional, default Anonymous)",
+      submitBtn: "Submit to TODO",
+      submitting: "Submitting…",
+      submitted: "Submitted to TODO!",
+      titleShort: "Title must be at least 2 characters",
+      compressing: "Compressing screenshot…",
+      maxImgs: "Up to 2 screenshots per submission",
+      imgErr: "Failed to process image",
+      imgTooBig: "Image is too large, please try a smaller screenshot",
+      voteFail: "Vote failed, please try again",
+      anon: "Anonymous",
+      anonShort: "Anon",
+      authorReply: "Maintainer reply: ",
+      replyShort: "Reply: ",
+      adminLogin: "Maintainer",
+      adminLogout: "Sign out",
+      adminPrompt: "Enter admin token (WISHLIST_ADMIN_TOKEN):",
+      syncing: "Syncing latest roadmap…",
+      loading: "Loading Roadmap…",
+      slowNet: "Slow connection — showing built-in roadmap while syncing live votes…",
+      offlineNet: "Offline mode — showing cached roadmap (you can still submit ideas)",
+      retry: "Retry",
+      close: "Close",
+    },
+  };
+  const t = (k) => UI[lang][k] || UI.zh[k];
+
+  // English translations for known seed & community items (by id)
+  const EN_CARDS = {
+    ad0000000101: [
+      "M1.1 Unified Context Kernel, Privacy Gate & Zero Silent Loss",
+      "Consolidate ancestor chains, wikilinks, memory selection, skill paths, and Q&A threads into a single ContextBundle pipeline; list file-path pointers for 4th+ linked notes instead of silently truncating, warn on broken anchors, read unsaved editor buffers first, and enforce private: true / excluded-folder gates.",
+    ],
+    ad0000000102: [
+      "M1.2 Structural Metadata, Anchor Hash Verification & Pre-Dispatch Preview",
+      "Extract key note metadata (type / def / domain / father / status), verify soft/hard anchor hashes against drift, surface 1-hop structural neighbors with human-readable why signals, and add a collapsible context preview & per-item toggle list inside the delegation confirmation modal.",
+    ],
+    ad0000000103: [
+      "M1.3 External Context Engine: Pure Node CLI + stdio Vault Context MCP",
+      "Decouple the context kernel from Obsidian APIs to expose vault_outline, vault_read, vault_related, and vault_find alongside memory_search / read / recent over stdio MCP and CLI for any external agent.",
+    ],
+    ad0000000104: [
+      "M0 Memory Store, Dispatch Drafts, Reply Inbox & Project-Folder Dispatch (v1.11.0–v1.12.2)",
+      "Per-note Markdown memory store (Base table / 3-column board / review modal / source re-anchoring) and memory-query.mjs CLI; dispatch drafts & payload snapshots, Q&A reply protocol & non-modal Reply Inbox, project-folder dispatch (with Codex project grouping), and By-status view in Now.",
+    ],
+    ad0000000001: [
+      "4-View Switcher for AI Record Blocks (Outline / Table / Cards / Timeline) (v1.10.0)",
+      "Switch any AI record parent block between Outline, Table, Cards, and Timeline views inline with per-block persistence, without altering underlying Markdown.",
+    ],
+    ad0000000002: [
+      "Expanded Agent & Terminal Matrix (Hermes / Qwen / Kimi / MiniMax / Muse / Pi)",
+      "Grok Bot (Sand) tracking is live; expanding support to Hermes Agent, Qwen, Kimi Code, ZCode, MiniMax Code, Muse, Pi, and more terminals (Ghostty / WezTerm / Kitty / Alacritty / cmux).",
+    ],
+    ad0000000003: [
+      "Full Windows Compatibility & Verification",
+      "Complete session log discovery, CLI execution compatibility, cross-platform script path escaping, and desktop app window handoff on Windows.",
+    ],
+    ad0000000005: [
+      "Behavioral Analytics & Review Feedback Loop",
+      "Combine daily spiral trajectories, DOING active durations, and interruption snapshots to analyze focus patterns and postponement habits.",
+    ],
+    ad0000000006: [
+      "Cursor Desktop (3.30.14+) Session Tracking (v1.9.8)",
+      "Read-only tracking of Cursor Desktop conversation turns, tool activity, and status write-backs via Hooks and incremental scanning.",
+    ],
+    ad0000000007: [
+      "Project Prefix for AI Records & Collapsible Recent Sessions (v1.9.8)",
+      "Auto-logged titles use 'Project -> Title'; Recent Sessions supports 7/30/120-day windows, per-agent stacking, and viewport anchoring.",
+    ],
+    ad0000000008: [
+      "Auto-Routing Background Answers >500 Chars & Streamlined 5-Tab Settings (v1.9.8)",
+      "Background answers under 500 chars write inline while longer replies save full notes to Agent Deck/Answers/; settings consolidated into 5 tabs.",
+    ],
+    ad0000000009: [
+      "Obsidian Idle CPU Optimization & Focus Counter",
+      "Pause background loop animations to reduce idle power usage; switch Chrome bookmarks to manual sync and add foreground app focus counters.",
+    ],
+    ad000000000a: [
+      "Clickable Short Links in Summaries & Unified Token Display (v1.9.7)",
+      "Fold long URLs and file paths in summaries into clickable [🔗](url) links and unify token accounting with Nautilus Spiral.",
+    ],
+    ad000000000b: [
+      "AI Collaboration Review Dashboard (v1.9.6)",
+      "GitHub-style daily token heatmap, 24-hour concurrency rhythm, model breakdown, and project leaderboard with source block jump.",
+    ],
+    ad000000000c: [
+      "OpenCode / Qoder Delegation, Archiving & Structured Summaries (v1.9.3–v1.9.6)",
+      "Desktop tracking and background delegation for OpenCode and Qoder, archiving full transcripts to Conversations with structured summaries.",
+    ],
+    ad000000000d: [
+      "Streamlined Execution & Antigravity / DSH Log Support (v2.3.0–v2.4.0)",
+      "Read Antigravity and DSH session logs; remove redundant focus dialogs and default global hotkeys in 2.4.0 in favor of Agent Deck.",
+    ],
+    afbb50626f33: [
+      "In-Place Fractal Boards & Multi-Agent Project Workbench (v1.10.0–v1.10.5)",
+      "Toggle any parent task into a 2D board with By-status / By-group columns, recursive Zoom breadcrumbs, mirror cards, drag-and-drop, pinning, bulk actions, and Markdown card rendering; Project Workbench adds team presets, Copilot task decomposition, concurrent dispatch, and Steward wave wrap-up.",
+    ],
+    d0e3b04d1404: [
+      "Outline Multi-Select, Group Rows & Bulk Status Switch (v1.10.3)",
+      "Bulk-change task statuses across drag selections or multi-cursors in a single undo step; ⌥⌘↓ groups selected AI records under a new parent block, ⌥⌘↑ jumps to parent.",
+    ],
+    "6806931cd2c1": [
+      "Auto-Journaling On by Default, Daily Note Creation & 10-Round Initial Window (v1.10.4)",
+      "Auto-journaling enabled by default with 30s polling; auto-creates missing daily notes from templates; caps first-time session backfill to 10 rounds; Logseq-style keyword colors & icons.",
+    ],
+    "4de8acf9c1c7": ["Direct Delegation to Claude Desktop App", ""],
+    "2dd4f4d72226": ["Support MiniMax Code Desktop Client & CLI", ""],
+    b2d325ffa557: [
+      "Track Sessions from Cindy Multi-Agent App",
+      "https://github.com/makecindy/cindy — Cindy aggregates terminal agents in one app; would love Agent Deck to track conversation records from Cindy.",
+    ],
+    c7d6705feee6: [
+      "Obsidian Copilot / Claudian Session Tracking, Delegation & Write-Back",
+      "Track and delegate tasks to in-vault assistants like Obsidian Copilot or Claudian, binding sidebar conversations back to journal tasks.",
+    ],
+    "0cd667f704ab": ["Standalone Ready-to-Use Desktop Client", ""],
+  };
+
+  function itemTitle(it) {
+    if (isEn()) return it.titleEn || (EN_CARDS[it.id] && EN_CARDS[it.id][0]) || it.title;
+    return it.title;
+  }
+  function itemDesc(it) {
+    if (isEn()) return it.descEn || (EN_CARDS[it.id] && EN_CARDS[it.id][1]) || it.desc;
+    return it.desc;
+  }
+  function itemAuthor(it, short = false) {
+    const a = it.author || "";
+    if (!a || a === "匿名用户" || a === "匿名") return short ? t("anonShort") : t("anon");
+    if (isEn() && a === "马自立") return "Matsuri";
+    return a;
+  }
 
   function getVoterId() {
     const key = "matsuri_wl_voter";
@@ -34,11 +248,15 @@
     }
   }
 
-  const CACHE_KEY = "matsuri_wl_cache_v1";
+  const CACHE_KEY = "matsuri_wl_cache_v2";
   const FALLBACK_ITEMS = [
+    ["ad0000000101", "in_progress", "Agent Deck", "M1.1 上下文内核收口、隐私闸门与零静默丢失", "将祖先链、双链解析、记忆挑选、技能卡路径与问答回灌收口为单一 ContextBundle 管道；第 4 篇起双链显式列出绝对路径指针而非静默截断，坏 #^blockId / #标题 显式告警，优先读取未落盘编辑器缓冲，并加入 private: true / 排除目录隐私闸门与单关键词检索补盲。", "2026-11-18T11:30:00.000Z"],
+    ["ad0000000102", "planned", "Agent Deck", "M1.2 结构保真、锚点漂移校验与派发前透明预览", "提取笔记核心属性摘要（type / def / domain / father / status），为引用块建立软/硬锚点 sha256 漂移校验，提供带 why 信号的一跳结构邻居，并在委派确认框内提供可展开勾选的轻量上下文预览清单。", "2026-11-18T11:20:00.000Z"],
+    ["ad0000000103", "planned", "Agent Deck", "M1.3 对外供给引擎：纯 Node CLI + stdio Vault Context MCP Server", "剥离 Obsidian API 的纯 Node 内核，除 memory_search / read / recent 外新增 vault_outline / vault_read / vault_related / vault_find 库级只读工具集，供 Claude Code、Codex、DSH、OpenCode 等任意客户端按需调用。", "2026-11-18T11:10:00.000Z"],
+    ["ad0000000104", "done", "Agent Deck", "M0 记忆库（一文一条）、派发草稿、回复信箱与按项目目录派发（v1.11.0–v1.12.2）", "上线一文一条记忆库（Base 表格 / 三列看板 / 逐条审阅 / 来源重锚定）与 memory-query.mjs CLI；支持派发草稿与载荷快照、❓/✍️ 回复协议与非模态回复信箱、按项目目录派发（Codex 自动归组项目）及侧栏「现在」按状态视图。", "2026-11-18T10:50:00.000Z"],
     ["ad0000000001", "done", "Agent Deck", "AI 记录母块四视图切换（大纲 / 表格 / 卡片 / 时间线）（v1.10.0）", "AI 自动记录母块尾部是视图切换入口，支持大纲、表格、卡片、时间线四种展示并记住每个块的偏好，不改写底层 Markdown。", "2026-11-15T09:50:00.000Z"],
-    ["ad0000000002", "planned", "Agent Deck", "Grok Bot（Sand）会话追踪与 Pi 支持", "Grok Bot（Sand）会话追踪已上线；Pi 支持仍在规划中。", "2026-11-15T09:40:00.000Z"],
-    ["ad0000000003", "planned", "Agent Deck", "Windows 端完整适配", "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容与桌面端窗口联动。", "2026-11-15T09:30:00.000Z"],
+    ["ad0000000002", "planned", "Agent Deck", "更多 Agent 与终端生态扩展（Hermes / 千问 / Kimi / MiniMax / Muse / Pi）", "Grok Bot（Sand）追踪已上线；持续接入 Hermes Agent、千问、Kimi Code、ZCode、MiniMax Code、Muse、Pi 与更多终端（Ghostty / WezTerm / Kitty / Alacritty / cmux）。", "2026-11-15T09:40:00.000Z"],
+    ["ad0000000003", "planned", "Agent Deck", "Windows 端完整适配", "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容、跨平台脚本路径转义与桌面端窗口联动。", "2026-11-15T09:30:00.000Z"],
     ["ad0000000005", "planned", "螺旋日程", "行为数据分析与反馈闭环", "结合每日螺旋轨迹、DOING 用时记录与中断快照，统计专注分布与延期规律并给出复盘反馈。", "2026-11-15T09:10:00.000Z"],
     ["ad0000000006", "done", "Agent Deck", "Cursor 桌面端（3.30.14+）会话追踪（v1.9.8）", "基于 Cursor 桌面端 Hooks 与增量扫描只读追踪对话轮次、工具活动与状态回写。", "2026-11-15T11:40:00.000Z"],
     ["ad0000000007", "done", "Agent Deck", "AI 记录项目名前缀与「最近的会话」折叠改版（v1.9.8）", "自动记录标题统一为「项目名 -> 标题」；最近的会话支持 7/30/120 天窗口、按 Agent 默认叠放和视口锚定。", "2026-11-15T11:30:00.000Z"],
@@ -78,13 +296,13 @@
       const r = await fetch(url, { ...opts, signal: ac ? ac.signal : opts.signal });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        const err = new Error(data.error || `请求失败 (${r.status})`);
+        const err = new Error(data.error || `Request failed (${r.status})`);
         err.status = r.status;
         throw err;
       }
       return data;
     } catch (e) {
-      if (e?.name === "AbortError") throw new Error("网络请求超时，请检查连接后重试");
+      if (e?.name === "AbortError") throw new Error(isEn() ? "Request timed out, please check your connection" : "网络请求超时，请检查连接后重试");
       throw e;
     } finally {
       if (timer) clearTimeout(timer);
@@ -147,7 +365,7 @@
       return await new Promise((resolve, reject) => {
         const r = new FileReader();
         r.onload = () => resolve(r.result);
-        r.onerror = () => reject(new Error("读取图片失败"));
+        r.onerror = () => reject(new Error(t("imgErr")));
         r.readAsDataURL(file);
       });
     }
@@ -156,7 +374,7 @@
       const img = await new Promise((resolve, reject) => {
         const i = new Image();
         i.onload = () => resolve(i);
-        i.onerror = () => reject(new Error("图片无法解析"));
+        i.onerror = () => reject(new Error(t("imgErr")));
         i.src = url;
       });
       const maxEdge = 1400;
@@ -182,7 +400,7 @@
           return dataUrl;
         }
       }
-      throw new Error("图片太大，请换一张小一点的截图");
+      throw new Error(t("imgTooBig"));
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -195,7 +413,7 @@
   const areaGroup = el("div", "wl-filters");
   const rightControls = el("div", "wl-bar-right");
   const sortGroup = el("div", "wl-sorts");
-  const addTopBtn = el("button", "wl-add-main", "+ 提功能建议（进入 TODO）");
+  const addTopBtn = el("button", "wl-add-main", t("addMain"));
   addTopBtn.type = "button";
   rightControls.append(sortGroup, addTopBtn);
   toolbar.append(areaGroup, rightControls);
@@ -203,19 +421,19 @@
   const boardEl = el("div", "wl-board");
   const statusHint = el("div", "wl-board-msg");
   const adminBar = el("div", "wl-admin-bar");
-  const adminToggle = el("button", "wl-admin-link", "作者管理");
+  const adminToggle = el("button", "wl-admin-link", t("adminLogin"));
   adminToggle.type = "button";
   adminBar.append(adminToggle);
 
   // Inline Composer Card (placed right below the Trello board)
   const composeSection = el("section", "wl-compose");
   composeSection.id = "advice";
-  composeSection.setAttribute("aria-label", "提一个功能建议");
+  composeSection.setAttribute("aria-label", t("composeTitle"));
 
   const composeHead = el("div", "wl-modal-head");
-  composeHead.append(el("h3", "", "提一个功能建议"));
-  const composeSub = el("span", "wl-modal-badge", "提交后进入 TODO 列");
-  composeHead.append(composeSub);
+  const composeH3 = el("h3", "", t("composeTitle"));
+  const composeSub = el("span", "wl-modal-badge", t("composeBadge"));
+  composeHead.append(composeH3, composeSub);
 
   const formCard = el("form", "wl-form");
   formCard.noValidate = true;
@@ -223,23 +441,29 @@
   const row1 = el("div", "wl-row");
   const titleInput = el("input", "wl-input");
   titleInput.type = "text";
-  titleInput.placeholder = "一句话标题（比如：支持一键把会话摘要导出成周报）";
+  titleInput.placeholder = t("titlePh");
   titleInput.maxLength = 80;
   titleInput.required = true;
 
   const areaSelect = el("select", "wl-select");
-  areaSelect.setAttribute("aria-label", "所属模块");
-  for (const a of AREAS) {
-    const opt = el("option", "", a.id);
-    opt.value = a.id;
-    areaSelect.append(opt);
+  areaSelect.setAttribute("aria-label", t("areaAria"));
+  function populateAreaSelect() {
+    const prev = areaSelect.value || "Agent Deck";
+    areaSelect.innerHTML = "";
+    for (const a of AREAS) {
+      const opt = el("option", "", areaLabel(a.id));
+      opt.value = a.id;
+      if (a.id === prev) opt.selected = true;
+      areaSelect.append(opt);
+    }
   }
+  populateAreaSelect();
   row1.append(titleInput, areaSelect);
 
   const descInput = el("textarea", "wl-textarea");
   descInput.rows = 4;
   descInput.maxLength = 1200;
-  descInput.placeholder = "补充使用场景或痛点（选填，最多 1200 字；也可以直接 Ctrl/⌘+V 粘贴截图）";
+  descInput.placeholder = t("descPh");
 
   const hpInput = el("input", "wl-hp");
   hpInput.type = "text";
@@ -255,9 +479,9 @@
   fileInput.multiple = true;
   fileInput.hidden = true;
 
-  const pickBtn = el("button", "wl-pick", "上传截图");
+  const pickBtn = el("button", "wl-pick", t("pickBtn"));
   pickBtn.type = "button";
-  const uploadHint = el("span", "wl-hint", "可选，最多 2 张；支持拖拽或粘贴截图，自动压缩");
+  const uploadHint = el("span", "wl-hint", t("uploadHint"));
   const previewWrap = el("div", "wl-previews");
   uploadBox.append(fileInput, pickBtn, uploadHint, previewWrap);
 
@@ -265,9 +489,9 @@
   const authorInput = el("input", "wl-author");
   authorInput.type = "text";
   authorInput.maxLength = 24;
-  authorInput.placeholder = "昵称（选填，默认匿名）";
+  authorInput.placeholder = t("authorPh");
   const msgEl = el("span", "wl-msg");
-  const submitBtn = el("button", "wl-submit", "提交到 TODO");
+  const submitBtn = el("button", "wl-submit", t("submitBtn"));
   submitBtn.type = "submit";
   rowFoot.append(authorInput, msgEl, submitBtn);
 
@@ -286,13 +510,59 @@
   const lightbox = el("div", "wl-lightbox");
   lightbox.hidden = true;
   const lbImg = el("img");
-  lbImg.alt = "截图预览";
+  lbImg.alt = "Screenshot preview";
   const lbClose = el("button", "wl-lb-close", "×");
   lbClose.type = "button";
-  lbClose.setAttribute("aria-label", "关闭预览");
+  lbClose.setAttribute("aria-label", t("close"));
   lightbox.append(lbImg, lbClose);
 
   root.append(toolbar, statusHint, boardEl, composeSection, adminBar, detailOverlay, lightbox);
+
+  // ---------- Whole-page Bilingual Switcher ----------
+  function syncStaticI18n() {
+    document.documentElement.setAttribute("data-jw-lang", lang);
+    document.querySelectorAll("[data-i18n-en]").forEach((node) => {
+      if (!node.hasAttribute("data-i18n-zh")) {
+        node.setAttribute("data-i18n-zh", node.innerHTML);
+      }
+      node.innerHTML = isEn() ? node.getAttribute("data-i18n-en") : node.getAttribute("data-i18n-zh");
+    });
+    document.querySelectorAll("[data-jw-set-lang]").forEach((btn) => {
+      const active = btn.getAttribute("data-jw-set-lang") === lang;
+      btn.classList.toggle("on", active);
+      btn.setAttribute("aria-pressed", String(active));
+    });
+
+    addTopBtn.textContent = t("addMain");
+    composeSection.setAttribute("aria-label", t("composeTitle"));
+    composeH3.textContent = t("composeTitle");
+    composeSub.textContent = t("composeBadge");
+    titleInput.placeholder = t("titlePh");
+    areaSelect.setAttribute("aria-label", t("areaAria"));
+    populateAreaSelect();
+    descInput.placeholder = t("descPh");
+    pickBtn.textContent = t("pickBtn");
+    uploadHint.textContent = t("uploadHint");
+    authorInput.placeholder = t("authorPh");
+    submitBtn.textContent = t("submitBtn");
+    adminToggle.textContent = adminToken ? t("adminLogout") : t("adminLogin");
+    renderToolbar();
+    renderBoard();
+    if (activeItem) openDetail(activeItem);
+  }
+
+  function setLang(next) {
+    if (next !== "zh" && next !== "en") return;
+    lang = next;
+    try { localStorage.setItem(LANG_KEY, lang); } catch {}
+    syncStaticI18n();
+  }
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-jw-set-lang]");
+    if (!btn) return;
+    setLang(btn.getAttribute("data-jw-set-lang"));
+  });
 
   // ---------- Focus, Modals & Previews ----------
   function scrollToAdvice(smooth = true) {
@@ -310,6 +580,9 @@
   }
   addTopBtn.addEventListener("click", focusCompose);
   window.addEventListener("hashchange", () => {
+    if (location.hash === "#whistlist") {
+      history.replaceState(null, "", "#wishlist");
+    }
     if (location.hash === "#advice") {
       userScrolled = false;
       scrollToAdvice(true);
@@ -345,10 +618,10 @@
       const box = el("div", "wl-prev");
       const thumb = el("img");
       thumb.src = img.dataUrl;
-      thumb.alt = img.name || "截图预览";
+      thumb.alt = img.name || "Screenshot";
       const rm = el("button", "wl-prev-rm", "×");
       rm.type = "button";
-      rm.setAttribute("aria-label", "移除截图");
+      rm.setAttribute("aria-label", "Remove screenshot");
       rm.addEventListener("click", () => {
         pendingImages.splice(idx, 1);
         renderPreviews();
@@ -361,21 +634,21 @@
   async function addFiles(fileList) {
     const files = Array.from(fileList || []).filter((f) => f.type.startsWith("image/"));
     if (!files.length) return;
-    msgEl.textContent = "正在压缩截图…";
+    msgEl.textContent = t("compressing");
     msgEl.classList.remove("is-err");
     try {
       for (const f of files) {
         if (pendingImages.length >= 2) {
-          msgEl.textContent = "每次最多上传 2 张截图";
+          msgEl.textContent = t("maxImgs");
           break;
         }
         const dataUrl = await compressImage(f);
         pendingImages.push({ dataUrl, name: f.name || "screenshot" });
       }
-      if (pendingImages.length <= 2 && msgEl.textContent === "正在压缩截图…") msgEl.textContent = "";
+      if (pendingImages.length <= 2 && msgEl.textContent === t("compressing")) msgEl.textContent = "";
       renderPreviews();
     } catch (err) {
-      msgEl.textContent = err.message || "处理截图失败";
+      msgEl.textContent = err.message || t("imgErr");
       msgEl.classList.add("is-err");
     }
   }
@@ -429,7 +702,7 @@
       item.voted = prevVoted;
       item.votes = prevVotes;
       onUpdated();
-      statusHint.textContent = err.message || "投票失败，请稍后重试";
+      statusHint.textContent = err.message || t("voteFail");
       statusHint.classList.add("is-err");
     }
   }
@@ -443,12 +716,12 @@
     const head = el("div", "wl-modal-head");
     const tags = el("div", "wl-detail-tags");
     tags.append(
-      el("span", `wl-label ${AREA_CLS[it.area] || "is-deck"}`, it.area || "Agent Deck"),
-      el("span", `wl-status ${col.cls}`, col.title),
+      el("span", `wl-label ${AREA_CLS[it.area] || "is-deck"}`, areaLabel(it.area || "Agent Deck")),
+      el("span", `wl-status ${col.cls}`, colTitle(col)),
     );
     const closeBtn = el("button", "wl-x", "×");
     closeBtn.type = "button";
-    closeBtn.setAttribute("aria-label", "关闭");
+    closeBtn.setAttribute("aria-label", t("close"));
     closeBtn.addEventListener("click", closeDetail);
     head.append(tags, closeBtn);
 
@@ -466,15 +739,16 @@
 
     const titleWrap = el("div", "wl-detail-title");
     titleWrap.append(
-      el("h3", "", it.title),
-      el("div", "wl-who", `${it.author || "匿名用户"} · ${fmtTime(it.createdAt)}`),
+      el("h3", "", itemTitle(it)),
+      el("div", "wl-who", `${itemAuthor(it, false)} · ${fmtTime(it.createdAt)}`),
     );
     topRow.append(voteBtn, titleWrap);
 
     detailDialog.append(head, topRow);
 
-    if (it.desc) {
-      detailDialog.append(el("p", "wl-detail-desc", it.desc));
+    const dText = itemDesc(it);
+    if (dText) {
+      detailDialog.append(el("p", "wl-detail-desc", dText));
     }
 
     if (Array.isArray(it.images) && it.images.length) {
@@ -485,7 +759,7 @@
         b.type = "button";
         const img = el("img");
         img.src = src;
-        img.alt = `${it.title} 截图`;
+        img.alt = `${itemTitle(it)} screenshot`;
         b.append(img);
         b.addEventListener("click", () => {
           lbImg.src = src;
@@ -498,7 +772,7 @@
 
     if (it.authorNote) {
       const note = el("div", "wl-reply");
-      note.append(el("b", "", "作者回复："), document.createTextNode(it.authorNote));
+      note.append(el("b", "", t("authorReply")), document.createTextNode(it.authorNote));
       detailDialog.append(note);
     }
 
@@ -508,7 +782,7 @@
       const admRow = el("div", "wl-adm-row");
       const sel = el("select", "wl-adm-sel");
       for (const c of COLUMNS) {
-        const o = el("option", "", c.title);
+        const o = el("option", "", colTitle(c));
         o.value = c.id;
         if (it.status === c.id) o.selected = true;
         sel.append(o);
@@ -570,7 +844,7 @@
     const counts = { all: items.length };
     for (const it of items) counts[it.area] = (counts[it.area] || 0) + 1;
 
-    for (const [id, label] of [["all", "全部模块"], ...AREAS.map((a) => [a.id, a.id])]) {
+    for (const [id, label] of [["all", t("allAreas")], ...AREAS.map((a) => [a.id, areaLabel(a.id)])]) {
       const btn = el("button", `wl-tab${filterArea === id ? " on" : ""}`, `${label} (${counts[id] || 0})`);
       btn.type = "button";
       btn.addEventListener("click", () => {
@@ -583,8 +857,8 @@
 
     sortGroup.innerHTML = "";
     for (const [k, label] of [
-      ["top", "最热投票"],
-      ["new", "最新提交"],
+      ["top", t("sortTop")],
+      ["new", t("sortNew")],
     ]) {
       const btn = el("button", `wl-tab${sortMode === k ? " on" : ""}`, label);
       btn.type = "button";
@@ -612,7 +886,7 @@
       const cover = el("div", "wl-card-cover");
       const img = el("img");
       img.src = `${API}?img=${encodeURIComponent(it.images[0])}`;
-      img.alt = `${it.title} 截图`;
+      img.alt = `${itemTitle(it)} screenshot`;
       img.loading = "lazy";
       cover.append(img);
       if (it.images.length > 1) {
@@ -622,28 +896,29 @@
     }
 
     const head = el("div", "wl-card-top");
-    head.append(el("span", `wl-label ${AREA_CLS[it.area] || "is-deck"}`, it.area || "Agent Deck"));
+    head.append(el("span", `wl-label ${AREA_CLS[it.area] || "is-deck"}`, areaLabel(it.area || "Agent Deck")));
     card.append(head);
 
-    card.append(el("h3", "wl-card-title", it.title));
+    card.append(el("h3", "wl-card-title", itemTitle(it)));
 
-    if (it.desc) {
-      card.append(el("p", "wl-card-desc", it.desc));
+    const dText = itemDesc(it);
+    if (dText) {
+      card.append(el("p", "wl-card-desc", dText));
     }
 
     if (it.authorNote) {
       const reply = el("div", "wl-card-note");
-      reply.append(el("b", "", "回复："), document.createTextNode(it.authorNote));
+      reply.append(el("b", "", t("replyShort")), document.createTextNode(it.authorNote));
       card.append(reply);
     }
 
     const foot = el("div", "wl-card-foot");
-    foot.append(el("span", "wl-who", `${it.author || "匿名"} · ${fmtTime(it.createdAt).slice(5)}`));
+    foot.append(el("span", "wl-who", `${itemAuthor(it, true)} · ${fmtTime(it.createdAt).slice(5)}`));
 
     const voteBtn = el("button", `wl-vote-pill${it.voted ? " on" : ""}`);
     voteBtn.type = "button";
     voteBtn.setAttribute("aria-pressed", String(Boolean(it.voted)));
-    voteBtn.setAttribute("aria-label", `为「${it.title}」投票`);
+    voteBtn.setAttribute("aria-label", `Vote for ${itemTitle(it)}`);
     voteBtn.append(el("span", "wl-arrow", "▲"), el("b", "", String(it.votes || 0)));
     voteBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -682,15 +957,15 @@
 
       const head = el("header", "wl-col-head");
       const titleWrap = el("div", "wl-col-title");
-      titleWrap.append(el("span", "wl-col-dot"), el("h3", "", col.title));
+      titleWrap.append(el("span", "wl-col-dot"), el("h3", "", colTitle(col)));
       const count = el("span", "wl-col-count", String(colItems.length));
       head.append(titleWrap, count);
 
-      const sub = el("div", "wl-col-sub", col.sub);
+      const sub = el("div", "wl-col-sub", colSub(col));
       const list = el("div", "wl-col-list");
 
       if (!colItems.length) {
-        list.append(el("div", "wl-col-empty", col.id === "pending" ? "还没有新提议，点下方添加第一张卡片" : "暂无卡片"));
+        list.append(el("div", "wl-col-empty", col.id === "pending" ? t("emptyPending") : t("emptyCol")));
       } else {
         for (const it of colItems) list.append(buildCard(it));
         if (colItems.length > 4) {
@@ -702,7 +977,7 @@
       colEl.append(head, sub, list);
 
       if (col.id === "pending") {
-        const addBtn = el("button", "wl-col-add", "+ 添加一张功能卡片");
+        const addBtn = el("button", "wl-col-add", t("addCol"));
         addBtn.type = "button";
         addBtn.addEventListener("click", focusCompose);
         colEl.append(addBtn);
@@ -729,13 +1004,13 @@
     e.preventDefault();
     const title = titleInput.value.trim();
     if (title.length < 2) {
-      msgEl.textContent = "标题至少写 2 个字";
+      msgEl.textContent = t("titleShort");
       msgEl.classList.add("is-err");
       titleInput.focus();
       return;
     }
     submitBtn.disabled = true;
-    msgEl.textContent = "正在提交…";
+    msgEl.textContent = t("submitting");
     msgEl.classList.remove("is-err");
 
     try {
@@ -764,12 +1039,12 @@
       descInput.value = "";
       pendingImages = [];
       renderPreviews();
-      msgEl.textContent = "已提交到 TODO 列！";
+      msgEl.textContent = t("submitted");
       msgEl.classList.remove("is-err");
       statusHint.textContent = "";
       statusHint.classList.remove("is-err");
     } catch (err) {
-      msgEl.textContent = err.message || "提交失败";
+      msgEl.textContent = err.message || (isEn() ? "Submission failed" : "提交失败");
       msgEl.classList.add("is-err");
     } finally {
       submitBtn.disabled = false;
@@ -781,18 +1056,18 @@
     if (adminToken) {
       adminToken = "";
       try { sessionStorage.removeItem("matsuri_wl_admin"); } catch {}
-      adminToggle.textContent = "作者管理";
+      adminToggle.textContent = t("adminLogin");
       if (activeItem) openDetail(activeItem);
       return;
     }
-    const t = prompt("输入管理员口令（WISHLIST_ADMIN_TOKEN）：");
-    if (!t) return;
-    adminToken = t.trim();
+    const tk = prompt(t("adminPrompt"));
+    if (!tk) return;
+    adminToken = tk.trim();
     try { sessionStorage.setItem("matsuri_wl_admin", adminToken); } catch {}
-    adminToggle.textContent = "退出管理";
+    adminToggle.textContent = t("adminLogout");
     if (activeItem) openDetail(activeItem);
   });
-  if (adminToken) adminToggle.textContent = "退出管理";
+  if (adminToken) adminToggle.textContent = t("adminLogout");
 
   // ---------- Initial Load ----------
   function showStatus(text, isErr, canRetry) {
@@ -804,7 +1079,7 @@
     statusHint.classList.toggle("is-err", Boolean(isErr));
     statusHint.append(document.createTextNode(text));
     if (canRetry) {
-      const retryBtn = el("button", "wl-retry", "重试");
+      const retryBtn = el("button", "wl-retry", t("retry"));
       retryBtn.type = "button";
       retryBtn.addEventListener("click", () => {
         inflightInit = null;
@@ -815,14 +1090,11 @@
   }
 
   async function load(forceFresh = false) {
+    syncStaticI18n();
     if (items.length) {
-      renderToolbar();
-      renderBoard();
-      if (forceFresh) showStatus("正在同步最新数据…", false, false);
+      if (forceFresh) showStatus(t("syncing"), false, false);
     } else {
-      renderToolbar();
-      renderBoard();
-      showStatus("正在加载 Roadmap…", false, false);
+      showStatus(t("loading"), false, false);
     }
 
     const slowTimer = !items.length ? setTimeout(() => {
@@ -830,7 +1102,7 @@
         items = FALLBACK_ITEMS.map((x) => ({ ...x }));
         renderToolbar();
         renderBoard();
-        showStatus("网络较慢，先展示内置路线图，仍在后台同步最新投票…", false, false);
+        showStatus(t("slowNet"), false, false);
       }
     }, 800) : null;
 
@@ -852,7 +1124,7 @@
         renderToolbar();
         renderBoard();
       }
-      showStatus("暂时连不上实时服务器，当前显示缓存路线图（仍可直接提建议）", true, true);
+      showStatus(t("offlineNet"), true, true);
     }
   }
 
