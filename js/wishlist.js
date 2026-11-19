@@ -511,6 +511,14 @@
     boardEl.scrollTo({ left, behavior: "smooth" });
   });
   boardEl.addEventListener("scroll", syncBoardNav, { passive: true });
+  boardEl.addEventListener("wheel", (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 0) {
+      if (e.target.closest(".wl-card, .wl-col-list")) {
+        boardEl.scrollLeft += e.deltaX;
+        e.preventDefault();
+      }
+    }
+  }, { passive: false });
   window.addEventListener("resize", syncBoardNav, { passive: true });
 
   const statusHint = el("div", "wl-board-msg");
@@ -552,7 +560,22 @@
     }
   }
   populateAreaSelect();
-  row1.append(titleInput, areaSelect);
+
+  const statusSelect = el("select", "wl-select wl-status-sel");
+  statusSelect.setAttribute("aria-label", "目标列");
+  function populateStatusSelect() {
+    const prev = statusSelect.value || "pending";
+    statusSelect.innerHTML = "";
+    for (const c of COLUMNS) {
+      const opt = el("option", "", colTitle(c));
+      opt.value = c.id;
+      if (c.id === prev) opt.selected = true;
+      statusSelect.append(opt);
+    }
+  }
+  populateStatusSelect();
+  statusSelect.hidden = !adminToken;
+  row1.append(titleInput, areaSelect, statusSelect);
 
   const descInput = el("textarea", "wl-textarea");
   descInput.rows = 4;
@@ -647,6 +670,9 @@
     titleInput.placeholder = t("titlePh");
     areaSelect.setAttribute("aria-label", t("areaAria"));
     populateAreaSelect();
+    populateStatusSelect();
+    statusSelect.hidden = !adminToken;
+    row1.classList.toggle("is-admin", Boolean(adminToken));
     descInput.placeholder = t("descPh");
     pickBtn.textContent = t("pickBtn");
     uploadHint.textContent = t("uploadHint");
@@ -679,14 +705,17 @@
   if (location.hash === "#advice") {
     scrollToAdvice(false);
   }
-  function focusCompose() {
+  function focusCompose(targetStatus) {
     userScrolled = true;
     msgEl.textContent = "";
     msgEl.classList.remove("is-err");
+    if (adminToken && typeof targetStatus === "string" && COL_MAP[targetStatus]) {
+      statusSelect.value = targetStatus;
+    }
     scrollToAdvice(true);
     setTimeout(() => titleInput.focus(), 120);
   }
-  addTopBtn.addEventListener("click", focusCompose);
+  addTopBtn.addEventListener("click", () => focusCompose());
   window.addEventListener("hashchange", () => {
     if (location.hash === "#whistlist") {
       history.replaceState(null, "", "#wishlist");
@@ -894,7 +923,7 @@
 
     if (adminToken) {
       const adm = el("div", "wl-adm-box");
-      adm.append(el("div", "wl-adm-title", "移动列表 / 回复（作者管理）"));
+      adm.append(el("div", "wl-adm-title", "编辑 / 改状态 / 删除（作者管理）"));
 
       const contactRow = el("div", "wl-adm-contact");
       contactRow.append(el("b", "", t("contactLabel")));
@@ -915,7 +944,22 @@
       }
       adm.append(contactRow);
 
-      const admRow = el("div", "wl-adm-row");
+      const admGrid = el("div", "wl-adm-grid");
+
+      const titleIn = el("input", "wl-adm-in");
+      titleIn.type = "text";
+      titleIn.maxLength = 80;
+      titleIn.value = it.title || "";
+      titleIn.placeholder = "标题（2–80 字）";
+
+      const metaRow = el("div", "wl-adm-row");
+      const areaSel = el("select", "wl-adm-sel");
+      for (const a of AREAS) {
+        const o = el("option", "", areaLabel(a.id));
+        o.value = a.id;
+        if (it.area === a.id) o.selected = true;
+        areaSel.append(o);
+      }
       const sel = el("select", "wl-adm-sel");
       for (const c of COLUMNS) {
         const o = el("option", "", colTitle(c));
@@ -923,24 +967,58 @@
         if (it.status === c.id) o.selected = true;
         sel.append(o);
       }
+      const authorIn = el("input", "wl-adm-in");
+      authorIn.type = "text";
+      authorIn.maxLength = 24;
+      authorIn.value = it.author || "";
+      authorIn.placeholder = "提交人";
+      metaRow.append(areaSel, sel, authorIn);
+
+      const descIn = el("textarea", "wl-adm-textarea");
+      descIn.rows = 3;
+      descIn.maxLength = 1200;
+      descIn.value = it.desc || "";
+      descIn.placeholder = "详细描述（选填）";
+
+      const contactIn = el("input", "wl-adm-in");
+      contactIn.type = "text";
+      contactIn.maxLength = 80;
+      contactIn.value = it.contact || "";
+      contactIn.placeholder = "联系方式（仅作者可见）";
+
       const noteIn = el("input", "wl-adm-in");
       noteIn.type = "text";
+      noteIn.maxLength = 300;
       noteIn.value = it.authorNote || "";
       noteIn.placeholder = "官方回复（选填）";
 
-      const saveBtn = el("button", "wl-adm-btn", "保存并移动");
+      const admRow = el("div", "wl-adm-row");
+      const saveBtn = el("button", "wl-adm-btn is-primary", "保存修改");
       saveBtn.type = "button";
       saveBtn.addEventListener("click", async () => {
+        const nextTitle = titleIn.value.trim();
+        if (nextTitle.length < 2) return alert("标题至少写 2 个字");
         saveBtn.disabled = true;
         try {
           const r = await fetch(API, {
             method: "PATCH",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` },
-            body: JSON.stringify({ id: it.id, status: sel.value, authorNote: noteIn.value }),
+            body: JSON.stringify({
+              id: it.id,
+              title: nextTitle,
+              desc: descIn.value.trim(),
+              area: areaSel.value,
+              author: authorIn.value.trim(),
+              contact: contactIn.value.trim(),
+              status: sel.value,
+              authorNote: noteIn.value,
+            }),
           });
           const data = await r.json();
           if (!r.ok) throw new Error(data.error || "保存失败");
           Object.assign(it, data.item);
+          writeCache(items);
+          renderToolbar();
           renderBoard();
           openDetail(it);
         } catch (err) {
@@ -961,13 +1039,15 @@
         const data = await r.json();
         if (!r.ok) return alert(data.error || "删除失败");
         items = items.filter((x) => x.id !== it.id);
+        writeCache(items);
         closeDetail();
         renderToolbar();
         renderBoard();
       });
 
-      admRow.append(sel, noteIn, saveBtn, delBtn);
-      adm.append(admRow);
+      admRow.append(saveBtn, delBtn);
+      admGrid.append(titleIn, metaRow, descIn, contactIn, noteIn, admRow);
+      adm.append(admGrid);
       detailDialog.append(adm);
     }
 
@@ -1035,6 +1115,42 @@
     head.append(el("span", `wl-label ${AREA_CLS[it.area] || "is-deck"}`, areaLabel(it.area || "Agent Deck")));
     if (adminToken && it.contact) {
       head.append(el("span", "wl-label is-contact", t("contactBadge")));
+    }
+    if (adminToken) {
+      const quickSel = el("select", "wl-card-status");
+      quickSel.setAttribute("aria-label", "切换状态");
+      for (const c of COLUMNS) {
+        const o = el("option", "", colTitle(c));
+        o.value = c.id;
+        if ((COL_MAP[it.status] ? it.status : "pending") === c.id) o.selected = true;
+        quickSel.append(o);
+      }
+      quickSel.addEventListener("click", (e) => e.stopPropagation());
+      quickSel.addEventListener("change", async (e) => {
+        e.stopPropagation();
+        const prev = it.status;
+        const next = quickSel.value;
+        quickSel.disabled = true;
+        try {
+          const r = await fetch(API, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` },
+            body: JSON.stringify({ id: it.id, status: next }),
+          });
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || "状态更新失败");
+          Object.assign(it, data.item);
+          writeCache(items);
+          renderBoard();
+        } catch (err) {
+          it.status = prev;
+          quickSel.value = prev;
+          alert(err.message);
+        } finally {
+          quickSel.disabled = false;
+        }
+      });
+      head.append(quickSel);
     }
     card.append(head);
 
@@ -1120,10 +1236,10 @@
 
       colEl.append(head, sub, list);
 
-      if (col.id === "pending") {
+      if (col.id === "pending" || adminToken) {
         const addBtn = el("button", "wl-col-add", t("addCol"));
         addBtn.type = "button";
-        addBtn.addEventListener("click", focusCompose);
+        addBtn.addEventListener("click", () => focusCompose(col.id));
         colEl.append(addBtn);
       }
 
@@ -1160,20 +1276,24 @@
     msgEl.classList.remove("is-err");
 
     try {
+      const reqHeaders = { "Content-Type": "application/json" };
+      if (adminToken) reqHeaders.Authorization = `Bearer ${adminToken}`;
+      const payload = {
+        action: "create",
+        title,
+        desc: descInput.value.trim(),
+        area: areaSelect.value,
+        author: authorInput.value.trim(),
+        contact: contactInput.value.trim(),
+        images: pendingImages.map((x) => ({ dataUrl: x.dataUrl })),
+        website: hpInput.value,
+        voterId,
+      };
+      if (adminToken) payload.status = statusSelect.value;
       const data = await fetchJson(API, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create",
-          title,
-          desc: descInput.value.trim(),
-          area: areaSelect.value,
-          author: authorInput.value.trim(),
-          contact: contactInput.value.trim(),
-          images: pendingImages.map((x) => ({ dataUrl: x.dataUrl })),
-          website: hpInput.value,
-          voterId,
-        }),
+        headers: reqHeaders,
+        body: JSON.stringify(payload),
       }, 15000);
       if (data.item) {
         items.unshift(data.item);
@@ -1200,12 +1320,18 @@
   });
 
   // ---------- Admin Auth ----------
+  let verifyingAdmin = false;
+  function syncAdminUi() {
+    adminToggle.textContent = adminToken ? t("adminLogout") : t("adminLogin");
+    statusSelect.hidden = !adminToken;
+    row1.classList.toggle("is-admin", Boolean(adminToken));
+  }
   adminToggle.addEventListener("click", () => {
     if (adminToken) {
       adminToken = "";
       try { sessionStorage.removeItem("matsuri_wl_admin"); } catch {}
       items = items.map(({ contact: _c, ...pub }) => pub);
-      adminToggle.textContent = t("adminLogin");
+      syncAdminUi();
       renderBoard();
       if (activeItem) {
         const refreshed = items.find((x) => x.id === activeItem.id);
@@ -1216,12 +1342,13 @@
     const tk = prompt(t("adminPrompt"));
     if (!tk) return;
     adminToken = tk.trim();
+    verifyingAdmin = true;
     try { sessionStorage.setItem("matsuri_wl_admin", adminToken); } catch {}
-    adminToggle.textContent = t("adminLogout");
+    syncAdminUi();
     inflightInit = null;
     load(true);
   });
-  if (adminToken) adminToggle.textContent = t("adminLogout");
+  syncAdminUi();
 
   // ---------- Initial Load ----------
   function showStatus(text, isErr, canRetry) {
@@ -1266,6 +1393,13 @@
       const data = await reqPromise;
       hasLiveSync = true;
       if (slowTimer) clearTimeout(slowTimer);
+      if (adminToken && data.isAdmin === false) {
+        adminToken = "";
+        try { sessionStorage.removeItem("matsuri_wl_admin"); } catch {}
+        syncAdminUi();
+        if (verifyingAdmin) alert("管理口令不对");
+      }
+      verifyingAdmin = false;
       items = Array.isArray(data.items) ? data.items : [];
       writeCache(items);
       showStatus("", false, false);

@@ -547,18 +547,20 @@ async function listItems(voterId, includePrivate = false, ip = "") {
   return items;
 }
 
-async function createItem(body, voterId, ip) {
+async function createItem(body, voterId, ip, admin = false) {
   if (String(body.website || "").trim()) {
     return Response.json({ ok: true, ignored: true }, { status: 201 });
   }
-  if (!(await checkLimit("post", ip, MAX_POST_PER_IP))) {
+  if (!admin && !(await checkLimit("post", ip, MAX_POST_PER_IP))) {
     return Response.json({ error: "今天提交的次数有点多，明天再来吧" }, { status: 429 });
   }
   const title = String(body.title || "").trim();
   const desc = String(body.desc || "").trim();
   const area = AREAS.has(body.area) ? body.area : "Agent Deck";
-  const author = String(body.author || "").trim().slice(0, 24) || "匿名用户";
+  const author = String(body.author || "").trim().slice(0, 24) || (admin ? "马自立" : "匿名用户");
   const contact = String(body.contact || "").trim().slice(0, 80);
+  const status = admin && STATUSES.has(body.status) ? body.status : "pending";
+  const authorNote = admin && typeof body.authorNote === "string" ? body.authorNote.trim().slice(0, 300) : "";
   if (title.length < 2 || title.length > 80) {
     return Response.json({ error: "标题请控制在 2–80 个字之间" }, { status: 400 });
   }
@@ -585,8 +587,8 @@ async function createItem(body, voterId, ip) {
     area,
     author,
     contact,
-    status: "pending",
-    authorNote: "",
+    status,
+    authorNote,
     images: imgIds,
     createdAt: now,
     updatedAt: now,
@@ -613,8 +615,8 @@ async function createItem(body, voterId, ip) {
     }
     await redis(cmds);
   }
-  const { contact: _contact, ...pubItem } = item;
-  return Response.json({ item: { ...pubItem, votes: voterId ? 1 : 0, voted: Boolean(voterId) } }, { status: 201 });
+  const outItem = admin ? item : (({ contact: _contact, ...pub }) => pub)(item);
+  return Response.json({ item: { ...outItem, votes: voterId ? 1 : 0, voted: Boolean(voterId) } }, { status: 201 });
 }
 
 async function toggleVote(body, voterId, ip) {
@@ -708,7 +710,7 @@ export async function POST(request) {
     const voterId = cleanVoter(body.voterId || request.headers.get("x-voter-id"));
     const ip = clientIp(request);
     if (body.action === "vote") return await toggleVote(body, voterId, ip);
-    return await createItem(body, voterId, ip);
+    return await createItem(body, voterId, ip, isAdmin(request));
   } catch (e) {
     console.error(e);
     return Response.json({ error: String(e.message || "提交失败").slice(0, 160) }, { status: 500 });
@@ -723,7 +725,22 @@ export async function PATCH(request) {
     const id = String(body?.id || "").trim();
     if (!/^[a-f0-9]{12}$/.test(id)) return Response.json({ error: "参数无效" }, { status: 400 });
 
+    if (typeof body.title === "string") {
+      const nextTitle = body.title.trim();
+      if (nextTitle.length < 2 || nextTitle.length > 80) {
+        return Response.json({ error: "标题请控制在 2–80 个字之间" }, { status: 400 });
+      }
+    }
+    if (typeof body.desc === "string" && body.desc.trim().length > 1200) {
+      return Response.json({ error: "描述最多 1200 个字" }, { status: 400 });
+    }
+
     const update = (it) => {
+      if (typeof body.title === "string") it.title = body.title.trim();
+      if (typeof body.desc === "string") it.desc = body.desc.trim();
+      if (body.area && AREAS.has(body.area)) it.area = body.area;
+      if (typeof body.author === "string") it.author = body.author.trim().slice(0, 24) || "匿名用户";
+      if (typeof body.contact === "string") it.contact = body.contact.trim().slice(0, 80);
       if (body.status && STATUSES.has(body.status)) it.status = body.status;
       if (typeof body.authorNote === "string") it.authorNote = body.authorNote.trim().slice(0, 300);
       it.updatedAt = new Date().toISOString();
