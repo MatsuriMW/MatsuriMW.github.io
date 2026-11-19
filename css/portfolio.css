@@ -278,6 +278,28 @@
 .pj-dz:not([open]) { padding-top: 16px; padding-bottom: 16px; }
 
 /* ===== Trello 式功能路线图与心愿单（/portfolio/journal-workflow/#wishlist） ===== */
+#wishlist > .sec-head { max-width: none; }
+#wishlist > .sec-head p { max-width: 780px; }
+.wl-head-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wl-head-toggle {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  font: inherit; font-size: 12.5px; color: var(--ink-2); background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 99px; padding: 4px 11px; cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.wl-head-toggle:hover { border-color: var(--blue); color: var(--blue); }
+.wl-head-caret {
+  width: 6px; height: 6px; border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor;
+  transform: rotate(-135deg); margin-top: 3px; transition: transform .2s var(--ease), margin-top .2s var(--ease);
+}
+#wishlist.is-head-collapsed > .sec-head { margin-bottom: 12px; }
+#wishlist.is-head-collapsed > .sec-head > h2,
+#wishlist.is-head-collapsed > .sec-head > p,
+#wishlist.is-head-collapsed .wl-bar,
+.wl-app.is-head-collapsed .wl-bar { display: none; }
+#wishlist.is-head-collapsed .wl-head-caret,
+.wl-app.is-head-collapsed .wl-head-caret { transform: rotate(45deg); margin-top: -3px; }
+
 .wl-app { display: grid; gap: 14px; }
 .wl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; }
 .wl-filters, .wl-sorts, .wl-bar-right { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
@@ -303,21 +325,30 @@
 }
 .wl-retry:hover { opacity: .85; }
 
-/* 4 列看板：桌面四列并排，窄屏横向滑动对齐 */
+/* 4 列看板：桌面默认一屏显示前 2 列（TODO + 计划中），横向滑动看后 2 列；窄屏保持 1 列 + 露出一角 */
+.wl-board-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.wl-board-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.wl-board-hint { font-size: 12px; color: var(--ink-3); }
 .wl-board {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, calc((100% - 14px) / 2));
+  gap: 14px;
   align-items: start;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(31, 31, 29, .22) transparent;
 }
-@media (max-width: 960px) {
+.wl-board::-webkit-scrollbar { height: 6px; }
+.wl-board::-webkit-scrollbar-thumb { background: rgba(31, 31, 29, .2); border-radius: 99px; }
+.wl-board::-webkit-scrollbar-track { background: transparent; }
+.wl-col { scroll-snap-align: start; }
+@media (max-width: 640px) {
   .wl-board {
     grid-template-columns: repeat(4, minmax(256px, 80vw));
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scroll-snap-type: x proximity;
+    gap: 12px;
   }
-  .wl-col { scroll-snap-align: start; }
 }
 .wl-col {
   display: flex; flex-direction: column; gap: 8px;
@@ -381,6 +412,7 @@
 .wl-label.is-spiral { color: #7c4d12; background: #faecd8; }
 .wl-label.is-link { color: var(--violet); background: #eae7fa; }
 .wl-label.is-mac { color: #1b7a4b; background: #dff4e8; }
+.wl-label.is-contact { color: #8c4a00; background: #fff0d6; }
 .wl-card-title { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.45; color: var(--ink); word-break: break-word; }
 .wl-card-desc {
   margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
@@ -434,12 +466,12 @@
 
 .wl-form { display: grid; gap: 12px; }
 .wl-row { display: grid; grid-template-columns: minmax(0, 1fr) 156px; gap: 10px; }
-.wl-input, .wl-select, .wl-textarea, .wl-author, .wl-adm-sel, .wl-adm-in {
+.wl-input, .wl-select, .wl-textarea, .wl-author, .wl-contact, .wl-adm-sel, .wl-adm-in {
   font: inherit; font-size: 14px; color: var(--ink); background: var(--page);
   border: 1px solid var(--rule); border-radius: 9px; padding: 9px 12px;
   transition: border-color .2s, background .2s;
 }
-.wl-input:focus, .wl-select:focus, .wl-textarea:focus, .wl-author:focus {
+.wl-input:focus, .wl-select:focus, .wl-textarea:focus, .wl-author:focus, .wl-contact:focus {
   outline: none; border-color: var(--blue); background: var(--surface);
 }
 .wl-textarea { resize: vertical; min-height: 88px; line-height: 1.65; }
@@ -465,8 +497,9 @@
   position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%;
   background: rgba(31, 31, 29, .78); color: #fff; font: 600 13px/1 sans-serif; cursor: pointer;
 }
+.wl-form-meta { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(0, 2fr); gap: 10px; }
+.wl-author, .wl-contact { width: 100%; }
 .wl-form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
-.wl-author { width: 200px; }
 .wl-msg { font-size: 13px; color: var(--ink-2); margin-right: auto; }
 .wl-msg.is-err { color: var(--red); }
 .wl-submit {
@@ -508,6 +541,18 @@
 }
 .wl-adm-box { padding-top: 12px; border-top: 1px dashed var(--rule); display: grid; gap: 8px; }
 .wl-adm-title { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.wl-adm-contact {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+  font-size: 13px; color: var(--ink-2); padding: 7px 10px; border-radius: 8px;
+  background: var(--page); border: 1px solid var(--rule);
+}
+.wl-adm-contact-val { color: var(--ink); font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; word-break: break-all; }
+.wl-adm-contact-empty { color: var(--ink-3); }
+.wl-adm-copy {
+  margin-left: auto; font: inherit; font-size: 11.5px; font-weight: 600; color: var(--blue);
+  background: var(--blue-soft); border: 0; border-radius: 6px; padding: 2px 8px; cursor: pointer;
+}
+.wl-adm-copy:hover { opacity: .85; }
 .wl-adm-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .wl-adm-in { flex: 1; min-width: 160px; padding: 6px 10px; font-size: 13px; }
 .wl-adm-sel { padding: 6px 8px; font-size: 13px; }
@@ -535,6 +580,5 @@
 
 @media (max-width: 640px) {
   .wl-compose, .wl-modal { padding: 18px 16px; }
-  .wl-row { grid-template-columns: 1fr; }
-  .wl-author { width: 100%; }
+  .wl-row, .wl-form-meta { grid-template-columns: 1fr; }
 }

@@ -494,8 +494,13 @@ async function ensureSeeded() {
   return existing || [];
 }
 
-async function listItems(voterId) {
+async function listItems(voterId, includePrivate = false) {
   const prefetchedIds = await ensureSeeded();
+  const expose = (it) => {
+    if (includePrivate) return it;
+    const { contact: _contact, ...pub } = it;
+    return pub;
+  };
   if (!HAS_REDIS) {
     const db = readDev();
     return db.ids
@@ -503,7 +508,7 @@ async function listItems(voterId) {
         const it = db.items[id];
         if (!it) return null;
         const set = db.votes[id] || [];
-        return { ...it, votes: set.length, voted: voterId ? set.includes(voterId) : false };
+        return { ...expose(it), votes: set.length, voted: voterId ? set.includes(voterId) : false };
       })
       .filter(Boolean);
   }
@@ -525,7 +530,7 @@ async function listItems(voterId) {
       const it = JSON.parse(raw);
       const votes = Number(res[i * step + 1] || 0);
       const voted = voterId ? res[i * step + 2] === 1 : false;
-      items.push({ ...it, votes, voted });
+      items.push({ ...expose(it), votes, voted });
     } catch {}
   }
   return items;
@@ -542,6 +547,7 @@ async function createItem(body, voterId, ip) {
   const desc = String(body.desc || "").trim();
   const area = AREAS.has(body.area) ? body.area : "Agent Deck";
   const author = String(body.author || "").trim().slice(0, 24) || "匿名用户";
+  const contact = String(body.contact || "").trim().slice(0, 80);
   if (title.length < 2 || title.length > 80) {
     return Response.json({ error: "标题请控制在 2–80 个字之间" }, { status: 400 });
   }
@@ -567,6 +573,7 @@ async function createItem(body, voterId, ip) {
     desc,
     area,
     author,
+    contact,
     status: "pending",
     authorNote: "",
     images: imgIds,
@@ -589,7 +596,8 @@ async function createItem(body, voterId, ip) {
     if (voterId) cmds.push(["SADD", `wish:votes:${id}`, voterId]);
     await redis(cmds);
   }
-  return Response.json({ item: { ...item, votes: voterId ? 1 : 0, voted: Boolean(voterId) } }, { status: 201 });
+  const { contact: _contact, ...pubItem } = item;
+  return Response.json({ item: { ...pubItem, votes: voterId ? 1 : 0, voted: Boolean(voterId) } }, { status: 201 });
 }
 
 async function toggleVote(body, voterId, ip) {
@@ -624,13 +632,17 @@ async function toggleVote(body, voterId, ip) {
   return Response.json({ id, votes: Number(votes || 0), voted });
 }
 
-function checkAdmin(req) {
-  if (!ADMIN_TOKEN) return Response.json({ error: "服务端未配置 WISHLIST_ADMIN_TOKEN" }, { status: 503 });
+function isAdmin(req) {
+  if (!ADMIN_TOKEN) return false;
   const auth = req.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
-  if (!token || token.length !== ADMIN_TOKEN.length) return Response.json({ error: "管理口令不对" }, { status: 401 });
-  const ok = crypto.timingSafeEqual(Buffer.from(token), Buffer.from(ADMIN_TOKEN));
-  return ok ? null : Response.json({ error: "管理口令不对" }, { status: 401 });
+  if (!token || token.length !== ADMIN_TOKEN.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(ADMIN_TOKEN));
+}
+
+function checkAdmin(req) {
+  if (!ADMIN_TOKEN) return Response.json({ error: "服务端未配置 WISHLIST_ADMIN_TOKEN" }, { status: 503 });
+  return isAdmin(req) ? null : Response.json({ error: "管理口令不对" }, { status: 401 });
 }
 
 export async function GET(request) {
@@ -649,8 +661,9 @@ export async function GET(request) {
       });
     }
     const voterId = cleanVoter(u.searchParams.get("voterId") || request.headers.get("x-voter-id"));
-    const items = await listItems(voterId);
-    return Response.json({ items }, { headers: { "Cache-Control": "no-store" } });
+    const admin = isAdmin(request);
+    const items = await listItems(voterId, admin);
+    return Response.json({ items, isAdmin: admin }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     console.error(e);
     return Response.json({ error: "读取心愿单失败" }, { status: 500 });

@@ -62,6 +62,17 @@
       pickBtn: "上传截图",
       uploadHint: "可选，最多 2 张；支持拖拽或粘贴截图，自动压缩",
       authorPh: "昵称（选填，默认匿名）",
+      contactPh: "联系方式（选填，微信 / 邮箱 / GitHub，仅作者可见）",
+      contactLabel: "联系方式：",
+      contactEmpty: "未填写",
+      contactBadge: "留有联系",
+      copyBtn: "复制",
+      copied: "已复制",
+      collapseHead: "收起抬头",
+      expandHead: "展开抬头",
+      boardLeft: "TODO · 计划中",
+      boardRight: "开发中 · 已上线",
+      boardSwipeHint: "← 横向滑动切换列 →",
       submitBtn: "提交到 TODO",
       submitting: "正在提交…",
       submitted: "已提交到 TODO 列！",
@@ -101,6 +112,17 @@
       pickBtn: "Upload Screenshot",
       uploadHint: "Optional, up to 2 images; drag & drop or paste from clipboard",
       authorPh: "Nickname (optional, default Anonymous)",
+      contactPh: "Contact (optional, email / Discord / GitHub — maintainer only)",
+      contactLabel: "Contact: ",
+      contactEmpty: "Not provided",
+      contactBadge: "Contact",
+      copyBtn: "Copy",
+      copied: "Copied",
+      collapseHead: "Collapse header",
+      expandHead: "Expand header",
+      boardLeft: "TODO · Planned",
+      boardRight: "In Progress · Shipped",
+      boardSwipeHint: "← Scroll horizontally →",
       submitBtn: "Submit to TODO",
       submitting: "Submitting…",
       submitted: "Submitted to TODO!",
@@ -285,7 +307,8 @@
   }
   function writeCache(list) {
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), items: list }));
+      const safe = list.map(({ contact: _c, ...pub }) => pub);
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), items: safe }));
     } catch {}
   }
 
@@ -309,11 +332,17 @@
     }
   }
 
+  let adminToken = "";
+  try {
+    adminToken = sessionStorage.getItem("matsuri_wl_admin") || "";
+  } catch {}
+
   async function fetchListWithRetry(attempts = 3) {
     const url = `${API}?voterId=${encodeURIComponent(voterId)}`;
+    const headers = adminToken ? { Authorization: `Bearer ${adminToken}` } : undefined;
     for (let i = 0; i < attempts; i++) {
       try {
-        return await fetchJson(url, { cache: "no-store" }, i === 0 ? 6000 : 8000);
+        return await fetchJson(url, { cache: "no-store", headers }, i === 0 ? 6000 : 8000);
       } catch (e) {
         const retriable = e.status == null || e.status >= 500;
         if (!retriable || i === attempts - 1) throw e;
@@ -339,10 +368,6 @@
   let sortMode = "top";
   let pendingImages = [];
   let activeItem = null;
-  let adminToken = "";
-  try {
-    adminToken = sessionStorage.getItem("matsuri_wl_admin") || "";
-  } catch {}
 
   const el = (tag, cls, text) => {
     const node = document.createElement(tag);
@@ -409,6 +434,46 @@
   // ---------- Skeleton ----------
   root.innerHTML = "";
 
+  // Collapsible Wishlist Header (sec-head + toolbar)
+  const HEAD_KEY = "matsuri_wl_head_collapsed";
+  let headCollapsed = false;
+  try {
+    headCollapsed = localStorage.getItem(HEAD_KEY) === "1";
+  } catch {}
+
+  const secEl = root.closest("#wishlist") || document.getElementById("wishlist");
+  const secHead = secEl ? secEl.querySelector(":scope > .sec-head") : null;
+  const headToggleBtn = el("button", "wl-head-toggle");
+  headToggleBtn.type = "button";
+  const headToggleText = el("span", "", "");
+  const headToggleCaret = el("span", "wl-head-caret");
+  headToggleCaret.setAttribute("aria-hidden", "true");
+  headToggleBtn.append(headToggleText, headToggleCaret);
+
+  if (secHead) {
+    const eyebrow = secHead.querySelector(":scope > .eyebrow");
+    const topRow = el("div", "wl-head-top");
+    if (eyebrow) {
+      secHead.insertBefore(topRow, eyebrow);
+      topRow.append(eyebrow, headToggleBtn);
+    } else {
+      secHead.prepend(topRow);
+      topRow.append(headToggleBtn);
+    }
+  }
+
+  function applyHeadCollapsed() {
+    if (secEl) secEl.classList.toggle("is-head-collapsed", headCollapsed);
+    root.classList.toggle("is-head-collapsed", headCollapsed);
+    headToggleBtn.setAttribute("aria-expanded", String(!headCollapsed));
+    headToggleText.textContent = headCollapsed ? t("expandHead") : t("collapseHead");
+  }
+  headToggleBtn.addEventListener("click", () => {
+    headCollapsed = !headCollapsed;
+    try { localStorage.setItem(HEAD_KEY, headCollapsed ? "1" : "0"); } catch {}
+    applyHeadCollapsed();
+  });
+
   const toolbar = el("div", "wl-bar");
   const areaGroup = el("div", "wl-filters");
   const rightControls = el("div", "wl-bar-right");
@@ -418,7 +483,34 @@
   rightControls.append(sortGroup, addTopBtn);
   toolbar.append(areaGroup, rightControls);
 
+  const boardNav = el("div", "wl-board-nav");
+  const boardPills = el("div", "wl-board-pills");
+  const boardLeftBtn = el("button", "wl-tab on", t("boardLeft"));
+  boardLeftBtn.type = "button";
+  const boardRightBtn = el("button", "wl-tab", t("boardRight"));
+  boardRightBtn.type = "button";
+  boardPills.append(boardLeftBtn, boardRightBtn);
+  const boardHint = el("span", "wl-board-hint", t("boardSwipeHint"));
+  boardNav.append(boardPills, boardHint);
+
   const boardEl = el("div", "wl-board");
+  function syncBoardNav() {
+    const maxScroll = Math.max(0, boardEl.scrollWidth - boardEl.clientWidth);
+    const inRightHalf = maxScroll > 20 && boardEl.scrollLeft >= maxScroll * 0.45;
+    boardLeftBtn.classList.toggle("on", !inRightHalf);
+    boardRightBtn.classList.toggle("on", inRightHalf);
+  }
+  boardLeftBtn.addEventListener("click", () => {
+    boardEl.scrollTo({ left: 0, behavior: "smooth" });
+  });
+  boardRightBtn.addEventListener("click", () => {
+    const targetCol = boardEl.children[2];
+    const left = targetCol ? targetCol.offsetLeft : boardEl.scrollWidth;
+    boardEl.scrollTo({ left, behavior: "smooth" });
+  });
+  boardEl.addEventListener("scroll", syncBoardNav, { passive: true });
+  window.addEventListener("resize", syncBoardNav, { passive: true });
+
   const statusHint = el("div", "wl-board-msg");
   const adminBar = el("div", "wl-admin-bar");
   const adminToggle = el("button", "wl-admin-link", t("adminLogin"));
@@ -485,17 +577,24 @@
   const previewWrap = el("div", "wl-previews");
   uploadBox.append(fileInput, pickBtn, uploadHint, previewWrap);
 
-  const rowFoot = el("div", "wl-form-foot");
+  const rowMeta = el("div", "wl-form-meta");
   const authorInput = el("input", "wl-author");
   authorInput.type = "text";
   authorInput.maxLength = 24;
   authorInput.placeholder = t("authorPh");
+  const contactInput = el("input", "wl-contact");
+  contactInput.type = "text";
+  contactInput.maxLength = 80;
+  contactInput.placeholder = t("contactPh");
+  rowMeta.append(authorInput, contactInput);
+
+  const rowFoot = el("div", "wl-form-foot");
   const msgEl = el("span", "wl-msg");
   const submitBtn = el("button", "wl-submit", t("submitBtn"));
   submitBtn.type = "submit";
-  rowFoot.append(authorInput, msgEl, submitBtn);
+  rowFoot.append(msgEl, submitBtn);
 
-  formCard.append(row1, descInput, hpInput, uploadBox, rowFoot);
+  formCard.append(row1, descInput, hpInput, uploadBox, rowMeta, rowFoot);
   composeSection.append(composeHead, formCard);
 
   // Detail Modal
@@ -516,7 +615,9 @@
   lbClose.setAttribute("aria-label", t("close"));
   lightbox.append(lbImg, lbClose);
 
-  root.append(toolbar, statusHint, boardEl, composeSection, adminBar, detailOverlay, lightbox);
+  root.append(toolbar, statusHint, boardNav, boardEl, composeSection, adminBar, detailOverlay, lightbox);
+  if (!secHead) root.prepend(headToggleBtn);
+  applyHeadCollapsed();
 
   // ---------- Whole-page Bilingual Switcher ----------
   function syncStaticI18n() {
@@ -534,6 +635,10 @@
     });
 
     addTopBtn.textContent = t("addMain");
+    applyHeadCollapsed();
+    boardLeftBtn.textContent = t("boardLeft");
+    boardRightBtn.textContent = t("boardRight");
+    boardHint.textContent = t("boardSwipeHint");
     composeSection.setAttribute("aria-label", t("composeTitle"));
     composeH3.textContent = t("composeTitle");
     composeSub.textContent = t("composeBadge");
@@ -544,6 +649,7 @@
     pickBtn.textContent = t("pickBtn");
     uploadHint.textContent = t("uploadHint");
     authorInput.placeholder = t("authorPh");
+    contactInput.placeholder = t("contactPh");
     submitBtn.textContent = t("submitBtn");
     adminToggle.textContent = adminToken ? t("adminLogout") : t("adminLogin");
     renderToolbar();
@@ -779,6 +885,26 @@
     if (adminToken) {
       const adm = el("div", "wl-adm-box");
       adm.append(el("div", "wl-adm-title", "移动列表 / 回复（作者管理）"));
+
+      const contactRow = el("div", "wl-adm-contact");
+      contactRow.append(el("b", "", t("contactLabel")));
+      if (it.contact) {
+        contactRow.append(el("span", "wl-adm-contact-val", it.contact));
+        const copyBtn = el("button", "wl-adm-copy", t("copyBtn"));
+        copyBtn.type = "button";
+        copyBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(it.contact);
+            copyBtn.textContent = t("copied");
+            setTimeout(() => { copyBtn.textContent = t("copyBtn"); }, 1500);
+          } catch {}
+        });
+        contactRow.append(copyBtn);
+      } else {
+        contactRow.append(el("span", "wl-adm-contact-empty", t("contactEmpty")));
+      }
+      adm.append(contactRow);
+
       const admRow = el("div", "wl-adm-row");
       const sel = el("select", "wl-adm-sel");
       for (const c of COLUMNS) {
@@ -897,6 +1023,9 @@
 
     const head = el("div", "wl-card-top");
     head.append(el("span", `wl-label ${AREA_CLS[it.area] || "is-deck"}`, areaLabel(it.area || "Agent Deck")));
+    if (adminToken && it.contact) {
+      head.append(el("span", "wl-label is-contact", t("contactBadge")));
+    }
     card.append(head);
 
     card.append(el("h3", "wl-card-title", itemTitle(it)));
@@ -992,9 +1121,11 @@
           const fourth = list.children[3];
           if (fourth) list.style.maxHeight = `${fourth.offsetTop + fourth.offsetHeight + 2}px`;
         }
+        syncBoardNav();
         syncAdvicePos();
       });
     } else {
+      requestAnimationFrame(syncBoardNav);
       syncAdvicePos();
     }
   }
@@ -1023,6 +1154,7 @@
           desc: descInput.value.trim(),
           area: areaSelect.value,
           author: authorInput.value.trim(),
+          contact: contactInput.value.trim(),
           images: pendingImages.map((x) => ({ dataUrl: x.dataUrl })),
           website: hpInput.value,
           voterId,
@@ -1037,6 +1169,7 @@
       }
       titleInput.value = "";
       descInput.value = "";
+      contactInput.value = "";
       pendingImages = [];
       renderPreviews();
       msgEl.textContent = t("submitted");
@@ -1056,8 +1189,13 @@
     if (adminToken) {
       adminToken = "";
       try { sessionStorage.removeItem("matsuri_wl_admin"); } catch {}
+      items = items.map(({ contact: _c, ...pub }) => pub);
       adminToggle.textContent = t("adminLogin");
-      if (activeItem) openDetail(activeItem);
+      renderBoard();
+      if (activeItem) {
+        const refreshed = items.find((x) => x.id === activeItem.id);
+        if (refreshed) openDetail(refreshed);
+      }
       return;
     }
     const tk = prompt(t("adminPrompt"));
@@ -1065,7 +1203,8 @@
     adminToken = tk.trim();
     try { sessionStorage.setItem("matsuri_wl_admin", adminToken); } catch {}
     adminToggle.textContent = t("adminLogout");
-    if (activeItem) openDetail(activeItem);
+    inflightInit = null;
+    load(true);
   });
   if (adminToken) adminToggle.textContent = t("adminLogout");
 
@@ -1117,6 +1256,10 @@
       showStatus("", false, false);
       renderToolbar();
       renderBoard();
+      if (activeItem) {
+        const refreshed = items.find((x) => x.id === activeItem.id);
+        if (refreshed) openDetail(refreshed);
+      }
     } catch (err) {
       if (slowTimer) clearTimeout(slowTimer);
       if (!items.length) {
