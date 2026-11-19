@@ -434,6 +434,7 @@
 }
 .wl-vote-pill:hover { border-color: var(--blue); color: var(--blue); }
 .wl-vote-pill.on { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+.wl-vote-pill:disabled, .wl-vote--lg:disabled { cursor: default; }
 .wl-vote-pill b { font-variant-numeric: tabular-nums; }
 .wl-arrow { font-size: 10px; line-height: 1; }
 

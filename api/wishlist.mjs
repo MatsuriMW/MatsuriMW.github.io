@@ -56,6 +56,9 @@ async function redis(cmds, retries = 0) {
 const clientIp = (req) =>
   req.headers.get("x-real-ip") || (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "local";
 
+const ipHash = (ip) =>
+  ip && ip !== "local" ? crypto.createHash("sha256").update(String(ip)).digest("hex").slice(0, 16) : "";
+
 const todayCN = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
 
 async function checkLimit(kind, ip, max) {
@@ -494,8 +497,9 @@ async function ensureSeeded() {
   return existing || [];
 }
 
-async function listItems(voterId, includePrivate = false) {
+async function listItems(voterId, includePrivate = false, ip = "") {
   const prefetchedIds = await ensureSeeded();
+  const ik = ipHash(ip);
   const expose = (it) => {
     if (includePrivate) return it;
     const { contact: _contact, ...pub } = it;
@@ -503,12 +507,15 @@ async function listItems(voterId, includePrivate = false) {
   };
   if (!HAS_REDIS) {
     const db = readDev();
+    const voteIps = db.voteIps || {};
     return db.ids
       .map((id) => {
         const it = db.items[id];
         if (!it) return null;
         const set = db.votes[id] || [];
-        return { ...expose(it), votes: set.length, voted: voterId ? set.includes(voterId) : false };
+        const ipSet = voteIps[id] || [];
+        const voted = Boolean((voterId && set.includes(voterId)) || (ik && ipSet.includes(ik)));
+        return { ...expose(it), votes: set.length, voted };
       })
       .filter(Boolean);
   }
@@ -519,18 +526,22 @@ async function listItems(voterId, includePrivate = false) {
     cmds.push(["GET", `wish:item:${id}`]);
     cmds.push(["SCARD", `wish:votes:${id}`]);
     if (voterId) cmds.push(["SISMEMBER", `wish:votes:${id}`, voterId]);
+    if (ik) cmds.push(["SISMEMBER", `wish:voteips:${id}`, ik]);
   }
   const res = await redis(cmds, 1);
-  const step = voterId ? 3 : 2;
+  const step = 2 + (voterId ? 1 : 0) + (ik ? 1 : 0);
   const items = [];
   for (let i = 0; i < ids.length; i++) {
-    const raw = res[i * step];
+    const base = i * step;
+    const raw = res[base];
     if (!raw) continue;
     try {
       const it = JSON.parse(raw);
-      const votes = Number(res[i * step + 1] || 0);
-      const voted = voterId ? res[i * step + 2] === 1 : false;
-      items.push({ ...expose(it), votes, voted });
+      const votes = Number(res[base + 1] || 0);
+      let idx = base + 2;
+      const byVoter = voterId ? res[idx++] === 1 : false;
+      const byIp = ik ? res[idx++] === 1 : false;
+      items.push({ ...expose(it), votes, voted: byVoter || byIp });
     } catch {}
   }
   return items;
@@ -581,11 +592,14 @@ async function createItem(body, voterId, ip) {
     updatedAt: now,
   };
 
+  const ik = ipHash(ip);
   if (!HAS_REDIS) {
     const db = readDev();
     db.ids.unshift(id);
     db.items[id] = item;
     db.votes[id] = voterId ? [voterId] : [];
+    db.voteIps ||= {};
+    db.voteIps[id] = voterId && ik ? [ik] : [];
     writeDev(db);
   } else {
     const cmds = [
@@ -593,7 +607,10 @@ async function createItem(body, voterId, ip) {
       ["LPUSH", "wish:ids", id],
       ["LTRIM", "wish:ids", 0, MAX_ITEMS - 1],
     ];
-    if (voterId) cmds.push(["SADD", `wish:votes:${id}`, voterId]);
+    if (voterId) {
+      cmds.push(["SADD", `wish:votes:${id}`, voterId]);
+      if (ik) cmds.push(["SADD", `wish:voteips:${id}`, ik]);
+    }
     await redis(cmds);
   }
   const { contact: _contact, ...pubItem } = item;
@@ -608,28 +625,40 @@ async function toggleVote(body, voterId, ip) {
   if (!(await checkLimit("vote", ip, MAX_VOTE_PER_IP))) {
     return Response.json({ error: "操作太频繁，请稍后再试" }, { status: 429 });
   }
+  const ik = ipHash(ip);
   if (!HAS_REDIS) {
     const db = readDev();
     if (!db.items[id]) return Response.json({ error: "条目不存在" }, { status: 404 });
     const set = (db.votes[id] ||= []);
-    const idx = set.indexOf(voterId);
-    const voted = idx === -1;
-    if (voted) set.push(voterId);
-    else set.splice(idx, 1);
+    db.voteIps ||= {};
+    const ipSet = (db.voteIps[id] ||= []);
+    if (set.includes(voterId) || (ik && ipSet.includes(ik))) {
+      return Response.json({ id, votes: set.length, voted: true, alreadyVoted: true });
+    }
+    set.push(voterId);
+    if (ik) ipSet.push(ik);
     writeDev(db);
-    return Response.json({ id, votes: set.length, voted });
+    return Response.json({ id, votes: set.length, voted: true, alreadyVoted: false });
   }
-  const [exists, already] = await redis([
+  const checkCmds = [
     ["EXISTS", `wish:item:${id}`],
     ["SISMEMBER", `wish:votes:${id}`, voterId],
-  ]);
+  ];
+  if (ik) checkCmds.push(["SISMEMBER", `wish:voteips:${id}`, ik]);
+  const checkRes = await redis(checkCmds);
+  const exists = checkRes[0];
+  const already = checkRes[1] === 1 || (ik && checkRes[2] === 1);
   if (!exists) return Response.json({ error: "条目不存在" }, { status: 404 });
-  const voted = already !== 1;
-  const [, votes] = await redis([
-    [voted ? "SADD" : "SREM", `wish:votes:${id}`, voterId],
-    ["SCARD", `wish:votes:${id}`],
-  ]);
-  return Response.json({ id, votes: Number(votes || 0), voted });
+  if (already) {
+    const [votes] = await redis([["SCARD", `wish:votes:${id}`]]);
+    return Response.json({ id, votes: Number(votes || 0), voted: true, alreadyVoted: true });
+  }
+  const addCmds = [["SADD", `wish:votes:${id}`, voterId]];
+  if (ik) addCmds.push(["SADD", `wish:voteips:${id}`, ik]);
+  addCmds.push(["SCARD", `wish:votes:${id}`]);
+  const addRes = await redis(addCmds);
+  const votes = addRes[addRes.length - 1];
+  return Response.json({ id, votes: Number(votes || 0), voted: true, alreadyVoted: false });
 }
 
 function isAdmin(req) {
@@ -662,7 +691,7 @@ export async function GET(request) {
     }
     const voterId = cleanVoter(u.searchParams.get("voterId") || request.headers.get("x-voter-id"));
     const admin = isAdmin(request);
-    const items = await listItems(voterId, admin);
+    const items = await listItems(voterId, admin, clientIp(request));
     return Response.json({ items, isAdmin: admin }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) {
     console.error(e);
@@ -734,6 +763,7 @@ export async function DELETE(request) {
       for (const imgId of it.images || []) delete db.imgs[imgId];
       delete db.items[id];
       delete db.votes[id];
+      if (db.voteIps) delete db.voteIps[id];
       db.ids = db.ids.filter((x) => x !== id);
       writeDev(db);
       return Response.json({ ok: true });
@@ -743,7 +773,7 @@ export async function DELETE(request) {
     const it = JSON.parse(raw);
     const cmds = [
       ["LREM", "wish:ids", 0, id],
-      ["DEL", `wish:item:${id}`, `wish:votes:${id}`],
+      ["DEL", `wish:item:${id}`, `wish:votes:${id}`, `wish:voteips:${id}`],
     ];
     for (const imgId of it.images || []) cmds.push(["DEL", `wish:img:${imgId}`]);
     await redis(cmds);

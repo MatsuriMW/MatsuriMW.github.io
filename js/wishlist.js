@@ -82,6 +82,7 @@
       imgErr: "处理截图失败",
       imgTooBig: "图片太大，请换一张小一点的截图",
       voteFail: "投票失败，请稍后重试",
+      votedTitle: "已投票（每人限投一次）",
       anon: "匿名用户",
       anonShort: "匿名",
       authorReply: "作者回复：",
@@ -132,6 +133,7 @@
       imgErr: "Failed to process image",
       imgTooBig: "Image is too large, please try a smaller screenshot",
       voteFail: "Vote failed, please try again",
+      votedTitle: "Already voted (one vote per person)",
       anon: "Anonymous",
       anonShort: "Anon",
       authorReply: "Maintainer reply: ",
@@ -785,12 +787,13 @@
     }
   });
 
-  // ---------- Voting ----------
+  // ---------- Voting (one vote per person) ----------
   async function toggleVote(item, onUpdated) {
-    const prevVoted = item.voted;
-    const prevVotes = item.votes;
-    item.voted = !prevVoted;
-    item.votes = Math.max(0, prevVotes + (item.voted ? 1 : -1));
+    if (item.voted || item._voting) return;
+    const prevVotes = item.votes || 0;
+    item._voting = true;
+    item.voted = true;
+    item.votes = prevVotes + 1;
     onUpdated();
 
     try {
@@ -800,16 +803,18 @@
         body: JSON.stringify({ action: "vote", id: item.id, voterId }),
       }, 9000);
       item.votes = data.votes;
-      item.voted = data.voted;
+      item.voted = Boolean(data.voted);
       writeCache(items);
       onUpdated();
       if (sortMode === "top") renderBoard();
     } catch (err) {
-      item.voted = prevVoted;
+      item.voted = false;
       item.votes = prevVotes;
       onUpdated();
       statusHint.textContent = err.message || t("voteFail");
       statusHint.classList.add("is-err");
+    } finally {
+      item._voting = false;
     }
   }
 
@@ -834,10 +839,15 @@
     const topRow = el("div", "wl-detail-top");
     const voteBtn = el("button", `wl-vote wl-vote--lg${it.voted ? " on" : ""}`);
     voteBtn.type = "button";
+    voteBtn.disabled = Boolean(it.voted);
+    voteBtn.setAttribute("aria-pressed", String(Boolean(it.voted)));
+    if (it.voted) voteBtn.title = t("votedTitle");
     voteBtn.append(el("span", "wl-arrow", "▲"), el("b", "", String(it.votes || 0)));
     const syncVoteUi = () => {
       voteBtn.classList.toggle("on", Boolean(it.voted));
+      voteBtn.disabled = Boolean(it.voted);
       voteBtn.setAttribute("aria-pressed", String(Boolean(it.voted)));
+      voteBtn.title = it.voted ? t("votedTitle") : "";
       voteBtn.querySelector("b").textContent = String(it.votes || 0);
       renderBoard();
     };
@@ -1046,14 +1056,19 @@
 
     const voteBtn = el("button", `wl-vote-pill${it.voted ? " on" : ""}`);
     voteBtn.type = "button";
+    voteBtn.disabled = Boolean(it.voted);
     voteBtn.setAttribute("aria-pressed", String(Boolean(it.voted)));
-    voteBtn.setAttribute("aria-label", `Vote for ${itemTitle(it)}`);
+    voteBtn.setAttribute("aria-label", it.voted ? t("votedTitle") : `Vote for ${itemTitle(it)}`);
+    if (it.voted) voteBtn.title = t("votedTitle");
     voteBtn.append(el("span", "wl-arrow", "▲"), el("b", "", String(it.votes || 0)));
     voteBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       toggleVote(it, () => {
         voteBtn.classList.toggle("on", Boolean(it.voted));
+        voteBtn.disabled = Boolean(it.voted);
         voteBtn.setAttribute("aria-pressed", String(Boolean(it.voted)));
+        voteBtn.setAttribute("aria-label", it.voted ? t("votedTitle") : `Vote for ${itemTitle(it)}`);
+        voteBtn.title = it.voted ? t("votedTitle") : "";
         voteBtn.querySelector("b").textContent = String(it.votes || 0);
       });
     });
