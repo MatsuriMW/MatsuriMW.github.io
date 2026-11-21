@@ -143,18 +143,32 @@ async function loadImage(id) {
 
 const SEED_ITEMS = [
   {
+    id: "ad0000000105",
+    title: "Harness 自动探测、段落右键委派、螺旋外沿番茄钟与 A/B/C 菜单（v1.13.1–v1.13.11 / v2.5–v2.6）",
+    titleEn: "Harness Auto-Detection, Paragraph Delegation, Outer-Rail Pomodoro & A/B/C Menu (v1.13.1–v1.13.11 / v2.5–v2.6)",
+    desc: "Agent Deck 上线本机 Harness 自动探测、千问办公 2.x 与 Hermes 追踪、光标跟随段落委派箭头、编辑器与四视图右键委派（CLI 默认短写法）、Windows CLI 三端 CI 与 Dream 私密过滤；螺旋日程上线外沿轻量化番茄钟（15m/25m/自定义）、接下来 A/B/C 重要程度右键菜单与中英双语 macOS 小组件。",
+    descEn: "Agent Deck ships local harness auto-detection, QwenWork 2.x & Hermes tracking, cursor-following paragraph delegation, editor/4-view right-click delegation, Windows 3-OS CI, and Dream privacy filtering; Nautilus Spiral ships outer-rail Pomodoro (15m/25m/custom), Up Next A/B/C priority menu, and bilingual macOS widgets.",
+    area: "双插件联动",
+    author: "马自立",
+    status: "done",
+    authorNote: "",
+    images: [],
+    createdAt: "2026-11-21T12:50:00.000Z",
+    updatedAt: "2026-11-21T12:50:00.000Z",
+  },
+  {
     id: "ad0000000101",
-    title: "M1.1 上下文内核收口、隐私闸门与零静默丢失",
-    titleEn: "M1.1 Unified Context Kernel, Privacy Gate & Zero Silent Loss",
-    desc: "将祖先链、双链解析、记忆挑选、技能卡路径与问答回灌收口为单一 ContextBundle 管道；第 4 篇起双链显式列出绝对路径指针而非静默截断，坏 #^blockId / #标题 显式告警，优先读取未落盘编辑器缓冲，并加入 private: true / 排除目录隐私闸门与单关键词检索补盲。",
-    descEn: "Consolidate ancestor chains, wikilinks, memory selection, skill paths, and Q&A threads into a single ContextBundle pipeline; list file-path pointers for 4th+ linked notes instead of silently truncating, warn on broken anchors, read unsaved editor buffers first, and enforce private: true / excluded-folder gates.",
+    title: "M1.1 上下文内核收口、隐私闸门与零静默丢失（v1.13.0）",
+    titleEn: "M1.1 Unified Context Kernel, Privacy Gate & Zero Silent Loss (v1.13.0)",
+    desc: "将祖先链、双链解析、记忆挑选、技能卡路径与问答回灌收口为单一 ContextBundle 管道；第 4 篇起双链显式列出绝对路径指针而非静默截断，坏 #^blockId / #标题 显式告警，优先读取未落盘编辑器缓冲，并加入 private: true / 排除目录隐私闸门、高危权限护栏与 Trace 脱敏诊断。",
+    descEn: "Consolidate ancestor chains, wikilinks, memory selection, skill paths, and Q&A threads into a single ContextBundle pipeline; list file-path pointers for 4th+ linked notes instead of silently truncating, warn on broken anchors, read unsaved editor buffers first, and enforce private: true gates, permission guardrails, and trace diagnostics.",
     area: "Agent Deck",
     author: "马自立",
-    status: "in_progress",
+    status: "done",
     authorNote: "",
     images: [],
     createdAt: "2026-11-18T11:30:00.000Z",
-    updatedAt: "2026-11-18T11:30:00.000Z",
+    updatedAt: "2026-11-21T12:40:00.000Z",
   },
   {
     id: "ad0000000102",
@@ -214,31 +228,31 @@ const SEED_ITEMS = [
   },
   {
     id: "ad0000000002",
-    title: "更多 Agent 与终端生态扩展（Hermes / 千问 / Kimi / MiniMax / Muse / Pi）",
-    titleEn: "Expanded Agent & Terminal Matrix (Hermes / Qwen / Kimi / MiniMax / Muse / Pi)",
-    desc: "Grok Bot（Sand）追踪已上线；持续接入 Hermes Agent、千问、Kimi Code、ZCode、MiniMax Code、Muse、Pi 与更多终端（Ghostty / WezTerm / Kitty / Alacritty / cmux）。",
-    descEn: "Grok Bot (Sand) tracking is live; expanding support to Hermes Agent, Qwen, Kimi Code, ZCode, MiniMax Code, Muse, Pi, and more terminals (Ghostty / WezTerm / Kitty / Alacritty / cmux).",
+    title: "更多 Agent 与终端生态扩展（Kimi / MiniMax / ZCode / Muse / Pi）",
+    titleEn: "Expanded Agent & Terminal Matrix (Kimi / MiniMax / ZCode / Muse / Pi)",
+    desc: "Hermes Agent、千问办公（QwenWork 2.x）与 Grok Bot（Sand）追踪均已上线；持续接入 Kimi Code、ZCode、MiniMax Code、Muse、Pi 与更多终端（Ghostty / WezTerm / Kitty / Alacritty / cmux）。",
+    descEn: "Hermes Agent, QwenWork 2.x, and Grok Bot (Sand) tracking are live; expanding support to Kimi Code, ZCode, MiniMax Code, Muse, Pi, and more terminals (Ghostty / WezTerm / Kitty / Alacritty / cmux).",
     area: "Agent Deck",
     author: "马自立",
     status: "planned",
     authorNote: "",
     images: [],
     createdAt: "2026-11-15T09:40:00.000Z",
-    updatedAt: "2026-11-18T11:00:00.000Z",
+    updatedAt: "2026-11-21T12:40:00.000Z",
   },
   {
     id: "ad0000000003",
     title: "Windows 端完整适配",
     titleEn: "Full Windows Compatibility & Verification",
-    desc: "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容、跨平台脚本路径转义与桌面端窗口联动。",
-    descEn: "Complete session log discovery, CLI execution compatibility, cross-platform script path escaping, and desktop app window handoff on Windows.",
+    desc: "v1.13.1–v1.13.6 已完成跨平台 SQLite、Windows .cmd/.bat CLI 包装脚本与进程树清理并跑通三端 CI，且在非 macOS 端自动隐藏菜单栏入口；持续补齐 Windows 桌面窗口联动与真机实测。",
+    descEn: "v1.13.1–v1.13.6 shipped cross-platform SQLite, Windows .cmd/.bat CLI wrapping & process-tree cleanup with 3-OS CI pass and non-macOS UI cleanup; continuing desktop window handoff & real-machine verification.",
     area: "Agent Deck",
     author: "马自立",
-    status: "planned",
+    status: "in_progress",
     authorNote: "",
     images: [],
     createdAt: "2026-11-15T09:30:00.000Z",
-    updatedAt: "2026-11-15T09:30:00.000Z",
+    updatedAt: "2026-11-21T12:40:00.000Z",
   },
   {
     id: "ad0000000005",
@@ -411,6 +425,7 @@ const SEED_ITEMS = [
 ];
 
 const REMOVED_SEED_IDS = ["ad0000000004"];
+const V4_SEED_IDS = new Set(["ad0000000105", "ad0000000101", "ad0000000002", "ad0000000003"]);
 let seedChecked = false;
 
 async function ensureSeeded() {
@@ -453,14 +468,33 @@ async function ensureSeeded() {
       db.seededV3 = true;
       changed = true;
     }
+    if (!db.seededV4) {
+      for (const it of SEED_ITEMS) {
+        if (!V4_SEED_IDS.has(it.id)) continue;
+        if (!db.items[it.id]) {
+          db.ids.unshift(it.id);
+          db.items[it.id] = { ...it };
+          db.votes[it.id] = [];
+        } else {
+          db.items[it.id] = {
+            ...it,
+            authorNote: db.items[it.id].authorNote || it.authorNote,
+            authorNoteAt: db.items[it.id].authorNoteAt || "",
+          };
+        }
+      }
+      db.seededV4 = true;
+      changed = true;
+    }
     if (changed) writeDev(db);
     return null;
   }
   if (seedChecked) return null;
-  const [claimed, cleanClaim, claimV3, existing] = await redis([
+  const [claimed, cleanClaim, claimV3, claimV4, existing] = await redis([
     ["SET", "wish:seeded:v1", "1", "NX"],
     ["SET", "wish:seeded:v2", "1", "NX"],
     ["SET", "wish:seeded:v3", "1", "NX"],
+    ["SET", "wish:seeded:v4", "1", "NX"],
     ["LRANGE", "wish:ids", 0, MAX_ITEMS - 1],
   ], 1);
   const cmds = [];
@@ -482,6 +516,25 @@ async function ensureSeeded() {
     const have = new Set(existing || []);
     for (const it of [...SEED_ITEMS].reverse()) {
       cmds.push(["SET", `wish:item:${it.id}`, JSON.stringify(it)]);
+      if (!have.has(it.id)) {
+        cmds.push(["LPUSH", "wish:ids", it.id]);
+      }
+    }
+  }
+  if (claimV4 === "OK") {
+    const have = new Set(existing || []);
+    const v4Items = SEED_ITEMS.filter((it) => V4_SEED_IDS.has(it.id));
+    const prevRaw = await redis(v4Items.map((it) => ["GET", `wish:item:${it.id}`]), 1);
+    for (let i = v4Items.length - 1; i >= 0; i--) {
+      const it = v4Items[i];
+      let prev = null;
+      try {
+        if (prevRaw[i]) prev = JSON.parse(prevRaw[i]);
+      } catch {}
+      const merged = prev
+        ? { ...it, authorNote: prev.authorNote || it.authorNote, authorNoteAt: prev.authorNoteAt || "" }
+        : it;
+      cmds.push(["SET", `wish:item:${it.id}`, JSON.stringify(merged)]);
       if (!have.has(it.id)) {
         cmds.push(["LPUSH", "wish:ids", it.id]);
       }
@@ -589,6 +642,7 @@ async function createItem(body, voterId, ip, admin = false) {
     contact,
     status,
     authorNote,
+    authorNoteAt: authorNote ? now : "",
     images: imgIds,
     createdAt: now,
     updatedAt: now,
@@ -742,7 +796,13 @@ export async function PATCH(request) {
       if (typeof body.author === "string") it.author = body.author.trim().slice(0, 24) || "匿名用户";
       if (typeof body.contact === "string") it.contact = body.contact.trim().slice(0, 80);
       if (body.status && STATUSES.has(body.status)) it.status = body.status;
-      if (typeof body.authorNote === "string") it.authorNote = body.authorNote.trim().slice(0, 300);
+      if (typeof body.authorNote === "string") {
+        const nextNote = body.authorNote.trim().slice(0, 300);
+        if (nextNote !== (it.authorNote || "")) {
+          it.authorNoteAt = nextNote ? new Date().toISOString() : "";
+        }
+        it.authorNote = nextNote;
+      }
       it.updatedAt = new Date().toISOString();
       return it;
     };

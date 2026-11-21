@@ -87,6 +87,11 @@
       anonShort: "匿名",
       authorReply: "作者回复：",
       replyShort: "回复：",
+      replyBtn: "回复",
+      editReplyBtn: "改回复",
+      sendReply: "发送",
+      clearReply: "清空",
+      replyPh: "输入作者回复（回车发送，Esc 取消）",
       adminLogin: "作者管理",
       adminLogout: "退出管理",
       adminPrompt: "输入管理员口令（WISHLIST_ADMIN_TOKEN）：",
@@ -138,6 +143,11 @@
       anonShort: "Anon",
       authorReply: "Maintainer reply: ",
       replyShort: "Reply: ",
+      replyBtn: "Reply",
+      editReplyBtn: "Edit reply",
+      sendReply: "Send",
+      clearReply: "Clear",
+      replyPh: "Write a reply (Enter to send, Esc to cancel)",
       adminLogin: "Maintainer",
       adminLogout: "Sign out",
       adminPrompt: "Enter admin token (WISHLIST_ADMIN_TOKEN):",
@@ -151,11 +161,25 @@
   };
   const t = (k) => UI[lang][k] || UI.zh[k];
 
+  const QUICK_REPLIES = [
+    { id: "ack", zhLabel: "收到", enLabel: "Received", zhText: "收到，感谢建议！", enText: "Received, thanks for the suggestion!", status: null, card: true },
+    { id: "planned", zhLabel: "已排期", enLabel: "Planned", zhText: "收到，已加入后续排期。", enText: "Added to the roadmap.", status: "planned", card: true },
+    { id: "progress", zhLabel: "开发中", enLabel: "In Progress", zhText: "正在开发中。", enText: "Actively working on this.", status: "in_progress", card: true },
+    { id: "done", zhLabel: "已完成", enLabel: "Done", zhText: "已完成，已在最新版本上线！", enText: "Done! Shipped in the latest release.", status: "done", card: true },
+    { id: "later", zhLabel: "暂不计划", enLabel: "Not Planned", zhText: "收到，暂不计划实现，先记录备查。", enText: "Noted, not planned for now.", status: null, card: false },
+  ];
+  const qrLabel = (q) => (isEn() ? q.enLabel : q.zhLabel);
+  const qrText = (q) => (isEn() ? q.enText : q.zhText);
+
   // English translations for known seed & community items (by id)
   const EN_CARDS = {
+    ad0000000105: [
+      "Harness Auto-Detection, Paragraph Delegation, Outer-Rail Pomodoro & A/B/C Menu (v1.13.1–v1.13.11 / v2.5–v2.6)",
+      "Agent Deck ships local harness auto-detection, QwenWork 2.x & Hermes tracking, cursor-following paragraph delegation, editor/4-view right-click delegation, Windows 3-OS CI, and Dream privacy filtering; Nautilus Spiral ships outer-rail Pomodoro (15m/25m/custom), Up Next A/B/C priority menu, and bilingual macOS widgets.",
+    ],
     ad0000000101: [
-      "M1.1 Unified Context Kernel, Privacy Gate & Zero Silent Loss",
-      "Consolidate ancestor chains, wikilinks, memory selection, skill paths, and Q&A threads into a single ContextBundle pipeline; list file-path pointers for 4th+ linked notes instead of silently truncating, warn on broken anchors, read unsaved editor buffers first, and enforce private: true / excluded-folder gates.",
+      "M1.1 Unified Context Kernel, Privacy Gate & Zero Silent Loss (v1.13.0)",
+      "Consolidate ancestor chains, wikilinks, memory selection, skill paths, and Q&A threads into a single ContextBundle pipeline; list file-path pointers for 4th+ linked notes instead of silently truncating, warn on broken anchors, read unsaved editor buffers first, and enforce private: true gates, permission guardrails, and trace diagnostics.",
     ],
     ad0000000102: [
       "M1.2 Structural Metadata, Anchor Hash Verification & Pre-Dispatch Preview",
@@ -174,12 +198,12 @@
       "Switch any AI record parent block between Outline, Table, Cards, and Timeline views inline with per-block persistence, without altering underlying Markdown.",
     ],
     ad0000000002: [
-      "Expanded Agent & Terminal Matrix (Hermes / Qwen / Kimi / MiniMax / Muse / Pi)",
-      "Grok Bot (Sand) tracking is live; expanding support to Hermes Agent, Qwen, Kimi Code, ZCode, MiniMax Code, Muse, Pi, and more terminals (Ghostty / WezTerm / Kitty / Alacritty / cmux).",
+      "Expanded Agent & Terminal Matrix (Kimi / MiniMax / ZCode / Muse / Pi)",
+      "Hermes Agent, QwenWork 2.x, and Grok Bot (Sand) tracking are live; expanding support to Kimi Code, ZCode, MiniMax Code, Muse, Pi, and more terminals (Ghostty / WezTerm / Kitty / Alacritty / cmux).",
     ],
     ad0000000003: [
       "Full Windows Compatibility & Verification",
-      "Complete session log discovery, CLI execution compatibility, cross-platform script path escaping, and desktop app window handoff on Windows.",
+      "v1.13.1–v1.13.6 shipped cross-platform SQLite, Windows .cmd/.bat CLI wrapping & process-tree cleanup with 3-OS CI pass and non-macOS UI cleanup; continuing desktop window handoff & real-machine verification.",
     ],
     ad0000000005: [
       "Behavioral Analytics & Review Feedback Loop",
@@ -240,6 +264,8 @@
       "Track and delegate tasks to in-vault assistants like Obsidian Copilot or Claudian, binding sidebar conversations back to journal tasks.",
     ],
     "0cd667f704ab": ["Standalone Ready-to-Use Desktop Client", ""],
+    "0c0a40ce1aa1": ["Add Multi-Language Support (Traditional Chinese, etc.)", ""],
+    c4d52a0222d5: ["Auto-Detect Installed Agents & Allow Omitting Model Override", ""],
   };
 
   function itemTitle(it) {
@@ -274,13 +300,14 @@
 
   const CACHE_KEY = "matsuri_wl_cache_v2";
   const FALLBACK_ITEMS = [
-    ["ad0000000101", "in_progress", "Agent Deck", "M1.1 上下文内核收口、隐私闸门与零静默丢失", "将祖先链、双链解析、记忆挑选、技能卡路径与问答回灌收口为单一 ContextBundle 管道；第 4 篇起双链显式列出绝对路径指针而非静默截断，坏 #^blockId / #标题 显式告警，优先读取未落盘编辑器缓冲，并加入 private: true / 排除目录隐私闸门与单关键词检索补盲。", "2026-11-18T11:30:00.000Z"],
+    ["ad0000000105", "done", "双插件联动", "Harness 自动探测、段落右键委派、螺旋外沿番茄钟与 A/B/C 菜单（v1.13.1–v1.13.11 / v2.5–v2.6）", "Agent Deck 上线本机 Harness 自动探测、千问办公 2.x 与 Hermes 追踪、光标跟随段落委派箭头、编辑器与四视图右键委派（CLI 默认短写法）、Windows CLI 三端 CI 与 Dream 私密过滤；螺旋日程上线外沿轻量化番茄钟（15m/25m/自定义）、接下来 A/B/C 重要程度右键菜单与中英双语 macOS 小组件。", "2026-11-21T12:50:00.000Z"],
+    ["ad0000000101", "done", "Agent Deck", "M1.1 上下文内核收口、隐私闸门与零静默丢失（v1.13.0）", "将祖先链、双链解析、记忆挑选、技能卡路径与问答回灌收口为单一 ContextBundle 管道；第 4 篇起双链显式列出绝对路径指针而非静默截断，坏 #^blockId / #标题 显式告警，优先读取未落盘编辑器缓冲，并加入 private: true / 排除目录隐私闸门、高危权限护栏与 Trace 脱敏诊断。", "2026-11-18T11:30:00.000Z"],
     ["ad0000000102", "planned", "Agent Deck", "M1.2 结构保真、锚点漂移校验与派发前透明预览", "提取笔记核心属性摘要（type / def / domain / father / status），为引用块建立软/硬锚点 sha256 漂移校验，提供带 why 信号的一跳结构邻居，并在委派确认框内提供可展开勾选的轻量上下文预览清单。", "2026-11-18T11:20:00.000Z"],
     ["ad0000000103", "planned", "Agent Deck", "M1.3 对外供给引擎：纯 Node CLI + stdio Vault Context MCP Server", "剥离 Obsidian API 的纯 Node 内核，除 memory_search / read / recent 外新增 vault_outline / vault_read / vault_related / vault_find 库级只读工具集，供 Claude Code、Codex、DSH、OpenCode 等任意客户端按需调用。", "2026-11-18T11:10:00.000Z"],
     ["ad0000000104", "done", "Agent Deck", "M0 记忆库（一文一条）、派发草稿、回复信箱与按项目目录派发（v1.11.0–v1.12.2）", "上线一文一条记忆库（Base 表格 / 三列看板 / 逐条审阅 / 来源重锚定）与 memory-query.mjs CLI；支持派发草稿与载荷快照、❓/✍️ 回复协议与非模态回复信箱、按项目目录派发（Codex 自动归组项目）及侧栏「现在」按状态视图。", "2026-11-18T10:50:00.000Z"],
     ["ad0000000001", "done", "Agent Deck", "AI 记录母块四视图切换（大纲 / 表格 / 卡片 / 时间线）（v1.10.0）", "AI 自动记录母块尾部是视图切换入口，支持大纲、表格、卡片、时间线四种展示并记住每个块的偏好，不改写底层 Markdown。", "2026-11-15T09:50:00.000Z"],
-    ["ad0000000002", "planned", "Agent Deck", "更多 Agent 与终端生态扩展（Hermes / 千问 / Kimi / MiniMax / Muse / Pi）", "Grok Bot（Sand）追踪已上线；持续接入 Hermes Agent、千问、Kimi Code、ZCode、MiniMax Code、Muse、Pi 与更多终端（Ghostty / WezTerm / Kitty / Alacritty / cmux）。", "2026-11-15T09:40:00.000Z"],
-    ["ad0000000003", "planned", "Agent Deck", "Windows 端完整适配", "补齐 Windows 环境下的会话日志路径探测、CLI 执行兼容、跨平台脚本路径转义与桌面端窗口联动。", "2026-11-15T09:30:00.000Z"],
+    ["ad0000000002", "planned", "Agent Deck", "更多 Agent 与终端生态扩展（Kimi / MiniMax / ZCode / Muse / Pi）", "Hermes Agent、千问办公（QwenWork 2.x）与 Grok Bot（Sand）追踪均已上线；持续接入 Kimi Code、ZCode、MiniMax Code、Muse、Pi 与更多终端（Ghostty / WezTerm / Kitty / Alacritty / cmux）。", "2026-11-15T09:40:00.000Z"],
+    ["ad0000000003", "in_progress", "Agent Deck", "Windows 端完整适配", "v1.13.1–v1.13.6 已完成跨平台 SQLite、Windows .cmd/.bat CLI 包装脚本与进程树清理并跑通三端 CI，且在非 macOS 端自动隐藏菜单栏入口；持续补齐 Windows 桌面窗口联动与真机实测。", "2026-11-15T09:30:00.000Z"],
     ["ad0000000005", "planned", "螺旋日程", "行为数据分析与反馈闭环", "结合每日螺旋轨迹、DOING 用时记录与中断快照，统计专注分布与延期规律并给出复盘反馈。", "2026-11-15T09:10:00.000Z"],
     ["ad0000000006", "done", "Agent Deck", "Cursor 桌面端（3.30.14+）会话追踪（v1.9.8）", "基于 Cursor 桌面端 Hooks 与增量扫描只读追踪对话轮次、工具活动与状态回写。", "2026-11-15T11:40:00.000Z"],
     ["ad0000000007", "done", "Agent Deck", "AI 记录项目名前缀与「最近的会话」折叠改版（v1.9.8）", "自动记录标题统一为「项目名 -> 标题」；最近的会话支持 7/30/120 天窗口、按 Agent 默认叠放和视口锚定。", "2026-11-15T11:30:00.000Z"],
@@ -847,6 +874,19 @@
     }
   }
 
+  async function patchItem(it, patch) {
+    const r = await fetch(API, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ id: it.id, ...patch }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || "保存失败");
+    Object.assign(it, data.item);
+    writeCache(items);
+    return it;
+  }
+
   // ---------- Card Detail Modal ----------
   function openDetail(it) {
     activeItem = it;
@@ -918,6 +958,9 @@
     if (it.authorNote) {
       const note = el("div", "wl-reply");
       note.append(el("b", "", t("authorReply")), document.createTextNode(it.authorNote));
+      if (it.authorNoteAt) {
+        note.append(el("span", "wl-reply-time", ` · ${fmtTime(it.authorNoteAt)}`));
+      }
       detailDialog.append(note);
     }
 
@@ -986,11 +1029,33 @@
       contactIn.value = it.contact || "";
       contactIn.placeholder = "联系方式（仅作者可见）";
 
-      const noteIn = el("input", "wl-adm-in");
-      noteIn.type = "text";
+      const presetRow = el("div", "wl-adm-presets");
+      const noteIn = el("textarea", "wl-adm-textarea wl-adm-note");
+      noteIn.rows = 2;
       noteIn.maxLength = 300;
       noteIn.value = it.authorNote || "";
-      noteIn.placeholder = "官方回复（选填）";
+      noteIn.placeholder = "官方回复（选填，点上方快捷回应可一键填入）";
+
+      for (const q of QUICK_REPLIES) {
+        const b = el("button", "wl-quick-btn", qrLabel(q));
+        b.type = "button";
+        b.title = qrText(q);
+        b.addEventListener("click", () => {
+          noteIn.value = qrText(q);
+          if (q.status) sel.value = q.status;
+          noteIn.focus();
+        });
+        presetRow.append(b);
+      }
+      if (it.authorNote) {
+        const clr = el("button", "wl-quick-btn is-muted", t("clearReply"));
+        clr.type = "button";
+        clr.addEventListener("click", () => {
+          noteIn.value = "";
+          noteIn.focus();
+        });
+        presetRow.append(clr);
+      }
 
       const admRow = el("div", "wl-adm-row");
       const saveBtn = el("button", "wl-adm-btn is-primary", "保存修改");
@@ -1000,24 +1065,15 @@
         if (nextTitle.length < 2) return alert("标题至少写 2 个字");
         saveBtn.disabled = true;
         try {
-          const r = await fetch(API, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` },
-            body: JSON.stringify({
-              id: it.id,
-              title: nextTitle,
-              desc: descIn.value.trim(),
-              area: areaSel.value,
-              author: authorIn.value.trim(),
-              contact: contactIn.value.trim(),
-              status: sel.value,
-              authorNote: noteIn.value,
-            }),
+          await patchItem(it, {
+            title: nextTitle,
+            desc: descIn.value.trim(),
+            area: areaSel.value,
+            author: authorIn.value.trim(),
+            contact: contactIn.value.trim(),
+            status: sel.value,
+            authorNote: noteIn.value,
           });
-          const data = await r.json();
-          if (!r.ok) throw new Error(data.error || "保存失败");
-          Object.assign(it, data.item);
-          writeCache(items);
           renderToolbar();
           renderBoard();
           openDetail(it);
@@ -1046,7 +1102,7 @@
       });
 
       admRow.append(saveBtn, delBtn);
-      admGrid.append(titleIn, metaRow, descIn, contactIn, noteIn, admRow);
+      admGrid.append(titleIn, metaRow, descIn, contactIn, presetRow, noteIn, admRow);
       adm.append(admGrid);
       detailDialog.append(adm);
     }
@@ -1132,15 +1188,7 @@
         const next = quickSel.value;
         quickSel.disabled = true;
         try {
-          const r = await fetch(API, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` },
-            body: JSON.stringify({ id: it.id, status: next }),
-          });
-          const data = await r.json();
-          if (!r.ok) throw new Error(data.error || "状态更新失败");
-          Object.assign(it, data.item);
-          writeCache(items);
+          await patchItem(it, { status: next });
           renderBoard();
         } catch (err) {
           it.status = prev;
@@ -1164,7 +1212,97 @@
     if (it.authorNote) {
       const reply = el("div", "wl-card-note");
       reply.append(el("b", "", t("replyShort")), document.createTextNode(it.authorNote));
+      if (it.authorNoteAt) {
+        reply.append(el("span", "wl-reply-time", ` · ${fmtTime(it.authorNoteAt).slice(5)}`));
+      }
       card.append(reply);
+    }
+
+    if (adminToken) {
+      const admBar = el("div", "wl-card-adm");
+      admBar.addEventListener("click", (e) => e.stopPropagation());
+      admBar.addEventListener("keydown", (e) => e.stopPropagation());
+
+      const quickRow = el("div", "wl-card-quick");
+      for (const q of QUICK_REPLIES.filter((x) => x.card)) {
+        const text = qrText(q);
+        const active = it.authorNote === text || it.authorNote === q.zhText || it.authorNote === q.enText;
+        const qb = el("button", `wl-quick-btn${active ? " on" : ""}`, qrLabel(q));
+        qb.type = "button";
+        qb.title = text;
+        qb.addEventListener("click", async () => {
+          qb.disabled = true;
+          try {
+            const patch = { authorNote: text };
+            if (q.status) patch.status = q.status;
+            await patchItem(it, patch);
+            renderBoard();
+          } catch (err) {
+            alert(err.message);
+          } finally {
+            qb.disabled = false;
+          }
+        });
+        quickRow.append(qb);
+      }
+
+      const replyBox = el("div", "wl-card-reply-box");
+      replyBox.hidden = true;
+      const replyIn = el("input", "wl-card-reply-in");
+      replyIn.type = "text";
+      replyIn.maxLength = 300;
+      replyIn.value = it.authorNote || "";
+      replyIn.placeholder = t("replyPh");
+
+      const sendBtn = el("button", "wl-quick-btn is-send", t("sendReply"));
+      sendBtn.type = "button";
+
+      const submitReply = async (val) => {
+        sendBtn.disabled = true;
+        replyIn.disabled = true;
+        try {
+          await patchItem(it, { authorNote: val });
+          renderBoard();
+        } catch (err) {
+          alert(err.message);
+          sendBtn.disabled = false;
+          replyIn.disabled = false;
+        }
+      };
+
+      sendBtn.addEventListener("click", () => submitReply(replyIn.value));
+      replyIn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          submitReply(replyIn.value);
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          replyBox.hidden = true;
+        }
+      });
+
+      replyBox.append(replyIn, sendBtn);
+      if (it.authorNote) {
+        const clrBtn = el("button", "wl-quick-btn is-muted", t("clearReply"));
+        clrBtn.type = "button";
+        clrBtn.addEventListener("click", () => submitReply(""));
+        replyBox.append(clrBtn);
+      }
+
+      const toggleReply = el("button", "wl-quick-btn is-custom", it.authorNote ? t("editReplyBtn") : t("replyBtn"));
+      toggleReply.type = "button";
+      toggleReply.addEventListener("click", () => {
+        replyBox.hidden = !replyBox.hidden;
+        if (!replyBox.hidden) {
+          replyIn.value = it.authorNote || "";
+          replyIn.focus();
+          replyIn.select();
+        }
+      });
+      quickRow.append(toggleReply);
+
+      admBar.append(quickRow, replyBox);
+      card.append(admBar);
     }
 
     const foot = el("div", "wl-card-foot");
