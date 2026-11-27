@@ -719,9 +719,18 @@
 #download > .sec-head { max-width: none; }
 #download > .sec-head p { max-width: 780px; }
 .jw-dl-head-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
-.jw-dl-status {
+.jw-dl-head-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.jw-dl-status,
+.jw-dl-total {
   font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 99px;
 }
+.jw-dl-total {
+  color: var(--ink-2); background: var(--surface); border: 1px solid var(--line);
+}
+.jw-dl-total b,
+.jw-dl-fcount b { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
+.jw-dl-total[hidden],
+.jw-dl-fcount[hidden] { display: none; }
 .jw-dl-status.is-soon { color: var(--ink-2); background: var(--neutral-soft); border: 1px solid var(--rule); }
 .jw-dl-status.is-live { color: #1b7a4b; background: #dff4e8; border: 1px solid #bde5cf; }
 
