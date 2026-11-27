@@ -627,3 +627,89 @@
   .wl-compose, .wl-modal { padding: 18px 16px; }
   .wl-row, .wl-row.is-admin, .wl-form-meta { grid-template-columns: 1fr; }
 }
+
+/* ===== 日志工作流页（/portfolio/journal-workflow/）：3 列指标、跳转导航、6 阶段网格与双插件分工 ===== */
+.pf-stats.pf-stats--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pf-stats.pf-stats--3 > div { padding: 28px 26px; }
+.pf-stats.pf-stats--3 b { font-size: clamp(40px, 4.8vw, 56px); }
+@media (max-width: 700px) {
+  .pf-stats.pf-stats--3 { grid-template-columns: 1fr; }
+  .pf-stats.pf-stats--3 > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+}
+
+.jw-ver-pills { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.jw-ver-pills span {
+  font: 600 12px/1 "SF Mono", Menlo, Consolas, monospace;
+  padding: 5px 10px; border-radius: 99px;
+  background: var(--surface); border: 1px solid var(--rule); color: var(--ink-2);
+}
+
+.jw-jump {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rule);
+}
+.jw-jump a {
+  display: inline-flex; align-items: center; padding: 5px 12px;
+  font-size: 13px; font-weight: 500; color: var(--ink-2);
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 99px;
+  transition: border-color .2s, color .2s, background .2s, transform .2s var(--ease);
+}
+.jw-jump a:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-soft); transform: translateY(-1px); }
+
+.pj-logcol { padding: 26px 28px 24px; }
+.pj-loghead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+.pj-loghead h3 { margin: 0; font-size: 18px; }
+.pj-logver {
+  font: 600 12px/1 "SF Mono", Menlo, Consolas, monospace;
+  padding: 4px 9px; border-radius: 99px;
+  background: var(--page); border: 1px solid var(--rule); color: var(--ink-2);
+}
+.pj-logcol ol > li.is-latest .pj-v b { color: var(--blue); }
+.jw-latest-tag {
+  font-size: 11px; font-weight: 600; color: var(--blue); background: var(--blue-soft);
+  padding: 2px 7px; border-radius: 99px;
+}
+
+.jw-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.jw-stage {
+  display: flex; flex-direction: column; gap: 10px; height: 100%;
+  padding: 28px 28px 26px; transition: border-color .25s, box-shadow .25s;
+}
+.jw-stage:hover { border-color: #d6d4cd; box-shadow: 0 14px 32px -24px rgba(31, 31, 29, .35); }
+.jw-stage-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.jw-step { font: 600 22px/1 "SF Mono", Menlo, Consolas, monospace; color: #c5c3bc; letter-spacing: -.02em; }
+.jw-stage:hover .jw-step { color: var(--blue); }
+.jw-stage h3 { font-size: 20px; line-height: 1.38; margin: 4px 0 2px; }
+.jw-pts { margin: 4px 0 0; padding-left: 18px; font-size: 14.5px; line-height: 1.82; color: var(--ink-2); }
+.jw-pts li + li { margin-top: 8px; }
+.jw-pts b { color: var(--ink); font-weight: 600; }
+
+.jw-split-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.jw-plugin { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 30px 30px 26px; border-top-width: 3px; }
+.jw-plugin.is-spiral { border-top-color: #c98632; }
+.jw-plugin.is-deck { border-top-color: var(--blue); }
+.jw-plugin-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.jw-plugin.is-spiral .kind { color: #7c4d12; background: #faecd8; }
+.jw-plugin h3 { font-size: 22px; line-height: 1.32; margin: 4px 0 0; }
+.jw-plugin-sub { margin: 0 0 6px; font-size: 14.5px; font-weight: 600; color: var(--ink-2); }
+.jw-plugin .pf-links { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--rule); }
+
+.jw-manifesto {
+  margin-top: 20px; padding: 30px 32px;
+  background: linear-gradient(180deg, var(--surface) 0%, #f8f7f3 100%);
+}
+.jw-manifesto-head h3 { font-size: 22px; line-height: 1.35; margin: 8px 0 0; }
+.jw-manifesto-cols {
+  grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;
+  margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--rule);
+}
+.jw-manifesto-col h4 { margin: 0 0 6px; font-size: 15.5px; font-weight: 700; color: var(--ink); }
+.jw-manifesto-col p { margin: 0; font-size: 14px; line-height: 1.78; color: var(--ink-2); }
+
+@media (max-width: 820px) {
+  .jw-flow, .jw-split-top, .jw-manifesto-cols { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .jw-stage, .jw-plugin, .jw-manifesto, .pj-logcol { padding: 20px 18px; }
+  .pf-stats.pf-stats--3 > div { padding: 20px 16px; }
+}
