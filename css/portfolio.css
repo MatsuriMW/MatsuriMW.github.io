@@ -610,6 +610,49 @@
 .wl-admin-bar { display: flex; justify-content: flex-end; }
 .wl-admin-link { font: inherit; font-size: 12.5px; color: var(--ink-3); background: none; border: 0; padding: 2px 4px; cursor: pointer; }
 .wl-admin-link:hover { color: var(--ink-2); }
+.wl-admin-panel {
+  margin-top: 14px; padding: 16px 20px; background: var(--surface);
+  border: 1px solid var(--rule); border-radius: 12px;
+}
+.wl-admin-panel[hidden] { display: none; }
+.wl-admin-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.wl-admin-panel-title-wrap { display: flex; align-items: center; gap: 8px; }
+.wl-admin-panel-title { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+.wl-admin-badge {
+  font-size: 11px; font-weight: 600; color: var(--blue); background: var(--blue-soft);
+  padding: 2px 8px; border-radius: 99px;
+}
+.wl-admin-refresh {
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--ink-2);
+  background: var(--page); border: 1px solid var(--rule); border-radius: 99px;
+  padding: 4px 12px; cursor: pointer;
+}
+.wl-admin-refresh:hover:not(:disabled) { border-color: var(--ink-3); color: var(--ink); }
+.wl-admin-refresh:disabled { opacity: .55; cursor: default; }
+.wl-admin-metrics {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  margin-top: 14px;
+}
+.wl-admin-metric {
+  padding: 10px 12px; border-radius: 10px; background: var(--page); border: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.wl-admin-metric span { font-size: 12px; color: var(--ink-3); }
+.wl-admin-metric b { font-size: 20px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.wl-admin-files { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.wl-admin-file {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 12px; border-radius: 8px; background: var(--page); border: 1px solid var(--rule);
+  font-size: 12.5px;
+}
+.wl-admin-file code {
+  font: 500 12px/1.4 "SF Mono", Menlo, Consolas, monospace; color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.wl-admin-file b { flex: none; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.wl-admin-meta,
+.wl-admin-state { margin: 10px 0 0; font-size: 12px; color: var(--ink-3); }
+.wl-admin-state.is-err { color: var(--red); }
 
 .wl-lightbox {
   position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px;
@@ -625,7 +668,7 @@
 
 @media (max-width: 640px) {
   .wl-compose, .wl-modal { padding: 18px 16px; }
-  .wl-row, .wl-row.is-admin, .wl-form-meta { grid-template-columns: 1fr; }
+  .wl-row, .wl-row.is-admin, .wl-form-meta, .wl-admin-metrics { grid-template-columns: 1fr; }
 }
 
 /* ===== 日志工作流页（/portfolio/journal-workflow/）：3 列指标、跳转导航、6 阶段网格与双插件分工 ===== */
@@ -719,18 +762,9 @@
 #download > .sec-head { max-width: none; }
 #download > .sec-head p { max-width: 780px; }
 .jw-dl-head-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
-.jw-dl-head-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.jw-dl-status,
-.jw-dl-total {
+.jw-dl-status {
   font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 99px;
 }
-.jw-dl-total {
-  color: var(--ink-2); background: var(--surface); border: 1px solid var(--line);
-}
-.jw-dl-total b,
-.jw-dl-fcount b { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
-.jw-dl-total[hidden],
-.jw-dl-fcount[hidden] { display: none; }
 .jw-dl-status.is-soon { color: var(--ink-2); background: var(--neutral-soft); border: 1px solid var(--rule); }
 .jw-dl-status.is-live { color: #1b7a4b; background: #dff4e8; border: 1px solid #bde5cf; }
 

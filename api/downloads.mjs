@@ -1,9 +1,36 @@
-// Vercel Serverless Function: aggregate Outline Journal installer download counts from GitHub Releases
+// Vercel Serverless Function: aggregate Outline Journal installer download counts from GitHub Releases (Maintainer-only)
+import crypto from "node:crypto";
 
 const GH_RELEASES_URL = "https://api.github.com/repos/MatsuriMW/MatsuriMW.github.io/releases?per_page=100";
 const CACHE_KEY = "oj:dl:cache";
 const RURL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const RTOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+function isAdmin(req, adminToken) {
+  if (!adminToken) return false;
+  const auth = req?.headers?.get("authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  const tokenBuf = Buffer.from(token);
+  const adminBuf = Buffer.from(adminToken);
+  if (!token || tokenBuf.length !== adminBuf.length) return false;
+  return crypto.timingSafeEqual(tokenBuf, adminBuf);
+}
+
+function checkAdmin(req) {
+  const adminToken = process.env.WISHLIST_ADMIN_TOKEN || "";
+  if (!adminToken) {
+    return Response.json(
+      { error: "服务端未配置 WISHLIST_ADMIN_TOKEN" },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+  return isAdmin(req, adminToken)
+    ? null
+    : Response.json(
+        { error: "管理口令不对" },
+        { status: 401, headers: { "Cache-Control": "no-store" } },
+      );
+}
 
 function classifyAsset(name) {
   const lower = String(name || "").toLowerCase();
@@ -72,12 +99,15 @@ async function fetchGitHubCounts() {
   };
 }
 
-export async function GET() {
+export async function GET(request) {
+  const denied = checkAdmin(request);
+  if (denied) return denied;
+
   try {
     const payload = await fetchGitHubCounts();
     redis([["SET", CACHE_KEY, JSON.stringify(payload), "EX", "86400"]]).catch(() => {});
     return Response.json(payload, {
-      headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
+      headers: { "Cache-Control": "private, no-store" },
     });
   } catch {
     try {
@@ -87,7 +117,7 @@ export async function GET() {
         const cached = JSON.parse(raw);
         return Response.json(
           { ...cached, stale: true },
-          { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } },
+          { headers: { "Cache-Control": "private, no-store" } },
         );
       }
     } catch {

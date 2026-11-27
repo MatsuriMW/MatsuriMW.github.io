@@ -95,6 +95,17 @@
       adminLogin: "作者管理",
       adminLogout: "退出管理",
       adminPrompt: "输入管理员口令（WISHLIST_ADMIN_TOKEN）：",
+      dlTitle: "独立桌面端下载统计",
+      dlBadge: "作者可见",
+      dlRefresh: "刷新",
+      dlLoading: "正在读取下载统计…",
+      dlError: "读取下载统计失败",
+      dlEmpty: "暂无安装包下载记录",
+      dlTotal: "累计下载",
+      dlMac: "macOS",
+      dlWin: "Windows",
+      dlUpdated: "更新于 ",
+      dlStale: "（缓存数据）",
       syncing: "正在同步最新数据…",
       loading: "正在加载 Roadmap…",
       slowNet: "网络较慢，先展示内置路线图，仍在后台同步最新投票…",
@@ -151,6 +162,17 @@
       adminLogin: "Maintainer",
       adminLogout: "Sign out",
       adminPrompt: "Enter admin token (WISHLIST_ADMIN_TOKEN):",
+      dlTitle: "Desktop App Downloads",
+      dlBadge: "Maintainer Only",
+      dlRefresh: "Refresh",
+      dlLoading: "Loading download stats…",
+      dlError: "Failed to load download stats",
+      dlEmpty: "No installer assets found",
+      dlTotal: "Total",
+      dlMac: "macOS",
+      dlWin: "Windows",
+      dlUpdated: "Updated ",
+      dlStale: " (cached)",
       syncing: "Syncing latest roadmap…",
       loading: "Loading Roadmap…",
       slowNet: "Slow connection — showing built-in roadmap while syncing live votes…",
@@ -549,6 +571,8 @@
   window.addEventListener("resize", syncBoardNav, { passive: true });
 
   const statusHint = el("div", "wl-board-msg");
+  const adminPanel = el("section", "wl-admin-panel");
+  adminPanel.hidden = true;
   const adminBar = el("div", "wl-admin-bar");
   const adminToggle = el("button", "wl-admin-link", t("adminLogin"));
   adminToggle.type = "button";
@@ -667,7 +691,7 @@
   lbClose.setAttribute("aria-label", t("close"));
   lightbox.append(lbImg, lbClose);
 
-  root.append(toolbar, statusHint, boardNav, boardEl, composeSection, adminBar, detailOverlay, lightbox);
+  root.append(toolbar, statusHint, boardNav, boardEl, composeSection, adminPanel, adminBar, detailOverlay, lightbox);
   if (!secHead) root.prepend(headToggleBtn);
   applyHeadCollapsed();
 
@@ -707,6 +731,7 @@
     contactInput.placeholder = t("contactPh");
     submitBtn.textContent = t("submitBtn");
     adminToggle.textContent = adminToken ? t("adminLogout") : t("adminLogin");
+    renderAdminPanel();
     renderToolbar();
     renderBoard();
     if (activeItem) openDetail(activeItem);
@@ -1459,14 +1484,124 @@
 
   // ---------- Admin Auth ----------
   let verifyingAdmin = false;
+  let adminVerified = false;
+  let dlStats = null;
+  let dlLoading = false;
+  let dlError = "";
+
+  function formatDlCount(n) {
+    const num = Number(n) || 0;
+    return isEn() ? String(num) : `${num} 次`;
+  }
+
+  function renderAdminPanel() {
+    if (!adminToken || !adminVerified) {
+      adminPanel.hidden = true;
+      adminPanel.innerHTML = "";
+      return;
+    }
+    adminPanel.hidden = false;
+    adminPanel.innerHTML = "";
+
+    const head = el("div", "wl-admin-panel-head");
+    const titleWrap = el("div", "wl-admin-panel-title-wrap");
+    titleWrap.append(
+      el("h4", "wl-admin-panel-title", t("dlTitle")),
+      el("span", "wl-admin-badge", t("dlBadge")),
+    );
+    const refreshBtn = el("button", "wl-admin-refresh", t("dlRefresh"));
+    refreshBtn.type = "button";
+    refreshBtn.disabled = dlLoading;
+    refreshBtn.addEventListener("click", () => loadDownloadStats(true));
+    head.append(titleWrap, refreshBtn);
+    adminPanel.append(head);
+
+    if (dlLoading && !dlStats) {
+      adminPanel.append(el("p", "wl-admin-state", t("dlLoading")));
+      return;
+    }
+    if (dlError && !dlStats) {
+      adminPanel.append(el("p", "wl-admin-state is-err", dlError));
+      return;
+    }
+    if (!dlStats) return;
+
+    const metrics = el("div", "wl-admin-metrics");
+    const metricItems = [
+      [t("dlTotal"), dlStats.total],
+      [t("dlMac"), dlStats.mac],
+      [t("dlWin"), dlStats.win],
+    ];
+    for (const [label, val] of metricItems) {
+      const card = el("div", "wl-admin-metric");
+      card.append(el("span", "", label), el("b", "", formatDlCount(val)));
+      metrics.append(card);
+    }
+    adminPanel.append(metrics);
+
+    const entries = Object.entries(dlStats.byFile || {}).sort(
+      (a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0) || a[0].localeCompare(b[0]),
+    );
+    if (entries.length) {
+      const list = el("ul", "wl-admin-files");
+      for (const [name, count] of entries) {
+        const li = el("li", "wl-admin-file");
+        const code = el("code", "", name);
+        const cnt = el("b", "", formatDlCount(count));
+        li.append(code, cnt);
+        list.append(li);
+      }
+      adminPanel.append(list);
+    } else {
+      adminPanel.append(el("p", "wl-admin-state", t("dlEmpty")));
+    }
+
+    const updatedStr = dlStats.updatedAt
+      ? new Date(dlStats.updatedAt).toLocaleString(isEn() ? "en-US" : "zh-CN", { hour12: false })
+      : "";
+    const metaText = `${updatedStr ? t("dlUpdated") + updatedStr : ""}${dlStats.stale ? t("dlStale") : ""}`;
+    if (metaText) adminPanel.append(el("p", "wl-admin-meta", metaText));
+    if (dlError) adminPanel.append(el("p", "wl-admin-state is-err", dlError));
+  }
+
+  async function loadDownloadStats(force = false) {
+    if (!adminToken || !adminVerified) return;
+    if (dlLoading && !force) return;
+    dlLoading = true;
+    dlError = "";
+    renderAdminPanel();
+    try {
+      const res = await fetch("/api/downloads", {
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error((body && body.error) || `${t("dlError")} (${res.status})`);
+      }
+      dlStats = body;
+      dlError = "";
+    } catch (err) {
+      dlError = (err && err.message) || t("dlError");
+    } finally {
+      dlLoading = false;
+      renderAdminPanel();
+    }
+  }
+
   function syncAdminUi() {
     adminToggle.textContent = adminToken ? t("adminLogout") : t("adminLogin");
     statusSelect.hidden = !adminToken;
     row1.classList.toggle("is-admin", Boolean(adminToken));
+    renderAdminPanel();
   }
   adminToggle.addEventListener("click", () => {
     if (adminToken) {
       adminToken = "";
+      adminVerified = false;
+      dlStats = null;
+      dlLoading = false;
+      dlError = "";
       try { sessionStorage.removeItem("matsuri_wl_admin"); } catch {}
       items = items.map(({ contact: _c, ...pub }) => pub);
       syncAdminUi();
@@ -1480,6 +1615,9 @@
     const tk = prompt(t("adminPrompt"));
     if (!tk) return;
     adminToken = tk.trim();
+    adminVerified = false;
+    dlStats = null;
+    dlError = "";
     verifyingAdmin = true;
     try { sessionStorage.setItem("matsuri_wl_admin", adminToken); } catch {}
     syncAdminUi();
@@ -1533,9 +1671,17 @@
       if (slowTimer) clearTimeout(slowTimer);
       if (adminToken && data.isAdmin === false) {
         adminToken = "";
+        adminVerified = false;
+        dlStats = null;
+        dlLoading = false;
+        dlError = "";
         try { sessionStorage.removeItem("matsuri_wl_admin"); } catch {}
         syncAdminUi();
         if (verifyingAdmin) alert("管理口令不对");
+      } else if (adminToken && data.isAdmin === true) {
+        adminVerified = true;
+        syncAdminUi();
+        if (!dlStats && !dlLoading) loadDownloadStats(false);
       }
       verifyingAdmin = false;
       items = Array.isArray(data.items) ? data.items : [];
